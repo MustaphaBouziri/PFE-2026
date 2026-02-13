@@ -11,6 +11,7 @@ class ChangePassTabletLayout extends StatelessWidget {
 
   const ChangePassTabletLayout({
     super.key,
+    required this.oldPasswordController,
     required this.newPasswordController,
     required this.confirmPasswordController,
     required this.formKey,
@@ -77,6 +78,7 @@ class ChangePassTabletLayout extends StatelessWidget {
                     //___________________ FORM ___________________
 
                     ChangePasswordSharedForm(
+                      oldPasswordController: oldPasswordController,
                       newPasswordController: newPasswordController,
                       confirmPasswordController: confirmPasswordController,
                       formKey: formKey,
