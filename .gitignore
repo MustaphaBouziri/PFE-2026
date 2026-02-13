@@ -1,0 +1,72 @@
+########################################
+# OS junk
+########################################
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+########################################
+# Editors / IDEs
+########################################
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+########################################
+# Logs
+########################################
+*.log
+
+########################################
+# Business Central / AL
+########################################
+# Dependencies downloaded by AL extension
+.alpackages/
+**/.alpackages/
+
+# Snapshots created by AL tools
+.snapshots/
+**/.snapshots/
+
+# Built extension packages (your two files in AL-backend/)
+*.app
+
+# AL cache/db (if present)
+*.alcache
+*.aldb
+
+########################################
+# Flutter / Dart (repo-wide safety net)
+########################################
+.dart_tool/
+**/.dart_tool/
+build/
+**/build/
+coverage/
+**/coverage/
+
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+**/android/.gradle/
+**/android/**/build/
+**/android/local.properties
+**/android/**/key.properties
+**/android/**/*.jks
+**/android/**/*.keystore
+
+# iOS/macOS CocoaPods + ephemeral
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+
+
+########################################
+# Tools temp files
+########################################
+digest.txt

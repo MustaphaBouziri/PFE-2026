@@ -55,16 +55,6 @@ table 50101 "MES User"
             Caption = 'Password Iterations';
             DataClassification = SystemMetadata;
         }
-        field(11; "Failed Login Count"; Integer)
-        {
-            Caption = 'Failed Login Count';
-            DataClassification = SystemMetadata;
-        }
-        field(12; "Lockout Until"; DateTime)
-        {
-            Caption = 'Lockout Until';
-            DataClassification = SystemMetadata;
-        }
         field(13; "Created At"; DateTime)
         {
             Caption = 'Created At';

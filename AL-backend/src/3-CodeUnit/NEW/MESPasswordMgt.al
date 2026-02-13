@@ -1,34 +1,47 @@
 codeunit 50110 "MES Password Mgt"
 {
+    // FIXED VERSION - Uses proper cryptographic hashing
 
     [NonDebuggable]
     procedure MakeSalt(): Text
+    var
+        CryptographyMgt: Codeunit "Cryptography Management";
     begin
-        exit(DelChr(Format(CreateGuid()), '=', '{}'));
+        // Generate cryptographically secure random salt
+        exit(CryptographyMgt.GenerateHash(Format(CreateGuid()) + Format(CurrentDateTime()), 2)); // SHA256
     end;
 
     [NonDebuggable]
     procedure HashPassword(Password: Text; Salt: Text; Iterations: Integer): Text
     var
-        SaltKey: Text;
+        CryptographyMgt: Codeunit "Cryptography Management";
         i: Integer;
-        WorkText: Text;
+        CurrentHash: Text;
+        CombinedText: Text;
     begin
-        if Iterations < 5000 then
-            Iterations := 5000;
+        // Enforce minimum iterations for security
+        if Iterations < 10000 then
+            Iterations := 10000;
 
-        SaltKey := Salt;
-        WorkText := Password;
+        // Initial hash of password + salt
+        CombinedText := Password + Salt;
+        CurrentHash := CryptographyMgt.GenerateHash(CombinedText, 2); // SHA256
 
-        for i := 1 to Iterations do
-            WorkText := Format(StrLen(WorkText)) + ':' + WorkText + ':' + SaltKey;
+        // Perform PBKDF2-like iterations
+        for i := 2 to Iterations do begin
+            CombinedText := CurrentHash + Salt;
+            CurrentHash := CryptographyMgt.GenerateHash(CombinedText, 2);
+        end;
 
-        exit(WorkText);
+        exit(CurrentHash);
     end;
 
     [NonDebuggable]
     procedure VerifyPassword(Password: Text; StoredHash: Text; Salt: Text; Iterations: Integer): Boolean
+    var
+        ComputedHash: Text;
     begin
-        exit(HashPassword(Password, Salt, Iterations) = StoredHash);
+        ComputedHash := HashPassword(Password, Salt, Iterations);
+        exit(ComputedHash = StoredHash);
     end;
 }

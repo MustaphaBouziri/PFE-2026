@@ -1,6 +1,6 @@
 {
   "id": "bf9cafbf-fd90-4e55-992d-f2085333bb03",
-  "name": "ALProject1",
+  "name": "ALProject",
   "publisher": "Default Publisher",
   "version": "1.0.0.0",
   "brief": "",
@@ -10,7 +10,14 @@
   "help": "",
   "url": "",
   "logo": "",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "63ca2fa4-4f03-4f2b-a480-172fef340d3f",
+      "name": "System Application",
+      "publisher": "Microsoft",
+      "version": "21.0.0.0"
+    }
+  ],
   "screenshots": [],
   "platform": "21.0.0.0",
   "application": "21.0.0.0",
