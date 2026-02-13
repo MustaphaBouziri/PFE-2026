@@ -10,6 +10,7 @@ class ChangePassMobileLayout extends StatelessWidget {
 
   const ChangePassMobileLayout({
     super.key,
+    required this.oldPasswordController,
     required this.newPasswordController,
     required this.confirmPasswordController,
     required this.formKey,
@@ -80,6 +81,7 @@ class ChangePassMobileLayout extends StatelessWidget {
                             ],
                           ),
                           child: ChangePasswordSharedForm(
+                            oldPasswordController: oldPasswordController,
                             newPasswordController: newPasswordController,
                             confirmPasswordController: confirmPasswordController,
                             formKey: formKey,

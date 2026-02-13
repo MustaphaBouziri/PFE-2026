@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ChangePasswordSharedForm extends StatefulWidget {
+  final TextEditingController oldPasswordController;
   final TextEditingController newPasswordController;
   final TextEditingController confirmPasswordController;
   final GlobalKey<FormState> formKey;
@@ -9,6 +10,7 @@ class ChangePasswordSharedForm extends StatefulWidget {
 
   const ChangePasswordSharedForm({
     super.key,
+    required this.oldPasswordController,
     required this.newPasswordController,
     required this.confirmPasswordController,
     required this.formKey,
@@ -23,6 +25,7 @@ class ChangePasswordSharedForm extends StatefulWidget {
 
 class _ChangePasswordSharedFormState
     extends State<ChangePasswordSharedForm> {
+  bool _obscureOldPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -37,6 +40,79 @@ class _ChangePasswordSharedFormState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //___________________ OLD PASSWORD LABEL ___________________
+
+            const Text(
+              "Current Password",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: mainColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            //___________________ OLD PASSWORD INPUT ___________________
+
+            TextFormField(
+              controller: widget.oldPasswordController,
+              obscureText: _obscureOldPassword,
+              decoration: InputDecoration(
+                hintText: "Enter your current password",
+                hintStyle: TextStyle(
+                  color: Colors.black.withOpacity(0.5),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureOldPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: mainColor,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureOldPassword = !_obscureOldPassword;
+                    });
+                  },
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: Color.fromARGB(255, 212, 212, 212),
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: mainColor,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: Colors.red,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: Colors.red,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return "Please enter your current password";
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 24),
+
             //___________________ NEW PASSWORD LABEL ___________________
 
             const Text(
@@ -110,16 +186,22 @@ class _ChangePasswordSharedFormState
                 if (value.trim().length > 20) {
                   return "Password must be less than 21 characters long";
                 }
+                
+                // Check password strength
+                if (!_isPasswordStrong(value)) {
+                  return "Password must contain uppercase, lowercase, number, and special character";
+                }
+                
                 return null;
               },
             ),
 
-            const SizedBox(height: 36),
+            const SizedBox(height: 24),
 
             //___________________ CONFIRM PASSWORD LABEL ___________________
 
             const Text(
-              "Retype Password",
+              "Confirm New Password",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -191,9 +273,9 @@ class _ChangePasswordSharedFormState
               },
             ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 32),
 
-            //___________________ Sign in BUTTON ___________________
+            //___________________ CHANGE PASSWORD BUTTON ___________________
 
             SizedBox(
               width: double.infinity,
@@ -207,7 +289,7 @@ class _ChangePasswordSharedFormState
                 ),
                 onPressed: widget.onChangePassword,
                 child: const Text(
-                  "Sign in",
+                  "Change Password",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -220,5 +302,15 @@ class _ChangePasswordSharedFormState
         ),
       ),
     );
+  }
+
+  // Password strength validation
+  bool _isPasswordStrong(String password) {
+    bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    bool hasLowercase = password.contains(RegExp(r'[a-z]'));
+    bool hasDigit = password.contains(RegExp(r'[0-9]'));
+    bool hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    
+    return hasUppercase && hasLowercase && hasDigit && hasSpecialChar;
   }
 }

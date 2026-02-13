@@ -1,6 +1,6 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pfe_mes/providers/auth_provider.dart';
 import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
 import 'layout/mobile.dart';
 import 'layout/tablet.dart';
@@ -25,90 +25,125 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-// remove this afterwards typed it so i dont get error
-void login(){
-
-}
-  /*
   Future<void> login() async {
     if (!formKey.currentState!.validate()) return;
-    
 
-      ___________GET USER INPUTS TEXT___________________
-
-    final userId = userIdController.text.trim(); 
+    final userId = userIdController.text.trim();
     final password = passwordController.text.trim();
 
-   
-   
-
-  ___________USER ID VERIFICATION CONDITION___________________
-
-    if (user do not xist in database) {
-      showDialog(
-        context: context,
-        builder: (context) => const AlertDialog(
-          title: Text("User Not Found"),
-          content: Text("This User ID does not exist."),
-        ),
-      );
-      return;
-    }
-
-     ___________USER PASSWORD VERIFICATION CONDITION___________________
-    if (if this user password not the same ) {
-      showDialog(
-        context: context,
-        builder: (context) => const AlertDialog(
-          title: Text("Login Failed"),
-          content: Text("Incorrect password. Please try again."),
-        ),
-      );
-      return;
-    }
-  ___________ CHECK IF USER IS NEW CONDITION ___________________
-
-    if ( the user is new ) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ChnagePasswordPage()),
-      );
-      return;
-    }
-
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-     Navigator.push(context, MaterialPageRoute(builder: (_) => MachineListPage()));
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    final success = await authProvider.login(userId, password);
+
+    if (!mounted) return;
+
+    // Close loading indicator
+    Navigator.of(context).pop();
+
+    if (success) {
+      if (authProvider.needsPasswordChange) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+        );
+      } else {
+        // Navigation is handled by main.dart Consumer
+        // The app will automatically show the main screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Login Failed"),
+          content: Text(authProvider.errorMessage ?? "Unknown error occurred. Please try again."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
   }
-*/
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
 
-        if (width < 600) {
-          return LoginMobileLayout(
-            userIdController:
-                userIdController, // basically its we just passing it for reference go web layout for more details
-            passwordController: passwordController,
-            formKey: formKey,
-            onLogin: login,
-          );
-        } else if (width < 1024) {
-          return LoginTabletLayout(
-            userIdController: userIdController,
-            passwordController: passwordController,
-            formKey: formKey,
-            onLogin: login,
-          );
-        } else {
-          return LoginWebLayout(
-            userIdController: userIdController,
-            passwordController: passwordController,
-            formKey: formKey,
-            onLogin: login,
-          );
-        }
+            // Show loading overlay if authenticating
+            return Stack(
+              children: [
+                // Main content
+                Builder(
+                  builder: (context) {
+                    if (width < 600) {
+                      return LoginMobileLayout(
+                        userIdController: userIdController,
+                        passwordController: passwordController,
+                        formKey: formKey,
+                        onLogin: login,
+                      );
+                    } else if (width < 1024) {
+                      return LoginTabletLayout(
+                        userIdController: userIdController,
+                        passwordController: passwordController,
+                        formKey: formKey,
+                        onLogin: login,
+                      );
+                    } else {
+                      return LoginWebLayout(
+                        userIdController: userIdController,
+                        passwordController: passwordController,
+                        formKey: formKey,
+                        onLogin: login,
+                      );
+                    }
+                  },
+                ),
+                // Loading overlay
+                if (auth.isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: const Center(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Authenticating...'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
       },
     );
   }
