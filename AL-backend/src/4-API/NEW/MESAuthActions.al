@@ -92,12 +92,5 @@ page 50121 "MES Auth Actions"
         exit(AuthAPI.AdminSetActive(token, userId, isActive));
     end;
 
-    /// <summary>
-    /// Admin endpoint - Gets list of users
-    /// </summary>
-    [ServiceEnabled]
-    procedure GetUsers(token: Text): Text
-    begin
-        exit(AuthAPI.GetUsers(token));
-    end;
+    
 }
