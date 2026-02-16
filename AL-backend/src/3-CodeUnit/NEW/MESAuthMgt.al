@@ -4,22 +4,18 @@ codeunit 50111 "MES Auth Mgt"
 
     var
         PwMgt: Codeunit "MES Password Mgt";
-        MaxFailedAttempts: Integer;
-        LockoutMinutes: Integer;
         TokenTTLHours: Integer;
 
     // ---------- INITIALIZATION ----------
 
     procedure Initialize()
     begin
-        MaxFailedAttempts := 5;
-        LockoutMinutes := 15;
         TokenTTLHours := 12;
     end;
 
     // ---------- USER CRUD (internal/admin use) ----------
 
-    procedure CreateUser(UserId: Code[50]; FullName: Text[100]; Role: Enum "MES User Role"; DepartmentCode: Code[20]; WorkCenterNo: Code[20])
+    procedure CreateUser(UserId: Code[50];EmployeeID: Code[50]; AuthID: Text[100]; Role: Enum "MES User Role";  WorkCenterNo: Code[20])
     var
         U: Record "MES User";
     begin
@@ -31,9 +27,9 @@ codeunit 50111 "MES Auth Mgt"
 
         U.Init();
         U."User Id" := UserId;
-        U.Name := FullName;
+        U."employee ID" := EmployeeID;
+        U."Auth ID" := AuthID;
         U.Role := Role;
-        U."Department Code" := DepartmentCode;
         U."Work Center No." := WorkCenterNo;
         U."Is Active" := true;
         U."Need To Change Pw" := true;
@@ -42,7 +38,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Insert(true);
     end;
 
-    [NonDebuggable]
+    [NonDebuggable] //what does this mean
     procedure SetPassword(UserId: Code[50]; NewPassword: Text; ForceChangeOnNextLogin: Boolean)
     var
         U: Record "MES User";
@@ -61,8 +57,8 @@ codeunit 50111 "MES Auth Mgt"
         Salt := PwMgt.MakeSalt();
         Hash := PwMgt.HashPassword(NewPassword, Salt, U."Password Iterations");
 
-        U."Password Salt" := CopyStr(Salt, 1, 50);
-        U."Password Hash" := CopyStr(Hash, 1, 128);
+        U."Password Salt" := CopyStr(Salt, 1, 50); // need to check
+        U."Hashed Password" := CopyStr(Hash, 1, 128);
         U."Need To Change Pw" := ForceChangeOnNextLogin;
         U.Modify(true);
 
@@ -90,11 +86,11 @@ codeunit 50111 "MES Auth Mgt"
 
         
         // Check if password is set
-        if (U."Password Hash" = '') or (U."Password Salt" = '') then
+        if (U."Hashed Password" = '') or (U."Password Salt" = '') then
             Error('Account setup incomplete. Please contact administrator.');
 
         // Verify password
-        if not PwMgt.VerifyPassword(Password, U."Password Hash", U."Password Salt", U."Password Iterations") then begin
+        if not PwMgt.VerifyPassword(Password, U."Hashed Password", U."Password Salt", U."Password Iterations") then begin
             Error('Invalid credentials.');
         end;
 
@@ -159,7 +155,7 @@ codeunit 50111 "MES Auth Mgt"
         exit(true);
     end;
 
-    [NonDebuggable]
+   [NonDebuggable] // need to be changed
     procedure ChangePassword(TokenText: Text; OldPassword: Text; NewPassword: Text): Boolean
     var
         U: Record "MES User";
@@ -168,7 +164,7 @@ codeunit 50111 "MES Auth Mgt"
         if not ValidateToken(TokenText, U, T) then
             Error('Unauthorized. Please login again.');
 
-        if not PwMgt.VerifyPassword(OldPassword, U."Password Hash", U."Password Salt", U."Password Iterations") then
+        if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt", U."Password Iterations") then
             Error('Current password is incorrect.');
 
         SetPassword(U."User Id", NewPassword, false);
@@ -193,7 +189,7 @@ codeunit 50111 "MES Auth Mgt"
         AdminUser: Record "MES User";
         U: Record "MES User";
     begin
-        RequireAdmin(TokenText, AdminUser);
+     
 
         if not U.Get(TargetUserId) then
             Error('User %1 not found.', TargetUserId);
@@ -263,7 +259,7 @@ codeunit 50111 "MES Auth Mgt"
 
     local procedure DefaultPasswordIterations(): Integer
     begin
-        exit(10000); // Increased from 1000 for better security
+        exit(1000); 
     end;
 
     local procedure IsPasswordStrong(Password: Text): Boolean

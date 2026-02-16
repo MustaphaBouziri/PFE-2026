@@ -48,9 +48,8 @@ codeunit 50120 "MES Auth API"
         OutJ.Add('token', Format(TokenRec."Token"));
         OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9)); // ISO 8601 format
         OutJ.Add('userId', U."User Id");
-        OutJ.Add('name', U.Name);
+        OutJ.Add('name', U."Auth ID");
         OutJ.Add('role', Format(U.Role));
-        OutJ.Add('departmentCode', U."Department Code");
         OutJ.Add('workCenterNo', U."Work Center No.");
         OutJ.Add('needToChangePw', U."Need To Change Pw");
 
@@ -72,9 +71,8 @@ codeunit 50120 "MES Auth API"
 
         OutJ.Add('success', true);
         OutJ.Add('userId', U."User Id");
-        OutJ.Add('name', U.Name);
+        OutJ.Add('name', U."Auth ID");
         OutJ.Add('role', Format(U.Role));
-        OutJ.Add('departmentCode', U."Department Code");
         OutJ.Add('workCenterNo', U."Work Center No.");
         OutJ.Add('needToChangePw', U."Need To Change Pw");
         OutJ.Add('isActive', U."Is Active");
@@ -136,22 +134,22 @@ codeunit 50120 "MES Auth API"
     // ---------- Admin endpoints ----------
 
     [TryFunction]
-    local procedure TryAdminCreateUser(token: Text; userId: Code[50]; fullName: Text[100]; role: Enum "MES User Role"; departmentCode: Code[20]; workCenterNo: Code[20])
+    local procedure TryAdminCreateUser(token: Text; userId: Code[50]; employeeId: Code[50]; authId: code[50]; role: Enum "MES User Role"; workCenterNo: Code[20])
     var
         AdminUser: Record "MES User";
     begin
         Auth.RequireAdmin(token, AdminUser);
-        Auth.CreateUser(userId, fullName, role, departmentCode, workCenterNo);
+        Auth.CreateUser(userId, employeeId, authId, role, workCenterNo);
     end;
 
-    procedure AdminCreateUser(token: Text; userId: Text; fullName: Text; roleInt: Integer; departmentCode: Text; workCenterNo: Text): Text
+    procedure AdminCreateUser(token: Text; userId: Text; employeeId: text; authId: text; roleInt: Integer; workCenterNo: Text): Text
     var
         Role: Enum "MES User Role";
         OutJ: JsonObject;
         ErrorJ: JsonObject;
         UserIdCode: Code[50];
-        FullNameText: Text[100];
-        DeptCode: Code[20];
+        AuthIdCode: Code[50];
+        EmployeeIdCode: Code[50];
         WCCode: Code[20];
     begin
         // Input validation
@@ -170,20 +168,20 @@ codeunit 50120 "MES Auth API"
             2:
                 Role := Role::Admin;
             else begin
-                    ErrorJ.Add('error', 'Invalid request');
-                    ErrorJ.Add('message', 'Invalid role value');
-                    exit(JsonToText(ErrorJ));
-                end;
+                ErrorJ.Add('error', 'Invalid request');
+                ErrorJ.Add('message', 'Invalid role value');
+                exit(JsonToText(ErrorJ));
+            end;
         end;
 
         // Convert types
         UserIdCode := CopyStr(userId, 1, 50);
-        FullNameText := CopyStr(fullName, 1, 100);
-        DeptCode := CopyStr(departmentCode, 1, 20);
+        AuthIdCode := CopyStr(authId, 1, 50);
+        EmployeeIdCode := CopyStr(employeeId, 1, 50);
         WCCode := CopyStr(workCenterNo, 1, 20);
 
         // Try to create user
-        if not TryAdminCreateUser(token, UserIdCode, FullNameText, Role, DeptCode, WCCode) then begin
+        if not TryAdminCreateUser(token, UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode) then begin
             ErrorJ.Add('error', 'User creation failed');
             ErrorJ.Add('message', GetLastErrorText());
             ClearLastError();
@@ -235,7 +233,9 @@ codeunit 50120 "MES Auth API"
     local procedure TryAdminSetActive(token: Text; userId: Code[50]; isActive: Boolean)
     var
         Success: Boolean;
+        AdminUser: Record "MES User";
     begin
+        Auth.RequireAdmin(Token, AdminUser);
         Success := Auth.SetActive(token, userId, isActive);
     end;
 
@@ -262,6 +262,42 @@ codeunit 50120 "MES Auth API"
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User status updated successfully');
+        exit(JsonToText(OutJ));
+    end;
+
+    procedure GetUsers(token: Text): Text
+    var
+        U: Record "MES User";
+        T: Record "MES Auth Token";
+        OutJ: JsonObject;
+        ErrorJ: JsonObject;
+        UsersJ: JsonArray;
+        UserJ: JsonObject;
+    begin
+        if not Auth.ValidateToken(token, U, T) then begin
+            ErrorJ.Add('error', 'Unauthorized');
+            ErrorJ.Add('message', 'Invalid or expired token');
+            exit(JsonToText(ErrorJ));
+        end;
+
+        UsersJ := JsonArray.Create();
+        U.Reset();
+        if U.FindSet() then
+            repeat
+                UserJ := JsonObject.Create();
+                UserJ.Add('userId', U."User Id");
+                UserJ.Add('employeeId', U."employee ID");
+                UserJ.Add('authId', U."Auth ID");
+                UserJ.Add('role', Format(U.Role));
+                UserJ.Add('workCenterNo', U."Work Center No.");
+                UserJ.Add('isActive', U."Is Active");
+                UserJ.Add('needToChangePw', U."Need To Change Pw");
+                UserJ.Add('createdAt', Format(U."Created At", 0, 9));
+                UsersJ.Add(UserJ);
+            until U.Next() = 0;
+
+        OutJ.Add('success', true);
+        OutJ.Add('users', UsersJ);
         exit(JsonToText(OutJ));
     end;
 

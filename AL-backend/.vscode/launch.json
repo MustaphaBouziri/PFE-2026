@@ -6,17 +6,12 @@
             "request": "launch",
             "type": "al",
             "environmentType": "OnPrem",
-            "server": "http://localhost:8080",
+            "server": "http://localhost:7049",
             "serverInstance": "BC210",
             "authentication": "Windows",
-            "startupObjectId": 22,
             "startupObjectType": "Page",
-            "breakOnError": "All",
-            "launchBrowser": true,
-            "enableLongRunningSqlStatements": true,
-            "enableSqlInformationDebugger": true,
-            "tenant": "default",
-            "usePublicURLFromServer": true
+            "startupObjectId": 22,
+            "tenant": "default"
         }
     ]
 }

@@ -69,9 +69,9 @@ page 50121 "MES Auth Actions"
     /// Admin endpoint - Creates a new user
     /// </summary>
     [ServiceEnabled]
-    procedure AdminCreateUser(token: Text; userId: Text; fullName: Text; roleInt: Integer; departmentCode: Text; workCenterNo: Text): Text
+    procedure AdminCreateUser(token: Text; userId: Text; employeeId: text; authId: text; roleInt: Integer; workCenterNo: Text): Text
     begin
-        exit(AuthAPI.AdminCreateUser(token, userId, fullName, roleInt, departmentCode, workCenterNo));
+        exit(AuthAPI.AdminCreateUser(token, userId, employeeId, authId, roleInt, workCenterNo));
     end;
 
     /// <summary>
@@ -90,5 +90,14 @@ page 50121 "MES Auth Actions"
     procedure AdminSetActive(token: Text; userId: Text; isActive: Boolean): Text
     begin
         exit(AuthAPI.AdminSetActive(token, userId, isActive));
+    end;
+
+    /// <summary>
+    /// Admin endpoint - Gets list of users
+    /// </summary>
+    [ServiceEnabled]
+    procedure GetUsers(token: Text): Text
+    begin
+        exit(AuthAPI.GetUsers(token));
     end;
 }
