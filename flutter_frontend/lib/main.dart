@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/admin/AddUserPage.dart';
 import 'package:provider/provider.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:pfe_mes/providers/auth_provider.dart';
 import 'package:pfe_mes/Auth/LoginPages/login_page.dart';
 import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
 
 void main() {
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
-      child: const MyApp(),
+    DevicePreview(
+      enabled: true, // Set to false in production
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -23,6 +28,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      useInheritedMediaQuery: true, // Important for DevicePreview
+      locale: DevicePreview.locale(context), // Important for DevicePreview
+      builder: DevicePreview.appBuilder, // Important for DevicePreview
       title: 'MES System',
       theme: ThemeData(
         textTheme: GoogleFonts.interTextTheme(),
@@ -33,12 +41,12 @@ class MyApp extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             auth.checkAuthStatus();
           });
-          
+
           if (auth.isAuthenticated) {
             if (auth.needsPasswordChange) {
               return const ChangePasswordPage();
             }
-            // TODO: Return your main app page
+            // Main app page
             return Scaffold(
               appBar: AppBar(
                 title: const Text('MES System'),
@@ -55,11 +63,13 @@ class MyApp extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle, size: 80, color: Colors.green),
+                    const Icon(Icons.check_circle,
+                        size: 80, color: Colors.green),
                     const SizedBox(height: 20),
                     const Text(
                       'Login Successful!',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -79,8 +89,8 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          
-          return const LoginPage();
+
+          return const AddUserPage();
         },
       ),
     );

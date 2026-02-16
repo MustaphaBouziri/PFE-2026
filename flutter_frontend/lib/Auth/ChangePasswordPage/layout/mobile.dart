@@ -7,6 +7,7 @@ class ChangePassMobileLayout extends StatelessWidget {
   final TextEditingController confirmPasswordController;
   final GlobalKey<FormState> formKey;
   final VoidCallback onChangePassword;
+  final TextEditingController oldPasswordController;
 
   const ChangePassMobileLayout({
     super.key,
