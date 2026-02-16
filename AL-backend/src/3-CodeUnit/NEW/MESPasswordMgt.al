@@ -1,6 +1,6 @@
 codeunit 50110 "MES Password Mgt"
 {
-    // FIXED VERSION - Uses proper cryptographic hashing
+   
 
     [NonDebuggable]
     procedure MakeSalt(): Text
@@ -19,9 +19,6 @@ codeunit 50110 "MES Password Mgt"
         CurrentHash: Text;
         CombinedText: Text;
     begin
-        // Enforce minimum iterations for security
-        if Iterations < 10000 then
-            Iterations := 10000;
 
         // Initial hash of password + salt
         CombinedText := Password + Salt;
