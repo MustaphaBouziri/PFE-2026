@@ -265,42 +265,6 @@ codeunit 50120 "MES Auth API"
         exit(JsonToText(OutJ));
     end;
 
-    procedure GetUsers(token: Text): Text
-    var
-        U: Record "MES User";
-        T: Record "MES Auth Token";
-        OutJ: JsonObject;
-        ErrorJ: JsonObject;
-        UsersJ: JsonArray;
-        UserJ: JsonObject;
-    begin
-        if not Auth.ValidateToken(token, U, T) then begin
-            ErrorJ.Add('error', 'Unauthorized');
-            ErrorJ.Add('message', 'Invalid or expired token');
-            exit(JsonToText(ErrorJ));
-        end;
-
-        UsersJ := JsonArray.Create();
-        U.Reset();
-        if U.FindSet() then
-            repeat
-                UserJ := JsonObject.Create();
-                UserJ.Add('userId', U."User Id");
-                UserJ.Add('employeeId', U."employee ID");
-                UserJ.Add('authId', U."Auth ID");
-                UserJ.Add('role', Format(U.Role));
-                UserJ.Add('workCenterNo', U."Work Center No.");
-                UserJ.Add('isActive', U."Is Active");
-                UserJ.Add('needToChangePw', U."Need To Change Pw");
-                UserJ.Add('createdAt', Format(U."Created At", 0, 9));
-                UsersJ.Add(UserJ);
-            until U.Next() = 0;
-
-        OutJ.Add('success', true);
-        OutJ.Add('users', UsersJ);
-        exit(JsonToText(OutJ));
-    end;
-
     // ---------- Utility procedure ----------
 
     local procedure JsonToText(J: JsonObject): Text
