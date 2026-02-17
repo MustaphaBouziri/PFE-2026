@@ -80,49 +80,43 @@ page 50101 "MES User API"
         {
             repeater(Group)
             {
-                field(userId; Rec."User Id")
-                {
-                    Caption = 'User Id';
-                }
+                field(userId; Rec."User Id") { }
+                field(employeeId; Rec."employee ID") { }
+                field(authId; Rec."Auth ID") { }
+                field(role; Rec.Role) { }
+                field(workCenterNo; Rec."Work Center No.") { }
+                field(isActive; Rec."Is Active") { }
+                field(needToChangePw; Rec."Need To Change Pw") { }
+                field(createdAt; Rec."Created At") { }
 
-                field(employeeId; Rec."employee ID")
-                {
-                    Caption = 'Employee ID';
-                }
 
-                field(role; Rec.Role)
-                {
-                    Caption = 'Role';
-                }
+                field(firstName; EmployeeRec."First Name") { }
+                field(lastName; EmployeeRec."Last Name") { }
+                field(email; EmployeeRec."E-Mail") { }
 
-                field(firstName; EmployeeRec."First Name")
-                {
-                    Caption = 'First Name';
-                }
 
-                field(lastName; EmployeeRec."Last Name")
-                {
-                    Caption = 'Last Name';
-                }
-
-                field(email; EmployeeRec."E-Mail")
-                {
-                    Caption = 'Email';
-                }
+                field(workCenterName; WorkCenterRec.Name) { }
             }
         }
     }
 
     var
         EmployeeRec: Record Employee;
+        WorkCenterRec: Record "Work Center";
 
     trigger OnAfterGetRecord()
     begin
         Clear(EmployeeRec);
+        Clear(WorkCenterRec);
+
         if Rec."employee ID" <> '' then
-            if EmployeeRec.Get(Rec."employee ID") then;
+            EmployeeRec.Get(Rec."employee ID");
+
+        if Rec."Work Center No." <> '' then
+            WorkCenterRec.Get(Rec."Work Center No.");
     end;
 }
+
 
 
 
@@ -145,21 +139,40 @@ page 50103 "MES User Create API"
             {
                 field(userId; Rec."User Id") { }
                 field(employeeId; Rec."employee ID") { }
+                field(authId; Rec."Auth ID") { }
                 field(role; Rec.Role) { }
-                field(firstName; EmployeeRec."First Name") { }
-                field(lastName; EmployeeRec."Last Name") { }
-                field(email; EmployeeRec."E-Mail") { }
+                field(workCenterNo; Rec."Work Center No.") { }
+                field(isActive; Rec."Is Active") { }
+                field(needToChangePw; Rec."Need To Change Pw") { }
+                field(createdAt; Rec."Created At") { }
+
+
+                field(firstName; EmployeeRec."First Name") { Editable = false; }
+                field(lastName; EmployeeRec."Last Name") { Editable = false; }
+                field(email; EmployeeRec."E-Mail") { Editable = false; }
+
+
+                field(workCenterName; WorkCenterRec.Name) { Editable = false; }
             }
         }
     }
 
     var
         EmployeeRec: Record Employee;
+        WorkCenterRec: Record "Work Center";
 
     trigger OnAfterGetRecord()
     begin
         Clear(EmployeeRec);
-        if Rec."employee ID" <> '' then
-            EmployeeRec.Get(Rec."employee ID");
+        Clear(WorkCenterRec);
+
+        if (Rec."employee ID" <> '') then
+            if not EmployeeRec.Get(Rec."employee ID") then
+                Clear(EmployeeRec);
+
+        if (Rec."Work Center No." <> '') then
+            if not WorkCenterRec.Get(Rec."Work Center No.") then
+                Clear(WorkCenterRec);
     end;
+
 }

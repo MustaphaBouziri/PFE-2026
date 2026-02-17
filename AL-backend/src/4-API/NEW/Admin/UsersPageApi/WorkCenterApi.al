@@ -21,7 +21,7 @@ page 50102 "MES Department API"
 
                 }
 
-                field(departmentName; Rec.Name)
+                field(workCenterName; Rec.Name)
                 {
                     Caption = 'Work Center name ';
                 }
