@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pfe_mes/admin/AddUserPage.dart';
 import 'package:pfe_mes/providers/erp_employee_provider.dart';
+import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
 import 'package:pfe_mes/providers/mes_user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:device_preview/device_preview.dart';
@@ -17,7 +18,8 @@ void main() {
   providers: [
     ChangeNotifierProvider(create: (_) => AuthProvider()),
     ChangeNotifierProvider(create: (_) => MesUserProvider()),
-    ChangeNotifierProvider(create:(_) =>ErpEmployeeProvider() ,)
+    ChangeNotifierProvider(create:(_) =>ErpEmployeeProvider() ,),
+    ChangeNotifierProvider(create:(_) =>ErpWorkcenterProvider() ,),
   ],
   child: const MyApp(),
 ),

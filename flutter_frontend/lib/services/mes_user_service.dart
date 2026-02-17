@@ -35,14 +35,17 @@ class MesUserService {
     }
   }
 
-  Future<bool> createMesUser(MesUser user) async {
+  Future<bool> createMesUser({
+    required String employeeId,
+    required String role,
+    required String workCenterNo,
+    
+  }) async {
     final body = jsonEncode({
-      'userId': user.userId,
-      'employeeId': user.employeeId,
-      'role': user.role,
-      'firstName': user.firstName,
-      'lastName': user.lastName,
-      'email': user.email,
+       'employeeId': employeeId,
+    'role': role,
+    'workCenterNo': workCenterNo,
+      
     });
 
     final response = await http.post(

@@ -20,7 +20,7 @@ class ErpEmployee {
   factory ErpEmployee.fromJson(Map<String, dynamic> json) {
     return ErpEmployee(
      
-      employeeId: json['employeeId']?.toString() ?? '',
+      employeeId: json['id']?.toString() ?? '',
       firstName: json['firstName']?.toString() ?? '',
       middleName: json['middleName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',

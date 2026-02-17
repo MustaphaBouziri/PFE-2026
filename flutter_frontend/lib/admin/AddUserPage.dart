@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/admin/addUserDialog.dart';
 import 'package:pfe_mes/providers/erp_employee_provider.dart';
+import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/mes_user_model.dart';
 import '../providers/mes_user_provider.dart';
@@ -56,6 +57,7 @@ class _AddUserPageState extends State<AddUserPage> {
                   child: ElevatedButton(
                     onPressed: () async{
                       await context.read<ErpEmployeeProvider>().fetchEmployees();// read is just a reference it store nothing 
+                      await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
                       
 
 
