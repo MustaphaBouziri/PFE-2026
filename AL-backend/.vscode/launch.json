@@ -1,17 +1,18 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Your own server",
-            "request": "launch",
-            "type": "al",
-            "environmentType": "OnPrem",
-            "server": "http://localhost:7049",
-            "serverInstance": "BC210",
-            "authentication": "Windows",
-            "startupObjectType": "Page",
-            "startupObjectId": 22,
-            "tenant": "default"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Your own server",
+      "request": "launch",
+      "type": "al",
+      "environmentType": "OnPrem",
+      "server": "http://localhost:7049",
+      "serverInstance": "BC210",
+      "authentication": "Windows",
+      "startupObjectType": "Page",
+      "startupObjectId": 22,
+      "schemaUpdateMode": "Recreate",
+      "tenant": "default"
+    }
+  ]
 }

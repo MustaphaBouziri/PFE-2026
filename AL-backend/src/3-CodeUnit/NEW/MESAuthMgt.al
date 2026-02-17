@@ -46,7 +46,6 @@ codeunit 50111 "MES Auth Mgt"
     /// The new account is created in the following default state:
     ///   Is Active          = true   (immediately usable)
     ///   Need To Change Pw  = true   (user must set password before first use)
-    ///   Password Iterations= DefaultPasswordIterations() (currently 1 000)
     ///   Created At         = CurrentDateTime()
     ///
     /// NOTE: This procedure only creates the record.  No password is set here.
@@ -79,7 +78,6 @@ codeunit 50111 "MES Auth Mgt"
         U."Work Center No."     := WorkCenterNo;
         U."Is Active"           := true;
         U."Need To Change Pw"   := true;               // force password reset on first login
-        U."Password Iterations" := DefaultPasswordIterations();
         U."Created At"          := CurrentDateTime();
         U.Insert(true);
     end;
@@ -90,7 +88,7 @@ codeunit 50111 "MES Auth Mgt"
     /// Steps performed:
     ///   1. Validate password meets complexity requirements (IsPasswordStrong).
     ///   2. Generate a new random salt via MES Password Mgt.
-    ///   3. Hash (password + salt) for N iterations.
+    ///   3. Hash (password + salt) 
     ///   4. Persist the salt and hash to the MES User record.
     ///   5. Revoke ALL existing tokens — any live sessions are terminated.
     ///
@@ -116,16 +114,12 @@ codeunit 50111 "MES Auth Mgt"
         if not IsPasswordStrong(NewPassword) then
             Error('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.');
 
-        // Ensure iteration count is always initialised before hashing.
-        if U."Password Iterations" = 0 then
-            U."Password Iterations" := DefaultPasswordIterations();
-
         Salt := PwMgt.MakeSalt();
-        Hash := PwMgt.HashPassword(NewPassword, Salt, U."Password Iterations");
+        Hash := PwMgt.HashPassword(NewPassword, Salt);
 
         // CopyStr is required: Salt is 64 chars but field is Text[50];
         // Hash is 64 chars and field is Text[128] — CopyStr is safe for Hash.
-        U."Password Salt"    := CopyStr(Salt, 1, 50);
+        U."Password Salt"    := CopyStr(Salt, 1, 500);
         U."Hashed Password"  := CopyStr(Hash, 1, 128);
         U."Need To Change Pw":= ForceChangeOnNextLogin;
         U.Modify(true);
@@ -164,12 +158,15 @@ codeunit 50111 "MES Auth Mgt"
         DeviceId: Text) : Record "MES Auth Token"
     var
         U: Record "MES User";
-        T: Record "MES Auth Token";
+        T: Record "MES Auth Token"; 
+        ComputedHash: Text;
     begin
+        ComputedHash := PwMgt.HashPassword(Password, U."Password Salt");
+   
         // Use a single generic message for both "not found" and "wrong password"
         // to prevent an attacker from learning which user IDs are registered.
         if not U.Get(UserId) then
-            Error('Invalid credentials.');
+            Error('Invalid credentials. user does not exist');
 
         if not U."Is Active" then
             Error('Account is disabled. Please contact administrator.');
@@ -179,8 +176,8 @@ codeunit 50111 "MES Auth Mgt"
             Error('Account setup incomplete. Please contact administrator.');
 
         // Verify the supplied password against the stored hash.
-        if not PwMgt.VerifyPassword(Password, U."Hashed Password", U."Password Salt", U."Password Iterations") then
-            Error('Invalid credentials.');
+        if not PwMgt.VerifyPassword(Password, U."Hashed Password", U."Password Salt") then
+            Error('Invalid credentials. password is wrong PW mismatch. Stored=%1.. Computed=%2..',ComputedHash,  U."Hashed Password");
 
         // All checks passed — create and return a new session token.
         T := IssueToken(UserId, DeviceId);
@@ -312,7 +309,7 @@ codeunit 50111 "MES Auth Mgt"
             Error('Unauthorized. Please login again.');
 
         // Require the current password before accepting a new one.
-        if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt", U."Password Iterations") then
+        if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt") then
             Error('Current password is incorrect.');
 
         // forceChangeOnNextLogin = false: the user is actively choosing a new
@@ -492,20 +489,6 @@ codeunit 50111 "MES Auth Mgt"
             until T.Next() = 0;
     end;
 
-    /// <summary>
-    /// Returns the default iteration count for password hashing.
-    ///
-    /// Current value: 1 000.
-    /// Production recommendation: 100 000 or higher.
-    ///
-    /// The value is stored per-user in "Password Iterations" so that
-    /// it can be raised for new accounts without invalidating existing ones.
-    /// Existing users get the higher count on their next password change.
-    /// </summary>
-    local procedure DefaultPasswordIterations() : Integer
-    begin
-        exit(1000);
-    end;
 
     /// <summary>
     /// Returns TRUE only when the password satisfies ALL complexity rules:
@@ -539,7 +522,8 @@ codeunit 50111 "MES Auth Mgt"
                 else                 HasSpecial := true;
             end;
         end;
-
-        exit(HasUpper and HasLower and HasDigit and HasSpecial);
+        exit(true)
+        //TODO RETURN THIS TO WHAT IT WAS DON'T FORGET
+        //exit(HasUpper and HasLower and HasDigit and HasSpecial);
     end;
 }

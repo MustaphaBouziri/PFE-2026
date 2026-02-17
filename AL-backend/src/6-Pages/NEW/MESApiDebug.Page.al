@@ -217,7 +217,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Login';
-                    Image            = LogIn;
+                    Image            = Start;
                     Promoted         = true;
                     PromotedCategory = Process;
                     PromotedIsBig    = true;
@@ -233,7 +233,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Logout';
-                    Image            = LogOut;
+                    Image            = Stop;
                     Promoted         = true;
                     PromotedCategory = Process;
                     ToolTip          = 'Revoke the token in the Token field.  Use after testing to clean up active sessions.';
@@ -248,7 +248,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Me';
-                    Image            = Information;
+                    Image            = Info;
                     Promoted         = true;
                     PromotedCategory = Process;
                     ToolTip          = 'Validate the token and retrieve the current user profile.  Useful to confirm a token is still valid.';
@@ -263,7 +263,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Change Password';
-                    Image            = ChangePassword;
+                    Image            = Change;
                     Promoted         = true;
                     PromotedCategory = Process;
                     ToolTip          = 'Change the password for the user owning the current token.  Requires Token, Old Password, and New Password.';
@@ -287,7 +287,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Admin: Create User';
-                    Image            = NewUser;
+                    Image            = User;
                     Promoted         = true;
                     PromotedCategory = Process;
                     ToolTip          = 'Create a new MES user.  Requires Admin token, UserId, EmployeeId, AuthId, RoleInt, and WorkCenterNo.';
@@ -303,7 +303,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea  = All;
                     Caption          = 'Admin: Set Password';
-                    Image            = ChangePassword;
+                    Image            = Edit;
                     Promoted         = true;
                     PromotedCategory = Process;
                     ToolTip          = 'Set or reset the password for any MES user.  Requires Admin token, target UserId, NewPassword, and ForceChange flag.';
@@ -403,11 +403,13 @@ page 50140 "MES API Debug"
     // Populates the ApiList summary field shown in the Overview group.
     // -------------------------------------------------------------------------
     trigger OnOpenPage()
+    var
+        ApiListBuilder: TextBuilder;
     begin
-        ApiList :=
-            'Auth: Login · Logout · Me · ChangePassword' + NewLine() +
-            'Admin: AdminCreateUser · AdminSetPassword · AdminSetActive' + NewLine() +
-            'All endpoints: POST /ODataV4/MESUnboundActions_<ProcedureName>';
+        ApiListBuilder.AppendLine('Auth: Login · Logout · Me · ChangePassword');
+        ApiListBuilder.AppendLine('Admin: AdminCreateUser · AdminSetPassword · AdminSetActive');
+        ApiListBuilder.Append('All endpoints: POST /ODataV4/MESUnboundActions_<ProcedureName>');
+        ApiList := ApiListBuilder.ToText();
     end;
 
     // -------------------------------------------------------------------------
