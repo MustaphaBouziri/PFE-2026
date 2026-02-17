@@ -92,8 +92,8 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
                 if (value == null || value.trim().isEmpty) {
                   return "Please enter your User ID";
                 }
-                if (value.trim().length < 8) {
-                  return "User ID must be at least 8 characters";
+                if (value.trim().length < 2) { // to change later
+                  return "User ID must be at least 8 characters"; // to change later
                 }
                 return null;
               },

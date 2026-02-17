@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/admin/AddUserPage.dart';
 import 'package:provider/provider.dart';
 import 'package:pfe_mes/providers/auth_provider.dart';
 import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
@@ -58,12 +59,11 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         // Navigation is handled by main.dart Consumer
         // The app will automatically show the main screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+
+        //___________just test no mater ur role u taken to admin page
+        Navigator.push(context, MaterialPageRoute(builder:(context) => AddUserPage(),));
+        
+        
       }
     } else {
       showDialog(
