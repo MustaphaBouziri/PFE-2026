@@ -12,18 +12,13 @@
 //                      the first 50 characters are persisted.  Widening the
 //                      field to Text[64] would store the full salt.
 //
-//   Password hashing : Iterative SHA-256 (PBKDF2-style):
-//                        hash_1 = SHA-256( password + salt )
-//                        hash_i = SHA-256( hash_{i-1} + salt )  for i = 2..N
-//                      This is not a true PBKDF2 (which uses HMAC), but it
-//                      provides meaningful brute-force resistance at low
-//                      iteration counts.  For higher security, increase
-//                      Password Iterations in MESAuthMgt.DefaultPasswordIterations().
-//
-//   Verification     : Re-hash with the same salt and iterations; compare
+//   Password hashing :  SHA-256 (PBKDF2-style):
+//                       hash = SHA-256( password + salt )
+//                       
+//   Verification     : Re-hash with the same salt and compare
 //                      the result to the stored hash using string equality.
 //                      Constant-time comparison is not available in standard
-//                      AL — this is acceptable at the current iteration counts.
+//                      AL — this is acceptable at the current usecase.
 //
 // [NonDebuggable]
 //   All three procedures are marked [NonDebuggable] to prevent plaintext
@@ -67,42 +62,29 @@ codeunit 50110 "MES Password Mgt"
     // HashPassword
     // =========================================================================
     /// <summary>
-    /// Hashes a plaintext password using iterative SHA-256 with the given salt.
+    /// Hashes a plaintext password using  SHA-256 with the given salt.
     ///
     /// Algorithm (PBKDF2-style, SHA-256 variant):
-    ///   round_1 = SHA-256( password + salt )
-    ///   round_i = SHA-256( round_{i-1} + salt )   for i = 2..Iterations
-    ///
-    /// The salt is re-mixed at every round to ensure the iteration chain
-    /// is salt-dependent (prevents precomputed rainbow table attacks even
-    /// if the iteration count is known).
+    /// 
+    /// 
     ///
     /// Parameters:
     ///   Password   — plaintext password entered by the user
     ///   Salt       — value from MakeSalt() stored in "Password Salt"
-    ///   Iterations — round count from "Password Iterations" (default 1 000)
-    ///
+    ///  
     /// Returns a 64-character uppercase hex string (SHA-256 output).
     /// The caller (SetPassword) stores this in "Hashed Password" (Text[128]).
     /// </summary>
     [NonDebuggable]
-    procedure HashPassword(Password: Text; Salt: Text; Iterations: Integer): Text
+    procedure HashPassword(Password: Text; Salt: Text): Text
     var
         CryptographyMgt: Codeunit "Cryptography Management";
-        i          : Integer;
         CurrentHash: Text;
         Combined   : Text;
     begin
         // Round 1: hash the raw password concatenated with the salt.
         Combined    := Password + Salt;
         CurrentHash := CryptographyMgt.GenerateHash(Combined, 2);  // SHA-256
-
-        // Rounds 2..N: feed the previous hash back in with the salt.
-        // Each round produces a new 64-char hex string.
-        for i := 2 to Iterations do begin
-            Combined    := CurrentHash + Salt;
-            CurrentHash := CryptographyMgt.GenerateHash(Combined, 2);
-        end;
 
         exit(CurrentHash);
     end;
@@ -113,21 +95,18 @@ codeunit 50110 "MES Password Mgt"
     /// <summary>
     /// Verifies a candidate plaintext password against a stored hash.
     ///
-    /// Re-hashes the candidate using the stored salt and iteration count, then
+    /// Re-hashes the candidate using the stored salt, then
     /// compares the result to the stored hash with string equality.
     ///
     /// Returns TRUE if the hashes match (password is correct), FALSE otherwise.
     ///
-    /// NOTE: This comparison is not constant-time.  At the default 1 000
-    /// iterations, timing side-channels are negligible in practice, but this
-    /// should be revisited if iterations are significantly reduced.
     /// </summary>
     [NonDebuggable]
-    procedure VerifyPassword(Password: Text; StoredHash: Text; Salt: Text; Iterations: Integer): Boolean
+    procedure VerifyPassword(Password: Text; StoredHash: Text; Salt: Text): Boolean
     var
         ComputedHash: Text;
     begin
-        ComputedHash := HashPassword(Password, Salt, Iterations);
+        ComputedHash := HashPassword(Password, Salt);
         exit(ComputedHash = StoredHash);
     end;
 }

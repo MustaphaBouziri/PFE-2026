@@ -383,7 +383,7 @@ codeunit 50125 "MES Unbound Actions"
 
     /// <summary>
     /// Builds a standard error JSON envelope from explicit strings.
-    ///   { "success": false, "error": "<errorCode>", "message": "<message>" }
+    ///   { "success": false, "error": "&lt;errorCode&gt;", "message": "&lt;message&gt;" }
     /// </summary>
     local procedure BuildError(ErrorCode: Text; Message: Text): Text
     var

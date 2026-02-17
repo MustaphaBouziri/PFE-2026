@@ -51,7 +51,7 @@ codeunit 50115 "MES Setup"
         // EmployeeID is left blank — the admin account has no HR record link.
         // WorkCenterNo is left blank — the admin works across all work centers.
         AuthMgt.CreateUser(
-            'admin',                    // User Id      — login username
+            'ADMIN',                    // User Id      — login username
             '',                         // Employee ID  — no linked HR employee
             'AD001',                    // Auth ID      — external identity ref
             "MES User Role"::Admin,     // Role         — full admin access
@@ -61,8 +61,8 @@ codeunit 50115 "MES Setup"
         // ForceChangeOnNextLogin = true means the user must call ChangePassword
         // on their first successful login before they can use the system.
         AuthMgt.SetPassword(
-            'admin',        // User Id
-            'Admin@123!',   // Temporary password — CHANGE THIS IMMEDIATELY
+            'ADMIN',        // User Id
+            '00000000',   // Temporary password — CHANGE THIS IMMEDIATELY
             true);          // Force change on next login
 
         Message('MES Setup complete. Login as "admin" and change the password immediately.');
