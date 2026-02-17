@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/Auth/ChangePasswordPage/layout/changePassForm.dart';
 
-
 class ChangePassTabletLayout extends StatelessWidget {
-    final TextEditingController newPasswordController;
+  final TextEditingController oldPasswordController;
+  final TextEditingController newPasswordController;
   final TextEditingController confirmPasswordController;
   final GlobalKey<FormState> formKey;
   final VoidCallback onChangePassword;
-  
 
   const ChangePassTabletLayout({
     super.key,
@@ -35,68 +34,77 @@ class ChangePassTabletLayout extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Container(
-                width: 600,
-                padding: const EdgeInsets.all(40),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 30,
-                      offset: const Offset(0, 15),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 600,
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.factory_outlined,
+                            size: 80,
+                            color: mainColor,
+                          ),
 
-                    //___________________ HEADER ___________________
+                          const SizedBox(height: 24),
 
-                    const Icon(
-                      Icons.factory_outlined,
-                      size: 80,
-                      color: mainColor,
-                    ),
+                          const Text(
+                            "Login Page",
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: mainColor,
+                            ),
+                          ),
 
-                    const SizedBox(height: 24),
+                          const SizedBox(height: 40),
 
-                    const Text(
-                      "Login Page",
-                      style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        color: mainColor,
+                          ChangePasswordSharedForm(
+                            oldPasswordController: oldPasswordController,
+                            newPasswordController: newPasswordController,
+                            confirmPasswordController:
+                                confirmPasswordController,
+                            formKey: formKey,
+                            onChangePassword: onChangePassword,
+                            maxWidth: 520,
+                          ),
+
+                          const SizedBox(height: 26),
+
+                          const Text(
+                            "© 2026  - All rights reserved",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(height: 40),
-
-                    //___________________ FORM ___________________
-
-                    ChangePasswordSharedForm(
-                      oldPasswordController: oldPasswordController,
-                      newPasswordController: newPasswordController,
-                      confirmPasswordController: confirmPasswordController,
-                      formKey: formKey,
-                      onChangePassword: onChangePassword,
-                      maxWidth: 520,
-                    ),
-                    SizedBox(height: 26,),
-                    const Text(
-                  "© 2026  - All rights reserved",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
                   ),
                 ),
-                  ],
-                ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

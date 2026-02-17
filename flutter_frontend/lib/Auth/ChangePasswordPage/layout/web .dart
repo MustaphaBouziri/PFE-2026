@@ -7,6 +7,7 @@ class ChangePassWebLayout extends StatelessWidget {
   final TextEditingController confirmPasswordController;
   final GlobalKey<FormState> formKey;
   final VoidCallback onChangePassword;
+  final TextEditingController oldPasswordController;
 
   const ChangePassWebLayout({
     super.key,

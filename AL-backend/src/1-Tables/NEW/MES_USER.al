@@ -13,7 +13,7 @@ table 50101 "MES User"
         field(3; "employee ID"; Code[50])
         {
             Caption = 'employee ID';
-            TableRelation = Employee.SystemId;
+            TableRelation = Employee."No.";
             DataClassification = EndUserIdentifiableInformation;
         }
         field(4; "Auth ID"; Text[100])
@@ -29,6 +29,7 @@ table 50101 "MES User"
         field(6; "Work Center No."; Code[20])
         {
             Caption = 'Work Center No.';
+            TableRelation="Work Center"."No.";
             DataClassification = CustomerContent;
         }
         field(7; "Is Active"; Boolean)
