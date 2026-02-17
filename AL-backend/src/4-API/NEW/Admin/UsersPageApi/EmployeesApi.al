@@ -76,6 +76,11 @@ page 50100 "MES Employee API"
                     Caption = 'First Name';
                 }
 
+                field("middleName"; Rec."Middle Name")
+                {
+                    Caption = 'middle Name';
+                }
+
                 field(lastName; Rec."Last Name")
                 {
                     Caption = 'Last Name';
@@ -86,6 +91,11 @@ page 50100 "MES Employee API"
                 field(email; Rec."E-Mail")
                 {
                     Caption = 'Email';
+                }
+
+                field(image; Rec.Image)
+                {
+                    Caption = 'Image';
                 }
             }
         }

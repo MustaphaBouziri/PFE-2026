@@ -138,3 +138,105 @@ page 50101 "MES User API"
         // The repeater fields will then return blank strings for this row.
     end;
 }
+*/
+
+page 50101 "MES User API"
+{
+    PageType = API;
+    APIPublisher = 'yourcompany';
+    APIGroup = 'v1';
+    APIVersion = 'v1.0';
+    EntityName = 'mesUser';
+    EntitySetName = 'mesUsers';
+    SourceTable = "MES User";
+    DelayedInsert = true;
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+                field(userId; Rec."User Id")
+                {
+                    Caption = 'User Id';
+                }
+
+                field(employeeId; Rec."employee ID")
+                {
+                    Caption = 'Employee ID';
+                }
+
+                field(role; Rec.Role)
+                {
+                    Caption = 'Role';
+                }
+
+                field(firstName; EmployeeRec."First Name")
+                {
+                    Caption = 'First Name';
+                }
+
+                field(lastName; EmployeeRec."Last Name")
+                {
+                    Caption = 'Last Name';
+                }
+
+                field(email; EmployeeRec."E-Mail")
+                {
+                    Caption = 'Email';
+                }
+            }
+        }
+    }
+
+    var
+        EmployeeRec: Record Employee;
+
+    trigger OnAfterGetRecord()
+    begin
+        Clear(EmployeeRec);
+        if Rec."employee ID" <> '' then
+            if EmployeeRec.Get(Rec."employee ID") then;
+    end;
+}
+
+
+
+page 50103 "MES User Create API"
+{
+    PageType = API;
+    APIPublisher = 'yourcompany';
+    APIGroup = 'v1';
+    APIVersion = 'v1.0';
+    EntityName = 'mesUserCreate';
+    EntitySetName = 'createMesUsers';
+    SourceTable = "MES User";
+    DelayedInsert = true; // important for POST
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+                field(userId; Rec."User Id") { }
+                field(employeeId; Rec."employee ID") { }
+                field(role; Rec.Role) { }
+                field(firstName; EmployeeRec."First Name") { }
+                field(lastName; EmployeeRec."Last Name") { }
+                field(email; EmployeeRec."E-Mail") { }
+            }
+        }
+    }
+
+    var
+        EmployeeRec: Record Employee;
+
+    trigger OnAfterGetRecord()
+    begin
+        Clear(EmployeeRec);
+        if Rec."employee ID" <> '' then
+            EmployeeRec.Get(Rec."employee ID");
+    end;
+}

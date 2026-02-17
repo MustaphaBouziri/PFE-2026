@@ -1,38 +1,39 @@
-class MesUser {
-  final String userId;
+class ErpEmployee {
+
   final String employeeId;
-  final String role;
   final String firstName;
+  final String middleName;
   final String lastName;
   final String email;
+  final String image;
 
-  MesUser({
-    required this.userId,
+  ErpEmployee({
+   
     required this.employeeId,
-    required this.role,
     this.firstName = '',
+    this.middleName = '',
     this.lastName = '',
     this.email = '',
+    this.image= '',
   });
 
-  factory MesUser.fromJson(Map<String, dynamic> json) {
-    return MesUser(
-      userId: json['userId']?.toString() ?? '',
+  factory ErpEmployee.fromJson(Map<String, dynamic> json) {
+    return ErpEmployee(
+     
       employeeId: json['employeeId']?.toString() ?? '',
-      role: json['role']?.toString() ?? '',
       firstName: json['firstName']?.toString() ?? '',
+      middleName: json['middleName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
+      image: json['image']?.toString() ?? 'https://picsum.photos/200/200',
+
     );
   }
 
   String get fullName {
-    final name = '$firstName $lastName'.trim();
+    final name = '$firstName $middleName $lastName '.trim();
     return name.isEmpty ? 'No Name' : name;
   }
 
-  @override
-  String toString() {
-    return 'MesUser(userId: $userId, employeeId: $employeeId, role: $role, fullName: $fullName, email: $email)';
-  }
+  
 }

@@ -1,25 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/models/mes_user_model.dart';
-import 'package:pfe_mes/services/mes_user_service.dart';
+import '../models/mes_user_model.dart';
+import '../services/mes_user_service.dart';
 
-class MesUserProvider with ChangeNotifier {// this class notify the ui when data changes meaning ui will auto rebuild so no need to create setState
+class MesUserProvider with ChangeNotifier {
   final MesUserService _service = MesUserService();
 
-  List<MesUser> users = [];// declaire the list here not the actual page 
+  List<MesUser> users = [];
   bool isLoading = false;
   String? errorMessage;
 
+  // Fetch users
   Future<void> fetchUsers() async {
     try {
       isLoading = true;
       errorMessage = null;
-      notifyListeners();//hey something changed rebuild pls
+      notifyListeners();
 
-      users = await _service.fetchMesUsers();//will have the data inside it 
+      users = await _service.fetchMesUsers();
     } catch (e) {
       errorMessage = e.toString();
     }
+
     isLoading = false;
     notifyListeners();
+  }
+
+  
+  Future<bool> addUser(MesUser user) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final success = await _service.createMesUser(user);
+      if (success) {
+        users.add(user);
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }
