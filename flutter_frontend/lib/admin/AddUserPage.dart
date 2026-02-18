@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/admin/addUserDialog.dart';
+import 'package:pfe_mes/admin/generatePasswordDialog.dart';
+import 'package:pfe_mes/providers/auth_provider.dart';
 import 'package:pfe_mes/providers/erp_employee_provider.dart';
 import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +33,8 @@ class _AddUserPageState extends State<AddUserPage> {
     final provider = context.watch<MesUserProvider>();
     final users = provider.users;
 
+    final authProvider = context.watch<AuthProvider>();
+
     final filteredUsers = users.where((user) {
       final bool roleMatch = selectedRole == 'All' || user.role == selectedRole;
 
@@ -55,16 +59,18 @@ class _AddUserPageState extends State<AddUserPage> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
-                    onPressed: () async{
-                      await context.read<ErpEmployeeProvider>().fetchEmployees();// read is just a reference it store nothing 
-                      await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
-                      
+                    onPressed: () async {
+                      await context
+                          .read<ErpEmployeeProvider>()
+                          .fetchEmployees(); // read is just a reference it store nothing
+                      await context
+                          .read<ErpWorkcenterProvider>()
+                          .fetchWorkCenter();
 
-
-                      showDialog(context: context, builder:(context) =>  AddUserDialog(),);
-
-
-                      
+                      showDialog(
+                        context: context,
+                        builder: (context) => AddUserDialog(),
+                      );
                     },
                     child: const Text('Add User'),
                   ),
@@ -87,7 +93,7 @@ class _AddUserPageState extends State<AddUserPage> {
                               borderSide: BorderSide(color: Colors.grey),
                             ),
                           ),
-                          onChanged: (_) => setState(() {}), // ✅ FIXED
+                          onChanged: (_) => setState(() {}),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -113,7 +119,7 @@ class _AddUserPageState extends State<AddUserPage> {
                             onChanged: (value) {
                               setState(() {
                                 selectedRole = value!;
-                              }); // ✅ enough, no notifyListeners needed
+                              }); 
                             },
                           ),
                         ),
@@ -127,75 +133,85 @@ class _AddUserPageState extends State<AddUserPage> {
                     itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
                       final user = filteredUsers[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 0,
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border(
-                            top: BorderSide(
-                              color: Colors.grey.shade200,
-                              width: 1,
+                      return GestureDetector(
+                        onTap: () async {
+                          
+
+                          showDialog(
+                        context: context,
+                        builder: (context) => GeneratePasswordDialog(userId: user.userId,),
+                      );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border(
+                              top: BorderSide(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
                             ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundImage: NetworkImage(
-                                      'https://i.pravatar.cc/150?img=${index + 1}',
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                        'https://i.pravatar.cc/150?img=${index + 1}',
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user.fullName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          user.fullName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        user.email,
-                                        style: const TextStyle(
-                                          color: Colors.grey,
+                                        Text(
+                                          user.email,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(flex: 1, child: Text(user.role)),
-                            const Expanded(flex: 1, child: Text('assembly')),
-                            const Expanded(
-                              flex: 1,
-                              child: Text(
-                                'Online',
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w500,
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(
-                              width: 120,
-                              child: Text(
-                                'Just now',
-                                overflow: TextOverflow.ellipsis,
+                              Expanded(flex: 1, child: Text(user.role)),
+                              const Expanded(flex: 1, child: Text('assembly')),
+                              const Expanded(
+                                flex: 1,
+                                child: Text(
+                                  'Online',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(
+                                width: 120,
+                                child: Text(
+                                  'Just now',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

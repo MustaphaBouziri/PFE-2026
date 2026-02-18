@@ -219,7 +219,7 @@ table 50101 "MES User"
 
 
         GuidTxt := Format(CreateGuid());
-        "Auth ID" := 'AUTH-' + CopyStr(GuidTxt, 2, 9);
+        "Auth ID" := 'AUTH-' + CopyStr(GuidTxt, 2, 8);
 
 
 
@@ -230,6 +230,5 @@ table 50101 "MES User"
 
         "Password Salt" := '';
         "Hashed Password" := '';
-        "Password Iterations" := 0;
     end;
 }
