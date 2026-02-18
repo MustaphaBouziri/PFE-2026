@@ -56,11 +56,11 @@ codeunit 50111 "MES Auth Mgt"
     ///   - A user with this UserId already exists
     /// </summary>
     procedure CreateUser(
-        UserId       : Code[50];
-        EmployeeID   : Code[50];
-        AuthID       : Text[100];
-        Role         : Enum "MES User Role";
-        WorkCenterNo : Code[20])
+        UserId: Code[50];
+        EmployeeID: Code[50];
+        AuthID: Text[100];
+        Role: Enum "MES User Role";
+        WorkCenterNo: Code[20])
     var
         U: Record "MES User";
     begin
@@ -71,14 +71,14 @@ codeunit 50111 "MES Auth Mgt"
             Error('User %1 already exists.', UserId);
 
         U.Init();
-        U."User Id"             := UserId;
-        U."employee ID"         := EmployeeID;
-        U."Auth ID"             := AuthID;
-        U.Role                  := Role;
-        U."Work Center No."     := WorkCenterNo;
-        U."Is Active"           := true;
-        U."Need To Change Pw"   := true;               // force password reset on first login
-        U."Created At"          := CurrentDateTime();
+        U."User Id" := UserId;
+        U."employee ID" := EmployeeID;
+        U."Auth ID" := AuthID;
+        U.Role := Role;
+        U."Work Center No." := WorkCenterNo;
+        U."Is Active" := true;
+        U."Need To Change Pw" := true;               // force password reset on first login
+        U."Created At" := CurrentDateTime();
         U.Insert(true);
     end;
 
@@ -100,11 +100,11 @@ codeunit 50111 "MES Auth Mgt"
     /// </summary>
     [NonDebuggable]
     procedure SetPassword(
-        UserId                : Code[50];
-        NewPassword           : Text;
+        UserId: Code[50];
+        NewPassword: Text;
         ForceChangeOnNextLogin: Boolean)
     var
-        U   : Record "MES User";
+        U: Record "MES User";
         Salt: Text;
         Hash: Text;
     begin
@@ -119,9 +119,9 @@ codeunit 50111 "MES Auth Mgt"
 
         // CopyStr is required: Salt is 64 chars but field is Text[50];
         // Hash is 64 chars and field is Text[128] — CopyStr is safe for Hash.
-        U."Password Salt"    := CopyStr(Salt, 1, 500);
-        U."Hashed Password"  := CopyStr(Hash, 1, 128);
-        U."Need To Change Pw":= ForceChangeOnNextLogin;
+        U."Password Salt" := CopyStr(Salt, 1, 500);
+        U."Hashed Password" := CopyStr(Hash, 1, 128);
+        U."Need To Change Pw" := ForceChangeOnNextLogin;
         U.Modify(true);
 
         // Invalidate all active sessions immediately when the password changes.
@@ -152,36 +152,26 @@ codeunit 50111 "MES Auth Mgt"
     ///   - Password is wrong            → "Invalid credentials."
     /// </summary>
     [NonDebuggable]
-    procedure Login(
-        UserId  : Code[50];
-        Password: Text;
-        DeviceId: Text) : Record "MES Auth Token"
+    procedure ValidateCredentials(UserId: Code[50]; Password: Text)
     var
         U: Record "MES User";
-        T: Record "MES Auth Token"; 
-        ComputedHash: Text;
     begin
-        ComputedHash := PwMgt.HashPassword(Password, U."Password Salt");
-   
-        // Use a single generic message for both "not found" and "wrong password"
-        // to prevent an attacker from learning which user IDs are registered.
         if not U.Get(UserId) then
             Error('Invalid credentials. user does not exist');
 
         if not U."Is Active" then
             Error('Account is disabled. Please contact administrator.');
 
-        // A user created but not yet given a password cannot log in.
         if (U."Hashed Password" = '') or (U."Password Salt" = '') then
             Error('Account setup incomplete. Please contact administrator.');
 
-        // Verify the supplied password against the stored hash.
         if not PwMgt.VerifyPassword(Password, U."Hashed Password", U."Password Salt") then
-            Error('Invalid credentials. password is wrong PW mismatch. Stored=%1.. Computed=%2..',ComputedHash,  U."Hashed Password");
+            Error('Invalid credentials. wrong passwrd');
+    end;
 
-        // All checks passed — create and return a new session token.
-        T := IssueToken(UserId, DeviceId);
-        exit(T);
+    procedure IssueNewToken(UserId: Code[50]; DeviceId: Text): Record "MES Auth Token"
+    begin
+        exit(IssueToken(UserId, DeviceId));
     end;
 
     /// <summary>
@@ -205,9 +195,9 @@ codeunit 50111 "MES Auth Mgt"
     ///   T         — populated with the MES Auth Token record on success
     /// </summary>
     procedure ValidateToken(
-        TokenText : Text;
-        var U     : Record "MES User";
-        var T     : Record "MES Auth Token") : Boolean
+        TokenText: Text;
+        var U: Record "MES User";
+        var T: Record "MES Auth Token"): Boolean
     var
         TokenGuid: Guid;
     begin
@@ -257,9 +247,9 @@ codeunit 50111 "MES Auth Mgt"
     /// Returns TRUE if the token was found and revoked.
     /// Returns FALSE if the token string is invalid, not parseable, or not found.
     /// </summary>
-    procedure Logout(TokenText: Text) : Boolean
+    procedure Logout(TokenText: Text): Boolean
     var
-        T        : Record "MES Auth Token";
+        T: Record "MES Auth Token";
         TokenGuid: Guid;
     begin
         if TokenText = '' then
@@ -298,9 +288,9 @@ codeunit 50111 "MES Auth Mgt"
     /// </summary>
     [NonDebuggable]
     procedure ChangePassword(
-        TokenText  : Text;
+        TokenText: Text;
         OldPassword: Text;
-        NewPassword: Text) : Boolean
+        NewPassword: Text): Boolean
     var
         U: Record "MES User";
         T: Record "MES Auth Token";
@@ -336,7 +326,7 @@ codeunit 50111 "MES Auth Mgt"
     ///   - User role is not Admin      → "Forbidden. Admin access required."
     /// </summary>
     procedure RequireAdmin(
-        TokenText    : Text;
+        TokenText: Text;
         var AdminUser: Record "MES User")
     var
         T: Record "MES Auth Token";
@@ -370,12 +360,12 @@ codeunit 50111 "MES Auth Mgt"
     ///   - Admin tries to deactivate self   → "Cannot modify your own account."
     /// </summary>
     procedure SetActive(
-        TokenText   : Text;
+        TokenText: Text;
         TargetUserId: Code[50];
-        Active      : Boolean) : Boolean
+        Active: Boolean): Boolean
     var
         AdminUser: Record "MES User";
-        U        : Record "MES User";
+        U: Record "MES User";
     begin
         // RequireAdmin validates the token AND populates AdminUser."User Id".
         // This must be called first so the self-deactivation guard below works.
@@ -444,24 +434,24 @@ codeunit 50111 "MES Auth Mgt"
     /// configurable, move it to a setup table or a named constant.
     /// </summary>
     local procedure IssueToken(
-        UserId  : Code[50];
-        DeviceId: Text) : Record "MES Auth Token"
+        UserId: Code[50];
+        DeviceId: Text): Record "MES Auth Token"
     var
-        T       : Record "MES Auth Token";
+        T: Record "MES Auth Token";
         TTLHours: Integer;
-        TTL     : Duration;
+        TTL: Duration;
     begin
         TTLHours := 12;
         TTL := TTLHours * 60 * 60 * 1000;  // hours → milliseconds (Duration type)
 
         T.Init();
-        T."Token"        := CreateGuid();
-        T."User Id"      := UserId;
-        T."Device Id"    := CopyStr(DeviceId, 1, 100);
-        T."Issued At"    := CurrentDateTime();
-        T."Expires At"   := CurrentDateTime() + TTL;
+        T."Token" := CreateGuid();
+        T."User Id" := UserId;
+        T."Device Id" := CopyStr(DeviceId, 1, 100);
+        T."Issued At" := CurrentDateTime();
+        T."Expires At" := CurrentDateTime() + TTL;
         T."Last Seen At" := CurrentDateTime();
-        T.Revoked        := false;
+        T.Revoked := false;
         T.Insert(true);
 
         exit(T);
@@ -501,14 +491,14 @@ codeunit 50111 "MES Auth Mgt"
     /// This check is performed on every SetPassword() call.
     /// It is a server-side guard — never rely solely on client-side validation.
     /// </summary>
-    local procedure IsPasswordStrong(Password: Text) : Boolean
+    local procedure IsPasswordStrong(Password: Text): Boolean
     var
-        HasUpper  : Boolean;
-        HasLower  : Boolean;
-        HasDigit  : Boolean;
+        HasUpper: Boolean;
+        HasLower: Boolean;
+        HasDigit: Boolean;
         HasSpecial: Boolean;
-        i         : Integer;
-        c         : Char;
+        i: Integer;
+        c: Char;
     begin
         if StrLen(Password) < 8 then
             exit(false);
@@ -516,10 +506,14 @@ codeunit 50111 "MES Auth Mgt"
         for i := 1 to StrLen(Password) do begin
             c := Password[i];
             case true of
-                (c in ['A' .. 'Z']): HasUpper   := true;
-                (c in ['a' .. 'z']): HasLower   := true;
-                (c in ['0' .. '9']): HasDigit   := true;
-                else                 HasSpecial := true;
+                (c in ['A' .. 'Z']):
+                    HasUpper := true;
+                (c in ['a' .. 'z']):
+                    HasLower := true;
+                (c in ['0' .. '9']):
+                    HasDigit := true;
+                else
+                    HasSpecial := true;
             end;
         end;
         exit(true)
