@@ -163,13 +163,7 @@ page 50140 "MES API Debug"
                     ToolTip         = 'The Work Center the new user is assigned to.  Leave blank for Admin accounts.';
                 }
 
-                // ForceChange — used by: AdminSetPassword
-                field(ForceChange; ForceChange)
-                {
-                    ApplicationArea = All;
-                    Caption         = 'Force Change On Next Login';
-                    ToolTip         = 'If true, the target user must change their password on next login.';
-                }
+                
 
                 // IsActive — used by: AdminSetActive
                 field(IsActive; IsActive)
@@ -311,7 +305,7 @@ page 50140 "MES API Debug"
                     trigger OnAction()
                     begin
                         LastResponse := AuthAPI.AdminSetPassword(
-                            Token, UserId, NewPassword, ForceChange);
+                            Token, UserId, NewPassword);
                     end;
                 }
 
@@ -438,6 +432,5 @@ page 50140 "MES API Debug"
         AuthId      : Text;
         RoleInt     : Integer;
         WorkCenterNo: Text;
-        ForceChange : Boolean;
         IsActive    : Boolean;
 }

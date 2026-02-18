@@ -14,13 +14,13 @@
 //
 // HOW TO CALL (ODataV4)
 // ─────────────────────
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_Login
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_Logout
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_Me
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_ChangePassword
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_AdminCreateUser
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetPassword
-//   POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetActive
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_Login
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_Logout
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_Me
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_ChangePassword
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_AdminCreateUser
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_AdminSetPassword
+//   POST  <baseUrl>/ODataV4/MESAuthEndpoints_AdminSetActive
 //
 //   All endpoints:
 //     - Accept JSON body   { "paramName": value, ... }
@@ -33,7 +33,7 @@
 // ──────────────────────────
 //   1. Navigate to Web Services in Business Central.
 //   2. New → Object Type = Codeunit, Object ID = 50125,
-//      Service Name = MESUnboundActions, Published = true.
+//      Service Name = MESAuthEndpoints, Published = true.
 //   3. The ODataV4 URL column will NOT show a URL (this is expected for
 //      codeunits), but the endpoint IS reachable at the path shown above.
 //
@@ -60,7 +60,7 @@ codeunit 50125 "MES Unbound Actions"
     /// <summary>
     /// Authenticates a user and returns a session token.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_Login
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_Login
     /// Body       { "userId": "...", "password": "...", "deviceId": "..." }
     /// Returns    { "success": true,  "token": "...", "expiresAt": "...",
     ///              "userId": "...",  "name": "...",  "role": "...",
@@ -108,7 +108,7 @@ codeunit 50125 "MES Unbound Actions"
     /// <summary>
     /// Revokes the supplied session token (logout).
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_Logout
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_Logout
     /// Body       { "token": "..." }
     /// Returns    { "success": true, "message": "Logged out successfully" }
     ///         or { "success": false, "error": "...", "message": "..." }
@@ -128,7 +128,7 @@ codeunit 50125 "MES Unbound Actions"
     /// <summary>
     /// Returns information about the currently authenticated user.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_Me
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_Me
     /// Body       { "token": "..." }
     /// Returns    { "success": true,  "userId": "...", "name": "...",
     ///              "role": "...", "workCenterNo": "...",
@@ -158,7 +158,7 @@ codeunit 50125 "MES Unbound Actions"
     /// <summary>
     /// Allows an authenticated user to change their own password.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_ChangePassword
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_ChangePassword
     /// Body       { "token": "...", "oldPassword": "...", "newPassword": "..." }
     /// Returns    { "success": true, "message": "Password changed successfully" }
     ///         or { "success": false, "error": "...", "message": "..." }
@@ -188,13 +188,15 @@ codeunit 50125 "MES Unbound Actions"
     /// <summary>
     /// Creates a new MES user.  Caller must supply a valid Admin token.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_AdminCreateUser
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_AdminCreateUser
     /// Body       { "token": "...", "userId": "...", "employeeId": "...",
     ///              "authId": "...", "roleInt": 0|1|2, "workCenterNo": "..." }
     ///   roleInt: 0 = Operator, 1 = Supervisor, 2 = Admin
     /// Returns    { "success": true, "message": "...", "userId": "..." }
     ///         or { "success": false, "error": "...", "message": "..." }
     /// </summary>
+
+    // DEPRICATED: is not currently in use do not delete
     procedure AdminCreateUser(
         token: Text;
         userId: Text;
@@ -247,7 +249,7 @@ codeunit 50125 "MES Unbound Actions"
     /// Admin token.  Optionally forces the target user to change password
     /// on their next login.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_AdminSetPassword
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_AdminSetPassword
     /// Body       { "token": "...", "userId": "...", "newPassword": "...",
     ///              "forceChangeOnNextLogin": true|false }
     /// Returns    { "success": true, "message": "..." }
@@ -259,8 +261,7 @@ codeunit 50125 "MES Unbound Actions"
     procedure AdminSetPassword(
         token: Text;
         userId: Text;
-        newPassword: Text;
-        forceChangeOnNextLogin: Boolean): Text
+        newPassword: Text): Text
     var
         OutJ: JsonObject;
         UserIdCode: Code[50];
@@ -270,7 +271,7 @@ codeunit 50125 "MES Unbound Actions"
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        if not TryAdminSetPassword(token, UserIdCode, newPassword, forceChangeOnNextLogin) then
+        if not TryAdminSetPassword(token, UserIdCode, newPassword, true) then
             exit(BuildErrorFromLastError('Password update failed'));
 
         OutJ.Add('success', true);
@@ -283,7 +284,7 @@ codeunit 50125 "MES Unbound Actions"
     /// Admin token.  Admin cannot deactivate their own account.
     /// Deactivating automatically revokes all existing tokens for that user.
     ///
-    /// HTTP POST  .../ODataV4/MESUnboundActions_AdminSetActive
+    /// HTTP POST  .../ODataV4/MESAuthEndpoints_AdminSetActive
     /// Body       { "token": "...", "userId": "...", "isActive": true|false }
     /// Returns    { "success": true, "message": "..." }
     ///         or { "success": false, "error": "...", "message": "..." }
