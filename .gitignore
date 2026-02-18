@@ -69,4 +69,7 @@ coverage/
 ########################################
 # Tools temp files
 ########################################
-digest.txt
+**/digest.txt
+digest.txt.no_slash_comments
+**.no_slash_comments
+**/**.no_slash_comments
