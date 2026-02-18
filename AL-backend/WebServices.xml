@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ==========================================================================
+     File   : WebServices.xml
+     Purpose: Automatically publishes "MES Unbound Actions" as an ODataV4
+              web service when the extension is installed.
+              Place this file at the root of your AL project.
+
+     ── ENDPOINT URLS ──────────────────────────────────────────────────────────
+     After deployment every procedure in Codeunit 50125 is reachable at:
+
+       POST  <baseUrl>/ODataV4/<ServiceName>_<ProcedureName>
+
+     Full list:
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Login
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Logout
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Me
+       POST  <baseUrl>/ODataV4/MESUnboundActions_ChangePassword
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminCreateUser
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetPassword
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetActive
+
+     ── BASE URL BY ENVIRONMENT ────────────────────────────────────────────────
+     On-premises / Docker:
+       http://<server>:<port>/<instance>/ODataV4/
+
+     BC SaaS cloud (production or sandbox):
+       https://api.businesscentral.dynamics.com/v2.0/<tenantId>/<environment>/ODataV4/
+
+     ── COMPANY SCOPING ────────────────────────────────────────────────────────
+     ODataV4 unbound actions are not bound to any entity, but Business Central
+     is a multi-company system, so you must tell BC which company to run the
+     call against.  There are THREE supported ways to do this:
+
+     1. HTTP REQUEST HEADER  (recommended for mobile / API clients)
+        Add the following header to every request:
+
+          Company-Id: <company GUID>
+
+        Example:
+          Company-Id: 7b1f3e9a-4c2d-4a8b-9f1e-3d5c7a2b0e6f
+
+        To look up your company GUID, call:
+          GET <baseUrl>/ODataV4/Company
+
+     2. QUERY STRING PARAMETER  (easy for testing / curl)
+        Append the company name or GUID to the URL:
+
+          ?company=<company name>            (name, URL-encoded if it contains spaces)
+          ?company=<company GUID>            (GUID, no braces)
+
+        Example:
+          POST .../ODataV4/MESUnboundActions_Login?company=CRONUS%20International%20Ltd.
+
+     3. NO COMPANY PARAMETER  (single-company tenants only)
+        If your BC tenant has exactly one company, BC will use it automatically.
+        No header or query parameter is needed.
+
+     ── IMPORTANT ──────────────────────────────────────────────────────────────
+     The AL codeunit (50125) does NOT handle company routing itself.
+     Company scoping is resolved entirely by the BC OData middleware before
+     your AL code ever runs.  You do NOT need to pass the company ID as a
+     JSON body parameter.
+========================================================================== -->
+<ExposedWebServices>
+    <WebService>
+        <ServiceName>MESUnboundActions</ServiceName>
+        <CodeunitName>MES Unbound Actions</CodeunitName>
+        <!-- ObjectID must match the codeunit object ID in MESUnboundActions.al -->
+        <ObjectID>50125</ObjectID>
+        <Published>true</Published>
+    </WebService>
+</ExposedWebServices>
