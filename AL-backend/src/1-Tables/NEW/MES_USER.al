@@ -39,7 +39,7 @@
 table 50101 "MES User"
 {
     DataClassification = CustomerContent;
-    Caption            = 'MES User';
+    Caption = 'MES User';
 
     fields
     {
@@ -53,7 +53,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(1; "User Id"; Code[50])
         {
-            Caption            = 'User Id';
+            Caption = 'User Id';
             DataClassification = EndUserIdentifiableInformation;
         }
 
@@ -68,8 +68,8 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(3; "employee ID"; Code[50])
         {
-            Caption            = 'Employee ID';
-            TableRelation      = Employee."No.";
+            Caption = 'Employee ID';
+            TableRelation = Employee."No.";
             DataClassification = EndUserIdentifiableInformation;
         }
 
@@ -82,7 +82,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(4; "Auth ID"; Text[100])
         {
-            Caption            = 'Auth ID';
+            Caption = 'Auth ID';
             DataClassification = EndUserIdentifiableInformation;
         }
 
@@ -97,7 +97,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(5; "Role"; Enum "MES User Role")
         {
-            Caption            = 'Role';
+            Caption = 'Role';
             DataClassification = CustomerContent;
         }
 
@@ -110,8 +110,8 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(6; "Work Center No."; Code[20])
         {
-            Caption            = 'Work Center No.';
-            TableRelation      = "Work Center"."No.";
+            Caption = 'Work Center No.';
+            TableRelation = "Work Center"."No.";
             DataClassification = CustomerContent;
         }
 
@@ -126,7 +126,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(7; "Is Active"; Boolean)
         {
-            Caption            = 'Is Active';
+            Caption = 'Is Active';
             DataClassification = SystemMetadata;
         }
 
@@ -140,7 +140,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(8; "Need To Change Pw"; Boolean)
         {
-            Caption            = 'Need To Change Password';
+            Caption = 'Need To Change Password';
             DataClassification = SystemMetadata;
         }
 
@@ -155,7 +155,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(9; "Password Salt"; Text[500])
         {
-            Caption            = 'Password Salt';
+            Caption = 'Password Salt';
             DataClassification = CustomerContent;
         }
 
@@ -169,7 +169,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(10; "Hashed Password"; Text[128])
         {
-            Caption            = 'Password Hash';
+            Caption = 'Password Hash';
             DataClassification = CustomerContent;
         }
 
@@ -180,7 +180,7 @@ table 50101 "MES User"
         // ---------------------------------------------------------------------
         field(12; "Created At"; DateTime)
         {
-            Caption            = 'Created At';
+            Caption = 'Created At';
             DataClassification = SystemMetadata;
         }
     }
@@ -195,6 +195,11 @@ table 50101 "MES User"
         key(PK; "User Id")
         {
             Clustered = true;
+        }
+        // TODO: need to add to add documentations
+        key(AuthId; "Auth ID")
+        {
+            Unique = true;
         }
 
         // Secondary key — non-clustered index on Role.

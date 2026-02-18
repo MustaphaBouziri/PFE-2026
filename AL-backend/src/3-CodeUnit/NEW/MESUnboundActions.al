@@ -72,37 +72,38 @@ codeunit 50125 "MES Unbound Actions"
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
     var
-        TokenRec  : Record "MES Auth Token";
-        U         : Record "MES User";
+        TokenRec: Record "MES Auth Token";
+        U: Record "MES User";
         UserIdCode: Code[50];
-        OutJ      : JsonObject;
+        OutJ: JsonObject;
     begin
-        // ── Input validation ──────────────────────────────────────────────────
         if (userId = '') or (password = '') then
             exit(BuildError('Invalid request', 'Username and password are required'));
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        // ── Attempt login via [TryFunction] ───────────────────────────────────
-        if not TryLogin(UserIdCode, password, deviceId, TokenRec) then
+        // TryFunction only does READ + validation — no INSERT inside
+        if not TryValidateCredentials(UserIdCode, password) then
             exit(BuildErrorFromLastError('Authentication failed'));
 
-        // ── Fetch user for response payload ───────────────────────────────────
+        // INSERT happens OUTSIDE the TryFunction
+        TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId);
+
         if not U.Get(TokenRec."User Id") then
             exit(BuildError('Internal error', 'User data not found after login'));
 
-        // ── Build success response ─────────────────────────────────────────────
-        OutJ.Add('success',       true);
-        OutJ.Add('token',         Format(TokenRec."Token"));
-        OutJ.Add('expiresAt',     Format(TokenRec."Expires At", 0, 9));  // ISO 8601
-        OutJ.Add('userId',        U."User Id");
-        OutJ.Add('name',          U."Auth ID");
-        OutJ.Add('role',          Format(U.Role));
-        OutJ.Add('workCenterNo',  U."Work Center No.");
-        OutJ.Add('needToChangePw',U."Need To Change Pw");
+        OutJ.Add('success', true);
+        OutJ.Add('token', Format(TokenRec."Token"));
+        OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
+        OutJ.Add('userId', U."User Id");
+        OutJ.Add('name', U."Auth ID");
+        OutJ.Add('role', Format(U.Role));
+        OutJ.Add('workCenterNo', U."Work Center No.");
+        OutJ.Add('needToChangePw', U."Need To Change Pw");
 
         exit(JsonToText(OutJ));
     end;
+
 
     /// <summary>
     /// Revokes the supplied session token (logout).
@@ -136,20 +137,20 @@ codeunit 50125 "MES Unbound Actions"
     /// </summary>
     procedure Me(token: Text): Text
     var
-        U   : Record "MES User";
-        T   : Record "MES Auth Token";
+        U: Record "MES User";
+        T: Record "MES Auth Token";
         OutJ: JsonObject;
     begin
         if not AuthMgt.ValidateToken(token, U, T) then
             exit(BuildError('Unauthorized', 'Invalid or expired token'));
 
-        OutJ.Add('success',       true);
-        OutJ.Add('userId',        U."User Id");
-        OutJ.Add('name',          U."Auth ID");
-        OutJ.Add('role',          Format(U.Role));
-        OutJ.Add('workCenterNo',  U."Work Center No.");
-        OutJ.Add('needToChangePw',U."Need To Change Pw");
-        OutJ.Add('isActive',      U."Is Active");
+        OutJ.Add('success', true);
+        OutJ.Add('userId', U."User Id");
+        OutJ.Add('name', U."Auth ID");
+        OutJ.Add('role', Format(U.Role));
+        OutJ.Add('workCenterNo', U."Work Center No.");
+        OutJ.Add('needToChangePw', U."Need To Change Pw");
+        OutJ.Add('isActive', U."Is Active");
 
         exit(JsonToText(OutJ));
     end;
@@ -195,19 +196,19 @@ codeunit 50125 "MES Unbound Actions"
     ///         or { "success": false, "error": "...", "message": "..." }
     /// </summary>
     procedure AdminCreateUser(
-        token       : Text;
-        userId      : Text;
-        employeeId  : Text;
-        authId      : Text;
-        roleInt     : Integer;
-        workCenterNo: Text) : Text
+        token: Text;
+        userId: Text;
+        employeeId: Text;
+        authId: Text;
+        roleInt: Integer;
+        workCenterNo: Text): Text
     var
-        Role          : Enum "MES User Role";
-        OutJ          : JsonObject;
-        UserIdCode    : Code[50];
-        AuthIdCode    : Code[50];
+        Role: Enum "MES User Role";
+        OutJ: JsonObject;
+        UserIdCode: Code[50];
+        AuthIdCode: Code[50];
         EmployeeIdCode: Code[50];
-        WCCode        : Code[20];
+        WCCode: Code[20];
     begin
         // ── Validate required fields ──────────────────────────────────────────
         if userId = '' then
@@ -215,18 +216,21 @@ codeunit 50125 "MES Unbound Actions"
 
         // ── Map integer → enum ────────────────────────────────────────────────
         case roleInt of
-            0: Role := Role::Operator;
-            1: Role := Role::Supervisor;
-            2: Role := Role::Admin;
+            0:
+                Role := Role::Operator;
+            1:
+                Role := Role::Supervisor;
+            2:
+                Role := Role::Admin;
             else
                 exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
         end;
 
         // ── Type conversions ──────────────────────────────────────────────────
-        UserIdCode     := CopyStr(userId,       1, 50);
-        AuthIdCode     := CopyStr(authId,        1, 50);
-        EmployeeIdCode := CopyStr(employeeId,   1, 50);
-        WCCode         := CopyStr(workCenterNo, 1, 20);
+        UserIdCode := CopyStr(userId, 1, 50);
+        AuthIdCode := CopyStr(authId, 1, 50);
+        EmployeeIdCode := CopyStr(employeeId, 1, 50);
+        WCCode := CopyStr(workCenterNo, 1, 20);
 
         // ── Attempt creation (admin guard is inside TryAdminCreateUser) ───────
         if not TryAdminCreateUser(token, UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode) then
@@ -234,7 +238,7 @@ codeunit 50125 "MES Unbound Actions"
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User created successfully');
-        OutJ.Add('userId',  UserIdCode);
+        OutJ.Add('userId', UserIdCode);
         exit(JsonToText(OutJ));
     end;
 
@@ -253,12 +257,12 @@ codeunit 50125 "MES Unbound Actions"
     /// </summary>
     [NonDebuggable]
     procedure AdminSetPassword(
-        token                : Text;
-        userId               : Text;
-        newPassword          : Text;
-        forceChangeOnNextLogin: Boolean) : Text
+        token: Text;
+        userId: Text;
+        newPassword: Text;
+        forceChangeOnNextLogin: Boolean): Text
     var
-        OutJ      : JsonObject;
+        OutJ: JsonObject;
         UserIdCode: Code[50];
     begin
         if (userId = '') or (newPassword = '') then
@@ -286,7 +290,7 @@ codeunit 50125 "MES Unbound Actions"
     /// </summary>
     procedure AdminSetActive(token: Text; userId: Text; isActive: Boolean): Text
     var
-        OutJ      : JsonObject;
+        OutJ: JsonObject;
         UserIdCode: Code[50];
     begin
         if userId = '' then
@@ -308,15 +312,12 @@ codeunit 50125 "MES Unbound Actions"
     //  propagating the error up the call stack.)
     // =========================================================================
 
+
     [TryFunction]
     [NonDebuggable]
-    local procedure TryLogin(
-        userId  : Code[50];
-        password: Text;
-        deviceId: Text;
-        var T   : Record "MES Auth Token")
+    local procedure TryValidateCredentials(userId: Code[50]; password: Text)
     begin
-        T := AuthMgt.Login(userId, password, deviceId);
+        AuthMgt.ValidateCredentials(userId, password);  // read-only, no INSERT
     end;
 
     [TryFunction]
@@ -328,12 +329,12 @@ codeunit 50125 "MES Unbound Actions"
 
     [TryFunction]
     local procedure TryAdminCreateUser(
-        token        : Text;
-        userId       : Code[50];
-        employeeId   : Code[50];
-        authId       : Code[50];
-        role         : Enum "MES User Role";
-        workCenterNo : Code[20])
+        token: Text;
+        userId: Code[50];
+        employeeId: Code[50];
+        authId: Code[50];
+        role: Enum "MES User Role";
+        workCenterNo: Code[20])
     var
         AdminUser: Record "MES User";
     begin
@@ -345,9 +346,9 @@ codeunit 50125 "MES Unbound Actions"
     [TryFunction]
     [NonDebuggable]
     local procedure TryAdminSetPassword(
-        token                : Text;
-        userId               : Code[50];
-        newPassword          : Text;
+        token: Text;
+        userId: Code[50];
+        newPassword: Text;
         forceChangeOnNextLogin: Boolean)
     var
         AdminUser: Record "MES User";
@@ -358,9 +359,9 @@ codeunit 50125 "MES Unbound Actions"
 
     [TryFunction]
     local procedure TryAdminSetActive(
-        token    : Text;
-        userId   : Code[50];
-        isActive : Boolean)
+        token: Text;
+        userId: Code[50];
+        isActive: Boolean)
     begin
         // SetActive already calls RequireAdmin internally
         AuthMgt.SetActive(token, userId, isActive);
@@ -390,7 +391,7 @@ codeunit 50125 "MES Unbound Actions"
         ErrJ: JsonObject;
     begin
         ErrJ.Add('success', false);
-        ErrJ.Add('error',   ErrorCode);
+        ErrJ.Add('error', ErrorCode);
         ErrJ.Add('message', Message);
         exit(JsonToText(ErrJ));
     end;

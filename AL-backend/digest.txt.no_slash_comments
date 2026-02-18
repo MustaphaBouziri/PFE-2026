@@ -1,0 +1,1684 @@
+Directory structure:
+└── AL-backend/
+    ├── app.json
+    ├── Default Publisher_ALProject_1.0.0.0.app
+    ├── WebServices.xml
+    ├── docs/
+    │   └── BC_Local_API_Setup.md
+    ├── src/
+    │   ├── 1-Tables/
+    │   │   └── NEW/
+    │   │       ├── MES_AuthToken.al
+    │   │       └── MES_USER.al
+    │   ├── 2-Enum/
+    │   │   └── NEW/
+    │   │       └── MES_UserRole.al
+    │   ├── 3-CodeUnit/
+    │   │   └── NEW/
+    │   │       ├── MESAuthMgt.al
+    │   │       ├── MESPasswordMgt.al
+    │   │       ├── MESSetup.al
+    │   │       └── MESUnboundActions.al
+    │   ├── 4-API/
+    │   │   └── NEW/
+    │   │       └── Admin/
+    │   │           └── UsersPageApi/
+    │   │               ├── EmployeesApi.al
+    │   │               ├── MesUserApi.al
+    │   │               └── WorkCenterApi.al
+    │   ├── 5-PermissionSet/
+    │   │   └── NEW/
+    │   │       └── MESAuthApi.permissionset.al
+    │   └── 6-Pages/
+    │       └── NEW/
+    │           ├── MESApiDebug.Page.al
+    │           ├── MESUserCard.Page.al
+    │           └── MESUserList.Page.al
+    └── .alpackages/
+        ├── Microsoft_Application_21.0.46256.46853.app
+        ├── Microsoft_System Application_21.0.46256.46853.app
+        └── Microsoft_System_21.0.46384.46844.app
+
+================================================
+FILE: app.json
+================================================
+{
+  "id": "bf9cafbf-fd90-4e55-992d-f2085333bb03",
+  "name": "ALProject",
+  "publisher": "Default Publisher",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+    {
+      "id": "63ca2fa4-4f03-4f2b-a480-172fef340d3f",
+      "name": "System Application",
+      "publisher": "Microsoft",
+      "version": "21.0.0.0"
+    }
+  ],
+  "screenshots": [],
+  "platform": "21.0.0.0",
+  "application": "21.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "10.0",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
+
+
+================================================
+FILE: Default Publisher_ALProject_1.0.0.0.app
+================================================
+[Binary file]
+
+
+================================================
+FILE: WebServices.xml
+================================================
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ==========================================================================
+     File   : WebServices.xml
+     Purpose: Automatically publishes "MES Unbound Actions" as an ODataV4
+              web service when the extension is installed.
+              Place this file at the root of your AL project.
+
+     â”€â”€ ENDPOINT URLS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     After deployment every procedure in Codeunit 50125 is reachable at:
+
+       POST  <baseUrl>/ODataV4/<ServiceName>_<ProcedureName>
+
+     Full list:
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Login
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Logout
+       POST  <baseUrl>/ODataV4/MESUnboundActions_Me
+       POST  <baseUrl>/ODataV4/MESUnboundActions_ChangePassword
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminCreateUser
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetPassword
+       POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetActive
+
+     â”€â”€ BASE URL BY ENVIRONMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     On-premises / Docker:
+       http://<server>:<port>/<instance>/ODataV4/
+
+     BC SaaS cloud (production or sandbox):
+       https://api.businesscentral.dynamics.com/v2.0/<tenantId>/<environment>/ODataV4/
+
+     â”€â”€ COMPANY SCOPING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     ODataV4 unbound actions are not bound to any entity, but Business Central
+     is a multi-company system, so you must tell BC which company to run the
+     call against.  There are THREE supported ways to do this:
+
+     1. HTTP REQUEST HEADER  (recommended for mobile / API clients)
+        Add the following header to every request:
+
+          Company-Id: <company GUID>
+
+        Example:
+          Company-Id: 7b1f3e9a-4c2d-4a8b-9f1e-3d5c7a2b0e6f
+
+        To look up your company GUID, call:
+          GET <baseUrl>/ODataV4/Company
+
+     2. QUERY STRING PARAMETER  (easy for testing / curl)
+        Append the company name or GUID to the URL:
+
+          ?company=<company name>            (name, URL-encoded if it contains spaces)
+          ?company=<company GUID>            (GUID, no braces)
+
+        Example:
+          POST .../ODataV4/MESUnboundActions_Login?company=CRONUS%20International%20Ltd.
+
+     3. NO COMPANY PARAMETER  (single-company tenants only)
+        If your BC tenant has exactly one company, BC will use it automatically.
+        No header or query parameter is needed.
+
+     â”€â”€ IMPORTANT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     The AL codeunit (50125) does NOT handle company routing itself.
+     Company scoping is resolved entirely by the BC OData middleware before
+     your AL code ever runs.  You do NOT need to pass the company ID as a
+     JSON body parameter.
+========================================================================== -->
+<ExposedWebServices>
+    <WebService>
+        <ServiceName>MESUnboundActions</ServiceName>
+        <CodeunitName>MES Unbound Actions</CodeunitName>
+        <!-- ObjectID must match the codeunit object ID in MESUnboundActions.al -->
+        <ObjectID>50125</ObjectID>
+        <Published>true</Published>
+    </WebService>
+</ExposedWebServices>
+
+
+
+
+================================================
+FILE: src/1-Tables/NEW/MES_AuthToken.al
+================================================
+table 50106 "MES Auth Token"
+{
+    DataClassification = SystemMetadata;
+    Caption            = 'MES Auth Token';
+
+    fields
+    {
+        field(1; "Token"; Guid)
+        {
+            Caption            = 'Token';
+            DataClassification = SystemMetadata;
+        }
+
+        field(2; "User Id"; Code[50])
+        {
+            Caption            = 'User Id';
+            TableRelation      = "MES User"."User Id";
+            DataClassification = SystemMetadata;
+        }
+
+        field(3; "Device Id"; Text[100])
+        {
+            Caption            = 'Device Id';
+            DataClassification = SystemMetadata;
+        }
+
+        field(4; "Issued At"; DateTime)
+        {
+            Caption            = 'Issued At';
+            DataClassification = SystemMetadata;
+        }
+
+        field(5; "Expires At"; DateTime)
+        {
+            Caption            = 'Expires At';
+            DataClassification = SystemMetadata;
+        }
+
+        field(6; "Last Seen At"; DateTime)
+        {
+            Caption            = 'Last Seen At';
+            DataClassification = SystemMetadata;
+        }
+
+        field(7; "Revoked"; Boolean)
+        {
+            Caption            = 'Revoked';
+            DataClassification = SystemMetadata;
+        }
+    }
+
+    keys
+    {
+        key(PK; "Token")
+        {
+            Clustered = true;
+        }
+
+        key(UserTokens; "User Id") { }
+    }
+}
+
+
+
+================================================
+FILE: src/1-Tables/NEW/MES_USER.al
+================================================
+table 50101 "MES User"
+{
+    DataClassification = CustomerContent;
+    Caption            = 'MES User';
+
+    fields
+    {
+        field(1; "User Id"; Code[50])
+        {
+            Caption            = 'User Id';
+            DataClassification = EndUserIdentifiableInformation;
+        }
+
+        field(3; "employee ID"; Code[50])
+        {
+            Caption            = 'Employee ID';
+            TableRelation      = Employee."No.";
+            DataClassification = EndUserIdentifiableInformation;
+        }
+
+        field(4; "Auth ID"; Text[100])
+        {
+            Caption            = 'Auth ID';
+            DataClassification = EndUserIdentifiableInformation;
+        }
+
+        field(5; "Role"; Enum "MES User Role")
+        {
+            Caption            = 'Role';
+            DataClassification = CustomerContent;
+        }
+
+        field(6; "Work Center No."; Code[20])
+        {
+            Caption            = 'Work Center No.';
+            TableRelation      = "Work Center"."No.";
+            DataClassification = CustomerContent;
+        }
+
+        field(7; "Is Active"; Boolean)
+        {
+            Caption            = 'Is Active';
+            DataClassification = SystemMetadata;
+        }
+
+        field(8; "Need To Change Pw"; Boolean)
+        {
+            Caption            = 'Need To Change Password';
+            DataClassification = SystemMetadata;
+        }
+
+        field(9; "Password Salt"; Text[500])
+        {
+            Caption            = 'Password Salt';
+            DataClassification = CustomerContent;
+        }
+
+        field(10; "Hashed Password"; Text[128])
+        {
+            Caption            = 'Password Hash';
+            DataClassification = CustomerContent;
+        }
+
+        field(12; "Created At"; DateTime)
+        {
+            Caption            = 'Created At';
+            DataClassification = SystemMetadata;
+        }
+    }
+
+    keys
+    {
+        key(PK; "User Id")
+        {
+            Clustered = true;
+        }
+
+        key(UserRole; "Role") { }
+    }
+}
+
+
+
+================================================
+FILE: src/2-Enum/NEW/MES_UserRole.al
+================================================
+enum 50100 "MES User Role"
+{
+    Extensible = true;
+
+    value(0; Operator)
+    {
+        Caption = 'OpÃ©rateur';
+    }
+
+    value(1; Supervisor)
+    {
+        Caption = 'Superviseur';
+    }
+
+    value(2; Admin)
+    {
+        Caption = 'Admin';
+    }
+}
+
+
+
+================================================
+FILE: src/3-CodeUnit/NEW/MESAuthMgt.al
+================================================
+codeunit 50111 "MES Auth Mgt"
+{
+    var
+        PwMgt: Codeunit "MES Password Mgt";
+
+
+    procedure CreateUser(
+        UserId       : Code[50];
+        EmployeeID   : Code[50];
+        AuthID       : Text[100];
+        Role         : Enum "MES User Role";
+        WorkCenterNo : Code[20])
+    var
+        U: Record "MES User";
+    begin
+        if UserId = '' then
+            Error('User ID cannot be empty.');
+
+        if U.Get(UserId) then
+            Error('User %1 already exists.', UserId);
+
+        U.Init();
+        U."User Id"             := UserId;
+        U."employee ID"         := EmployeeID;
+        U."Auth ID"             := AuthID;
+        U.Role                  := Role;
+        U."Work Center No."     := WorkCenterNo;
+        U."Is Active"           := true;
+        U."Need To Change Pw"   := true;               // force password reset on first login
+        U."Created At"          := CurrentDateTime();
+        U.Insert(true);
+    end;
+
+    [NonDebuggable]
+    procedure SetPassword(
+        UserId                : Code[50];
+        NewPassword           : Text;
+        ForceChangeOnNextLogin: Boolean)
+    var
+        U   : Record "MES User";
+        Salt: Text;
+        Hash: Text;
+    begin
+        if not U.Get(UserId) then
+            Error('User %1 not found.', UserId);
+
+        if not IsPasswordStrong(NewPassword) then
+            Error('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.');
+
+        Salt := PwMgt.MakeSalt();
+        Hash := PwMgt.HashPassword(NewPassword, Salt);
+
+        U."Password Salt"    := CopyStr(Salt, 1, 500);
+        U."Hashed Password"  := CopyStr(Hash, 1, 128);
+        U."Need To Change Pw":= ForceChangeOnNextLogin;
+        U.Modify(true);
+
+        RevokeAllTokensForUser(UserId);
+    end;
+
+
+    [NonDebuggable]
+    procedure Login(
+        UserId  : Code[50];
+        Password: Text;
+        DeviceId: Text) : Record "MES Auth Token"
+    var
+        U: Record "MES User";
+        T: Record "MES Auth Token"; 
+        ComputedHash: Text;
+    begin
+        ComputedHash := PwMgt.HashPassword(Password, U."Password Salt");
+   
+        if not U.Get(UserId) then
+            Error('Invalid credentials. user does not exist');
+
+        if not U."Is Active" then
+            Error('Account is disabled. Please contact administrator.');
+
+        if (U."Hashed Password" = '') or (U."Password Salt" = '') then
+            Error('Account setup incomplete. Please contact administrator.');
+
+        if not PwMgt.VerifyPassword(Password, U."Hashed Password", U."Password Salt") then
+            Error('Invalid credentials. password is wrong PW mismatch. Stored=%1.. Computed=%2..',ComputedHash,  U."Hashed Password");
+
+        T := IssueToken(UserId, DeviceId);
+        exit(T);
+    end;
+
+    procedure ValidateToken(
+        TokenText : Text;
+        var U     : Record "MES User";
+        var T     : Record "MES Auth Token") : Boolean
+    var
+        TokenGuid: Guid;
+    begin
+        Clear(U);
+        Clear(T);
+
+        if TokenText = '' then
+            exit(false);
+
+        if not Evaluate(TokenGuid, TokenText) then
+            exit(false);
+
+        if not T.Get(TokenGuid) then
+            exit(false);
+
+        if T.Revoked then
+            exit(false);
+
+        if T."Expires At" <= CurrentDateTime() then
+            exit(false);
+
+        if not U.Get(T."User Id") then
+            exit(false);
+
+        if not U."Is Active" then
+            exit(false);
+
+        T."Last Seen At" := CurrentDateTime();
+        T.Modify(true);
+
+        exit(true);
+    end;
+
+    procedure Logout(TokenText: Text) : Boolean
+    var
+        T        : Record "MES Auth Token";
+        TokenGuid: Guid;
+    begin
+        if TokenText = '' then
+            exit(false);
+
+        if not Evaluate(TokenGuid, TokenText) then
+            exit(false);
+
+        if not T.Get(TokenGuid) then
+            exit(false);
+
+        T.Revoked := true;
+        T.Modify(true);
+        exit(true);
+    end;
+
+    [NonDebuggable]
+    procedure ChangePassword(
+        TokenText  : Text;
+        OldPassword: Text;
+        NewPassword: Text) : Boolean
+    var
+        U: Record "MES User";
+        T: Record "MES Auth Token";
+    begin
+        if not ValidateToken(TokenText, U, T) then
+            Error('Unauthorized. Please login again.');
+
+        if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt") then
+            Error('Current password is incorrect.');
+
+        SetPassword(U."User Id", NewPassword, false);
+        exit(true);
+    end;
+
+
+    procedure RequireAdmin(
+        TokenText    : Text;
+        var AdminUser: Record "MES User")
+    var
+        T: Record "MES Auth Token";
+    begin
+        if not ValidateToken(TokenText, AdminUser, T) then
+            Error('Unauthorized. Please login again.');
+
+        if AdminUser.Role <> AdminUser.Role::Admin then
+            Error('Forbidden. Admin access required.');
+    end;
+
+    procedure SetActive(
+        TokenText   : Text;
+        TargetUserId: Code[50];
+        Active      : Boolean) : Boolean
+    var
+        AdminUser: Record "MES User";
+        U        : Record "MES User";
+    begin
+        RequireAdmin(TokenText, AdminUser);
+
+        if not U.Get(TargetUserId) then
+            Error('User %1 not found.', TargetUserId);
+
+        if AdminUser."User Id" = TargetUserId then
+            Error('Cannot modify your own account status.');
+
+        U."Is Active" := Active;
+        U.Modify(true);
+
+        if not Active then
+            RevokeAllTokensForUser(TargetUserId);
+
+        exit(true);
+    end;
+
+
+    procedure CleanupExpiredTokens()
+    var
+        T: Record "MES Auth Token";
+    begin
+        T.SetFilter("Expires At", '<%1', CurrentDateTime());
+        if not T.IsEmpty() then
+            T.DeleteAll(true);
+    end;
+
+
+    local procedure IssueToken(
+        UserId  : Code[50];
+        DeviceId: Text) : Record "MES Auth Token"
+    var
+        T       : Record "MES Auth Token";
+        TTLHours: Integer;
+        TTL     : Duration;
+    begin
+        TTLHours := 12;
+        TTL := TTLHours * 60 * 60 * 1000;  // hours â†’ milliseconds (Duration type)
+
+        T.Init();
+        T."Token"        := CreateGuid();
+        T."User Id"      := UserId;
+        T."Device Id"    := CopyStr(DeviceId, 1, 100);
+        T."Issued At"    := CurrentDateTime();
+        T."Expires At"   := CurrentDateTime() + TTL;
+        T."Last Seen At" := CurrentDateTime();
+        T.Revoked        := false;
+        T.Insert(true);
+
+        exit(T);
+    end;
+
+    local procedure RevokeAllTokensForUser(UserId: Code[50])
+    var
+        T: Record "MES Auth Token";
+    begin
+        T.SetRange("User Id", UserId);
+        if T.FindSet(true) then
+            repeat
+                T.Revoked := true;
+                T.Modify(true);
+            until T.Next() = 0;
+    end;
+
+
+    local procedure IsPasswordStrong(Password: Text) : Boolean
+    var
+        HasUpper  : Boolean;
+        HasLower  : Boolean;
+        HasDigit  : Boolean;
+        HasSpecial: Boolean;
+        i         : Integer;
+        c         : Char;
+    begin
+        if StrLen(Password) < 8 then
+            exit(false);
+
+        for i := 1 to StrLen(Password) do begin
+            c := Password[i];
+            case true of
+                (c in ['A' .. 'Z']): HasUpper   := true;
+                (c in ['a' .. 'z']): HasLower   := true;
+                (c in ['0' .. '9']): HasDigit   := true;
+                else                 HasSpecial := true;
+            end;
+        end;
+        exit(true)
+    end;
+}
+
+
+
+================================================
+FILE: src/3-CodeUnit/NEW/MESPasswordMgt.al
+================================================
+codeunit 50110 "MES Password Mgt"
+{
+    [NonDebuggable]
+    procedure MakeSalt(): Text
+    var
+        CryptographyMgt: Codeunit "Cryptography Management";
+    begin
+        exit(CryptographyMgt.GenerateHash(Format(CreateGuid()) + Format(CurrentDateTime()), 2));
+    end;
+
+    [NonDebuggable]
+    procedure HashPassword(Password: Text; Salt: Text): Text
+    var
+        CryptographyMgt: Codeunit "Cryptography Management";
+        CurrentHash: Text;
+        Combined   : Text;
+    begin
+        Combined    := Password + Salt;
+        CurrentHash := CryptographyMgt.GenerateHash(Combined, 2);  // SHA-256
+
+        exit(CurrentHash);
+    end;
+
+    [NonDebuggable]
+    procedure VerifyPassword(Password: Text; StoredHash: Text; Salt: Text): Boolean
+    var
+        ComputedHash: Text;
+    begin
+        ComputedHash := HashPassword(Password, Salt);
+        exit(ComputedHash = StoredHash);
+    end;
+}
+
+
+
+================================================
+FILE: src/3-CodeUnit/NEW/MESSetup.al
+================================================
+Error reading file with 'cp1252': 'charmap' codec can't decode byte 0x90 in position 1222: character maps to <undefined>
+
+
+================================================
+FILE: src/3-CodeUnit/NEW/MESUnboundActions.al
+================================================
+codeunit 50125 "MES Unbound Actions"
+{
+    var
+        AuthMgt: Codeunit "MES Auth Mgt";  // business logic layer
+
+
+    [NonDebuggable]
+    procedure Login(userId: Text; password: Text; deviceId: Text): Text
+    var
+        TokenRec  : Record "MES Auth Token";
+        U         : Record "MES User";
+        UserIdCode: Code[50];
+        OutJ      : JsonObject;
+    begin
+        if (userId = '') or (password = '') then
+            exit(BuildError('Invalid request', 'Username and password are required'));
+
+        UserIdCode := CopyStr(userId, 1, 50);
+
+        if not TryLogin(UserIdCode, password, deviceId, TokenRec) then
+            exit(BuildErrorFromLastError('Authentication failed'));
+
+        if not U.Get(TokenRec."User Id") then
+            exit(BuildError('Internal error', 'User data not found after login'));
+
+        OutJ.Add('success',       true);
+        OutJ.Add('token',         Format(TokenRec."Token"));
+        OutJ.Add('expiresAt',     Format(TokenRec."Expires At", 0, 9));  // ISO 8601
+        OutJ.Add('userId',        U."User Id");
+        OutJ.Add('name',          U."Auth ID");
+        OutJ.Add('role',          Format(U.Role));
+        OutJ.Add('workCenterNo',  U."Work Center No.");
+        OutJ.Add('needToChangePw',U."Need To Change Pw");
+
+        exit(JsonToText(OutJ));
+    end;
+
+    procedure Logout(token: Text): Text
+    var
+        OutJ: JsonObject;
+    begin
+        if not AuthMgt.Logout(token) then
+            exit(BuildError('Logout failed', 'Invalid or already-expired token'));
+
+        OutJ.Add('success', true);
+        OutJ.Add('message', 'Logged out successfully');
+        exit(JsonToText(OutJ));
+    end;
+
+    procedure Me(token: Text): Text
+    var
+        U   : Record "MES User";
+        T   : Record "MES Auth Token";
+        OutJ: JsonObject;
+    begin
+        if not AuthMgt.ValidateToken(token, U, T) then
+            exit(BuildError('Unauthorized', 'Invalid or expired token'));
+
+        OutJ.Add('success',       true);
+        OutJ.Add('userId',        U."User Id");
+        OutJ.Add('name',          U."Auth ID");
+        OutJ.Add('role',          Format(U.Role));
+        OutJ.Add('workCenterNo',  U."Work Center No.");
+        OutJ.Add('needToChangePw',U."Need To Change Pw");
+        OutJ.Add('isActive',      U."Is Active");
+
+        exit(JsonToText(OutJ));
+    end;
+
+    [NonDebuggable]
+    procedure ChangePassword(token: Text; oldPassword: Text; newPassword: Text): Text
+    var
+        OutJ: JsonObject;
+    begin
+        if (oldPassword = '') or (newPassword = '') then
+            exit(BuildError('Invalid request', 'Both old and new passwords are required'));
+
+        if not TryChangePassword(token, oldPassword, newPassword) then
+            exit(BuildErrorFromLastError('Password change failed'));
+
+        OutJ.Add('success', true);
+        OutJ.Add('message', 'Password changed successfully');
+        exit(JsonToText(OutJ));
+    end;
+
+
+    procedure AdminCreateUser(
+        token       : Text;
+        userId      : Text;
+        employeeId  : Text;
+        authId      : Text;
+        roleInt     : Integer;
+        workCenterNo: Text) : Text
+    var
+        Role          : Enum "MES User Role";
+        OutJ          : JsonObject;
+        UserIdCode    : Code[50];
+        AuthIdCode    : Code[50];
+        EmployeeIdCode: Code[50];
+        WCCode        : Code[20];
+    begin
+        if userId = '' then
+            exit(BuildError('Invalid request', 'User ID is required'));
+
+        case roleInt of
+            0: Role := Role::Operator;
+            1: Role := Role::Supervisor;
+            2: Role := Role::Admin;
+            else
+                exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+        end;
+
+        UserIdCode     := CopyStr(userId,       1, 50);
+        AuthIdCode     := CopyStr(authId,        1, 50);
+        EmployeeIdCode := CopyStr(employeeId,   1, 50);
+        WCCode         := CopyStr(workCenterNo, 1, 20);
+
+        if not TryAdminCreateUser(token, UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode) then
+            exit(BuildErrorFromLastError('User creation failed'));
+
+        OutJ.Add('success', true);
+        OutJ.Add('message', 'User created successfully');
+        OutJ.Add('userId',  UserIdCode);
+        exit(JsonToText(OutJ));
+    end;
+
+    [NonDebuggable]
+    procedure AdminSetPassword(
+        token                : Text;
+        userId               : Text;
+        newPassword          : Text;
+        forceChangeOnNextLogin: Boolean) : Text
+    var
+        OutJ      : JsonObject;
+        UserIdCode: Code[50];
+    begin
+        if (userId = '') or (newPassword = '') then
+            exit(BuildError('Invalid request', 'User ID and new password are required'));
+
+        UserIdCode := CopyStr(userId, 1, 50);
+
+        if not TryAdminSetPassword(token, UserIdCode, newPassword, forceChangeOnNextLogin) then
+            exit(BuildErrorFromLastError('Password update failed'));
+
+        OutJ.Add('success', true);
+        OutJ.Add('message', 'Password updated successfully');
+        exit(JsonToText(OutJ));
+    end;
+
+    procedure AdminSetActive(token: Text; userId: Text; isActive: Boolean): Text
+    var
+        OutJ      : JsonObject;
+        UserIdCode: Code[50];
+    begin
+        if userId = '' then
+            exit(BuildError('Invalid request', 'User ID is required'));
+
+        UserIdCode := CopyStr(userId, 1, 50);
+
+        if not TryAdminSetActive(token, UserIdCode, isActive) then
+            exit(BuildErrorFromLastError('Status update failed'));
+
+        OutJ.Add('success', true);
+        OutJ.Add('message', 'User status updated successfully');
+        exit(JsonToText(OutJ));
+    end;
+
+
+    [TryFunction]
+    [NonDebuggable]
+    local procedure TryLogin(
+        userId  : Code[50];
+        password: Text;
+        deviceId: Text;
+        var T   : Record "MES Auth Token")
+    begin
+        T := AuthMgt.Login(userId, password, deviceId);
+    end;
+
+    [TryFunction]
+    [NonDebuggable]
+    local procedure TryChangePassword(token: Text; oldPassword: Text; newPassword: Text)
+    begin
+        AuthMgt.ChangePassword(token, oldPassword, newPassword);
+    end;
+
+    [TryFunction]
+    local procedure TryAdminCreateUser(
+        token        : Text;
+        userId       : Code[50];
+        employeeId   : Code[50];
+        authId       : Code[50];
+        role         : Enum "MES User Role";
+        workCenterNo : Code[20])
+    var
+        AdminUser: Record "MES User";
+    begin
+        AuthMgt.RequireAdmin(token, AdminUser);
+        AuthMgt.CreateUser(userId, employeeId, authId, role, workCenterNo);
+    end;
+
+    [TryFunction]
+    [NonDebuggable]
+    local procedure TryAdminSetPassword(
+        token                : Text;
+        userId               : Code[50];
+        newPassword          : Text;
+        forceChangeOnNextLogin: Boolean)
+    var
+        AdminUser: Record "MES User";
+    begin
+        AuthMgt.RequireAdmin(token, AdminUser);
+        AuthMgt.SetPassword(userId, newPassword, forceChangeOnNextLogin);
+    end;
+
+    [TryFunction]
+    local procedure TryAdminSetActive(
+        token    : Text;
+        userId   : Code[50];
+        isActive : Boolean)
+    begin
+        AuthMgt.SetActive(token, userId, isActive);
+    end;
+
+
+    local procedure JsonToText(J: JsonObject): Text
+    var
+        JsonText: Text;
+    begin
+        J.WriteTo(JsonText);
+        exit(JsonText);
+    end;
+
+    local procedure BuildError(ErrorCode: Text; Message: Text): Text
+    var
+        ErrJ: JsonObject;
+    begin
+        ErrJ.Add('success', false);
+        ErrJ.Add('error',   ErrorCode);
+        ErrJ.Add('message', Message);
+        exit(JsonToText(ErrJ));
+    end;
+
+    local procedure BuildErrorFromLastError(ErrorCode: Text): Text
+    var
+        Msg: Text;
+    begin
+        Msg := GetLastErrorText();
+        ClearLastError();
+        exit(BuildError(ErrorCode, Msg));
+    end;
+}
+
+
+
+================================================
+FILE: src/4-API/NEW/Admin/UsersPageApi/EmployeesApi.al
+================================================
+page 50100 "MES Employee API"
+{
+    PageType     = API;
+    APIPublisher = 'yourcompany';
+    APIGroup     = 'v1';
+    APIVersion   = 'v1.0';
+    EntityName   = 'employee';
+    EntitySetName= 'employees';
+    SourceTable  = Employee;
+    DelayedInsert= true;
+    Editable     = false;  // read-only: MES does not create or modify HR employees
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+                field(id; Rec."No.")
+                {
+                    Caption = 'Id';
+                }
+
+                field(firstName; Rec."First Name")
+                {
+                    Caption = 'First Name';
+                }
+
+                field("middleName"; Rec."Middle Name")
+                {
+                    Caption = 'middle Name';
+                }
+
+                field(lastName; Rec."Last Name")
+                {
+                    Caption = 'Last Name';
+                }
+
+                field(email; Rec."E-Mail")
+                {
+                    Caption = 'Email';
+                }
+
+                field(image; Rec.Image)
+                {
+                    Caption = 'Image';
+                }
+            }
+        }
+    }
+}
+
+
+
+================================================
+FILE: src/4-API/NEW/Admin/UsersPageApi/MesUserApi.al
+================================================
+page 50101 "MES User API"
+{
+    PageType     = API;
+    APIPublisher = 'yourcompany';
+    APIGroup     = 'v1';
+    APIVersion   = 'v1.0';
+    EntityName   = 'mesUser';
+    EntitySetName= 'mesUsers';
+    SourceTable  = "MES User";
+    DelayedInsert= true;   // required by BC API page conventions even for read-only pages
+    Editable     = false;  // all write operations go through MES Unbound Actions
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+
+                field(userId; Rec."User Id")
+                {
+                    Caption = 'User Id';
+                }
+
+                field(employeeId; Rec."employee ID")
+                {
+                    Caption = 'Employee ID';
+                }
+
+                field(role; Rec.Role)
+                {
+                    Caption = 'Role';
+                }
+
+
+                field(firstName; EmployeeRec."First Name")
+                {
+                    Caption = 'First Name';
+                }
+
+                field(lastName; EmployeeRec."Last Name")
+                {
+                    Caption = 'Last Name';
+                }
+
+                field(email; EmployeeRec."E-Mail")
+                {
+                    Caption = 'Email';
+                }
+            }
+        }
+    }
+
+    var
+        EmployeeRec: Record Employee;
+
+    trigger OnAfterGetRecord()
+    begin
+        Clear(EmployeeRec);
+
+        if Rec."employee ID" <> '' then
+            if EmployeeRec.Get(Rec."employee ID") then;
+    end;
+}
+
+
+page 50103 "MES User Create API"
+{
+    PageType     = API;
+    APIPublisher = 'yourcompany';
+    APIGroup     = 'v1';
+    APIVersion   = 'v1.0';
+    EntityName   = 'mesUserCreate';
+    EntitySetName= 'createMesUsers';
+    SourceTable  = "MES User";
+    DelayedInsert= true;  // required for POST: accumulate all fields before Insert()
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+
+                field(userId; Rec."User Id") { }
+
+                field(employeeId; Rec."employee ID") { }
+
+                field(role; Rec.Role) { }
+
+
+                field(firstName; EmployeeRec."First Name") { }
+                field(lastName; EmployeeRec."Last Name") { }
+                field(email; EmployeeRec."E-Mail") { }
+            }
+        }
+    }
+
+    var
+        EmployeeRec: Record Employee;
+
+    trigger OnAfterGetRecord()
+    begin
+        Clear(EmployeeRec);
+
+        if Rec."employee ID" <> '' then
+            EmployeeRec.Get(Rec."employee ID");
+    end;
+}
+
+
+
+================================================
+FILE: src/4-API/NEW/Admin/UsersPageApi/WorkCenterApi.al
+================================================
+page 50102 "MES Department API"
+{
+    PageType     = API;
+    APIPublisher = 'yourcompany';
+    APIGroup     = 'v1';
+    APIVersion   = 'v1.0';
+    EntityName   = 'workCenter';
+    EntitySetName= 'workCenters';
+    SourceTable  = "Work Center";
+    DelayedInsert= true;
+    Editable     = false;  // read-only: work centers are managed in BC Manufacturing
+
+    layout
+    {
+        area(content)
+        {
+            repeater(Group)
+            {
+                field(id; Rec."No.")
+                {
+                    Caption = 'Work Center Id';
+                }
+
+                field(departmentName; Rec.Name)
+                {
+                    Caption = 'Work Center Name';
+                }
+            }
+        }
+    }
+}
+
+
+
+================================================
+FILE: src/5-PermissionSet/NEW/MESAuthApi.permissionset.al
+================================================
+permissionset 50130 "MES AUTH API"
+{
+    Assignable = true;
+    Caption    = 'MES Authentication API';
+
+    Permissions =
+        tabledata "MES User"       = RIMD,
+
+        tabledata "MES Auth Token" = RIMD,
+
+        table "MES Auth Token"     = X,
+
+        codeunit "MES Password Mgt"     = X,
+
+        codeunit "MES Auth Mgt"         = X,
+
+        codeunit "MES Unbound Actions"  = X;
+}
+
+
+
+================================================
+FILE: src/6-Pages/NEW/MESApiDebug.Page.al
+================================================
+page 50140 "MES API Debug"
+{
+    PageType           = Card;
+    ApplicationArea    = All;
+    UsageCategory      = Administration;
+    Caption            = 'MES API Debug';
+    SourceTable        = Integer;
+    SourceTableTemporary = true;  // keeps the page open without a real record
+
+    layout
+    {
+        area(Content)
+        {
+            group(Overview)
+            {
+                Caption = 'Available APIs';
+
+                field(ApiList; ApiList)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Endpoints';
+                    MultiLine       = true;
+                    Editable        = false;
+                    ToolTip         = 'Lists all available MES API endpoints for quick reference.';
+                }
+            }
+
+            group(Request)
+            {
+                Caption = 'Request Inputs';
+
+                field(UserId; UserId)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'User Id';
+                    ToolTip         = 'The MES User Id.  Used as the login username and as the target for admin actions.';
+                }
+
+                field(Password; Password)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Password';
+                    ExtendedDatatype = Masked;
+                    ToolTip          = 'Plaintext password for the Login action.  Masked in UI.';
+                }
+
+                field(DeviceId; DeviceId)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Device Id';
+                    ToolTip         = 'Optional device identifier sent with Login (stored in the token for audit trail).';
+                }
+
+                field(Token; Token)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Token';
+                    ToolTip         = 'Session token GUID returned by Login.  Required for all authenticated actions.';
+                }
+
+                field(OldPassword; OldPassword)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Old Password';
+                    ExtendedDatatype = Masked;
+                    ToolTip          = 'Current password, required to authenticate the ChangePassword request.';
+                }
+
+                field(NewPassword; NewPassword)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'New Password';
+                    ExtendedDatatype = Masked;
+                    ToolTip          = 'New password to set.  Must meet complexity requirements (8+ chars, upper, lower, digit, special).';
+                }
+
+                field(EmployeeId; EmployeeId)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Employee Id';
+                    ToolTip         = 'BC Employee No. to link to the new MES User.  Leave blank if no HR record exists.';
+                }
+
+                field(AuthId; AuthId)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Auth Id';
+                    ToolTip         = 'External identity reference (e.g. Active Directory UPN "AD\\jdoe").  Returned as "name" in API responses.';
+                }
+
+                field(RoleInt; RoleInt)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Role  (0=Operator, 1=Supervisor, 2=Admin)';
+                    ToolTip         = 'Integer role code for the new user.  0=Operator, 1=Supervisor, 2=Admin.';
+                }
+
+                field(WorkCenterNo; WorkCenterNo)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Work Center No.';
+                    ToolTip         = 'The Work Center the new user is assigned to.  Leave blank for Admin accounts.';
+                }
+
+                field(ForceChange; ForceChange)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Force Change On Next Login';
+                    ToolTip         = 'If true, the target user must change their password on next login.';
+                }
+
+                field(IsActive; IsActive)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Is Active';
+                    ToolTip         = 'Target active status for AdminSetActive.  Set to false to disable the account.';
+                }
+            }
+
+            group(Response)
+            {
+                Caption = 'Last Response';
+
+                field(LastResponse; LastResponse)
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Response';
+                    MultiLine       = true;
+                    Editable        = false;
+                    ToolTip         = 'Raw JSON response from the last API call.  Check "success" to determine if the call succeeded.';
+                }
+            }
+        }
+    }
+
+    actions
+    {
+        area(Processing)
+        {
+            group("Auth API")
+            {
+                Caption = 'Auth API';
+
+                action(Login)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Login';
+                    Image            = Start;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig    = true;
+                    ToolTip          = 'Authenticate with UserId + Password.  Copies the returned token into the Token field automatically is NOT done here â€” paste it manually from Last Response.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.Login(UserId, Password, DeviceId);
+                    end;
+                }
+
+                action(Logout)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Logout';
+                    Image            = Stop;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Revoke the token in the Token field.  Use after testing to clean up active sessions.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.Logout(Token);
+                    end;
+                }
+
+                action(Me)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Me';
+                    Image            = Info;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Validate the token and retrieve the current user profile.  Useful to confirm a token is still valid.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.Me(Token);
+                    end;
+                }
+
+                action(ChangePassword)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Change Password';
+                    Image            = Change;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Change the password for the user owning the current token.  Requires Token, Old Password, and New Password.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.ChangePassword(Token, OldPassword, NewPassword);
+                    end;
+                }
+            }
+
+            group("Admin API")
+            {
+                Caption = 'Admin API';
+
+                action(AdminCreateUser)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Admin: Create User';
+                    Image            = User;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Create a new MES user.  Requires Admin token, UserId, EmployeeId, AuthId, RoleInt, and WorkCenterNo.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.AdminCreateUser(
+                            Token, UserId, EmployeeId, AuthId, RoleInt, WorkCenterNo);
+                    end;
+                }
+
+                action(AdminSetPassword)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Admin: Set Password';
+                    Image            = Edit;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Set or reset the password for any MES user.  Requires Admin token, target UserId, NewPassword, and ForceChange flag.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.AdminSetPassword(
+                            Token, UserId, NewPassword, ForceChange);
+                    end;
+                }
+
+                action(AdminSetActive)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Admin: Set Active';
+                    Image            = Status;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Activate or deactivate a user account.  Requires Admin token, target UserId, and IsActive value.';
+
+                    trigger OnAction()
+                    begin
+                        LastResponse := AuthAPI.AdminSetActive(Token, UserId, IsActive);
+                    end;
+                }
+            }
+
+            group(Setup)
+            {
+                Caption = 'Setup';
+
+                action(RunSetup)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Run MES Setup';
+                    Image            = Setup;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig    = true;
+                    ToolTip          = 'Seeds the default "admin" account.  Run ONCE on a new environment.  Will fail gracefully if the admin account already exists.';
+
+                    trigger OnAction()
+                    begin
+                        Codeunit.Run(Codeunit::"MES Setup");
+                    end;
+                }
+            }
+
+            group(Navigate)
+            {
+                Caption = 'Navigate';
+
+                action(OpenUserList)
+                {
+                    ApplicationArea  = All;
+                    Caption          = 'Open MES User List';
+                    Image            = Users;
+                    Promoted         = true;
+                    PromotedCategory = Process;
+                    ToolTip          = 'Opens the MES User List page to view all registered MES accounts.';
+
+                    trigger OnAction()
+                    begin
+                        Page.Run(Page::"MES User List");
+                    end;
+                }
+            }
+
+            action(ClearResponse)
+            {
+                ApplicationArea = All;
+                Caption         = 'Clear Response';
+                Image           = Delete;
+                ToolTip         = 'Clears the Last Response field so the next API call result is easy to read.';
+
+                trigger OnAction()
+                begin
+                    LastResponse := '';
+                end;
+            }
+        }
+    }
+
+    trigger OnOpenPage()
+    var
+        ApiListBuilder: TextBuilder;
+    begin
+        ApiListBuilder.AppendLine('Auth: Login Â· Logout Â· Me Â· ChangePassword');
+        ApiListBuilder.AppendLine('Admin: AdminCreateUser Â· AdminSetPassword Â· AdminSetActive');
+        ApiListBuilder.Append('All endpoints: POST /ODataV4/MESUnboundActions_<ProcedureName>');
+        ApiList := ApiListBuilder.ToText();
+    end;
+
+    var
+        AuthAPI: Codeunit "MES Unbound Actions";
+
+        ApiList     : Text;
+
+        LastResponse: Text;
+
+        UserId      : Text;
+        Password    : Text;
+        DeviceId    : Text;
+        Token       : Text;
+        OldPassword : Text;
+        NewPassword : Text;
+        EmployeeId  : Text;
+        AuthId      : Text;
+        RoleInt     : Integer;
+        WorkCenterNo: Text;
+        ForceChange : Boolean;
+        IsActive    : Boolean;
+}
+
+
+
+================================================
+FILE: src/6-Pages/NEW/MESUserCard.Page.al
+================================================
+page 50142 "MES User Card"
+{
+    PageType        = Card;
+    ApplicationArea = All;
+    UsageCategory   = Administration;
+    Caption         = 'MES User';
+    SourceTable     = "MES User";
+    Editable        = false;  // all modifications go through the API
+
+    layout
+    {
+        area(Content)
+        {
+            group(General)
+            {
+                Caption = 'General';
+
+                field("User Id"; Rec."User Id")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The MES login username.  This is what the user types at the MES login screen.';
+                }
+
+                field("employee ID"; Rec."employee ID")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The Business Central Employee No. linked to this MES account.  Blank if no HR record is associated.';
+                }
+
+                field("Auth ID"; Rec."Auth ID")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'External identity reference such as an Active Directory UPN.  Returned as the "name" field in API responses.';
+                }
+
+                field(Role; Rec.Role)
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The role that controls what this user can do in the MES application.';
+                }
+
+                field("Work Center No."; Rec."Work Center No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The production work center assigned to this user.  The MES frontend scopes its UI to this work center on login.';
+                }
+            }
+
+            group(Status)
+            {
+                Caption = 'Status';
+
+                field("Is Active"; Rec."Is Active")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'When false, the account is locked and the user cannot log in.  All active tokens are revoked when an account is deactivated.';
+                }
+
+                field("Need To Change Pw"; Rec."Need To Change Pw")
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Must Change Password';
+                    ToolTip         = 'When true, the user must change their password before using the MES app.  Set automatically after AdminSetPassword.';
+                }
+
+                field("Created At"; Rec."Created At")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'UTC timestamp when this account was created.  Never modified after initial creation.';
+                }
+            }
+        }
+    }
+}
+
+
+
+================================================
+FILE: src/6-Pages/NEW/MESUserList.Page.al
+================================================
+page 50141 "MES User List"
+{
+    PageType        = List;
+    ApplicationArea = All;
+    UsageCategory   = Administration;
+    Caption         = 'MES Users';
+    SourceTable     = "MES User";
+    CardPageId      = "MES User Card";  // drill-down opens the detail card
+    Editable        = false;            // all modifications go through the API
+
+    layout
+    {
+        area(Content)
+        {
+            repeater(Users)
+            {
+                field("User Id"; Rec."User Id")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The MES login username (primary key).';
+                }
+
+                field("employee ID"; Rec."employee ID")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The BC Employee No. linked to this account.  Blank if no HR record is associated.';
+                }
+
+                field("Auth ID"; Rec."Auth ID")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'External identity reference (e.g. Active Directory UPN).  Returned as "name" in API responses.';
+                }
+
+                field(Role; Rec.Role)
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The access role for this account.';
+                }
+
+                field("Work Center No."; Rec."Work Center No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'The work center this user is assigned to.';
+                }
+
+                field("Is Active"; Rec."Is Active")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'When false, the account is locked.  Use the AdminSetActive API endpoint to change this.';
+                }
+
+                field("Need To Change Pw"; Rec."Need To Change Pw")
+                {
+                    ApplicationArea = All;
+                    Caption         = 'Must Change Password';
+                    ToolTip         = 'When true, the user must change their password on next login.';
+                }
+
+                field("Created At"; Rec."Created At")
+                {
+                    ApplicationArea = All;
+                    ToolTip         = 'UTC timestamp when the account was first created.';
+                }
+            }
+        }
+    }
+}
+
+
+
+================================================
+FILE: .alpackages/Microsoft_Application_21.0.46256.46853.app
+================================================
+[Binary file]
+
+
+================================================
+FILE: .alpackages/Microsoft_System Application_21.0.46256.46853.app
+================================================
+[Binary file]
+
+
+================================================
+FILE: .alpackages/Microsoft_System_21.0.46384.46844.app
+================================================
+[Binary file]
+
