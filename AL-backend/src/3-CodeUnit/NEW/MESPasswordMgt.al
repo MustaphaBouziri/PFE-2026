@@ -8,9 +8,6 @@
 // ALGORITHM
 //   Salt generation  : SHA-256( GUID_string + CurrentDateTime_string )
 //                      Produces a 64-character hex string.
-//                      NOTE: stored in "Password Salt" (Text[50]), so only
-//                      the first 50 characters are persisted.  Widening the
-//                      field to Text[64] would store the full salt.
 //
 //   Password hashing :  SHA-256 (PBKDF2-style):
 //                       hash = SHA-256( password + salt )
@@ -54,8 +51,7 @@ codeunit 50110 "MES Password Mgt"
     begin
         // Combine a random GUID with the current timestamp for entropy, then
         // hash to produce a fixed-length, uniformly distributed salt string.
-        exit(CryptographyMgt.GenerateHash(Format(CreateGuid()) + Format(CurrentDateTime()), 2));
-        //                                                                       ^ 2 = SHA-256
+        exit(CryptographyMgt.GenerateHash(Format(CreateGuid()) + Format(CurrentDateTime()), 2)); // 2 = SHA-256
     end;
 
     // =========================================================================

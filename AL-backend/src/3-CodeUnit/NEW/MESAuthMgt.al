@@ -117,9 +117,7 @@ codeunit 50111 "MES Auth Mgt"
         Salt := PwMgt.MakeSalt();
         Hash := PwMgt.HashPassword(NewPassword, Salt);
 
-        // CopyStr is required: Salt is 64 chars but field is Text[50];
-        // Hash is 64 chars and field is Text[128] — CopyStr is safe for Hash.
-        U."Password Salt" := CopyStr(Salt, 1, 500);
+        U."Password Salt" := CopyStr(Salt, 1, 64);
         U."Hashed Password" := CopyStr(Hash, 1, 128);
         U."Need To Change Pw" := ForceChangeOnNextLogin;
         U.Modify(true);
