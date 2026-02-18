@@ -6,7 +6,7 @@ page 50141 "MES User List"
     Caption = 'MES Users';
     SourceTable = "MES User";
     CardPageId = "MES User Card";
-    Editable = false;
+    Editable = true;
 
     layout
     {

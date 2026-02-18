@@ -113,7 +113,7 @@ page 50101 "MES User API"
             EmployeeRec.Get(Rec."employee ID");
 
         if Rec."Work Center No." <> '' then
-            WorkCenterRec.Get(Rec."Work Center No.");
+            if WorkCenterRec.Get(Rec."Work Center No.") then;
     end;
 }
 
