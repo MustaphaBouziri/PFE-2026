@@ -366,7 +366,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('User added successfully!')),
                     );
-                    Navigator.of(context).pop(); 
+                    Navigator.of(context).pop();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

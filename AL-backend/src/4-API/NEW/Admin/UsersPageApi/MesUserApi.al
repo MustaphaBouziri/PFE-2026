@@ -45,15 +45,15 @@
 // =============================================================================
 page 50101 "MES User API"
 {
-    PageType     = API;
+    PageType = API;
     APIPublisher = 'yourcompany';
-    APIGroup     = 'v1';
-    APIVersion   = 'v1.0';
-    EntityName   = 'mesUser';
-    EntitySetName= 'mesUsers';
-    SourceTable  = "MES User";
-    DelayedInsert= true;   // required by BC API page conventions even for read-only pages
-    Editable     = false;  // all write operations go through MES Unbound Actions
+    APIGroup = 'v1';
+    APIVersion = 'v1.0';
+    EntityName = 'mesUser';
+    EntitySetName = 'mesUsers';
+    SourceTable = "MES User";
+    DelayedInsert = true;   // required by BC API page conventions even for read-only pages
+    Editable = false;  // all write operations go through MES Unbound Actions
 
     layout
     {
@@ -150,12 +150,12 @@ page 50101 "MES User API"
         Clear(WorkCenterRec);
 
         if Rec."Work Center No." <> '' then
-            if WorkCenterRec.Get(Rec."Work Center No.") then;
+            WorkCenterRec.Get(Rec."Work Center No.");
 
         // Only attempt the lookup when an employee is actually linked.
         // The "if ... then" form safely handles a deleted employee without error.
         if Rec."employee ID" <> '' then
-            if EmployeeRec.Get(Rec."employee ID") then;
+            EmployeeRec.Get(Rec."employee ID");
         // If Get returns false (employee deleted), EmployeeRec stays blank.
         // The joined fields will serialise as empty strings for this row.
     end;
@@ -230,14 +230,14 @@ page 50101 "MES User API"
 // =============================================================================
 page 50103 "MES User Create API"
 {
-    PageType     = API;
+    PageType = API;
     APIPublisher = 'yourcompany';
-    APIGroup     = 'v1';
-    APIVersion   = 'v1.0';
-    EntityName   = 'mesUserCreate';
-    EntitySetName= 'createMesUsers';
-    SourceTable  = "MES User";
-    DelayedInsert= true;  // required for POST: accumulate all fields before Insert()
+    APIGroup = 'v1';
+    APIVersion = 'v1.0';
+    EntityName = 'mesUserCreate';
+    EntitySetName = 'createMesUsers';
+    SourceTable = "MES User";
+    DelayedInsert = true;  // required for POST: accumulate all fields before Insert()
 
     layout
     {
@@ -264,7 +264,7 @@ page 50103 "MES User Create API"
                 field(createdAt; Rec."Created At") { }
 
 
-                
+
 
 
                 field(workCenterName; WorkCenterRec.Name) { Editable = false; }
@@ -279,7 +279,7 @@ page 50103 "MES User Create API"
                 field(firstName; EmployeeRec."First Name") { Editable = false; }
                 field(lastName; EmployeeRec."Last Name") { Editable = false; }
                 field(email; EmployeeRec."E-Mail") { Editable = false; }
-              
+
             }
         }
     }

@@ -30,6 +30,31 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> adminSetPassword({
+     required String token,
+    required String userId,
+    required String newPassword,
+    
+  }) async{
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final success = await _apiService.AdminSetPassword(token: token, userId: userId, newPassword: newPassword, );
+      return success;
+
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+   
+  }
+
   // Login
   Future<bool> login(String userId, String password) async {
     _isLoading = true;
