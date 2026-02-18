@@ -33,7 +33,7 @@ page 50141 "MES User List"
     Caption         = 'MES Users';
     SourceTable     = "MES User";
     CardPageId      = "MES User Card";  // drill-down opens the detail card
-    Editable        = false;            // all modifications go through the API
+    Editable        = true;           
 
     layout
     {

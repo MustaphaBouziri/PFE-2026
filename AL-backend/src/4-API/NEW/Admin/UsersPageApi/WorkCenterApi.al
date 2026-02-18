@@ -57,7 +57,7 @@ page 50102 "MES Department API"
 
                 // Human-readable work center name displayed in the MES UI
                 // dropdowns and on the operator's home screen.
-                field(departmentName; Rec.Name)
+                field(workCenterName; Rec.Name)
                 {
                     Caption = 'Work Center Name';
                 }

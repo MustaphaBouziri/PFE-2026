@@ -64,6 +64,16 @@ page 50101 "MES User API"
             // OnAfterGetRecord — they behave as joined columns in the response.
             repeater(Group)
             {
+                field(authId; Rec."Auth ID") { }
+                field(workCenterNo; Rec."Work Center No.") { }
+                field(isActive; Rec."Is Active") { }
+                field(needToChangePw; Rec."Need To Change Pw") { }
+                field(createdAt; Rec."Created At") { }
+
+
+                field(lastName; EmployeeRec."Last Name") { }
+                field(email; EmployeeRec."E-Mail") { }
+
                 // ── MES User fields (from SourceTable) ───────────────────────
 
                 // The MES login username — primary key and login credential.
@@ -94,15 +104,7 @@ page 50101 "MES User API"
                     Caption = 'First Name';
                 }
 
-                field(lastName; EmployeeRec."Last Name")
-                {
-                    Caption = 'Last Name';
-                }
-
-                field(email; EmployeeRec."E-Mail")
-                {
-                    Caption = 'Email';
-                }
+                field(workCenterName; WorkCenterRec.Name) { }
             }
         }
     }
@@ -117,6 +119,7 @@ page 50101 "MES User API"
     // -------------------------------------------------------------------------
     var
         EmployeeRec: Record Employee;
+        WorkCenterRec: Record "Work Center";
 
     // -------------------------------------------------------------------------
     // Trigger: OnAfterGetRecord
@@ -144,6 +147,10 @@ page 50101 "MES User API"
     begin
         // Reset the join buffer so no stale data leaks from the previous row.
         Clear(EmployeeRec);
+        Clear(WorkCenterRec);
+
+        if Rec."Work Center No." <> '' then
+            if WorkCenterRec.Get(Rec."Work Center No.") then;
 
         // Only attempt the lookup when an employee is actually linked.
         // The "if ... then" form safely handles a deleted employee without error.
@@ -250,6 +257,17 @@ page 50103 "MES User Create API"
                 // Optional — links this account to a BC Employee record by "No.".
                 // Leave blank if no HR employee record exists for this user.
                 field(employeeId; Rec."employee ID") { }
+                field(authId; Rec."Auth ID") { }
+                field(workCenterNo; Rec."Work Center No.") { }
+                field(isActive; Rec."Is Active") { }
+                field(needToChangePw; Rec."Need To Change Pw") { }
+                field(createdAt; Rec."Created At") { }
+
+
+                
+
+
+                field(workCenterName; WorkCenterRec.Name) { Editable = false; }
 
                 // Required — sets the access level for the new account.
                 // Send as the enum string: "Operator", "Supervisor", or "Admin".
@@ -258,10 +276,10 @@ page 50103 "MES User Create API"
                 // ── Read-only joined Employee fields ──────────────────────────
                 // Populated on GET via OnAfterGetRecord; derived from the linked
                 // Employee record.  Including these in a POST body has no effect.
-
-                field(firstName; EmployeeRec."First Name") { }
-                field(lastName; EmployeeRec."Last Name") { }
-                field(email; EmployeeRec."E-Mail") { }
+                field(firstName; EmployeeRec."First Name") { Editable = false; }
+                field(lastName; EmployeeRec."Last Name") { Editable = false; }
+                field(email; EmployeeRec."E-Mail") { Editable = false; }
+              
             }
         }
     }
@@ -275,6 +293,7 @@ page 50103 "MES User Create API"
     // -------------------------------------------------------------------------
     var
         EmployeeRec: Record Employee;
+        WorkCenterRec: Record "Work Center";
 
     // -------------------------------------------------------------------------
     // Trigger: OnAfterGetRecord
@@ -300,11 +319,15 @@ page 50103 "MES User Create API"
     begin
         // Reset the join buffer to prevent stale data carry-over between rows.
         Clear(EmployeeRec);
+        Clear(WorkCenterRec);
 
-        // Load the matching Employee record.
-        // CAUTION: raises a runtime error if the employee has been deleted.
-        // See note above for the safer alternative.
-        if Rec."employee ID" <> '' then
-            EmployeeRec.Get(Rec."employee ID");
+        if (Rec."employee ID" <> '') then
+            if not EmployeeRec.Get(Rec."employee ID") then
+                Clear(EmployeeRec);
+
+        if (Rec."Work Center No." <> '') then
+            if not WorkCenterRec.Get(Rec."Work Center No.") then
+                Clear(WorkCenterRec);
     end;
+
 }

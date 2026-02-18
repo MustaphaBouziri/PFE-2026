@@ -208,4 +208,28 @@ table 50101 "MES User"
         // in admin list APIs.
         key(UserRole; "Role") { }
     }
+
+    trigger OnInsert()
+    var
+        GuidTxt: Text[50];
+    begin
+
+        if "User Id" = '' then
+            "User Id" := Format(CreateGuid());
+
+
+        GuidTxt := Format(CreateGuid());
+        "Auth ID" := 'AUTH-' + CopyStr(GuidTxt, 2, 9);
+
+
+
+        "Is Active" := true;
+        "Need To Change Pw" := true;
+        "Created At" := CurrentDateTime();
+
+
+        "Password Salt" := '';
+        "Hashed Password" := '';
+        "Password Iterations" := 0;
+    end;
 }
