@@ -88,7 +88,7 @@ codeunit 50111 "MES Auth Mgt"
     /// Steps performed:
     ///   1. Validate password meets complexity requirements (IsPasswordStrong).
     ///   2. Generate a new random salt via MES Password Mgt.
-    ///   3. Hash (password + salt) 
+    ///   3. Hash (password + salt)
     ///   4. Persist the salt and hash to the MES User record.
     ///   5. Revoke ALL existing tokens — any live sessions are terminated.
     ///
@@ -132,18 +132,18 @@ codeunit 50111 "MES Auth Mgt"
     // =========================================================================
 
     /// <summary>
-    /// Authenticates a user with UserId + Password and issues a new session token.
+    /// Authenticates a user with UserId + Password.
+    /// This procedure is READ-ONLY — it performs no database writes.
+    /// It is safe to call from inside a [TryFunction].
     ///
     /// Security properties:
     ///   - Generic "Invalid credentials." message for both "no such user" and
     ///     "wrong password" cases — prevents user-enumeration attacks where an
     ///     attacker probes which usernames are registered.
-    ///   - Returns a populated MES Auth Token record on success.
-    ///   - Token TTL is 12 hours (see IssueToken).
     ///
-    /// [NonDebuggable]: password and token values are never visible in the debugger.
+    /// [NonDebuggable]: password values are never visible in the debugger.
     ///
-    /// Raises an error (caught by TryLogin in MESUnboundActions) if:
+    /// Raises an error if:
     ///   - User does not exist          → "Invalid credentials."
     ///   - Account is disabled          → "Account is disabled."
     ///   - No password has been set     → "Account setup incomplete."
@@ -173,7 +173,11 @@ codeunit 50111 "MES Auth Mgt"
     end;
 
     /// <summary>
-    /// Validates a raw token string and returns the associated user and token records.
+    /// Validates a raw token string and returns the associated user and token
+    /// records.  This procedure is READ-ONLY — it does NOT update Last Seen At.
+    /// Call TouchToken() separately after a successful validation to record
+    /// activity.  This split keeps ValidateToken() safe to call from inside a
+    /// [TryFunction].
     ///
     /// A token is considered valid only when ALL of the following are true:
     ///   - TokenText is a parseable GUID
@@ -183,9 +187,7 @@ codeunit 50111 "MES Auth Mgt"
     ///   - The associated MES User exists
     ///   - User.Is Active = true
     ///
-    /// On success, updates Token."Last Seen At" for audit trail purposes.
-    /// On any failure, clears U and T and returns FALSE — the caller never
-    /// needs to inspect error state, just check the return value.
+    /// On any failure, clears U and T and returns FALSE.
     ///
     /// Parameters:
     ///   TokenText — raw GUID string as received from the HTTP client
@@ -227,12 +229,22 @@ codeunit 50111 "MES Auth Mgt"
         if not U."Is Active" then
             exit(false);
 
-        // Refresh the activity timestamp for every successful validation.
-        // This enables idle-session detection and sliding-window monitoring.
+        exit(true);
+    end;
+
+    /// <summary>
+    /// Updates Token."Last Seen At" for audit trail / idle-session monitoring.
+    ///
+    /// This write is intentionally separated from ValidateToken() so that
+    /// ValidateToken() remains read-only and safe to call from inside a
+    /// [TryFunction].  Call this immediately after a successful ValidateToken()
+    /// whenever you want to record user activity (i.e. in the HTTP-layer
+    /// endpoints, not inside TryFunction wrappers).
+    /// </summary>
+    procedure TouchToken(var T: Record "MES Auth Token")
+    begin
         T."Last Seen At" := CurrentDateTime();
         T.Modify(true);
-
-        exit(true);
     end;
 
     /// <summary>
@@ -265,30 +277,30 @@ codeunit 50111 "MES Auth Mgt"
     end;
 
     /// <summary>
-    /// Allows an authenticated user to change their own password.
+    /// Validates credentials for a password change.  READ-ONLY — safe to call
+    /// from inside a [TryFunction].
     ///
-    /// Requires both a valid session token (the user must be logged in) and
-    /// the correct current password.  This double-factor requirement prevents
-    /// an attacker who has stolen a token from changing the password silently.
+    /// Checks:
+    ///   - Token is valid and not expired.
+    ///   - OldPassword matches the stored hash.
+    ///   - NewPassword satisfies the strength policy.
     ///
-    /// On success, delegates to SetPassword() which will:
-    ///   - Enforce password strength rules
-    ///   - Generate a new salt and hash
-    ///   - Revoke ALL existing tokens (including the current session)
-    ///   The client must log in again after a successful password change.
+    /// On success, OutUserId is set to the user ID so the caller can pass it
+    /// to SetPassword() outside the TryFunction.
     ///
     /// [NonDebuggable]: password values are never visible in the debugger.
     ///
     /// Raises an error if:
     ///   - Token is invalid or expired     → "Unauthorized."
     ///   - OldPassword is incorrect        → "Current password is incorrect."
-    ///   - NewPassword fails strength test → error from SetPassword()
+    ///   - NewPassword fails strength test → error from IsPasswordStrong check
     /// </summary>
     [NonDebuggable]
-    procedure ChangePassword(
+    procedure ValidateChangePassword(
         TokenText: Text;
         OldPassword: Text;
-        NewPassword: Text): Boolean
+        NewPassword: Text;
+        var OutUserId: Code[50])
     var
         U: Record "MES User";
         T: Record "MES Auth Token";
@@ -296,14 +308,38 @@ codeunit 50111 "MES Auth Mgt"
         if not ValidateToken(TokenText, U, T) then
             Error('Unauthorized. Please login again.');
 
-        // Require the current password before accepting a new one.
         if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt") then
             Error('Current password is incorrect.');
 
-        // forceChangeOnNextLogin = false: the user is actively choosing a new
-        // password, so no forced-change flag is needed after this call.
-        SetPassword(U."User Id", NewPassword, false);
-        exit(true);
+        if not IsPasswordStrong(NewPassword) then
+            Error('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.');
+
+        OutUserId := U."User Id";
+    end;
+
+    /// <summary>
+    /// Validates that a token exists and belongs to an Admin.  READ-ONLY —
+    /// safe to call from inside a [TryFunction].
+    ///
+    /// On success, OutAdminUserId is set so the caller can use it for
+    /// self-action guards outside the TryFunction.
+    ///
+    /// Raises an error if:
+    ///   - Token is invalid or expired → "Unauthorized. Please login again."
+    ///   - User role is not Admin      → "Forbidden. Admin access required."
+    /// </summary>
+    procedure ValidateAdminToken(TokenText: Text; var OutAdminUserId: Code[50])
+    var
+        AdminUser: Record "MES User";
+        T: Record "MES Auth Token";
+    begin
+        if not ValidateToken(TokenText, AdminUser, T) then
+            Error('Unauthorized. Please login again.');
+
+        if AdminUser.Role <> AdminUser.Role::Admin then
+            Error('Forbidden. Admin access required.');
+
+        OutAdminUserId := AdminUser."User Id";
     end;
 
     // =========================================================================
@@ -313,8 +349,9 @@ codeunit 50111 "MES Auth Mgt"
     /// <summary>
     /// Validates a token AND asserts that the token owner holds the Admin role.
     ///
-    /// This is the single entry point for all admin privilege checks.
-    /// Call this at the start of any procedure that requires admin access.
+    /// This is the single entry point for all admin privilege checks in
+    /// write-capable contexts (i.e. called OUTSIDE TryFunctions).
+    /// For read-only validation inside a TryFunction, use ValidateAdminToken().
     ///
     /// On success, AdminUser is populated with the calling admin's MES User record
     /// so callers can use AdminUser."User Id" for self-action guards.
@@ -334,6 +371,9 @@ codeunit 50111 "MES Auth Mgt"
 
         if AdminUser.Role <> AdminUser.Role::Admin then
             Error('Forbidden. Admin access required.');
+
+        // Record admin activity now that we are outside any TryFunction.
+        TouchToken(T);
     end;
 
     /// <summary>
@@ -462,7 +502,7 @@ codeunit 50111 "MES Auth Mgt"
     /// matching rows without a full table scan.
     ///
     /// Called by:
-    ///   SetPassword()  — after every password change
+    ///   SetPassword()    — after every password change
     ///   SetActive(false) — when an account is disabled
     /// </summary>
     local procedure RevokeAllTokensForUser(UserId: Code[50])
@@ -476,7 +516,6 @@ codeunit 50111 "MES Auth Mgt"
                 T.Modify(true);
             until T.Next() = 0;
     end;
-
 
     /// <summary>
     /// Returns TRUE only when the password satisfies ALL complexity rules:

@@ -52,7 +52,7 @@ codeunit 50115 "MES Setup"
         // WorkCenterNo is left blank — the admin works across all work centers.
         AuthMgt.CreateUser(
             'ADMIN',                    // User Id      — login username
-            '',                         // Employee ID  — no linked HR employee
+            'AC',                       // Employee ID  — no linked HR employee
             'AD001',                    // Auth ID      — external identity ref
             "MES User Role"::Admin,     // Role         — full admin access
             '');                        // Work Center  — not assigned to one WC

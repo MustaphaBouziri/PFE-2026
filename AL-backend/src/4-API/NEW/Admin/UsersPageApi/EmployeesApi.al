@@ -45,15 +45,15 @@
 // =============================================================================
 page 50100 "MES Employee API"
 {
-    PageType     = API;
+    PageType = API;
     APIPublisher = 'yourcompany';
-    APIGroup     = 'v1';
-    APIVersion   = 'v1.0';
-    EntityName   = 'employee';
-    EntitySetName= 'employees';
-    SourceTable  = Employee;
-    DelayedInsert= true;
-    Editable     = false;  // read-only: MES does not create or modify HR employees
+    APIGroup = 'v1';
+    APIVersion = 'v1.0';
+    EntityName = 'employee';
+    EntitySetName = 'employees';
+    SourceTable = Employee;
+    DelayedInsert = true;
+    Editable = false;  // read-only: MES does not create or modify HR employees
 
     layout
     {

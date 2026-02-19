@@ -5,9 +5,11 @@ class MesUser {
   final String firstName;
   final String lastName;
   final String email;
+  final String authId;
 
   MesUser({
     required this.userId,
+    required this.authId,
     required this.employeeId,
     required this.role,
     this.firstName = '',
@@ -23,6 +25,7 @@ class MesUser {
       firstName: json['firstName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
+      authId: json['authId']
     );
   }
 

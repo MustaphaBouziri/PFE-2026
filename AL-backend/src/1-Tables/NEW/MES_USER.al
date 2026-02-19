@@ -306,7 +306,7 @@ table 50101 "MES User"
     begin
         repeat
             GuidTxt := Format(CreateGuid());
-            CandidateId := 'AUTH-' + CopyStr(GuidTxt, 2, 9);
+            CandidateId := 'AUTH-' + CopyStr(GuidTxt, 2, 8);
             MESUser.SetRange("Auth ID", CandidateId);
         until MESUser.IsEmpty();
         exit(CandidateId);
@@ -330,9 +330,6 @@ table 50101 "MES User"
     begin
         if "Employee ID" = '' then
             Error('Employee ID is required.');
-
-        if "Role".AsInteger() = 0 then
-            Error('Role is required.');
 
         ValidateRoleWorkCenterCombination();
     end;

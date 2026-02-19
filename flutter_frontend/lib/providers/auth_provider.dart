@@ -1,18 +1,23 @@
 import 'package:flutter/foundation.dart';
+
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   bool _isAuthenticated = false;
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _userData;
 
   bool get isAuthenticated => _isAuthenticated;
+
   bool get isLoading => _isLoading;
+
   String? get errorMessage => _errorMessage;
+
   Map<String, dynamic>? get userData => _userData;
+
   bool get needsPasswordChange => _userData?['needToChangePw'] ?? false;
 
   // Check if user is already logged in
@@ -31,19 +36,22 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> adminSetPassword({
-     required String token,
     required String userId,
     required String newPassword,
-    
-  }) async{
+  }) async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
+      final String? rawToken = await _apiService.getToken();
+      final String token = rawToken ?? '';
 
-      final success = await _apiService.AdminSetPassword(token: token, userId: userId, newPassword: newPassword, );
+      final success = await _apiService.AdminSetPassword(
+        token: token,
+        userId: userId,
+        newPassword: newPassword,
+      );
       return success;
-
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
@@ -52,7 +60,6 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-   
   }
 
   // Login
@@ -101,7 +108,11 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
-      final result = await _apiService.changePassword(token, oldPassword, newPassword);
+      final result = await _apiService.changePassword(
+        token,
+        oldPassword,
+        newPassword,
+      );
 
       if (result['success'] == true) {
         // Update user data
@@ -132,7 +143,7 @@ class AuthProvider with ChangeNotifier {
     if (token != null) {
       await _apiService.logout(token);
     }
-    
+
     _isAuthenticated = false;
     _userData = null;
     _errorMessage = null;

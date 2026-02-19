@@ -39,10 +39,11 @@
 //
 // ERROR HANDLING PATTERN
 // ───────────────────────
-//   Every public procedure wraps its business-logic call in a [TryFunction].
-//   On failure the [TryFunction] returns FALSE; the last error text is then
-//   captured, cleared, and embedded in a JSON error envelope.  This means
-//   the HTTP response is always 200 OK with a JSON body – the caller must
+//   Every public procedure wraps its read/validation call in a [TryFunction].
+//   All database writes (Insert, Modify, Delete) happen OUTSIDE TryFunctions.
+//   On validation failure the [TryFunction] returns FALSE; the last error text
+//   is captured, cleared, and embedded in a JSON error envelope.  This means
+//   the HTTP response is always 200 OK with a JSON body — the caller must
 //   inspect the "success" field to distinguish success from failure.
 // =============================================================================
 codeunit 50125 "MES Unbound Actions"
@@ -82,11 +83,11 @@ codeunit 50125 "MES Unbound Actions"
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        // TryFunction only does READ + validation — no INSERT inside
+        // TryValidateCredentials is read-only — no writes inside the TryFunction.
         if not TryValidateCredentials(UserIdCode, password) then
             exit(BuildErrorFromLastError('Authentication failed'));
 
-        // INSERT happens OUTSIDE the TryFunction
+        // INSERT happens OUTSIDE the TryFunction.
         TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId);
 
         if not U.Get(TokenRec."User Id") then
@@ -103,7 +104,6 @@ codeunit 50125 "MES Unbound Actions"
 
         exit(JsonToText(OutJ));
     end;
-
 
     /// <summary>
     /// Revokes the supplied session token (logout).
@@ -141,8 +141,12 @@ codeunit 50125 "MES Unbound Actions"
         T: Record "MES Auth Token";
         OutJ: JsonObject;
     begin
+        // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
         if not AuthMgt.ValidateToken(token, U, T) then
             exit(BuildError('Unauthorized', 'Invalid or expired token'));
+
+        // Write Last Seen At OUTSIDE the validation path.
+        AuthMgt.TouchToken(T);
 
         OutJ.Add('success', true);
         OutJ.Add('userId', U."User Id");
@@ -163,18 +167,31 @@ codeunit 50125 "MES Unbound Actions"
     /// Returns    { "success": true, "message": "Password changed successfully" }
     ///         or { "success": false, "error": "...", "message": "..." }
     ///
+    /// Flow:
+    ///   1. TryValidateChangePassword — read-only: checks token, old password
+    ///      correctness, and new password strength.  Safe inside TryFunction.
+    ///   2. SetPassword — writes new salt/hash and revokes all tokens.
+    ///      Runs OUTSIDE the TryFunction.
+    ///
     /// NOTE: password parameters are [NonDebuggable].
     /// </summary>
     [NonDebuggable]
     procedure ChangePassword(token: Text; oldPassword: Text; newPassword: Text): Text
     var
         OutJ: JsonObject;
+        TargetUserId: Code[50];
     begin
         if (oldPassword = '') or (newPassword = '') then
             exit(BuildError('Invalid request', 'Both old and new passwords are required'));
 
-        if not TryChangePassword(token, oldPassword, newPassword) then
+        // Step 1 — read-only validation inside a TryFunction.
+        if not TryValidateChangePassword(token, oldPassword, newPassword, TargetUserId) then
             exit(BuildErrorFromLastError('Password change failed'));
+
+        // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
+        // forceChangeOnNextLogin = false: the user is actively choosing a new
+        // password, so no forced-change flag is needed after this call.
+        AuthMgt.SetPassword(TargetUserId, newPassword, false);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password changed successfully');
@@ -194,6 +211,10 @@ codeunit 50125 "MES Unbound Actions"
     ///   roleInt: 0 = Operator, 1 = Supervisor, 2 = Admin
     /// Returns    { "success": true, "message": "...", "userId": "..." }
     ///         or { "success": false, "error": "...", "message": "..." }
+    ///
+    /// Flow:
+    ///   1. TryValidateAdminToken — read-only admin check.  Safe in TryFunction.
+    ///   2. CreateUser            — Insert happens OUTSIDE the TryFunction.
     /// </summary>
 
     // DEPRICATED: is not currently in use do not delete
@@ -211,6 +232,7 @@ codeunit 50125 "MES Unbound Actions"
         AuthIdCode: Code[50];
         EmployeeIdCode: Code[50];
         WCCode: Code[20];
+        AdminUserId: Code[50];
     begin
         // ── Validate required fields ──────────────────────────────────────────
         if userId = '' then
@@ -234,9 +256,12 @@ codeunit 50125 "MES Unbound Actions"
         EmployeeIdCode := CopyStr(employeeId, 1, 50);
         WCCode := CopyStr(workCenterNo, 1, 20);
 
-        // ── Attempt creation (admin guard is inside TryAdminCreateUser) ───────
-        if not TryAdminCreateUser(token, UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode) then
+        // Step 1 — read-only admin token validation inside a TryFunction.
+        if not TryValidateAdminToken(token, AdminUserId) then
             exit(BuildErrorFromLastError('User creation failed'));
+
+        // Step 2 — Insert happens OUTSIDE the TryFunction.
+        AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User created successfully');
@@ -246,14 +271,18 @@ codeunit 50125 "MES Unbound Actions"
 
     /// <summary>
     /// Admin sets or resets a user's password.  Caller must supply a valid
-    /// Admin token.  Optionally forces the target user to change password
-    /// on their next login.
+    /// Admin token.  Forces the target user to change password on their
+    /// next login.
     ///
     /// HTTP POST  .../ODataV4/MESAuthEndpoints_AdminSetPassword
     /// Body       { "token": "...", "userId": "...", "newPassword": "...",
     ///              "forceChangeOnNextLogin": true|false }
     /// Returns    { "success": true, "message": "..." }
     ///         or { "success": false, "error": "...", "message": "..." }
+    ///
+    /// Flow:
+    ///   1. TryValidateAdminToken — read-only admin check.  Safe in TryFunction.
+    ///   2. SetPassword           — writes OUTSIDE the TryFunction.
     ///
     /// NOTE: newPassword is [NonDebuggable].
     /// </summary>
@@ -265,14 +294,19 @@ codeunit 50125 "MES Unbound Actions"
     var
         OutJ: JsonObject;
         UserIdCode: Code[50];
+        AdminUserId: Code[50];
     begin
         if (userId = '') or (newPassword = '') then
             exit(BuildError('Invalid request', 'User ID and new password are required'));
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        if not TryAdminSetPassword(token, UserIdCode, newPassword, true) then
+        // Step 1 — read-only admin token validation inside a TryFunction.
+        if not TryValidateAdminToken(token, AdminUserId) then
             exit(BuildErrorFromLastError('Password update failed'));
+
+        // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
+        AuthMgt.SetPassword(UserIdCode, newPassword, true);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password updated successfully');
@@ -288,19 +322,33 @@ codeunit 50125 "MES Unbound Actions"
     /// Body       { "token": "...", "userId": "...", "isActive": true|false }
     /// Returns    { "success": true, "message": "..." }
     ///         or { "success": false, "error": "...", "message": "..." }
+    ///
+    /// Flow:
+    ///   1. TryValidateAdminToken — read-only admin check.  Safe in TryFunction.
+    ///   2. SetActive             — writes OUTSIDE the TryFunction.
+    ///      SetActive itself calls RequireAdmin which re-validates the token
+    ///      (this second validation is pure read; TouchToken is called there).
     /// </summary>
     procedure AdminSetActive(token: Text; userId: Text; isActive: Boolean): Text
     var
         OutJ: JsonObject;
         UserIdCode: Code[50];
+        AdminUserId: Code[50];
     begin
         if userId = '' then
             exit(BuildError('Invalid request', 'User ID is required'));
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        if not TryAdminSetActive(token, UserIdCode, isActive) then
+        // Step 1 — read-only admin token validation inside a TryFunction.
+        if not TryValidateAdminToken(token, AdminUserId) then
             exit(BuildErrorFromLastError('Status update failed'));
+
+        // Step 2 — SetActive performs writes (Modify + RevokeAll) outside the
+        // TryFunction.  It calls RequireAdmin internally which re-validates the
+        // token and calls TouchToken; this is acceptable here since we are
+        // already outside any TryFunction.
+        AuthMgt.SetActive(token, UserIdCode, isActive);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User status updated successfully');
@@ -308,64 +356,52 @@ codeunit 50125 "MES Unbound Actions"
     end;
 
     // =========================================================================
-    // SECTION 3 – [TryFunction] WRAPPERS
-    // (TryFunctions catch any Error() calls and return FALSE instead of
-    //  propagating the error up the call stack.)
+    // SECTION 3 – [TryFunction] WRAPPERS  (read-only — no writes allowed)
+    //
+    // AL rule: Modify / Insert / Delete (directly or transitively) are
+    // forbidden inside a [TryFunction].  Every wrapper here is strictly
+    // read-only.  All database writes happen in the public procedures above,
+    // AFTER the TryFunction has returned TRUE.
     // =========================================================================
 
-
+    /// <summary>
+    /// Read-only credential check.  Raises an error on any failure;
+    /// the [TryFunction] converts that to a FALSE return value.
+    /// </summary>
     [TryFunction]
     [NonDebuggable]
     local procedure TryValidateCredentials(userId: Code[50]; password: Text)
     begin
-        AuthMgt.ValidateCredentials(userId, password);  // read-only, no INSERT
+        // ValidateCredentials is read-only (no writes).
+        AuthMgt.ValidateCredentials(userId, password);
     end;
 
+    /// <summary>
+    /// Read-only password-change pre-check.  Validates the token, verifies the
+    /// old password, and checks the new password strength — all reads.
+    /// Sets OutUserId so the caller can pass it to SetPassword() outside.
+    /// </summary>
     [TryFunction]
     [NonDebuggable]
-    local procedure TryChangePassword(token: Text; oldPassword: Text; newPassword: Text)
-    begin
-        AuthMgt.ChangePassword(token, oldPassword, newPassword);
-    end;
-
-    [TryFunction]
-    local procedure TryAdminCreateUser(
+    local procedure TryValidateChangePassword(
         token: Text;
-        userId: Code[50];
-        employeeId: Code[50];
-        authId: Code[50];
-        role: Enum "MES User Role";
-        workCenterNo: Code[20])
-    var
-        AdminUser: Record "MES User";
-    begin
-        // RequireAdmin validates token AND asserts Admin role in one call
-        AuthMgt.RequireAdmin(token, AdminUser);
-        AuthMgt.CreateUser(userId, employeeId, authId, role, workCenterNo);
-    end;
-
-    [TryFunction]
-    [NonDebuggable]
-    local procedure TryAdminSetPassword(
-        token: Text;
-        userId: Code[50];
+        oldPassword: Text;
         newPassword: Text;
-        forceChangeOnNextLogin: Boolean)
-    var
-        AdminUser: Record "MES User";
+        var OutUserId: Code[50])
     begin
-        AuthMgt.RequireAdmin(token, AdminUser);
-        AuthMgt.SetPassword(userId, newPassword, forceChangeOnNextLogin);
+        // ValidateChangePassword is read-only (no writes).
+        AuthMgt.ValidateChangePassword(token, oldPassword, newPassword, OutUserId);
     end;
 
+    /// <summary>
+    /// Read-only admin token check.  Validates the token and asserts Admin role.
+    /// Sets OutAdminUserId so the caller can use it for self-action guards.
+    /// </summary>
     [TryFunction]
-    local procedure TryAdminSetActive(
-        token: Text;
-        userId: Code[50];
-        isActive: Boolean)
+    local procedure TryValidateAdminToken(token: Text; var OutAdminUserId: Code[50])
     begin
-        // SetActive already calls RequireAdmin internally
-        AuthMgt.SetActive(token, userId, isActive);
+        // ValidateAdminToken is read-only (no writes).
+        AuthMgt.ValidateAdminToken(token, OutAdminUserId);
     end;
 
     // =========================================================================

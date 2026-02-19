@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/admin/addUserDialog.dart';
-import 'package:pfe_mes/admin/generatePasswordDialog.dart';
-import 'package:pfe_mes/providers/auth_provider.dart';
-import 'package:pfe_mes/providers/erp_employee_provider.dart';
-import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
 import 'package:provider/provider.dart';
-import '../models/mes_user_model.dart';
+
+import '../providers/auth_provider.dart';
+import '../providers/erp_employee_provider.dart';
+import '../providers/erp_workCenter_provider.dart';
 import '../providers/mes_user_provider.dart';
+import '../widgets/employee_avatar.dart';
+import 'addUserDialog.dart';
+import 'generatePasswordDialog.dart';
 
 class AddUserPage extends StatefulWidget {
   const AddUserPage({super.key});
@@ -17,7 +18,7 @@ class AddUserPage extends StatefulWidget {
 
 class _AddUserPageState extends State<AddUserPage> {
   String selectedRole = 'All';
-  List<String> roles = ['All', 'Admin', 'Supervisor', 'Employee'];
+  final List<String> roles = ['All', 'Admin', 'Supervisor', 'Operator'];
   final TextEditingController searchController = TextEditingController();
 
   @override
@@ -32,12 +33,10 @@ class _AddUserPageState extends State<AddUserPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<MesUserProvider>();
     final users = provider.users;
-
-    final authProvider = context.watch<AuthProvider>();
+    final auth = context.watch<AuthProvider>();
 
     final filteredUsers = users.where((user) {
       final bool roleMatch = selectedRole == 'All' || user.role == selectedRole;
-
       final bool searchMatch =
           user.fullName.toLowerCase().contains(
             searchController.text.toLowerCase(),
@@ -45,7 +44,6 @@ class _AddUserPageState extends State<AddUserPage> {
           user.email.toLowerCase().contains(
             searchController.text.toLowerCase(),
           );
-
       return roleMatch && searchMatch;
     }).toList();
 
@@ -56,25 +54,35 @@ class _AddUserPageState extends State<AddUserPage> {
           ? Center(child: Text(provider.errorMessage!))
           : Column(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Colors.black),
+                  tooltip: 'Logout',
+                  onPressed: () async {
+                    await auth.logout();
+                  },
+                ),
+                // ── ADD USER BUTTON ──────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     onPressed: () async {
                       await context
                           .read<ErpEmployeeProvider>()
-                          .fetchEmployees(); // read is just a reference it store nothing
+                          .fetchEmployees();
                       await context
                           .read<ErpWorkcenterProvider>()
                           .fetchWorkCenter();
 
                       showDialog(
                         context: context,
-                        builder: (context) => AddUserDialog(),
+                        builder: (context) => const AddUserDialog(),
                       );
                     },
                     child: const Text('Add User'),
                   ),
                 ),
+
+                // ── SEARCH + FILTER ──────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -84,8 +92,7 @@ class _AddUserPageState extends State<AddUserPage> {
                           controller: searchController,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.search),
-                            hintText:
-                                "Search users by name, lastName, or email",
+                            hintText: 'Search users by name or email',
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.all(
                                 Radius.circular(8),
@@ -117,9 +124,7 @@ class _AddUserPageState extends State<AddUserPage> {
                                 )
                                 .toList(),
                             onChanged: (value) {
-                              setState(() {
-                                selectedRole = value!;
-                              }); 
+                              setState(() => selectedRole = value!);
                             },
                           ),
                         ),
@@ -127,20 +132,25 @@ class _AddUserPageState extends State<AddUserPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+
+                const SizedBox(height: 8),
+
+                // ── USER LIST ────────────────────────────────────────
                 Expanded(
                   child: ListView.builder(
                     itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
                       final user = filteredUsers[index];
-                      return GestureDetector(
-                        onTap: () async {
-                          
 
+                      return GestureDetector(
+                        onTap: () {
                           showDialog(
-                        context: context,
-                        builder: (context) => GeneratePasswordDialog(userId: user.userId,),
-                      );
+                            context: context,
+                            builder: (context) => GeneratePasswordDialog(
+                              userId: user.userId,
+                              authId: user.authId,
+                            ),
+                          );
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(
@@ -164,10 +174,13 @@ class _AddUserPageState extends State<AddUserPage> {
                                 flex: 3,
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
-                                      backgroundImage: NetworkImage(
-                                        'https://i.pravatar.cc/150?img=${index + 1}',
-                                      ),
+                                    // ── BC photo or initials ──
+                                    EmployeeAvatar(
+                                      // MesUser doesn't carry imageBase64 yet
+                                      // (see note below), so this falls back
+                                      // to initials derived from fullName.
+                                      fallbackLabel: _initials(user.fullName),
+                                      radius: 20,
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
@@ -220,5 +233,12 @@ class _AddUserPageState extends State<AddUserPage> {
               ],
             ),
     );
+  }
+
+  String _initials(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || fullName.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/providers/erp_employee_provider.dart';
-import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
-import 'package:pfe_mes/providers/mes_user_provider.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/erp_employee_provider.dart';
+import '../providers/erp_workCenter_provider.dart';
+import '../providers/mes_user_provider.dart';
+import '../widgets/employee_avatar.dart';
 
 class AddUserDialog extends StatefulWidget {
   const AddUserDialog({super.key});
@@ -48,6 +50,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── HEADER ──────────────────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.blue.shade50,
@@ -81,7 +84,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
               const SizedBox(height: 12),
 
-              // SEARCH
+              // ── SEARCH ──────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
@@ -97,22 +100,20 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
               const SizedBox(height: 12),
 
-              // EMPLOYEE LIST WITH HIGHLIGHT
+              // ── EMPLOYEE LIST ────────────────────────────────────────────
               SizedBox(
                 height: 350,
                 child: ListView.builder(
                   itemCount: filteredEmployees.length,
                   itemBuilder: (context, index) {
                     final employee = filteredEmployees[index];
-                    final employeeid = employee.employeeId;
-
                     final isSelected = selectedEmployeeIndex == index;
 
                     return GestureDetector(
                       onTap: () {
                         setState(() {
                           selectedEmployeeIndex = index;
-                          selectedEmployeeId = employeeid;
+                          selectedEmployeeId = employee.employeeId;
                         });
                       },
                       child: Container(
@@ -133,8 +134,10 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           ),
                         ),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: NetworkImage(employee.image),
+                          // ── BC blob photo or initials fallback ──
+                          leading: EmployeeAvatar(
+                            employee: employee,
+                            radius: 22,
                           ),
                           title: Text(employee.fullName),
                           subtitle: Text(employee.email),
@@ -153,7 +156,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
               const SizedBox(height: 20),
 
-              // ROLE TITLE
+              // ── ROLE SECTION ─────────────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -166,121 +169,22 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
               const SizedBox(height: 12),
 
-              // ROLE BUTTONS (INLINE, NO EXTRA WIDGET)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedRoleIndex = 0;
-                            selectedRole = 'Operator';
-                          });
-                        },
-                        child: Container(
-                          height: 50,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: selectedRoleIndex == 0
-                                ? Colors.orange
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: selectedRoleIndex == 0
-                                  ? Colors.orange
-                                  : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Text(
-                            'Operator',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: selectedRoleIndex == 0
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _roleButton(0, 'Operator', Colors.orange),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedRoleIndex = 1;
-                            selectedRole = 'Supervisor';
-                          });
-                        },
-                        child: Container(
-                          height: 50,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: selectedRoleIndex == 1
-                                ? Colors.green
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: selectedRoleIndex == 1
-                                  ? Colors.green
-                                  : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Text(
-                            'Supervisor',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: selectedRoleIndex == 1
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _roleButton(1, 'Supervisor', Colors.green),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedRoleIndex = 2;
-                            selectedRole = 'Admin';
-                          });
-                        },
-                        child: Container(
-                          height: 50,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: selectedRoleIndex == 2
-                                ? Colors.red
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: selectedRoleIndex == 2
-                                  ? Colors.red
-                                  : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Text(
-                            'Admin',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: selectedRoleIndex == 2
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _roleButton(2, 'Admin', Colors.red),
                   ],
                 ),
               ),
 
               const SizedBox(height: 20),
 
+              // ── WORK CENTER SECTION ───────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -299,20 +203,13 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   itemCount: workCenters.length,
                   itemBuilder: (context, index) {
                     final workCenter = workCenters[index];
-                    final workCenterid = workCenter.id;
-                    final bool isSelected =
-                        selectedWorkCenterIndex ==
-                        index; // sellected is true if selectedWorkcenterIndex==index
-                    /*
-                    when you click an item, setState triggers a rebuild of the whole ListView.builder,
-                    lets say now the sleetctedEmployeeindex = 2  it will force rebuild now for each index isSelected is true ? 0!=2 ok do not apply the selection design verify line by line 
-                     */
+                    final isSelected = selectedWorkCenterIndex == index;
 
                     return GestureDetector(
                       onTap: () {
                         setState(() {
                           selectedWorkCenterIndex = index;
-                          selectWorkCenterId = workCenterid;
+                          selectWorkCenterId = workCenter.id;
                         });
                       },
                       child: Container(
@@ -342,44 +239,87 @@ class _AddUserDialogState extends State<AddUserDialog> {
                 ),
               ),
 
-              ElevatedButton(
-                onPressed: () async {
-                  if (selectedEmployeeIndex == null ||
-                      selectWorkCenterId == null ||
-                      selectedRoleIndex == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select employee, role, and work center',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
+              // ── SUBMIT ───────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (selectedEmployeeIndex == null ||
+                          selectWorkCenterId == null ||
+                          selectedRoleIndex == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please select employee, role, and work center',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
 
-                  final success = await mesUserProvider.addUser(
-                    employeeId: selectedEmployeeId!,
-                    role: selectedRole!,
-                    workCenterNo: selectWorkCenterId!,
-                  );
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('User added successfully!')),
-                    );
-                    Navigator.of(context).pop();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          mesUserProvider.errorMessage ?? 'Failed to add user',
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: Text('Add User'),
+                      final success = await mesUserProvider.addUser(
+                        employeeId: selectedEmployeeId!,
+                        role: selectedRole!,
+                        workCenterNo: selectWorkCenterId!,
+                      );
+
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('User added successfully!'),
+                          ),
+                        );
+                        Navigator.of(context).pop();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              mesUserProvider.errorMessage ??
+                                  'Failed to add user',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Add User'),
+                  ),
+                ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _roleButton(int index, String label, Color color) {
+    final isSelected = selectedRoleIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedRoleIndex = index;
+            selectedRole = label;
+          });
+        },
+        child: Container(
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? color : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey.shade300,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : Colors.black,
+            ),
           ),
         ),
       ),
