@@ -77,7 +77,6 @@ class ApiService {
           'deviceId': deviceId,
         }),
       );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final result = jsonDecode(data['value'] ?? '{}');
@@ -86,7 +85,6 @@ class ApiService {
           await _saveToken(result['token']);
           await _saveUserData(result);
         }
-
         return result;
       } else {
         return {
