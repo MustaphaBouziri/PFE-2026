@@ -8,11 +8,9 @@ class MesUserService {
   static const String companyId =
       '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
 
-  // GET users
+  
   static String get fetchMesUsersUrl =>
       '$baseUrl/companies($companyId)/mesUsers';
-
-  // POST create user
   static String get createMesUserUrl =>
       '$baseUrl/companies($companyId)/createMesUsers';
 

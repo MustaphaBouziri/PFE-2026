@@ -92,7 +92,6 @@ class ApiService {
           'deviceId': deviceId,
         }),
       );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final result = jsonDecode(data['value'] ?? '{}');
@@ -101,7 +100,6 @@ class ApiService {
           await _saveToken(result['token']);
           await _saveUserData(result);
         }
-
         return result;
       } else {
         return {
@@ -168,7 +166,7 @@ class ApiService {
   Future<Map<String, dynamic>> logout(String token) async {
     try {
       final response = await http.post(
-        Uri.parse(loginEndpoint),
+        Uri.parse(logoutEndpoint),
         headers: _getHeaders(token: token),
         body: jsonEncode({'token': token}),
       );
