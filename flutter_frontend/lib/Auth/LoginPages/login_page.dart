@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/admin/AddUserPage.dart';
 import 'package:provider/provider.dart';
 import 'package:pfe_mes/providers/auth_provider.dart';
-import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
 import 'layout/mobile.dart';
 import 'layout/tablet.dart';
 import 'layout/web.dart';
@@ -33,44 +31,20 @@ class _LoginPageState extends State<LoginPage> {
     final password = passwordController.text.trim();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
 
     final success = await authProvider.login(userId, password);
 
     if (!mounted) return;
 
-    // Close loading indicator
-    Navigator.of(context).pop();
-
-    if (success) {
-      if (authProvider.needsPasswordChange) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
-        );
-      } else {
-        // Navigation is handled by main.dart Consumer
-        // The app will automatically show the main screen
-
-        //___________just test no mater ur role u taken to admin page
-        Navigator.push(context, MaterialPageRoute(builder:(context) => AddUserPage(),));
-        
-        
-      }
-    } else {
+    if (!success) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Login Failed"),
-          content: Text(authProvider.errorMessage ?? "Unknown error occurred. Please try again."),
+          content: Text(
+            authProvider.errorMessage ??
+                "Unknown error occurred. Please try again.",
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -80,6 +54,8 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
+    // On success, main.dart Consumer automatically routes to the correct page
+    // based on needsPasswordChange and role — no manual navigation needed here.
   }
 
   @override
@@ -90,10 +66,8 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context, constraints) {
             final width = constraints.maxWidth;
 
-            // Show loading overlay if authenticating
             return Stack(
               children: [
-                // Main content
                 Builder(
                   builder: (context) {
                     if (width < 600) {

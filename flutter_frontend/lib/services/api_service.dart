@@ -11,20 +11,16 @@ class ApiService {
   static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
 
   // Endpoints
-      static const String loginEndpoint =
-      '${baseUrl}Login?company=$companyId';
+  static const String loginEndpoint = '${baseUrl}Login?company=$companyId';
 
-      static const String meEndpoint =
-      '${baseUrl}Me?company=$companyId';
-      
-      static const String changePasswordEndpoint =
+  static const String meEndpoint = '${baseUrl}Me?company=$companyId';
+
+  static const String changePasswordEndpoint =
       '${baseUrl}ChangePassword?company=$companyId';
 
-      static const String logoutEndpoint =
-      '${baseUrl}Logout?company=$companyId';
-      
+  static const String logoutEndpoint = '${baseUrl}Logout?company=$companyId';
 
-      static const String adminSetPasswordEndpoint =
+  static const String adminSetPasswordEndpoint =
       '${baseUrl}AdminSetPassword?company=$companyId';
 
   // Shared headers
@@ -34,10 +30,6 @@ class ApiService {
       'Accept': 'application/json',
     };
 
-    if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
-    }
-
     return headers;
   }
 
@@ -45,19 +37,13 @@ class ApiService {
     required String token,
     required String userId,
     required String newPassword,
-    
-
-
   }) async {
-    final body = jsonEncode( {
-      'token':token,
-      'userid':userId,
-      'newPassword':newPassword,
-      
-
-
+    final body = jsonEncode({
+      'token': token,
+      'userId': userId,
+      'newPassword': newPassword,
     });
-   final response = await http.post(
+    final response = await http.post(
       Uri.parse(adminSetPasswordEndpoint),
       headers: {
         'Accept': 'application/json',
@@ -70,11 +56,10 @@ class ApiService {
       return true;
     } else {
       throw Exception(
-          'Failed to generate password: ${response.statusCode} ${response.body}');
+        'Failed to generate password: ${response.statusCode} ${response.body}',
+      );
     }
   }
-
-  
 
   // Login
   Future<Map<String, dynamic>> login(
@@ -152,12 +137,27 @@ class ApiService {
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final result = jsonDecode(data['value'] ?? '{}');
         return result;
       } else {
-        return {'error': 'Failed', 'message': 'Password change failed'};
+        // Parse BC's actual error response instead of swallowing it
+        try {
+          final data = jsonDecode(response.body);
+          return {
+            'success': false,
+            'error': 'Failed',
+            'message':
+                data['error']?['message'] ?? 'HTTP ${response.statusCode}',
+          };
+        } catch (_) {
+          return {
+            'success': false,
+            'error': 'Failed',
+            'message': 'HTTP ${response.statusCode}: ${response.body}',
+          };
+        }
       }
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
@@ -168,7 +168,7 @@ class ApiService {
   Future<Map<String, dynamic>> logout(String token) async {
     try {
       final response = await http.post(
-        Uri.parse(loginEndpoint),
+        Uri.parse(logoutEndpoint),
         headers: _getHeaders(token: token),
         body: jsonEncode({'token': token}),
       );
