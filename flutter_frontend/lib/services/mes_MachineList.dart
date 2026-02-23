@@ -4,8 +4,8 @@ import 'package:pfe_mes/models/mes_machine_model.dart';
 
 class MESMachineListService {
   static const String baseUrl =
-      'http://localhost:7048/BC210/ODataV4/MES Machine Actions';
-
+      'http://localhost:7048/BC210/ODataV4/MESMachinesActionsEndpoints_';
+//http://localhost:7048/BC210/ODataV4/MESMachinesActionsEndpoints_FetchMachines?company=9e31f41c-e73a-ed11-bbab-000d3a21ffa5
   static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
 
   static const String fetchMachinesEndpoint =
@@ -26,11 +26,18 @@ class MESMachineListService {
       },
       body: body
     );
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final data = jsonDecode(response.body);
 
-      return data.map((json) => MachineModel.fromJson(json)).toList();
-    } else {
+   if (response.statusCode == 200) {
+  final data = jsonDecode(response.body);
+
+  final String valueString = data['value'] ?? '[]';
+
+  final List<dynamic> machinesList = jsonDecode(valueString);
+
+  return machinesList
+      .map((machine) => MachineModel.fromJson(machine))
+      .toList();
+} else {
       throw Exception(
         'Failed to fetch machines: ${response.statusCode} ${response.body}',
       );
