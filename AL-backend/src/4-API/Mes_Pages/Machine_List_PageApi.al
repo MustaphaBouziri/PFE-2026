@@ -82,6 +82,27 @@ codeunit 50130 "MES Machine Actions"
 
     end;
 
+procedure SetMachineStatus(MachineNo: Code[20]; NewStatus: Enum "MES Machine Status")
+var
+    MESMachineStatus: Record "MES Machine Status";
+begin
+    if MachineNo = '' then
+        Error('Machine No. is required.');
 
+    MESMachineStatus.Reset();
+    MESMachineStatus.SetRange("Machine No.", MachineNo);
+
+    if not MESMachineStatus.FindLast() then begin
+        MESMachineStatus.Init();
+        MESMachineStatus."Machine No." := MachineNo;
+        MESMachineStatus."Status" := NewStatus;
+        MESMachineStatus."Last Updated At" := CurrentDateTime();
+        MESMachineStatus.Insert();
+    end else begin
+        MESMachineStatus."Status" := NewStatus;
+        MESMachineStatus."Last Updated At" := CurrentDateTime();
+        MESMachineStatus.Modify();
+    end;
+end;
 }
 
