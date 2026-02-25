@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/models/mes_machine_model.dart';
+import 'package:pfe_mes/pages/tab1/machineOrderPage.dart';
 
 class MachineCard extends StatelessWidget {
-  final dynamic machine;
+  final MachineModel machine;
   const MachineCard({super.key, required this.machine});
 
   @override
@@ -32,75 +34,80 @@ class MachineCard extends StatelessWidget {
           statusText = Colors.green;
         }
 
-        return Container(
-          padding: EdgeInsets.all(padding),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      machine.machineName,
-                      style: TextStyle(
-                        fontSize: titleSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    height: statusHeight,
-                    width: statusWidth,
-                    decoration: BoxDecoration(
-                      color: statusBg,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(context,MaterialPageRoute(builder:(context) => Machineorderpage(machineNo: machine.machineNo),));
+          },
+          child: Container(
+            padding: EdgeInsets.all(padding),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
                       child: Text(
-                        machine.status ?? 'Running',
+                        machine.machineName,
                         style: TextStyle(
-                          fontSize: textSize,
+                          fontSize: titleSize,
                           fontWeight: FontWeight.bold,
-                          color: statusText,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text("departmentName", style: TextStyle(fontSize: textSize)),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Current Order:", style: TextStyle(fontSize: textSize)),
-                  Text("bluhbluh", style: TextStyle(fontSize: textSize)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Operator:", style: TextStyle(fontSize: textSize)),
-                  Text("ahmed ben salah", style: TextStyle(fontSize: textSize)),
-                ],
-              ),
-            ],
+                    Container(
+                      height: statusHeight,
+                      width: statusWidth,
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          machine.status ?? 'Running',
+                          style: TextStyle(
+                            fontSize: textSize,
+                            fontWeight: FontWeight.bold,
+                            color: statusText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text("departmentName", style: TextStyle(fontSize: textSize)),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Current Order:", style: TextStyle(fontSize: textSize)),
+                    Text("bluhbluh", style: TextStyle(fontSize: textSize)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Operator:", style: TextStyle(fontSize: textSize)),
+                    Text("ahmed ben salah", style: TextStyle(fontSize: textSize)),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

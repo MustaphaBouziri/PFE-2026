@@ -21,7 +21,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
     return Scaffold(
       appBar: AppBar(),
       body: StreamBuilder(
-        stream: provider.getMachinesStream("300"),
+        stream: provider.getMachinesStream("100"),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());

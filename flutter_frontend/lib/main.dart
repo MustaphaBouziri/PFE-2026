@@ -5,9 +5,11 @@ import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
 import 'package:pfe_mes/Auth/LoginPages/login_page.dart';
 import 'package:pfe_mes/admin/AddUserPage.dart';
 import 'package:pfe_mes/pages/machineListPage/machineListPage.dart';
+import 'package:pfe_mes/pages/tab1/machineOrderPage.dart';
 import 'package:pfe_mes/providers/auth_provider.dart';
 import 'package:pfe_mes/providers/erp_employee_provider.dart';
 import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
+import 'package:pfe_mes/providers/machineOrders_provider.dart';
 import 'package:pfe_mes/providers/mes_machines_provider.dart';
 import 'package:pfe_mes/providers/mes_user_provider.dart';
 import 'package:pfe_mes/user/userDashboard.dart';
@@ -23,6 +25,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => MesUserProvider()),
           ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
+          ChangeNotifierProvider(create:(_) => MachineordersProvider(),),
           Provider(create:(_) => MesMachinesProvider(),)
         ],
         child: const MyApp(),
@@ -76,7 +79,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-   /* return Consumer<AuthProvider>(
+    /*return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
@@ -88,5 +91,6 @@ class _AuthGateState extends State<_AuthGate> {
       },
     );*/
     return Machinelistpage();
+    
   }
 }
