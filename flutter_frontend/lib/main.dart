@@ -1,19 +1,18 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pfe_mes/Auth/ChangePasswordPage/changePassPage.dart';
-import 'package:pfe_mes/Auth/LoginPages/login_page.dart';
-import 'package:pfe_mes/admin/AddUserPage.dart';
-import 'package:pfe_mes/pages/machineListPage/machineListPage.dart';
-import 'package:pfe_mes/pages/tab1/machineOrderPage.dart';
-import 'package:pfe_mes/providers/auth_provider.dart';
-import 'package:pfe_mes/providers/erp_employee_provider.dart';
-import 'package:pfe_mes/providers/erp_workCenter_provider.dart';
-import 'package:pfe_mes/providers/machineOrders_provider.dart';
-import 'package:pfe_mes/providers/mes_machines_provider.dart';
-import 'package:pfe_mes/providers/mes_user_provider.dart';
-import 'package:pfe_mes/user/userDashboard.dart';
 import 'package:provider/provider.dart';
+
+import '/domain/admin/providers/erp_workCenter_provider.dart';
+import '/domain/admin/providers/mes_user_provider.dart';
+import '/domain/auth/providers/auth_provider.dart';
+import '/domain/machines/providers/machineOrders_provider.dart';
+import 'domain/admin/providers/erp_employee_provider.dart';
+import 'domain/machines/providers/mes_machines_provider.dart';
+import 'presentation/admin/AddUserPage.dart';
+import 'presentation/auth/ChangePassword/changePassPage.dart';
+import 'presentation/auth/Login/login_page.dart';
+import 'presentation/machine/machine_List/machineListPage.dart';
 
 void main() {
   runApp(
@@ -25,8 +24,8 @@ void main() {
           ChangeNotifierProvider(create: (_) => MesUserProvider()),
           ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
-          ChangeNotifierProvider(create:(_) => MachineordersProvider(),),
-          Provider(create:(_) => MesMachinesProvider(),)
+          ChangeNotifierProvider(create: (_) => MachineordersProvider()),
+          Provider(create: (_) => MesMachinesProvider()),
         ],
         child: const MyApp(),
       ),
@@ -49,13 +48,13 @@ class MyApp extends StatelessWidget {
       // Important for DevicePreview
       title: 'MES System',
       theme: ThemeData(
-  scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
 
-  textTheme: GoogleFonts.interTextTheme().apply(
-    bodyColor: const Color(0xFF0F172A),
-    displayColor: const Color(0xFF0F172A),
-  ),
-),
+        textTheme: GoogleFonts.interTextTheme().apply(
+          bodyColor: const Color(0xFF0F172A),
+          displayColor: const Color(0xFF0F172A),
+        ),
+      ),
       home: const _AuthGate(),
     );
   }
@@ -79,7 +78,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    /*return Consumer<AuthProvider>(
+    return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
@@ -89,8 +88,6 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();
       },
-    );*/
-    return Machinelistpage();
-    
+    );
   }
 }
