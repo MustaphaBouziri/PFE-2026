@@ -42,7 +42,7 @@ codeunit 50130 "MES Machine Actions"
     */
 
     begin
-        if workCenterNo = '' then Error('Work Center Number  is required');
+        if workCenterNo = '' then Error('Work Center Number is required');
         //setRange = select * from machine center where workcenterNo = what user sent
         Machine.SetRange("Work Center No.", workCenterNo);
 
@@ -63,7 +63,8 @@ codeunit 50130 "MES Machine Actions"
                 MachineObj.Add('machineNo', Machine."No.");
                 MachineObj.Add('machineName', Machine."Name");
                 MachineObj.Add('status', 'Idle');
-                MachineObj.Add('currentOrder', '');
+
+                MachineObj.Add('currentOrder', 'No operator yet');
 
                 MESMachineStatus.Reset();
                 MESMachineStatus.SetRange("Machine No.", Machine."No.");
@@ -72,37 +73,68 @@ codeunit 50130 "MES Machine Actions"
                     // ok why findLast ? since the Mes Machine status is for real time data fetching we need to last record not the first record
                     MachineObj.Replace('status', Format(MESMachineStatus.Status));
                     MachineObj.Replace('currentOrder', MESMachineStatus."Current Prod. Order No.");
-
                 end;
+
                 MachineArr.Add(MachineObj);
             until Machine.Next() = 0;// go to next record
         exit(JsonToTextArr(MachineArr));
 
+    end;
 
+
+    procedure getMachineOrders(machineNo: Text): Text
+    var
+        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
+        ProductOrderLine: Record "Prod. Order Line";
+        ProductOrderRoutingLineArr: JsonArray;
+        ProductOrderRoutingLineObj: JsonObject;
+    begin
+
+        if MachineNo = '' then Error('Machine Number is required');
+        ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center"); // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
+        ProductOrderRoutingLine.SetRange("No.", MachineNo);
+        // setRange used for simple comperation , setFilter for complex comperation
+        ProductOrderRoutingLine.SetFilter(Status, '%1|%2|%3', // %1|%2|%3 means get me orders where status = ? or ? or ?
+                                          ProductOrderRoutingLine.Status::Planned,
+                                          ProductOrderRoutingLine.Status::"Firm Planned",
+                                          ProductOrderRoutingLine.Status::Released
+                                         );
+
+        if ProductOrderRoutingLine.FindSet() then
+            repeat
+                Clear(ProductOrderRoutingLineObj);
+                ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
+                
+                if ProductOrderLine.FindFirst() then begin
+                    ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
+                    ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
+                    ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
+                    ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
+                    // Order description
+                    ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
+                    ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
+                    ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
+                    // Operation description
+                    ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
+                    ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
+                    
+                    ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
+                end;
+
+            until ProductOrderRoutingLine.Next() = 0;
+
+        exit(JsonToTextArr(ProductOrderRoutingLineArr));
 
     end;
 
-procedure SetMachineStatus(MachineNo: Code[20]; NewStatus: Enum "MES Machine Status")
-var
-    MESMachineStatus: Record "MES Machine Status";
-begin
-    if MachineNo = '' then
-        Error('Machine No. is required.');
 
-    MESMachineStatus.Reset();
-    MESMachineStatus.SetRange("Machine No.", MachineNo);
 
-    if not MESMachineStatus.FindLast() then begin
-        MESMachineStatus.Init();
-        MESMachineStatus."Machine No." := MachineNo;
-        MESMachineStatus."Status" := NewStatus;
-        MESMachineStatus."Last Updated At" := CurrentDateTime();
-        MESMachineStatus.Insert();
-    end else begin
-        MESMachineStatus."Status" := NewStatus;
-        MESMachineStatus."Last Updated At" := CurrentDateTime();
-        MESMachineStatus.Modify();
-    end;
-end;
+
+
+
+
+
+
+
 }
 
