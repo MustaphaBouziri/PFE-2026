@@ -40,8 +40,6 @@ dependencies:
   
   # HTTP requests
   http: ^1.2.0
-
-  dio: ^5.9.1
   
   # Local storage for tokens
   shared_preferences: ^2.2.2
@@ -102,6 +100,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-  assets:
-    # Bundle the YAML config file with the app
-    - ./app_config.yaml
