@@ -25,13 +25,13 @@ class MachineOrderModel {
     return MachineOrderModel(
       orderNo: json['orderNo'] ?? '',
       status: json['status'] ?? '',
-      operationNo: json['operationNo'] ?? '',
+      operationNo: json['operationNo'] ?? '', // for non nullable fields
       plannedStart: json['plannedStart'] != null
           ? DateTime.tryParse(json['plannedStart'].toString())
           : null,
-      plannedEnd: json['plannedEnd'] != null
+      plannedEnd: json['plannedEnd'] != null // for nullable fields
           ? DateTime.tryParse(json['plannedEnd'].toString())
-          : null,
+          : null, 
       itemNo: json['itemNo'] ?? '',
       itemDescription: json['ItemDescription'] ?? '',
       orderQuantity: (json['OrderQuantity'] ?? 0).toDouble(),
