@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/erp_order_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/machineOrders_provider.dart';
@@ -104,82 +105,19 @@ class _MachineorderpageState extends State<Machineorderpage> {
                                 children: [
                                   Expanded(
                                     flex: 3,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Item:',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        ExpandableText(
-                                          text: machineOrder.itemDescription,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 1,
-                                        ),
-                                      ],
-                                    ),
+                                    child: _infoBlock("Item", machineOrder.itemDescription, true)
                                   ),
                                   Expanded(
                                     flex: 2,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Quantity:',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Text(
-                                          '${machineOrder.orderQuantity} unit',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child:_infoBlock("Quantity", machineOrder.orderQuantity, false)
                                   ),
                                   Expanded(
                                     flex: 2,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Start:',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        if (machineOrder.plannedStart != null)
-                                          Text(
-                                            '${machineOrder.plannedStart}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                   child: _infoBlock("Planned Start", machineOrder.plannedStart, false)
                                   ),
                                   Expanded(
                                     flex: 2,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'End:',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        if (machineOrder.plannedEnd != null)
-                                          Text(
-                                            '${machineOrder.plannedEnd}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                    child: _infoBlock("Planned End", machineOrder.plannedEnd, false)
                                   ),
                                   Expanded(
                                     flex: 3,
@@ -260,6 +198,25 @@ class _MachineorderpageState extends State<Machineorderpage> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _infoBlock(dynamic title, dynamic titleValue, bool isExpandable) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(color: Colors.grey)),
+        isExpandable
+            ? ExpandableText(
+                text: titleValue,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+              )
+            : Text(
+                titleValue,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+      ],
     );
   }
 }
