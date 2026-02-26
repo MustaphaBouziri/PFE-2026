@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/data/machine/models/erp_order_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/machineOrders_provider.dart';
@@ -48,45 +47,26 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : machineOrdersList.isEmpty
           ? const Center(child: Text('No Orders Found'))
           : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Order Cards ──────────────────────────────
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: machineOrdersList.length,
-                    itemBuilder: (context, index) {
-                      final order = machineOrdersList[index];
-                      final style = _badgeStyle(order.status);
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Order Cards ──────────────────────────────
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: machineOrdersList.length,
+              itemBuilder: (context, index) {
+                final order = machineOrdersList[index];
+                final style = _badgeStyle(order.status);
 
-                      return Opacity(
-                        opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
-                        child: _OrderCard(order: order, badgeStyle: style),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                return Opacity(
+                  opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
+                  child: _OrderCard(order: order, badgeStyle: style),
+                );
+              },
             ),
-    );
-  }
-
-  Widget _infoBlock(dynamic title, dynamic titleValue, bool isExpandable) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: TextStyle(color: Colors.grey)),
-        isExpandable
-            ? ExpandableText(
-                text: titleValue,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                maxLines: 1,
-              )
-            : Text(
-                titleValue,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
