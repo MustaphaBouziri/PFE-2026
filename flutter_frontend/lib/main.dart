@@ -1,6 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/presentation/machine/machines_orders/machineOrderPage.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
@@ -78,7 +79,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
+    /*return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
@@ -88,6 +89,7 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();
       },
-    );
+    );*/
+    return Machinelistpage();
   }
 }
