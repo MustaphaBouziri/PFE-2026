@@ -65,7 +65,7 @@ coverage/
 **/macos/Pods/
 **/macos/Flutter/ephemeral/
 
-
+**/**-temp/**
 ########################################
 # Tools temp files
 ########################################
