@@ -51,11 +51,10 @@ class _MachineorderpageState extends State<Machineorderpage> {
                       final machineOrder = machineOrdersList[index];
 
                       final baseColor = machineOrder.status == "Firm Planned"
-                          ? const Color.fromARGB(255, 225, 54, 255)
+                          ? const Color(0xFFFFA500)
                           : machineOrder.status == "Planned"
-                          ? const Color.fromARGB(255, 173, 183, 187)
-                          : const Color.fromARGB(255, 0, 238, 8);
-
+                          ? const Color(0xFF2196F3)
+                          : const Color(0xFF4CAF50);
                       return Card(
                         color: Colors.white,
                         margin: const EdgeInsets.only(bottom: 11),
@@ -230,11 +229,20 @@ class _MachineorderpageState extends State<Machineorderpage> {
                                               ),
                                             ),
                                           ),
-                                          child: const Text(
-                                            'Start',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.play_arrow,
+                                                color: Colors.white,
+                                              ),
+                                              SizedBox(width: 4),
+                                              const Text(
+                                                'Start Order',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
