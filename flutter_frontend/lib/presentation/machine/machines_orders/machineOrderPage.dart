@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/erp_order_model.dart';
+import 'package:pfe_mes/presentation/machine/machines_orders/ordersProgressionPage.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/machineOrders_provider.dart';
@@ -47,26 +50,49 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : machineOrdersList.isEmpty
           ? const Center(child: Text('No Orders Found'))
           : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Order Cards ──────────────────────────────
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: machineOrdersList.length,
-              itemBuilder: (context, index) {
-                final order = machineOrdersList[index];
-                final style = _badgeStyle(order.status);
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Order Cards ──────────────────────────────
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: machineOrdersList.length,
+                    itemBuilder: (context, index) {
+                      final order = machineOrdersList[index];
+                      final style = _badgeStyle(order.status);
 
-                return Opacity(
-                  opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
-                  child: _OrderCard(order: order, badgeStyle: style),
-                );
-              },
+                      return Opacity(
+                        opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
+                        child: _OrderCard(
+                          order: order,
+                          badgeStyle: style,
+                          machineNo: widget.machineNo,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
+    );
+  }
+
+  Widget _infoBlock(dynamic title, dynamic titleValue, bool isExpandable) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(color: Colors.grey)),
+        isExpandable
+            ? ExpandableText(
+                text: titleValue,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+              )
+            : Text(
+                titleValue,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+      ],
     );
   }
 }
@@ -117,10 +143,15 @@ _BadgeStyle _badgeStyle(String status) {
 // ── Order Card ────────────────────────────────────────────────────────────────
 
 class _OrderCard extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final _BadgeStyle badgeStyle;
+  final String machineNo;
 
-  const _OrderCard({required this.order, required this.badgeStyle});
+  const _OrderCard({
+    required this.order,
+    required this.badgeStyle,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -146,8 +177,16 @@ class _OrderCard extends StatelessWidget {
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 520;
               return isWide
-                  ? _WideLayout(order: order, badgeStyle: badgeStyle)
-                  : _NarrowLayout(order: order, badgeStyle: badgeStyle);
+                  ? _WideLayout(
+                      order: order,
+                      badgeStyle: badgeStyle,
+                      machineNo: machineNo,
+                    )
+                  : _NarrowLayout(
+                      order: order,
+                      badgeStyle: badgeStyle,
+                      machineNo: machineNo,
+                    );
             },
           ),
         ),
@@ -159,10 +198,15 @@ class _OrderCard extends StatelessWidget {
 // ── Wide Layout ───────────────────────────────────────────────────────────────
 
 class _WideLayout extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final _BadgeStyle badgeStyle;
+  final String machineNo;
 
-  const _WideLayout({required this.order, required this.badgeStyle});
+  const _WideLayout({
+    required this.order,
+    required this.badgeStyle,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +224,7 @@ class _WideLayout extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        const _ActionButtons(),
+        _ActionButtons(order: order, machineNo: machineNo),
       ],
     );
   }
@@ -189,10 +233,15 @@ class _WideLayout extends StatelessWidget {
 // ── Narrow Layout ─────────────────────────────────────────────────────────────
 
 class _NarrowLayout extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final _BadgeStyle badgeStyle;
+  final String machineNo;
 
-  const _NarrowLayout({required this.order, required this.badgeStyle});
+  const _NarrowLayout({
+    required this.order,
+    required this.badgeStyle,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +252,7 @@ class _NarrowLayout extends StatelessWidget {
         const SizedBox(height: 12),
         _InfoGrid(order: order),
         const SizedBox(height: 14),
-        const _ActionButtons(fullWidth: true),
+        _ActionButtons(fullWidth: true, order: order, machineNo: machineNo),
       ],
     );
   }
@@ -212,7 +261,7 @@ class _NarrowLayout extends StatelessWidget {
 // ── Badge + Order ID ──────────────────────────────────────────────────────────
 
 class _BadgeAndId extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final _BadgeStyle badgeStyle;
 
   const _BadgeAndId({required this.order, required this.badgeStyle});
@@ -255,7 +304,7 @@ class _BadgeAndId extends StatelessWidget {
 // ── Info Grid ─────────────────────────────────────────────────────────────────
 
 class _InfoGrid extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
 
   const _InfoGrid({required this.order});
 
@@ -318,8 +367,14 @@ class _InfoCell extends StatelessWidget {
 
 class _ActionButtons extends StatelessWidget {
   final bool fullWidth;
+  final MachineOrderModel order;
+  final String machineNo;
 
-  const _ActionButtons({this.fullWidth = false});
+  _ActionButtons({
+    this.fullWidth = false,
+    required this.order,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +393,37 @@ class _ActionButtons extends StatelessWidget {
     );
 
     final startBtn = ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: () async {
+        try {
+          final provider = context.read<MachineordersProvider>();
+          final success = await provider.startOrder(
+            order.orderNo,
+            order.operationNo,
+            machineNo,
+          );
+          if (!context.mounted) return;
+          if (success) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => OrdersProgressionPage()),
+            );
+          }
+        } catch (e) {
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("Cannot Start Operation"),
+              content: Text(e.toString().replaceFirst("Exception: ", "")),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("OK"),
+                ),
+              ],
+            ),
+          );
+        }
+      },
       icon: const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
       label: const Text(
         'Start Order',
