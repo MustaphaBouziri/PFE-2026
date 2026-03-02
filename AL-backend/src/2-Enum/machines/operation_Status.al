@@ -2,21 +2,18 @@ enum 50102 "MES Operation Status"
 {
     Extensible = true;
 
-    value(0; NotStarted)
-    {
-        Caption = 'NotStarted';
-    }
+    
 
-    value(1; Running)
+    value(0; Running)
     {
         Caption = 'Running';
     }
 
-    value(2; Paused)
+    value(1; Paused)
     {
         Caption = 'Paused';
     }
-    value(3; Finished)
+    value(2; Finished)
     {
         Caption = 'Finished';
     }
