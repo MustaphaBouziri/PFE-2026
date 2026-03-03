@@ -8,6 +8,7 @@ import '../../../domain/machines/providers/machineOrders_provider.dart';
 
 class Machineorderpage extends StatefulWidget {
   final String machineNo;
+  
 
   const Machineorderpage({super.key, required this.machineNo});
 
@@ -31,18 +32,7 @@ class _MachineorderpageState extends State<Machineorderpage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Machine Orders - ${widget.machineNo}'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
-        ),
-      ),
+
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
@@ -405,7 +395,9 @@ class _ActionButtons extends StatelessWidget {
           if (success) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => OrdersProgressionPage()),
+              MaterialPageRoute(
+                builder: (_) => OrdersProgressionPage(machineNo: machineNo),
+              ),
             );
           }
         } catch (e) {

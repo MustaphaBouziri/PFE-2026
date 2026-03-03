@@ -38,4 +38,11 @@ class MachineordersProvider with ChangeNotifier {
 
   return result;
 }
+//________________machine operations status stream __________
+
+
+
+  Stream<List<Map<String, dynamic>>>  getMachineOperationsStatusStream(String machineNo) {
+    return _service.streamMachines(machineNo);
+  }
 }

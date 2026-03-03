@@ -27,6 +27,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
           ChangeNotifierProvider(create: (_) => MachineordersProvider()),
           Provider(create: (_) => MesMachinesProvider()),
+        
         ],
         child: const MyApp(),
       ),

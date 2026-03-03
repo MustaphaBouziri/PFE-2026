@@ -63,4 +63,53 @@ class ErpMachineOrdersService {
       throw Exception('Failed to start operation: ${response.statusCode}');
     }
   }
+
+  //____________fetch machine operation status monitoring
+
+  Future<List<Map<String, dynamic>>> fetchMachineOperationStatus(
+    String machineNo,
+  ) async {
+  
+    final body = jsonEncode({'machineNo': machineNo});
+
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchMachineOperationStatus),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final String valueString = data['value'] ?? '[]';
+
+      final List<dynamic> decodedList = jsonDecode(valueString);
+
+      return decodedList
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } else {
+      throw Exception(
+        'Failed to fetch machine operations status: ${response.statusCode}',
+      );
+    }
+  }
+
+  // __________________ STREAM __________________
+
+  Stream<List<Map<String, dynamic>>> streamMachines(String machineNo) async* {
+    while (true) {
+      try {
+        final machineOperationsStatus = await fetchMachineOperationStatus(
+          machineNo,
+        );
+
+        yield machineOperationsStatus;
+      } catch (e) {
+        yield [];
+      }
+
+      await Future.delayed(const Duration(seconds: 5));
+    }
+  }
 }
