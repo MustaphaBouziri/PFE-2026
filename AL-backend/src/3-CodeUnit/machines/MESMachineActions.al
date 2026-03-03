@@ -193,16 +193,18 @@ codeunit 50130 "MES Machine Actions"
 
         // we check if there is a curently worked on operation of a diferent order 
         MESOperation.Reset();
+        MESOperation.SetCurrentKey("Machine No", "Last Updated At");
         MESOperation.SetRange("Machine No", machineNo);
-        MESOperation.SetRange("Operation Status", MESOperation."Operation Status"::Running);
 
-        if MESOperation.FindFirst() then
-            Error(
-                'Machine %1 is already running another operation (Order %2 - Operation %3). Pause or finish it first.',
-                MESOperation."Machine No",
-                MESOperation."Prod Order No",
-                MESOperation."Operation No"
-            );
+        if MESOperation.FindLast() then begin
+            if MESOperation."Operation Status" = MESOperation."Operation Status"::Running then
+                Error(
+                    'Machine %1 is already running another operation (Order %2 - Operation %3). Pause or finish it first.',
+                    MESOperation."Machine No",
+                    MESOperation."Prod Order No",
+                    MESOperation."Operation No"
+                );
+        end;
 
 
         // now we find the previous order routing line 
@@ -271,43 +273,90 @@ codeunit 50130 "MES Machine Actions"
 
     //______________________________________________________________________
 
-    procedure fetchOperationStatus(
-    prodOderNo: Code[20];
-    operationNo: Code[10];
-    MachineNo: Code[20]
-): Text
+    procedure fetchOperationsStatus(machineNo: Code[20]): Text
     var
-        MESOperation: Record "MES Operation Status";
-        MESOperationObj: JsonObject;
-        MESOperationArr: JsonArray;
-        ResultTxt: Text;
+        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatusObj: JsonObject;
+        MESOperationStatusArr: JsonArray;
+
+        LastProdOrder: Code[20];
+        LastOperation: Code[10];
     begin
-        MESOperation.Reset();
+        MESOperationStatus.Reset();
 
-        MESOperation.SetCurrentKey(
-        "Prod Order No",
-        "Operation No",
-        "Machine No",
-        "Last Updated At"
-);
+        /*
+        our table now look like this : 
+        | Machine | Order   | Op | Time  | Status   |
+    | ------- | ------- | -- | ----- | -------- |
+    | 110     | 1011002 | 40 | 13:30 | Running  |
+    | 110     | 1011002 | 40 | 13:39 | Paused   |
+    | 110     | 1011003 | 40 | 13:42 | Running  |
+    | 110     | 1011003 | 40 | 13:35 | Paused   |
+    | 110     | 1011001 | 30 | 13:10 | Finished |
 
-        MESOperation.SetRange("Prod Order No", prodOderNo);
-        MESOperation.SetRange("Operation No", operationNo);
-        MESOperation.SetRange("Machine No", MachineNo);
 
-        if MESOperation.FindLast() then begin
-            Clear(MESOperationObj);
+        */
+        // now sort by machine order operation and time 
+        MESOperationStatus.SetCurrentKey(
+            "Machine No",
+            "Prod Order No",
+            "Operation No",
+            "Last Updated At"
+        );
 
-            MESOperationObj.Add('ProdOrderNo', MESOperation."Prod Order No");
-            MESOperationObj.Add('OperationNo', MESOperation."Operation No");
-            MESOperationObj.Add('MachineNo', MESOperation."Machine No");
-            MESOperationObj.Add('OperationStatus', Format(MESOperation."Operation Status"));
-            MESOperationObj.Add('LastUpdatedAt', Format(MESOperation."Last Updated At"));
+        MESOperationStatus.SetRange("Machine No", machineNo);
+        MESOperationStatus.Ascending(false); // newest record per group is now the first so i dont need to use findlast make stuff shorter
+        /*
+        now our table is sorted and looks like this : 
 
-            MESOperationArr.Add(MESOperationObj);
+        | Order   | Op | Time  | Status   |
+    | ------- | -- | ----- | -------- |
+    | 1011003 | 40 | 13:42 | Running  |
+    | 1011003 | 40 | 13:35 | Paused   |
+    | 1011002 | 40 | 13:39 | Paused   |
+    | 1011002 | 40 | 13:30 | Running  |
+    | 1011001 | 30 | 13:10 | Finished |
+
+
+        */
+
+        if MESOperationStatus.FindSet() then begin
+            repeat
+
+                // since we are sorted by newest first,
+                // the first time we see a group = latest status
+                if (MESOperationStatus."Prod Order No" <> LastProdOrder) or
+                   (MESOperationStatus."Operation No" <> LastOperation) then begin
+
+                    LastProdOrder := MESOperationStatus."Prod Order No"; //: = 1011003
+                    LastOperation := MESOperationStatus."Operation No"; //:= 40
+
+                    /* here earlier i did a mistake, i did setFilter where running or paused which is wrong. 
+                    why ? bcz it will only fetch me rows with status running and paused as a group,ignoring thoese who have paused.
+                     so Find can return me paused or running but it's wrong bcz i might have one that is paused at latest time which is not counted
+                      bcz of the setFilter so no matter what the find return it will be wrong thats why we use the if else here 
+                      : if the last record is running or paused add to the obj else go out and loop again */
+
+                    if (MESOperationStatus."Operation Status" =
+                        MESOperationStatus."Operation Status"::Running) or
+                       (MESOperationStatus."Operation Status" =
+                        MESOperationStatus."Operation Status"::Paused) then begin
+
+                        Clear(MESOperationStatusObj);
+
+                        MESOperationStatusObj.Add('prodOrderNo', MESOperationStatus."Prod Order No");
+                        MESOperationStatusObj.Add('operationNo', MESOperationStatus."Operation No");
+                        MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
+                        MESOperationStatusObj.Add('lastUpdatedAt', Format(MESOperationStatus."Last Updated At"));
+
+                        MESOperationStatusArr.Add(MESOperationStatusObj);
+                    end;
+                end;
+
+            until MESOperationStatus.Next() = 0;
         end;
 
-        exit(JsonToTextArr(MESOperationArr));
+        exit(JsonToTextArr(MESOperationStatusArr));
     end;
 
     /*procedure fetchOperationProgression(

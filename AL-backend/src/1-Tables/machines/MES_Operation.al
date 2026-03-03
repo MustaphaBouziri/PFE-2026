@@ -53,7 +53,7 @@ table 50108 "MES Operation Status"
             Clustered = true;
         }
 
-        key(StatusTimeline; "Prod Order No", "Operation No", "Machine No", "Last Updated At")
+          key(StatusTimeline; "Prod Order No", "Operation No", "Machine No", "Last Updated At")
         {
         }
         key(MachineKey; "Machine No") { }
