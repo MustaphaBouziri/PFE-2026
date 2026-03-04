@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/machine/models/erp_order_model.dart';
 import '../models/badge_style.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/badge_and_id.dart';
 import '../widgets/info_grid.dart';
 
 class WideLayout extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final BadgeStyle badgeStyle;
+  final String machineNo;
 
-  const WideLayout({super.key, required this.order, required this.badgeStyle});
+  const WideLayout({
+    required this.order,
+    required this.badgeStyle,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +33,9 @@ class WideLayout extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        const ActionButtons(),
+        ActionButtons(order: order, machineNo: machineNo),
       ],
     );
   }
 }
+

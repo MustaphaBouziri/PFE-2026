@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/machine/models/erp_order_model.dart';
 import '../layout/narrow_layout.dart';
 import '../layout/wide_layout.dart';
 import '../models/badge_style.dart';
 
 class OrderCard extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final BadgeStyle badgeStyle;
+  final String machineNo;
 
-  const OrderCard({super.key, required this.order, required this.badgeStyle});
+  const OrderCard({
+    required this.order,
+    required this.badgeStyle,
+    required this.machineNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +40,16 @@ class OrderCard extends StatelessWidget {
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 520;
               return isWide
-                  ? WideLayout(order: order, badgeStyle: badgeStyle)
-                  : NarrowLayout(order: order, badgeStyle: badgeStyle);
+                  ? WideLayout(
+                order: order,
+                badgeStyle: badgeStyle,
+                machineNo: machineNo,
+              )
+                  : NarrowLayout(
+                order: order,
+                badgeStyle: badgeStyle,
+                machineNo: machineNo,
+              );
             },
           ),
         ),
