@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/machines/providers/machineOrders_provider.dart';
+import '../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'models/badge_style.dart';
 import 'widgets/order_card.dart';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/utils.dart';
 import 'info_cell.dart';
 
 class InfoGrid extends StatelessWidget {
@@ -17,12 +18,16 @@ class InfoGrid extends StatelessWidget {
         const SizedBox(width: 16),
         InfoCell(
           label: 'Start',
-          value: order.plannedStart != null ? '${order.plannedStart}' : '—',
+          value: order.plannedStart != null
+              ? Utils.formatTimestamp(order.plannedStart.toString())
+              : '—',
         ),
         const SizedBox(width: 16),
         InfoCell(
           label: 'End',
-          value: order.plannedEnd != null ? '${order.plannedEnd}' : '—',
+          value: order.plannedEnd != null
+              ? Utils.formatTimestamp(order.plannedEnd.toString())
+              : '—',
         ),
       ],
     );

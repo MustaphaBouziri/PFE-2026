@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../data/machine/models/erp_order_model.dart';
+import '../../../../../data/machine/models/erp_order_model.dart';
 import '../models/badge_style.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/badge_and_id.dart';

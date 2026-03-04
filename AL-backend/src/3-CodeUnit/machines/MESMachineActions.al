@@ -221,7 +221,7 @@ codeunit 50130 "MES Machine Actions"
             1/ the privious operation need to be fully done to move on to the next operation
             */
 
-            if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
+          /*   if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
                                                                                  // we r in findLast thats why its named PreviousMesOpration + we do need to know the previous operation info from mes table
 
                 PreviousMESOperation.Reset();
@@ -235,7 +235,7 @@ codeunit 50130 "MES Machine Actions"
                     Error('Previous operation must be fully finished before starting this one.');
 
 
-            end /*else begin
+            end */ /*else begin
                 // 2/ no need to wait for the previous operation to be done to move on to the next one 
                 PreviousMESOperation.Reset();
                 PreviousMESOperation.SetRange("Prod Order No", prodOderNo);

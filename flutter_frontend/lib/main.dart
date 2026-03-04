@@ -1,7 +1,6 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pfe_mes/presentation/machine/machines_orders/machineOrderPage.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
