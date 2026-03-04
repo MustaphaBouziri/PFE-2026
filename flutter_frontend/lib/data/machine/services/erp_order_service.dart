@@ -14,9 +14,11 @@ class ErpMachineOrdersService {
       headers: AppConstants.jsonHeaders,
       body: body,
     );
+    print(response.body);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      
 
       final String valueString = data['value'] ?? '[]';
 
