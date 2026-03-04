@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/machines_orders/tabsMain.dart';
 
 import '../../../data/machine/models/mes_machine_model.dart';
 import '../machines_orders/machineOrderPage.dart';
@@ -42,7 +43,7 @@ class MachineCard extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    Machineorderpage(machineNo: machine.machineNo),
+                    MachineMainPage(machineNo: machine.machineNo),
               ),
             );
           },

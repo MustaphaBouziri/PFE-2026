@@ -24,4 +24,25 @@ class MachineordersProvider with ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> startOrder(
+  String prodOderNo,
+  String operationNo,
+  String machineNo,
+) async {
+  final result = await _service.getStartOperationValidation(
+    prodOderNo,
+    operationNo,
+    machineNo,
+  );
+
+  return result;
+}
+//________________machine operations status stream __________
+
+
+
+  Stream<List<Map<String, dynamic>>>  getMachineOperationsStatusStream(String machineNo) {
+    return _service.streamMachines(machineNo);
+  }
 }

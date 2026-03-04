@@ -50,25 +50,25 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : machineOrdersList.isEmpty
           ? const Center(child: Text('No Orders Found'))
           : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: machineOrdersList.length,
-                    itemBuilder: (context, index) {
-                      final order = machineOrdersList[index];
-                      final style = badgeStyleFromStatus(order.status);
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: machineOrdersList.length,
+              itemBuilder: (context, index) {
+                final order = machineOrdersList[index];
+                final style = badgeStyleFromStatus(order.status);
 
-                      return Opacity(
-                        opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
-                        child: OrderCard(order: order, badgeStyle: style),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                return Opacity(
+                  opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
+                  child: OrderCard(order: order, badgeStyle: style),
+                );
+              },
             ),
+          ),
+        ],
+      ),
     );
   }
 }
