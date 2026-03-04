@@ -26,7 +26,7 @@ table 50108 "MES Operation Status"
             TableRelation = "Machine Center"."No.";
         }
 
-        field(5; "Operator Id"; Code[20])
+        field(5; "Operator Id"; Code[50])
         {
             TableRelation = "MES User"."User Id";
         }

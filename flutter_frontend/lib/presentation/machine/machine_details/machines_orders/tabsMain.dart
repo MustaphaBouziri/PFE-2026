@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/presentation/machine/machines_orders/machineOrderPage.dart';
-import 'package:pfe_mes/presentation/machine/machines_orders/ordersProgressionPage.dart';
-import 'package:pfe_mes/presentation/widgets/navBar.dart';
+
+import '../../../widgets/navBar.dart';
+import 'machineOrderPage.dart';
+import '../machine_production/ordersProgressionPage.dart';
 
 class MachineMainPage extends StatefulWidget {
   final String machineNo;

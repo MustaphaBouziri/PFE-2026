@@ -60,7 +60,7 @@ class ErpMachineOrdersService {
         throw Exception(innerJson['message'] ?? 'Unknown error');
       }
     } else {
-      throw Exception('Failed to start operation: ${response.statusCode}');
+      throw Exception('Failed to start operation: ${response.statusCode} ${response.body}');
     }
   }
 
