@@ -81,51 +81,71 @@ codeunit 50130 "MES Machine Actions"
 
     end;
 
+    //______________________________fetching machine orders _____________________________________
+
 
     procedure getMachineOrders(machineNo: Text): Text
-    var
-        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
-        ProductOrderLine: Record "Prod. Order Line";
-        ProductOrderRoutingLineArr: JsonArray;
-        ProductOrderRoutingLineObj: JsonObject;
-    begin
+var
+    ProductOrderRoutingLine: Record "Prod. Order Routing Line";
+    ProductOrderLine: Record "Prod. Order Line";
+    ProductOrderRoutingLineArr: JsonArray;
+    ProductOrderRoutingLineObj: JsonObject;
+    MESOperation: Record "MES Operation Status";
+begin
 
-        if MachineNo = '' then Error('Machine Number is required');
-        ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center"); // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
-        ProductOrderRoutingLine.SetRange("No.", MachineNo);
-        // setRange used for simple comperation , setFilter for complex comperation
-        ProductOrderRoutingLine.SetFilter(Status, '%1|%2|%3', // %1|%2|%3 means get me orders where status = ? or ? or ?
-                                          ProductOrderRoutingLine.Status::Planned,
-                                          ProductOrderRoutingLine.Status::"Firm Planned",
-                                          ProductOrderRoutingLine.Status::Released
-                                         );
+    if MachineNo = '' then Error('Machine Number is required');
 
-        if ProductOrderRoutingLine.FindSet() then
-            repeat
+    ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center"); 
+    // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
+
+    ProductOrderRoutingLine.SetRange("No.", MachineNo);
+
+    // setRange used for simple comperation , setFilter for complex comperation
+    ProductOrderRoutingLine.SetFilter(Status, '%1|%2|%3', 
+                                      // %1|%2|%3 means get me orders where status = ? or ? or ?
+                                      ProductOrderRoutingLine.Status::Planned,
+                                      ProductOrderRoutingLine.Status::"Firm Planned",
+                                      ProductOrderRoutingLine.Status::Released
+                                     );
+
+    if ProductOrderRoutingLine.FindSet() then
+        repeat
+            MESOperation.Reset();
+            MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
+            MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
+            MESOperation.SetRange("Machine No", MachineNo);
+
+            // if this order/operation does not exist in the mes operation table enter the body
+            
+            if not MESOperation.FindFirst() then begin
+                
                 Clear(ProductOrderRoutingLineObj);
+
+                ProductOrderLine.Reset();
                 ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
 
                 if ProductOrderLine.FindFirst() then begin
+                    //so the prod line is used for to know the order info and prod order routing line is used to know the operation details.
                     ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
                     ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
                     ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
                     ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
-                    // Order description
                     ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
                     ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
                     ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
-                    // Operation description
                     ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
                     ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
 
                     ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
                 end;
 
-            until ProductOrderRoutingLine.Next() = 0;
+            end;
 
-        exit(JsonToTextArr(ProductOrderRoutingLineArr));
+        until ProductOrderRoutingLine.Next() = 0;
 
-    end;
+    exit(JsonToTextArr(ProductOrderRoutingLineArr));
+
+end;
     // you need to explain this why did you remove the arrtotext func just to replace it with another func that does thhe same thing
 
     //____________________________________________________________________________________________________________
