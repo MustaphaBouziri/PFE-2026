@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/machines/providers/machineOrders_provider.dart';
@@ -21,9 +22,10 @@ class OrdersProgressionPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: provider.getMachineOperationsStatusStream(machineNo),
+      body: StreamBuilder<List<OperationStatusAndProgressModel>>(
+        stream: provider.getMachineOperationStatusAndProgressStream(machineNo),
         builder: (context, snapshot) {
+          
           // ── Loading ──────────────────────────────────────────────────────
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());

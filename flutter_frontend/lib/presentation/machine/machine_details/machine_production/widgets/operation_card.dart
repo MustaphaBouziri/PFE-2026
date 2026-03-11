@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
 import '../layout/narrow_layout.dart';
 import '../layout/wide_layout.dart';
@@ -10,42 +11,25 @@ import '../models/status_style.dart';
 /// [IntrinsicHeight] (which breaks inside ListView) or a non-uniform
 /// Border (which breaks with borderRadius).
 class OperationCard extends StatelessWidget {
-  final Map<String, dynamic> operationData;
+  final OperationStatusAndProgressModel operationData;
   final VoidCallback? onTap;
 
   const OperationCard({super.key, required this.operationData, this.onTap});
+  //fixed by making it use the model  + fixed the proggress now dynamic
 
-  String get _prodOrderNo => operationData['prodOrderNo']?.toString() ?? '—';
+  String get _prodOrderNo => operationData.prodOrderNo;
 
-  String get _operationNo => operationData['operationNo']?.toString() ?? '—';
+  String get _operationNo => operationData.operationNo;
 
-  String get _operationStatus =>
-      operationData['operationStatus']?.toString() ?? '';
+  String get _operationStatus => operationData.operationStatus;
 
-  String? get _lastUpdatedAt => operationData['lastUpdatedAt']?.toString();
+  String get _lastUpdatedAt => operationData.lastUpdatedAt;
 
   double get _progress {
-    final rawProgress = operationData['progress'];
-    if (rawProgress != null) {
-      final p = (rawProgress as num).toDouble();
-      return p > 1.0 ? p / 100.0 : p;
+    if (operationData.orderQty != 0) {
+      return (operationData.progressPercent / 100).clamp(0.0, 1.0);
     }
-    final produced = operationData['producedQty'];
-    final required = operationData['requiredQty'];
-    if (produced != null && required != null) {
-      final req = (required as num).toDouble();
-      if (req > 0) return ((produced as num).toDouble() / req).clamp(0.0, 1.0);
-    }
-    switch (_operationStatus) {
-      case 'Running':
-        return 0.5;
-      case 'Paused':
-        return 0.35;
-      case 'Finished':
-        return 1.0;
-      default:
-        return 0.0;
-    }
+    return 0.0;
   }
 
   @override

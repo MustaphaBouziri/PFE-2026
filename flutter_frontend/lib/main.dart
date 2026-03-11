@@ -79,7 +79,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    /*return Consumer<AuthProvider>(
+   /* return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();

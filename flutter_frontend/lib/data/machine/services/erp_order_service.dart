@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
 import '../models/erp_order_model.dart';
 import '../../../core/constants/app_constants.dart';
@@ -66,6 +67,7 @@ class ErpMachineOrdersService {
     }
   }
 
+/*
   //____________fetch machine operation status monitoring
 
   Future<List<Map<String, dynamic>>> fetchMachineOperationStatus(
@@ -98,6 +100,7 @@ class ErpMachineOrdersService {
   }
 
   // __________________ STREAM __________________
+  // need to change the stream name
 
   Stream<List<Map<String, dynamic>>> streamMachines(String machineNo) async* {
     while (true) {
@@ -114,4 +117,63 @@ class ErpMachineOrdersService {
       await Future.delayed(const Duration(seconds: 5));
     }
   }
+  */
+
+  Future<List<OperationStatusAndProgressModel>> fetchMachineOperationStatusAndProgress(
+    String machineNo,
+  ) async {
+  
+    final body = jsonEncode({'machineNo': machineNo});
+
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchMachineOperationStatusAndProgress),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final String valueString = data['value'] ?? '[]';
+
+      final List<dynamic> machineOperationStatusAndProgressList = jsonDecode(valueString);
+
+      return machineOperationStatusAndProgressList
+          .map((operationStatusAndProgress) => OperationStatusAndProgressModel.fromJson(operationStatusAndProgress))
+          .toList();
+    } else {
+      throw Exception(
+        'Failed to fetch machine operations status and progress : ${response.statusCode}',
+      );
+    }
+  }
+
+  // __________________ STREAM __________________
+  
+
+  Stream<List<OperationStatusAndProgressModel>> streamMachinesOperationStatusAndProgress(String machineNo) async* {
+    while (true) {
+      try {
+        final machineOperationsStatusAndProgress = await fetchMachineOperationStatusAndProgress(
+          machineNo,
+        );
+
+        yield machineOperationsStatusAndProgress;
+      } catch (e) {
+        yield [];
+      }
+
+      await Future.delayed(const Duration(seconds: 5));
+    }
+  }
 }
+
+
+
+
+
+
+
+
+
+

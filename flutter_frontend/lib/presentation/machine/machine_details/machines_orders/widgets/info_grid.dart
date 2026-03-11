@@ -18,16 +18,14 @@ class InfoGrid extends StatelessWidget {
         const SizedBox(width: 16),
         InfoCell(
           label: 'Start',
-          value: order.plannedStart != null
-              ? Utils.formatTimestamp(order.plannedStart.toString())
-              : '—',
+          value: Utils.formatTimestamp(order.plannedStart.toString()),
         ),
         const SizedBox(width: 16),
         InfoCell(
           label: 'End',
-          value: order.plannedEnd != null
-              ? Utils.formatTimestamp(order.plannedEnd.toString())
-              : '—',
+          value: 
+              Utils.formatTimestamp(order.plannedEnd.toString()),
+            
         ),
       ],
     );
