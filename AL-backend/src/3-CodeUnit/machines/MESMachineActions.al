@@ -458,7 +458,7 @@ codeunit 50130 "MES Machine Actions"
 
         exit(JsonToTextArr(MESOperationProgressArr));
     end;
-    
+
 
     //_____________progress + status merge___________________
 
@@ -519,6 +519,7 @@ codeunit 50130 "MES Machine Actions"
                             MESOperationStatusObj.Add('producedQty', MESOperationProgress."Produced Quantity");
                             MESOperationStatusObj.Add('scrapQty', MESOperationProgress."Scrap Quantity");
                             MESOperationStatusObj.Add('orderQty', MESOperationProgress."Order Quantity");
+                            MESOperationStatusObj.Add('itemDescription', MESOperationProgress."Item Description");
                             if MESOperationProgress."Order Quantity" <> 0 then
                                 MESOperationStatusObj.Add('progressPercent',
                                     (MESOperationProgress."Produced Quantity" / MESOperationProgress."Order Quantity") * 100);
