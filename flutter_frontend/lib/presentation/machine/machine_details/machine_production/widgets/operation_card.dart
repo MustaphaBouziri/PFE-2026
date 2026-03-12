@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/operationDetailPage.dart';
 
 import '../layout/narrow_layout.dart';
 import '../layout/wide_layout.dart';
@@ -12,9 +13,9 @@ import '../models/status_style.dart';
 /// Border (which breaks with borderRadius).
 class OperationCard extends StatelessWidget {
   final OperationStatusAndProgressModel operationData;
-  final VoidCallback? onTap;
+  
 
-  const OperationCard({super.key, required this.operationData, this.onTap});
+  const OperationCard({super.key, required this.operationData});
   //fixed by making it use the model  + fixed the proggress now dynamic
 
   String get _prodOrderNo => operationData.prodOrderNo;
@@ -40,7 +41,9 @@ class OperationCard extends StatelessWidget {
     return Opacity(
       opacity: isRunning ? 1.0 : 0.80,
       child: GestureDetector(
-        onTap: onTap,
+        onTap:() {
+          Navigator.push(context, MaterialPageRoute(builder:(context) => OperationDetailPage(operationData: operationData,),));
+        },
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(

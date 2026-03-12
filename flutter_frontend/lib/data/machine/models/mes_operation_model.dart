@@ -7,6 +7,7 @@ class OperationStatusAndProgressModel {
   final double scrapQty;
   final double orderQty;
   final double progressPercent;
+  final String itemDescription;
 
   OperationStatusAndProgressModel({
     required this.prodOrderNo,
@@ -17,6 +18,7 @@ class OperationStatusAndProgressModel {
     required this.scrapQty,
     required this.orderQty,
     required this.progressPercent,
+    required this.itemDescription,
   });
 
   factory OperationStatusAndProgressModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class OperationStatusAndProgressModel {
       scrapQty:        (json['scrapQty']        as num? ?? 0).toDouble(),
       orderQty:        (json['orderQty']        as num? ?? 0).toDouble(),
       progressPercent: (json['progressPercent'] as num? ?? 0).toDouble(),
+      itemDescription: json['itemDescription'] ?? '',
     );
   }
 }
