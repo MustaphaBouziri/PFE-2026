@@ -28,7 +28,7 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
           children: [
             CurrentOrderInfoContainer(operationData: widget.operationData),
             const SizedBox(height: 16),
-            ActionButtonsContainer(),
+            ActionButtonsContainer(operationData: widget.operationData),
             const SizedBox(height: 16),
             ProductionChart(),
             const SizedBox(height: 16),

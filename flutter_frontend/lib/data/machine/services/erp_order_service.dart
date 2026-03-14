@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+
 import 'package:http/http.dart' as http;
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
@@ -15,7 +16,7 @@ class ErpMachineOrdersService {
       headers: AppConstants.jsonHeaders,
       body: body,
     );
-    print(response.body);
+    
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -164,6 +165,86 @@ class ErpMachineOrdersService {
       }
 
       await Future.delayed(const Duration(seconds: 5));
+    }
+  }
+  //________________________________fetch + stream live data for a specific operation
+
+  Future<OperationStatusAndProgressModel?> fetchOperationLiveData(
+  String machineNo, String prodOderNo, String operationNo
+) async {
+  final body = jsonEncode({
+    'machineNo': machineNo,
+    'prodOderNo': prodOderNo,
+    'operationNo': operationNo,
+  });
+
+  final response = await http.post(
+    Uri.parse(AppConstants.fetchOperationLiveData),
+    headers: AppConstants.jsonHeaders,
+    body: body,
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final String valueString = data['value'] ?? '[]';
+    final List<dynamic> list = jsonDecode(valueString);
+
+    // list.first bc return an array and we only need the first one after all it's basily one operation will be returned 
+    return list.isNotEmpty
+        ? OperationStatusAndProgressModel.fromJson(list.first)
+        : null;
+  } else {
+    throw Exception('Failed to fetch status and progress : ${response.statusCode}');
+  }
+}
+
+Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
+  String machineNo, String prodOderNo, String operationNo) async* {
+  while (true) {
+    try {
+      final data = await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+      yield data;
+    } catch (e) {
+      yield null;
+    }
+    await Future.delayed(const Duration(seconds: 5));
+  }
+}
+
+
+//_________declaire production _______________
+
+Future<bool> declareProduction(
+    String prodOderNo,
+    String operationNo,
+    String machineNo,
+    double input,
+  ) async {
+    final body = jsonEncode({
+      'prodOderNo': prodOderNo,
+      'operationNo': operationNo,
+      'machineNo': machineNo,
+      'input':input
+    });
+
+    final response = await http.post(
+      Uri.parse(AppConstants.declareProduction),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final outerJson = jsonDecode(response.body);
+
+      final innerJson = jsonDecode(outerJson['value']);
+
+      if (innerJson['value'] == true) {
+        return true;
+      } else {
+        throw Exception(innerJson['message'] ?? 'Unknown error');
+      }
+    } else {
+      throw Exception('Failed to declaire production: ${response.statusCode} ${response.body}');
     }
   }
 }

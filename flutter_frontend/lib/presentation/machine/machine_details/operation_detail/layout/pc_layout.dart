@@ -47,7 +47,7 @@ class _PcLayoutState extends State<PcLayout> {
               Expanded(
                 child: Column(
                   children: [
-                    ActionButtonsContainer(),
+                    ActionButtonsContainer(operationData: widget.operationData),
                     const SizedBox(height: 16),
                     RequiredComponent(),
                   ],

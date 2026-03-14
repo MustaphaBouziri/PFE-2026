@@ -39,6 +39,13 @@ class AppConstants {
       static const String fetchMachineOperationStatusAndProgress =
       '${_machinesBase}fetchOperationsStatusAndProgress?$_company';
 
+      static const String fetchOperationLiveData =
+      '${_machinesBase}fetchOperationLiveData?$_company';
+
+      static const String declareProduction =
+      '${_machinesBase}declareProduction?$_company';
+
+
   // ─── ERP API ENDPOINTS ─────────────────────────────────────────────────────
   static String get employeesUrl => '$_apiBase/companies($companyId)/employees';
 

@@ -72,7 +72,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
             const SizedBox(height: 12),
 
-            // progress
+            //progress
             Row(
               children: [
                 Expanded(

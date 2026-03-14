@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
@@ -50,4 +51,21 @@ class MachineordersProvider with ChangeNotifier {
    Stream<List<OperationStatusAndProgressModel>>  getMachineOperationStatusAndProgressStream(String machineNo) {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }
+
+  Stream<OperationStatusAndProgressModel?>  fetchOperationLiveDataStream(String machineNo,String prodOderNo,String operationNo) {
+    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo);
+  }
+
+  //_______declaire Production 
+  Future<bool> declareProduction(
+  String prodOderNo,
+  String operationNo,
+  String machineNo,
+  double input
+) async {
+  final result = await _service.declareProduction(prodOderNo, operationNo, machineNo, input);
+  
+
+  return result;
+}
 }
