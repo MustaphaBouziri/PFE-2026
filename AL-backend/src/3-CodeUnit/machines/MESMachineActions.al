@@ -495,9 +495,11 @@ codeunit 50130 "MES Machine Actions"
 
                         // adding status fields
                         MESOperationStatusObj.Add('prodOrderNo', MESOperationStatus."Prod Order No");
+                         MESOperationStatusObj.Add('machineNo', MESOperationStatus."Machine No");
                         MESOperationStatusObj.Add('operationNo', MESOperationStatus."Operation No");
                         MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
                         MESOperationStatusObj.Add('lastUpdatedAt', Format(MESOperationStatus."Last Updated At"));
+
 
                         /*
                         so basicly for status we don't know what's there, so we explore the whole table
@@ -557,6 +559,150 @@ codeunit 50130 "MES Machine Actions"
         */
         exit(JsonToTextArr(MESOperationStatusArr));
     end;
+    //______________________________________________________________________
+
+    procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20];
+        operationNo: Code[10]): Text
+    var
+        MESOperationStatus: Record "MES Operation Status";
+        MESOperationProgress: Record "MES Operation Progression";
+        MESOperationStatusObj: JsonObject;
+        MESOperationStatusArr: JsonArray;
+    begin
+        Clear(MESOperationStatusArr);
+
+        MESOperationStatus.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
+        MESOperationStatus.SetRange("Machine No", machineNo);
+        MESOperationStatus.SetRange("Prod Order No", prodOderNo);
+        MESOperationStatus.SetRange("Operation No", operationNo);
+        MESOperationStatus.Ascending(false);
+
+        if MESOperationStatus.FindFirst() then begin
+
+            // we skip the finished operations
+            if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
+               (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
+
+                Clear(MESOperationStatusObj);
+
+                // adding status fields
+
+                MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
+
+                MESOperationProgress.Reset();
+                MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
+                MESOperationProgress.SetRange("Machine No", machineNo);
+                MESOperationProgress.SetRange("Prod Order No", MESOperationStatus."Prod Order No");
+                MESOperationProgress.SetRange("Operation No", MESOperationStatus."Operation No");
+                MESOperationProgress.Ascending(false);
+
+                if MESOperationProgress.FindFirst() then begin
+                    MESOperationStatusObj.Add('producedQty', MESOperationProgress."Produced Quantity");
+                    MESOperationStatusObj.Add('scrapQty', MESOperationProgress."Scrap Quantity");
+
+                    if MESOperationProgress."Order Quantity" <> 0 then
+                        MESOperationStatusObj.Add('progressPercent',
+                            (MESOperationProgress."Produced Quantity" / MESOperationProgress."Order Quantity") * 100);
+                end;
+
+                MESOperationStatusArr.Add(MESOperationStatusObj);
+            end;
+
+        end;
+
+
+        exit(JsonToTextArr(MESOperationStatusArr));
+    end;
+
+
+// _____________________declaire production___________
+procedure declareProduction(
+    machineNo: Code[20];
+    prodOderNo: Code[20];
+    operationNo: Code[10];
+    input: Decimal
+): Text
+var
+    ResultJson: JsonObject;
+    Success: Boolean;
+    ErrorMessage: Text;
+begin
+    ClearLastError();
+
+    Success := TryDeclareProduction(machineNo, prodOderNo, operationNo, input);
+
+    if Success then begin
+        InsertMESOperationProgression(machineNo, prodOderNo, operationNo, input);
+        ResultJson.Add('value', true);
+    end else begin
+        ErrorMessage := GetLastErrorText();
+        ResultJson.Add('value', false);
+        ResultJson.Add('message', ErrorMessage);
+    end;
+
+    exit(JsonToText(ResultJson));
+end;
+
+[TryFunction]
+local procedure TryDeclareProduction(
+    machineNo: Code[20];
+    prodOderNo: Code[20];
+    operationNo: Code[10];
+    input: Decimal
+)
+var
+    MESOperationProgress: Record "MES Operation Progression";
+begin
+    MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
+    MESOperationProgress.SetRange("Machine No", machineNo);
+    MESOperationProgress.SetRange("Prod Order No", prodOderNo);
+    MESOperationProgress.SetRange("Operation No", operationNo);
+    MESOperationProgress.Ascending(false);
+
+    if not MESOperationProgress.FindFirst() then
+        Error('Operation progression record not found.');
+
+    if input <= 0 then
+        Error('Declared quantity must be greater than zero.');
+
+    if (MESOperationProgress."Produced Quantity" + input) > MESOperationProgress."Order Quantity" then
+        Error('Declared quantity exceeds the remaining order quantity.');
+end;
+
+local procedure InsertMESOperationProgression(
+    machineNo: Code[20];
+    prodOderNo: Code[20];
+    operationNo: Code[10];
+    input: Decimal
+)
+var
+    MESOperationProgress: Record "MES Operation Progression";
+    NewMESOperationProgress: Record "MES Operation Progression";
+    Total: Decimal;
+begin
+    MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
+    MESOperationProgress.SetRange("Machine No", machineNo);
+    MESOperationProgress.SetRange("Prod Order No", prodOderNo);
+    MESOperationProgress.SetRange("Operation No", operationNo);
+    MESOperationProgress.Ascending(false);
+    MESOperationProgress.FindFirst();
+
+    Total := MESOperationProgress."Produced Quantity" + input;
+
+    NewMESOperationProgress.Init();
+    NewMESOperationProgress."Prod Order No"     := prodOderNo;
+    NewMESOperationProgress."Operation No"      := operationNo;
+    NewMESOperationProgress."Machine No"        := machineNo;
+    NewMESOperationProgress."Operator Id"       := UserId;
+    NewMESOperationProgress."Item No"           := MESOperationProgress."Item No";
+    NewMESOperationProgress."Item Description"  := MESOperationProgress."Item Description";
+    NewMESOperationProgress."Order Quantity"    := MESOperationProgress."Order Quantity";
+    NewMESOperationProgress."Produced Quantity" := Total;
+    NewMESOperationProgress."Scrap Quantity"    := 0;
+    NewMESOperationProgress.Insert(true);
+end;
+    
+
 
 }
 
