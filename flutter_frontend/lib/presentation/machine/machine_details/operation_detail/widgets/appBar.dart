@@ -25,7 +25,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
               Text(
                 "Order: " + operationData.prodOrderNo,
                 style: TextStyle(
-                  fontSize: isPhone ? 14 : 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0F172A),
                 ),
@@ -33,7 +33,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
               Text(
                 "Operation: " + operationData.operationNo,
                 style: TextStyle(
-                  fontSize: isPhone ? 12 : 11,
+                  fontSize: isPhone ? 13 : 11,
                   color: const Color(0xFF64748B),
                 ),
               ),
@@ -42,8 +42,8 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
           const Spacer(),
           Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isPhone ? 11 : 8,
-              vertical: isPhone ? 6 : 4,
+              horizontal: isPhone ? 11 : 14,
+              vertical: isPhone ? 6 : 8,
             ),
             decoration: BoxDecoration(
               color: operationData.operationStatus == 'Running'
@@ -63,7 +63,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
             child: Text(
               operationData.operationStatus,
               style: TextStyle(
-                fontSize: isPhone ? 11 : 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
                 color: operationData.operationStatus == 'Running'

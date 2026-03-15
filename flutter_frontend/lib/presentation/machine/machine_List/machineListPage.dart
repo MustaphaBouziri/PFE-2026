@@ -20,7 +20,38 @@ class _MachinelistpageState extends State<Machinelistpage> {
     ); // go up to the widget tree find the mesMachineProvider and give me access to it // false mean i just wanna the provider object and i do not wanna this widget to rebuild when it change , we did this cuz we got stream
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: NetworkImage('https://picsum.photos/200/200'),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ahmed Ben Hamed',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const Text(
+                  'ID: 00012036',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.logout, size: 16),
+              label: const Text('Logout'),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+
       body: StreamBuilder(
         stream: provider.getMachinesStream("100"),
         builder: (context, snapshot) {
@@ -56,6 +87,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         color: Colors.white,
+                        border: Border.all(color: Color(0xFFE2E8F0)),
                       ),
                       child: const Center(
                         child: Row(
@@ -84,6 +116,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         color: Colors.white,
+                        border: Border.all(color: Color(0xFFE2E8F0)),
                       ),
                       child: const Center(
                         child: Row(

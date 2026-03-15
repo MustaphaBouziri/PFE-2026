@@ -24,16 +24,20 @@ class MachineCard extends StatelessWidget {
 
         Color statusBg;
         Color statusText;
+        Color leftBorder;
 
         if (status == 'idle') {
           statusBg = const Color.fromARGB(76, 158, 158, 158);
           statusText = const Color.fromARGB(255, 85, 85, 85);
+          leftBorder = const Color.fromARGB(255, 158, 158, 158);
         } else if (status == 'running') {
           statusBg = const Color.fromARGB(40, 40, 197, 92);
           statusText = Colors.green;
+          leftBorder = Colors.green;
         } else {
           statusBg = const Color.fromARGB(40, 40, 197, 92);
           statusText = Colors.green;
+          leftBorder = Colors.green;
         }
 
         return GestureDetector(
@@ -42,12 +46,11 @@ class MachineCard extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    MachineMainPage(machineNo: machine.machineNo),
+                    MachineMainPage(machineNo: machine.machineNo,machineName: machine.machineName),
               ),
             );
           },
           child: Container(
-            padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: Colors.white,
@@ -60,67 +63,83 @@ class MachineCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        machine.machineName,
-                        style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.bold,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    width: 5,
+                    child: ColoredBox(color: leftBorder),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: padding + 5,
+                      right: padding,
+                      top: padding,
+                      bottom: padding,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                machine.machineName,
+                                style: TextStyle(
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              height: statusHeight,
+                              width: statusWidth,
+                              decoration: BoxDecoration(
+                                color: statusBg,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  machine.status ?? 'Running',
+                                  style: TextStyle(
+                                    fontSize: textSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: statusText,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                    Container(
-                      height: statusHeight,
-                      width: statusWidth,
-                      decoration: BoxDecoration(
-                        color: statusBg,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Center(
-                        child: Text(
-                          machine.status ?? 'Running',
-                          style: TextStyle(
-                            fontSize: textSize,
-                            fontWeight: FontWeight.bold,
-                            color: statusText,
-                          ),
+                        const SizedBox(height: 8),
+                        Text("departmentName", style: TextStyle(fontSize: textSize)),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Current Order:", style: TextStyle(fontSize: textSize)),
+                            Text("bluhbluh", style: TextStyle(fontSize: textSize)),
+                          ],
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Operator:", style: TextStyle(fontSize: textSize)),
+                            Text("ahmed ben salah", style: TextStyle(fontSize: textSize)),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text("departmentName", style: TextStyle(fontSize: textSize)),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Current Order:",
-                      style: TextStyle(fontSize: textSize),
-                    ),
-                    Text("bluhbluh", style: TextStyle(fontSize: textSize)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Operator:", style: TextStyle(fontSize: textSize)),
-                    Text(
-                      "ahmed ben salah",
-                      style: TextStyle(fontSize: textSize),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
