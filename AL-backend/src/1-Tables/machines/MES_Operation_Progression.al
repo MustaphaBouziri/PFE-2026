@@ -32,13 +32,13 @@ table 50109 "MES Operation Progression"
             TableRelation = "MES User"."User Id";
         }
 
-         field(6; "Item No"; Code[20]) { }
+        field(6; "Item No"; Code[20]) { }
 
         field(7; "Item Description"; Text[100]) { }
 
         field(8; "Order Quantity"; Decimal) { }
 
-        field(9; "Produced Quantity"; Decimal)
+        field(9; "Cycle Quantity"; Decimal)
         {
             DecimalPlaces = 0 : 5;
         }
@@ -48,9 +48,14 @@ table 50109 "MES Operation Progression"
             DecimalPlaces = 0 : 5;
         }
 
-   
+        field(11; "Total Produced Quantity"; Decimal)
+        {
+            DecimalPlaces = 0 : 5;
+        }
 
-        field(11; "Last Updated At"; DateTime)
+
+
+        field(12; "Last Updated At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
