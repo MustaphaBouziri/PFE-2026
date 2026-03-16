@@ -34,6 +34,7 @@ class OperationProgressBar extends StatelessWidget {
             backgroundColor: const Color(0xFFE5E7EB),
             valueColor:
             AlwaysStoppedAnimation<Color>(style.progressColor),
+
           ),
         ),
 

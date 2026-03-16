@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../../core/constants/app_constants.dart';
+import '../../../core/app_constants.dart';
 import '../models/mes_machine_model.dart';
 
 class MESMachineListService {

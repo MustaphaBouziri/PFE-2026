@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../../core/constants/app_constants.dart';
+import '../../../core/app_constants.dart';
 import '../models/erp_employees_model.dart';
 
 class ErpEmployeeService {

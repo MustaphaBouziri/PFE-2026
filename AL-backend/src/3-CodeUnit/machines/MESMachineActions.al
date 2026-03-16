@@ -85,67 +85,67 @@ codeunit 50130 "MES Machine Actions"
 
 
     procedure getMachineOrders(machineNo: Text): Text
-var
-    ProductOrderRoutingLine: Record "Prod. Order Routing Line";
-    ProductOrderLine: Record "Prod. Order Line";
-    ProductOrderRoutingLineArr: JsonArray;
-    ProductOrderRoutingLineObj: JsonObject;
-    MESOperation: Record "MES Operation Status";
-begin
+    var
+        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
+        ProductOrderLine: Record "Prod. Order Line";
+        ProductOrderRoutingLineArr: JsonArray;
+        ProductOrderRoutingLineObj: JsonObject;
+        MESOperation: Record "MES Operation Status";
+    begin
 
-    if MachineNo = '' then Error('Machine Number is required');
+        if MachineNo = '' then Error('Machine Number is required');
 
-    ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center"); 
-    // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
+        ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center");
+        // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
 
-    ProductOrderRoutingLine.SetRange("No.", MachineNo);
+        ProductOrderRoutingLine.SetRange("No.", MachineNo);
 
-    // setRange used for simple comperation , setFilter for complex comperation
-    ProductOrderRoutingLine.SetFilter(Status, '%1|%2|%3', 
-                                      // %1|%2|%3 means get me orders where status = ? or ? or ?
-                                      ProductOrderRoutingLine.Status::Planned,
-                                      ProductOrderRoutingLine.Status::"Firm Planned",
-                                      ProductOrderRoutingLine.Status::Released
-                                     );
+        // setRange used for simple comperation , setFilter for complex comperation
+        ProductOrderRoutingLine.SetFilter(Status, '%1|%2|%3',
+                                          // %1|%2|%3 means get me orders where status = ? or ? or ?
+                                          ProductOrderRoutingLine.Status::Planned,
+                                          ProductOrderRoutingLine.Status::"Firm Planned",
+                                          ProductOrderRoutingLine.Status::Released
+                                         );
 
-    if ProductOrderRoutingLine.FindSet() then
-        repeat
-            MESOperation.Reset();
-            MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
-            MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
-            MESOperation.SetRange("Machine No", MachineNo);
+        if ProductOrderRoutingLine.FindSet() then
+            repeat
+                MESOperation.Reset();
+                MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
+                MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
+                MESOperation.SetRange("Machine No", MachineNo);
 
-            // if this order/operation does not exist in the mes operation table enter the body
-            
-            if not MESOperation.FindFirst() then begin
-                
-                Clear(ProductOrderRoutingLineObj);
+                // if this order/operation does not exist in the mes operation table enter the body
 
-                ProductOrderLine.Reset();
-                ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
+                if not MESOperation.FindFirst() then begin
 
-                if ProductOrderLine.FindFirst() then begin
-                    //so the prod line is used for to know the order info and prod order routing line is used to know the operation details.
-                    ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
-                    ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
-                    ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
-                    ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
-                    ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
-                    ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
-                    ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
-                    ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
-                    ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
+                    Clear(ProductOrderRoutingLineObj);
 
-                    ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
+                    ProductOrderLine.Reset();
+                    ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
+
+                    if ProductOrderLine.FindFirst() then begin
+                        //so the prod line is used for to know the order info and prod order routing line is used to know the operation details.
+                        ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
+                        ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
+                        ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
+                        ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
+                        ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
+                        ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
+                        ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
+                        ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
+                        ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
+
+                        ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
+                    end;
+
                 end;
 
-            end;
+            until ProductOrderRoutingLine.Next() = 0;
 
-        until ProductOrderRoutingLine.Next() = 0;
+        exit(JsonToTextArr(ProductOrderRoutingLineArr));
 
-    exit(JsonToTextArr(ProductOrderRoutingLineArr));
-
-end;
+    end;
     // you need to explain this why did you remove the arrtotext func just to replace it with another func that does thhe same thing
 
     //____________________________________________________________________________________________________________
@@ -241,31 +241,31 @@ end;
             1/ the privious operation need to be fully done to move on to the next operation
             */
 
-          /*   if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
-                                                                                 // we r in findLast thats why its named PreviousMesOpration + we do need to know the previous operation info from mes table
+            /*   if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
+                                                                                   // we r in findLast thats why its named PreviousMesOpration + we do need to know the previous operation info from mes table
 
-                PreviousMESOperation.Reset();
-                //We check PreviousMESOperation because we need to validate that the previous step has actually finished or at least started before starting the current operation. PreviousRouitng line is just a plan the actual info to use to verrify is in PreviousMESOperation
+                  PreviousMESOperation.Reset();
+                  //We check PreviousMESOperation because we need to validate that the previous step has actually finished or at least started before starting the current operation. PreviousRouitng line is just a plan the actual info to use to verrify is in PreviousMESOperation
 
-                PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                PreviousMESOperation.SetRange("Operation Status", PreviousMESOperation."Operation Status"::Finished);
+                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
+                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
+                  PreviousMESOperation.SetRange("Operation Status", PreviousMESOperation."Operation Status"::Finished);
 
-                if not PreviousMESOperation.FindFirst() then // i dont think findFirst or findLast matter here cuz our goal is to find any record thar show a previous operation is finished 
-                    Error('Previous operation must be fully finished before starting this one.');
+                  if not PreviousMESOperation.FindFirst() then // i dont think findFirst or findLast matter here cuz our goal is to find any record thar show a previous operation is finished 
+                      Error('Previous operation must be fully finished before starting this one.');
 
 
-            end */ /*else begin
-                // 2/ no need to wait for the previous operation to be done to move on to the next one 
-                PreviousMESOperation.Reset();
-                PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                // no need to do PreviousMESOperation.SetRange("Operation Status",PreviousMESOperation."Operation Status"::Finished); // cuz it do not need ot be finished 
+              end */ /*else begin
+                  // 2/ no need to wait for the previous operation to be done to move on to the next one 
+                  PreviousMESOperation.Reset();
+                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
+                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
+                  // no need to do PreviousMESOperation.SetRange("Operation Status",PreviousMESOperation."Operation Status"::Finished); // cuz it do not need ot be finished 
 
-                if not PreviousMESOperation.FindSet() then Error('Previous operation has not started yet.');
-                TotalProducedQuantity := 0;
-                repeat TotalProducedQuantity += PreviousMESOperation."Produced Quantity"; until PreviousMESOperation.Next() = 0;
-                if TotalProducedQuantity < PreviousProdOrderRoutingLine."Send-Ahead Quantity" then Error('You must produce at least %1 units in previous operation before starting this one.', PreviousProdOrderRoutingLine."Send-Ahead Quantity");*/
+                  if not PreviousMESOperation.FindSet() then Error('Previous operation has not started yet.');
+                  TotalProducedQuantity := 0;
+                  repeat TotalProducedQuantity += PreviousMESOperation."Produced Quantity"; until PreviousMESOperation.Next() = 0;
+                  if TotalProducedQuantity < PreviousProdOrderRoutingLine."Send-Ahead Quantity" then Error('You must produce at least %1 units in previous operation before starting this one.', PreviousProdOrderRoutingLine."Send-Ahead Quantity");*/
 
 
         end;

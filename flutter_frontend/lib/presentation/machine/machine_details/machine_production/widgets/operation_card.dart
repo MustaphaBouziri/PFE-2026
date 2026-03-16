@@ -94,7 +94,7 @@ class OperationCard extends StatelessWidget {
                   ),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final isWide = constraints.maxWidth > 520;
+                      final isWide = constraints.maxWidth > 600;
                       if (isWide) {
                         return OperationWideLayout(
                           prodOrderNo: _prodOrderNo,

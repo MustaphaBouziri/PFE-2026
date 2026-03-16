@@ -38,7 +38,7 @@ class OrderCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 520;
+              final isWide = constraints.maxWidth > 600;
               return isWide
                   ? WideLayout(
                 order: order,
