@@ -113,6 +113,7 @@ class _OperationStatusBadgeState extends State<OperationStatusBadge>
             fontSize: 13,
             fontWeight: FontWeight.w500,
             color: Color(0xFF64748B),
+            
           ),
         ),
       ],

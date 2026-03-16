@@ -17,7 +17,7 @@ import 'presentation/machine/machine_List/machineListPage.dart';
 void main() {
   runApp(
     DevicePreview(
-      enabled: false, // Set to false in production
+      enabled: true, // Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -26,7 +26,6 @@ void main() {
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
           ChangeNotifierProvider(create: (_) => MachineordersProvider()),
           Provider(create: (_) => MesMachinesProvider()),
-        
         ],
         child: const MyApp(),
       ),
@@ -49,7 +48,12 @@ class MyApp extends StatelessWidget {
       // Important for DevicePreview
       title: 'MES System',
       theme: ThemeData(
+
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          shape: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+        ),
 
         textTheme: GoogleFonts.interTextTheme().apply(
           bodyColor: const Color(0xFF0F172A),
@@ -79,7 +83,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
+    /* return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
@@ -89,7 +93,7 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();
       },
-    );
+    );*/
     return Machinelistpage();
   }
 }

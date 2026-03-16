@@ -44,6 +44,7 @@ class ActionButtons extends StatelessWidget {
         builder: (_) => AlertDialog(
           title: const Text("Cannot Start Operation"),
           content: Text(e.toString().replaceFirst("Exception: ", "")),
+          backgroundColor: Colors.white,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -76,6 +77,8 @@ class ActionButtons extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0F172A),
           shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,        // ← add this
+  overlayColor: Colors.transparent, 
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

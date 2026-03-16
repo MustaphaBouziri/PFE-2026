@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
 import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/services/erp_order_service.dart';
@@ -42,7 +44,28 @@ class MachineordersProvider with ChangeNotifier {
 
 
 
-  Stream<List<Map<String, dynamic>>>  getMachineOperationsStatusStream(String machineNo) {
-    return _service.streamMachines(machineNo);
+ /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
+    return _service.streamMachinesOperationStatusAndProgress(machineNo);
+  }*/
+
+   Stream<List<OperationStatusAndProgressModel>>  getMachineOperationStatusAndProgressStream(String machineNo) {
+    return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }
+
+  Stream<OperationStatusAndProgressModel?>  fetchOperationLiveDataStream(String machineNo,String prodOderNo,String operationNo) {
+    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo);
+  }
+
+  //_______declaire Production 
+  Future<bool> declareProduction(
+  String prodOderNo,
+  String operationNo,
+  String machineNo,
+  double input
+) async {
+  final result = await _service.declareProduction(prodOderNo, operationNo, machineNo, input);
+  
+
+  return result;
+}
 }
