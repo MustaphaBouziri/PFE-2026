@@ -74,7 +74,7 @@ class LoginTabletLayout extends StatelessWidget {
                       passwordController: passwordController,
                       formKey: formKey,
                       onLogin: onLogin,
-                      maxWidth: 520,
+                      maxWidth: 600,
                     ),
                     SizedBox(height: 26),
                     const Text(

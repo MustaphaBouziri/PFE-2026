@@ -17,7 +17,7 @@ import 'presentation/machine/machine_List/machineListPage.dart';
 void main() {
   runApp(
     DevicePreview(
-      enabled: true, // Set to false in production
+      enabled: false, // Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -79,7 +79,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    /*return Consumer<AuthProvider>(
+    return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
@@ -89,7 +89,7 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();
       },
-    );*/
+    );
     return Machinelistpage();
   }
 }

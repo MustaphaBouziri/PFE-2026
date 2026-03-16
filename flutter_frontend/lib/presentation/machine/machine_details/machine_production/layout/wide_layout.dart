@@ -7,7 +7,7 @@ import '../widgets/progress_bar.dart';
 import '../widgets/status_badge.dart';
 
 /// Two-column layout: info on the left, Pause/Resume on the right.
-/// Used at widths > 520 px. Mirrors the role of [WideLayout] in machineOrderPage.
+/// Used at widths > 600 px. Mirrors the role of [WideLayout] in machineOrderPage.
 ///
 /// Left column order: badge → status + last updated → progress bar → tap hint
 class OperationWideLayout extends StatelessWidget {

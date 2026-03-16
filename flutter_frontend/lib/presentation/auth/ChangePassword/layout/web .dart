@@ -74,7 +74,7 @@ class ChangePassWebLayout extends StatelessWidget {
                   confirmPasswordController: confirmPasswordController,
                   formKey: formKey,
                   onChangePassword: onChangePassword,
-                  maxWidth: 520,
+                  maxWidth: 600,
                 ),
 
                 const SizedBox(height: 30),
