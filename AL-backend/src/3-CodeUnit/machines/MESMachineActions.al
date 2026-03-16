@@ -522,6 +522,7 @@ codeunit 50130 "MES Machine Actions"
                         as for progress no need cuz status loop provide us with a specific operation and order number
                         so we could just do set range with these values and return us the progress fields info of this specific operation.
                         */
+
                         MESOperationProgress.Reset();
                         MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
                         MESOperationProgress.SetRange("Machine No", machineNo);
@@ -715,6 +716,59 @@ begin
     NewMESOperationProgress."Scrap Quantity"    := 0;
     NewMESOperationProgress.Insert(true);
 end;
+
+
+//___________________________
+
+
+ procedure fetchOperationDeclaration(  machineNo: Code[20];
+    prodOderNo: Code[20];
+    operationNo: Code[10]): Text
+    var
+        MESOperationProgress: Record "MES Operation Progression";
+        MESOperationProgressObj: JsonObject;
+        MESOperationProgressArr: JsonArray;
+
+        LastProdOrder: Code[20];
+        LastOperation: Code[10];
+    begin
+        Clear(MESOperationProgressArr);
+        MESOperationProgress.Reset();
+        MESOperationProgress.SetCurrentKey(
+            "Machine No",
+            "Prod Order No",
+            "Operation No",
+            "Last Updated At"
+        );
+
+        MESOperationProgress.SetRange("Machine No", machineNo);
+    MESOperationProgress.SetRange("Prod Order No", prodOderNo);
+    MESOperationProgress.SetRange("Operation No", operationNo);
+    MESOperationProgress.Ascending(false);
+   
+        if MESOperationProgress.FindSet() then begin
+            repeat
+
+
+                    Clear(MESOperationProgressObj);
+                    
+                    MESOperationProgressObj.Add('orderQty', MESOperationProgress."Order Quantity");
+                    MESOperationProgressObj.Add('producedQty', MESOperationProgress."Produced Quantity");
+                    MESOperationProgressObj.Add('scrapQty', MESOperationProgress."Scrap Quantity");
+                    MESOperationProgressObj.Add('userName',MESOperationProgress."Operator Id".);
+                    
+                   
+
+                    MESOperationProgressArr.Add(MESOperationProgressObj);
+                
+
+
+            until MESOperationProgress.Next() = 0;
+        end;
+
+        exit(JsonToTextArr(MESOperationProgressArr));
+    end;
+
     
 
 
