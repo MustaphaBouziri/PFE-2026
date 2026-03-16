@@ -27,7 +27,7 @@ class OperationCard extends StatelessWidget {
   String get _lastUpdatedAt => operationData.lastUpdatedAt;
 
   double get _progress {
-    if (operationData.orderQty != 0) {
+    if (operationData.orderQuantity != 0) {
       return (operationData.progressPercent / 100).clamp(0.0, 1.0);
     }
     return 0.0;

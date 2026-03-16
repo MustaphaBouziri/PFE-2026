@@ -19,7 +19,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
       widget.operationData.operationStatus,
     );
 
-    final double progress = widget.operationData.orderQty != 0
+    final double progress = widget.operationData.orderQuantity != 0
         ? (widget.operationData.progressPercent / 100).clamp(0.0, 1.0)
         : 0.0;
 
@@ -65,9 +65,9 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
             // required quantity + produced quantity
             _InfoRow(
               leftLabel: "Required Quantity",
-              leftValue: "${widget.operationData.orderQty} Unit",
+              leftValue: "${widget.operationData.orderQuantity} Unit",
               rightLabel: "Produced Quantity",
-              rightValue: "${widget.operationData.producedQty} Unit",
+              rightValue: "${widget.operationData.totalProducedQuantity} Unit",
             ),
 
             const SizedBox(height: 12),

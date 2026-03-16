@@ -1,6 +1,9 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
+import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
 import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/services/erp_order_service.dart';
@@ -11,6 +14,20 @@ class MachineordersProvider with ChangeNotifier {
   List<MachineOrderModel> machineOrders = [];
   bool isLoading = false;
   String? errorMessage;
+
+   final StreamController<void> _refreshController = StreamController<void>.broadcast();
+
+  void triggerRefresh() {
+    _refreshController.add(());
+  }
+
+  @override
+void dispose() {
+  _refreshController.close();
+  super.dispose();
+}
+
+
 
   Future<void> getMachineOrders(String machineNo) async {
     try {
@@ -52,8 +69,8 @@ class MachineordersProvider with ChangeNotifier {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }
 
-  Stream<OperationStatusAndProgressModel?>  fetchOperationLiveDataStream(String machineNo,String prodOderNo,String operationNo) {
-    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo);
+   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(String machineNo, String prodOderNo, String operationNo) {
+    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo, _refreshController.stream);
   }
 
   //_______declaire Production 
@@ -64,8 +81,15 @@ class MachineordersProvider with ChangeNotifier {
   double input
 ) async {
   final result = await _service.declareProduction(prodOderNo, operationNo, machineNo, input);
-  
+  triggerRefresh();
 
   return result;
 }
+//__________fetch production cycle
+
+Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
+  String machineNo, String prodOrderNo, String operationNo) {
+  return _service.streamProductionCycles(machineNo, prodOrderNo, operationNo, _refreshController.stream);
+}
+
 }

@@ -2,12 +2,14 @@ import 'dart:convert';
 
 
 import 'package:http/http.dart' as http;
+import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
 import '../../../core/app_constants.dart';
 import '../models/erp_order_model.dart';
 import '../models/mes_operation_model.dart';
 
 class ErpMachineOrdersService {
+
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
     final body = jsonEncode({'machineNo': machineNo});
 
@@ -199,15 +201,10 @@ class ErpMachineOrdersService {
 }
 
 Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
-  String machineNo, String prodOderNo, String operationNo) async* {
-  while (true) {
-    try {
-      final data = await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
-      yield data;
-    } catch (e) {
-      yield null;
-    }
-    await Future.delayed(const Duration(seconds: 5));
+  String machineNo, String prodOderNo, String operationNo, Stream<void> trigger) async* {
+  yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+  await for (final _ in trigger) {
+    yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
   }
 }
 
@@ -247,14 +244,38 @@ Future<bool> declareProduction(
       throw Exception('Failed to declaire production: ${response.statusCode} ${response.body}');
     }
   }
+
+//___________fetch production cycle ________
+Future<List<ProductionCycleModel>> fetchProductionCycles(
+  String machineNo, String prodOrderNo, String operationNo
+) async {
+  final body = jsonEncode({
+    'machineNo': machineNo,
+    'prodOrderNo': prodOrderNo,
+    'operationNo': operationNo,
+  });
+
+  final response = await http.post(
+    Uri.parse(AppConstants.fetchProductionCycles),
+    headers: AppConstants.jsonHeaders,
+    body: body,
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final String valueString = data['value'] ?? '[]';
+    final List<dynamic> list = jsonDecode(valueString);
+    return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
+  } else {
+    throw Exception('Failed to fetch production cycles: ${response.statusCode}');
+  }
 }
 
-
-
-
-
-
-
-
-
-
+Stream<List<ProductionCycleModel>> streamProductionCycles(
+  String machineNo, String prodOrderNo, String operationNo, Stream<void> trigger) async* {
+  yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
+  await for (final _ in trigger) {
+    yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
+  }
+}
+}
