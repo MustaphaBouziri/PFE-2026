@@ -584,6 +584,8 @@ codeunit 50130 "MES Machine Actions"
         Employee: Record Employee;
         CycleObj: JsonObject;
         CycleArr: JsonArray;
+        a: Record "Prod. Order Component";
+
     begin
         Clear(CycleArr);
         OperationCycle.Reset();
@@ -639,6 +641,57 @@ codeunit 50130 "MES Machine Actions"
         end;
 
         exit(JsonToTextArr(CycleArr));
+    end;
+
+    //__________machine history_____
+    procedure fetchMachineHistory(machineNo: Text): Text
+    var
+        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
+        ProductOrderLine: Record "Prod. Order Line";
+        ProductOrderRoutingLineArr: JsonArray;
+        ProductOrderRoutingLineObj: JsonObject;
+        MESOperation: Record "MES Operation Status";
+    begin
+
+        if MachineNo = '' then Error('Machine Number is required');
+
+        ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center");
+
+        ProductOrderRoutingLine.SetRange("No.", MachineNo);
+
+        ProductOrderRoutingLine.SetRange(Status, ProductOrderRoutingLine.Status::Finished);
+
+        if ProductOrderRoutingLine.FindSet() then
+            repeat
+                MESOperation.Reset();
+                MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
+                MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
+                MESOperation.SetRange("Machine No", MachineNo);
+
+                Clear(ProductOrderRoutingLineObj);
+
+                ProductOrderLine.Reset();
+                ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
+
+                if ProductOrderLine.FindFirst() then begin
+                    //so the prod line is used for to know the order info and prod order routing line is used to know the operation details.
+                    ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
+                    ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
+                    ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
+                    ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
+                    ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
+                    ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
+                    ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
+                    ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
+                    ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
+
+                    ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
+                end;
+
+            until ProductOrderRoutingLine.Next() = 0;
+
+        exit(JsonToTextArr(ProductOrderRoutingLineArr));
+
     end;
 
 
