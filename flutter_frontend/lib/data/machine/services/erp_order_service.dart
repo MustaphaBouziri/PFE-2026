@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'package:http/http.dart' as http;
 import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
@@ -9,7 +8,6 @@ import '../models/erp_order_model.dart';
 import '../models/mes_operation_model.dart';
 
 class ErpMachineOrdersService {
-
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
     final body = jsonEncode({'machineNo': machineNo});
 
@@ -18,7 +16,6 @@ class ErpMachineOrdersService {
       headers: AppConstants.jsonHeaders,
       body: body,
     );
-
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -71,7 +68,7 @@ class ErpMachineOrdersService {
     }
   }
 
- /* //____________fetch machine operation status monitoring
+  /* //____________fetch machine operation status monitoring
 
   Future<List<Map<String, dynamic>>> fetchMachineOperationStatus(
     String machineNo,
@@ -122,10 +119,8 @@ class ErpMachineOrdersService {
   }
   */
 
-  Future<List<OperationStatusAndProgressModel>> fetchMachineOperationStatusAndProgress(
-    String machineNo,
-  ) async {
-
+  Future<List<OperationStatusAndProgressModel>>
+  fetchMachineOperationStatusAndProgress(String machineNo) async {
     final body = jsonEncode({'machineNo': machineNo});
 
     final response = await http.post(
@@ -139,10 +134,17 @@ class ErpMachineOrdersService {
 
       final String valueString = data['value'] ?? '[]';
 
-      final List<dynamic> machineOperationStatusAndProgressList = jsonDecode(valueString);
+      final List<dynamic> machineOperationStatusAndProgressList = jsonDecode(
+        valueString,
+      );
 
       return machineOperationStatusAndProgressList
-          .map((operationStatusAndProgress) => OperationStatusAndProgressModel.fromJson(operationStatusAndProgress))
+          .map(
+            (operationStatusAndProgress) =>
+                OperationStatusAndProgressModel.fromJson(
+                  operationStatusAndProgress,
+                ),
+          )
           .toList();
     } else {
       throw Exception(
@@ -153,13 +155,12 @@ class ErpMachineOrdersService {
 
   // __________________ STREAM __________________
 
-
-  Stream<List<OperationStatusAndProgressModel>> streamMachinesOperationStatusAndProgress(String machineNo) async* {
+  Stream<List<OperationStatusAndProgressModel>>
+  streamMachinesOperationStatusAndProgress(String machineNo) async* {
     while (true) {
       try {
-        final machineOperationsStatusAndProgress = await fetchMachineOperationStatusAndProgress(
-          machineNo,
-        );
+        final machineOperationsStatusAndProgress =
+            await fetchMachineOperationStatusAndProgress(machineNo);
 
         yield machineOperationsStatusAndProgress;
       } catch (e) {
@@ -172,46 +173,53 @@ class ErpMachineOrdersService {
   //________________________________fetch + stream live data for a specific operation
 
   Future<OperationStatusAndProgressModel?> fetchOperationLiveData(
-  String machineNo, String prodOderNo, String operationNo
-) async {
-  final body = jsonEncode({
-    'machineNo': machineNo,
-    'prodOderNo': prodOderNo,
-    'operationNo': operationNo,
-  });
+    String machineNo,
+    String prodOderNo,
+    String operationNo,
+  ) async {
+    final body = jsonEncode({
+      'machineNo': machineNo,
+      'prodOderNo': prodOderNo,
+      'operationNo': operationNo,
+    });
 
-  final response = await http.post(
-    Uri.parse(AppConstants.fetchOperationLiveData),
-    headers: AppConstants.jsonHeaders,
-    body: body,
-  );
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchOperationLiveData),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final String valueString = data['value'] ?? '[]';
-    final List<dynamic> list = jsonDecode(valueString);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final String valueString = data['value'] ?? '[]';
+      final List<dynamic> list = jsonDecode(valueString);
 
-    // list.first bc return an array and we only need the first one after all it's basily one operation will be returned
-    return list.isNotEmpty
-        ? OperationStatusAndProgressModel.fromJson(list.first)
-        : null;
-  } else {
-    throw Exception('Failed to fetch status and progress : ${response.statusCode}');
+      // list.first bc return an array and we only need the first one after all it's basily one operation will be returned
+      return list.isNotEmpty
+          ? OperationStatusAndProgressModel.fromJson(list.first)
+          : null;
+    } else {
+      throw Exception(
+        'Failed to fetch status and progress : ${response.statusCode}',
+      );
+    }
   }
-}
 
-Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
-  String machineNo, String prodOderNo, String operationNo, Stream<void> trigger) async* {
-  yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
-  await for (final _ in trigger) {
+  Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
+    String machineNo,
+    String prodOderNo,
+    String operationNo,
+    Stream<void> trigger,
+  ) async* {
     yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+    await for (final _ in trigger) {
+      yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+    }
   }
-}
 
+  //_________declaire production _______________
 
-//_________declaire production _______________
-
-Future<bool> declareProduction(
+  Future<bool> declareProduction(
     String prodOderNo,
     String operationNo,
     String machineNo,
@@ -221,7 +229,7 @@ Future<bool> declareProduction(
       'prodOderNo': prodOderNo,
       'operationNo': operationNo,
       'machineNo': machineNo,
-      'input':input
+      'input': input,
     });
 
     final response = await http.post(
@@ -241,41 +249,81 @@ Future<bool> declareProduction(
         throw Exception(innerJson['message'] ?? 'Unknown error');
       }
     } else {
-      throw Exception('Failed to declaire production: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to declaire production: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
-//___________fetch production cycle ________
-Future<List<ProductionCycleModel>> fetchProductionCycles(
-  String machineNo, String prodOrderNo, String operationNo
-) async {
-  final body = jsonEncode({
-    'machineNo': machineNo,
-    'prodOrderNo': prodOrderNo,
-    'operationNo': operationNo,
-  });
+  //___________fetch production cycle ________
+  Future<List<ProductionCycleModel>> fetchProductionCycles(
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+  ) async {
+    final body = jsonEncode({
+      'machineNo': machineNo,
+      'prodOrderNo': prodOrderNo,
+      'operationNo': operationNo,
+    });
 
-  final response = await http.post(
-    Uri.parse(AppConstants.fetchProductionCycles),
-    headers: AppConstants.jsonHeaders,
-    body: body,
-  );
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchProductionCycles),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final String valueString = data['value'] ?? '[]';
-    final List<dynamic> list = jsonDecode(valueString);
-    return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
-  } else {
-    throw Exception('Failed to fetch production cycles: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final String valueString = data['value'] ?? '[]';
+      final List<dynamic> list = jsonDecode(valueString);
+      return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
+    } else {
+      throw Exception(
+        'Failed to fetch production cycles: ${response.statusCode}',
+      );
+    }
   }
-}
 
-Stream<List<ProductionCycleModel>> streamProductionCycles(
-  String machineNo, String prodOrderNo, String operationNo, Stream<void> trigger) async* {
-  yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
-  await for (final _ in trigger) {
+  Stream<List<ProductionCycleModel>> streamProductionCycles(
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+    Stream<void> trigger,
+  ) async* {
     yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
+    await for (final _ in trigger) {
+      yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
+    }
   }
-}
+  
+  //_________fetch machine orders history______
+
+  Future<List<MachineOrderModel>> fetchMachineHistory(String machineNo) async {
+    final body = jsonEncode({'machineNo': machineNo});
+
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchMachineHistory),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
+
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final String valueString = data['value'] ?? '[]';
+
+      final List<dynamic> machineOrdersHistoryList = jsonDecode(valueString);
+
+      return machineOrdersHistoryList
+          .map((machineHistory) => MachineOrderModel.fromJson(machineHistory))
+          .toList();
+    } else {
+      throw Exception(
+        'Failed to fetch machine orders history: ${response.statusCode} ${response.body}',
+      );
+    }
+  }
+
 }

@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -12,22 +11,22 @@ class MachineordersProvider with ChangeNotifier {
   final ErpMachineOrdersService _service = ErpMachineOrdersService();
 
   List<MachineOrderModel> machineOrders = [];
+  List<MachineOrderModel> machineOrdersHistory = [];
   bool isLoading = false;
   String? errorMessage;
 
-   final StreamController<void> _refreshController = StreamController<void>.broadcast();
+  final StreamController<void> _refreshController =
+      StreamController<void>.broadcast();
 
   void triggerRefresh() {
     _refreshController.add(());
   }
 
   @override
-void dispose() {
-  _refreshController.close();
-  super.dispose();
-}
-
-
+  void dispose() {
+    _refreshController.close();
+    super.dispose();
+  }
 
   Future<void> getMachineOrders(String machineNo) async {
     try {
@@ -45,51 +44,88 @@ void dispose() {
   }
 
   Future<bool> startOrder(
-  String prodOderNo,
-  String operationNo,
-  String machineNo,
-) async {
-  final result = await _service.getStartOperationValidation(
-    prodOderNo,
-    operationNo,
-    machineNo,
-  );
+    String prodOderNo,
+    String operationNo,
+    String machineNo,
+  ) async {
+    final result = await _service.getStartOperationValidation(
+      prodOderNo,
+      operationNo,
+      machineNo,
+    );
 
-  return result;
-}
-//________________machine operations status stream __________
+    return result;
+  }
+  //________________machine operations status stream __________
 
-
-
- /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
+  /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }*/
 
-   Stream<List<OperationStatusAndProgressModel>>  getMachineOperationStatusAndProgressStream(String machineNo) {
+  Stream<List<OperationStatusAndProgressModel>>
+  getMachineOperationStatusAndProgressStream(String machineNo) {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }
 
-   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(String machineNo, String prodOderNo, String operationNo) {
-    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo, _refreshController.stream);
+  Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
+    String machineNo,
+    String prodOderNo,
+    String operationNo,
+  ) {
+    return _service.streamFetchOperationLiveData(
+      machineNo,
+      prodOderNo,
+      operationNo,
+      _refreshController.stream,
+    );
   }
 
-  //_______declaire Production 
+  //_______declaire Production
   Future<bool> declareProduction(
-  String prodOderNo,
-  String operationNo,
-  String machineNo,
-  double input
-) async {
-  final result = await _service.declareProduction(prodOderNo, operationNo, machineNo, input);
-  triggerRefresh();
+    String prodOderNo,
+    String operationNo,
+    String machineNo,
+    double input,
+  ) async {
+    final result = await _service.declareProduction(
+      prodOderNo,
+      operationNo,
+      machineNo,
+      input,
+    );
+    triggerRefresh();
 
-  return result;
-}
-//__________fetch production cycle
+    return result;
+  }
+  //__________fetch production cycle
 
-Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
-  String machineNo, String prodOrderNo, String operationNo) {
-  return _service.streamProductionCycles(machineNo, prodOrderNo, operationNo, _refreshController.stream);
-}
+  Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+  ) {
+    return _service.streamProductionCycles(
+      machineNo,
+      prodOrderNo,
+      operationNo,
+      _refreshController.stream,
+    );
+  }
 
+  //__________fetch machine orders history
+
+  Future<void> fetchMachineHistory(String machineNo) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      machineOrdersHistory = await _service.fetchMachineHistory(machineNo);
+    } catch (e) {
+      errorMessage = e.toString();
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
 }

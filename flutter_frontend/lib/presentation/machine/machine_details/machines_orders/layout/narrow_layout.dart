@@ -10,11 +10,13 @@ class NarrowLayout extends StatelessWidget {
   final MachineOrderModel order;
   final BadgeStyle badgeStyle;
   final String machineNo;
+  final bool showActions;
 
   const NarrowLayout({
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
+    this.showActions = true,
   });
 
   @override
@@ -25,8 +27,10 @@ class NarrowLayout extends StatelessWidget {
         BadgeAndId(order: order, badgeStyle: badgeStyle),
         const SizedBox(height: 12),
         InfoGrid(order: order),
-        const SizedBox(height: 14),
-        ActionButtons(fullWidth: true, order: order, machineNo: machineNo),
+        if (showActions) ...[
+          const SizedBox(height: 14),
+          ActionButtons(fullWidth: true, order: order, machineNo: machineNo),
+        ],
       ],
     );
   }

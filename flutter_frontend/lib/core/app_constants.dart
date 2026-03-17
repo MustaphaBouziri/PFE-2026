@@ -48,6 +48,9 @@ class AppConstants {
        static const String fetchProductionCycles =
       '${_machinesBase}fetchProductionCycles?$_company';
 
+      static const String fetchMachineHistory =
+      '${_machinesBase}fetchMachineHistory?$_company';
+
 
       
 

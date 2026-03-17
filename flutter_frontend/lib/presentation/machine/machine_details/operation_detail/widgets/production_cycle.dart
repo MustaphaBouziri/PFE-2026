@@ -16,9 +16,7 @@ class _ProductionCycleState extends State<ProductionCycle> {
 
   @override
   Widget build(BuildContext context) {
-    final cycles = widget.cycles.length > 1
-        ? widget.cycles.sublist(1)
-        : <ProductionCycleModel>[];
+    final cycles = widget.cycles;
 
     final start = currentPage * rowsPerPage;
     final end = (start + rowsPerPage > cycles.length)
@@ -37,7 +35,6 @@ class _ProductionCycleState extends State<ProductionCycle> {
       ),
       child: Column(
         children: [
-          // titles
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: const BoxDecoration(

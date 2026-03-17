@@ -10,11 +10,13 @@ class WideLayout extends StatelessWidget {
   final MachineOrderModel order;
   final BadgeStyle badgeStyle;
   final String machineNo;
+  final bool showActions;
 
   const WideLayout({
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
+    this.showActions = true,
   });
 
   @override
@@ -32,10 +34,11 @@ class WideLayout extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 16),
-        ActionButtons(order: order, machineNo: machineNo),
+        if (showActions) ...[
+          const SizedBox(width: 16),
+          ActionButtons(order: order, machineNo: machineNo),
+        ],
       ],
     );
   }
 }
-

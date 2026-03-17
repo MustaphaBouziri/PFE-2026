@@ -9,17 +9,21 @@ class OrderCard extends StatelessWidget {
   final MachineOrderModel order;
   final BadgeStyle badgeStyle;
   final String machineNo;
+  final bool showActions;
+  final VoidCallback? onTap;
 
   const OrderCard({
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
+    this.showActions = true,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -41,15 +45,17 @@ class OrderCard extends StatelessWidget {
               final isWide = constraints.maxWidth > 600;
               return isWide
                   ? WideLayout(
-                order: order,
-                badgeStyle: badgeStyle,
-                machineNo: machineNo,
-              )
+                      order: order,
+                      badgeStyle: badgeStyle,
+                      machineNo: machineNo,
+                      showActions: showActions,
+                    )
                   : NarrowLayout(
-                order: order,
-                badgeStyle: badgeStyle,
-                machineNo: machineNo,
-              );
+                      order: order,
+                      badgeStyle: badgeStyle,
+                      machineNo: machineNo,
+                      showActions: showActions,
+                    );
             },
           ),
         ),

@@ -30,6 +30,13 @@ BadgeStyle badgeStyleFromStatus(String status) {
         text: Color(0xFF6B7280),
         label: 'PLANNED',
       );
+    case 'Finished':
+      return const BadgeStyle(
+        bg: Color(0xFFEFF6FF),
+        border: Color(0xFFBFDBFE),
+        text: Color(0xFF1D4ED8),
+        label: 'FINISHED',
+      );
     case 'Released':
     default:
       return const BadgeStyle(
