@@ -119,57 +119,48 @@ class ErpMachineOrdersService {
   }
   */
 
-  Future<List<OperationStatusAndProgressModel>>
-  fetchMachineOperationStatusAndProgress(String machineNo) async {
-    final body = jsonEncode({'machineNo': machineNo});
+  Future<List<OperationStatusAndProgressModel>> fetchMachineOperationStatusAndProgress(
+    String machineNo, bool fetchFinished) async {
+  final body = jsonEncode({
+    'machineNo': machineNo,
+    'fetchFinished': fetchFinished,
+  });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchMachineOperationStatusAndProgress),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
+  final response = await http.post(
+    Uri.parse(AppConstants.fetchMachineOperationStatusAndProgress),
+    headers: AppConstants.jsonHeaders,
+    body: body,
+  );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final String valueString = data['value'] ?? '[]';
+    final List<dynamic> machineOperationStatusAndProgressList = jsonDecode(valueString);
 
-      final String valueString = data['value'] ?? '[]';
-
-      final List<dynamic> machineOperationStatusAndProgressList = jsonDecode(
-        valueString,
-      );
-
-      return machineOperationStatusAndProgressList
-          .map(
-            (operationStatusAndProgress) =>
-                OperationStatusAndProgressModel.fromJson(
-                  operationStatusAndProgress,
-                ),
-          )
-          .toList();
-    } else {
-      throw Exception(
-        'Failed to fetch machine operations status and progress : ${response.statusCode}',
-      );
-    }
+    return machineOperationStatusAndProgressList
+        .map((operationStatusAndProgress) =>
+            OperationStatusAndProgressModel.fromJson(operationStatusAndProgress))
+        .toList();
+  } else {
+    throw Exception(
+        'Failed to fetch machine operations status and progress : ${response.statusCode}');
   }
+}
 
   // __________________ STREAM __________________
 
-  Stream<List<OperationStatusAndProgressModel>>
-  streamMachinesOperationStatusAndProgress(String machineNo) async* {
-    while (true) {
-      try {
-        final machineOperationsStatusAndProgress =
-            await fetchMachineOperationStatusAndProgress(machineNo);
-
-        yield machineOperationsStatusAndProgress;
-      } catch (e) {
-        yield [];
-      }
-
-      await Future.delayed(const Duration(seconds: 5));
+  Stream<List<OperationStatusAndProgressModel>> streamMachinesOperationStatusAndProgress(
+    String machineNo, bool fetchFinished) async* {
+  while (true) {
+    try {
+      final data = await fetchMachineOperationStatusAndProgress(machineNo, fetchFinished);
+      yield data;
+    } catch (e) {
+      yield [];
     }
+    await Future.delayed(const Duration(seconds: 5));
   }
+}
   //________________________________fetch + stream live data for a specific operation
 
   Future<OperationStatusAndProgressModel?> fetchOperationLiveData(

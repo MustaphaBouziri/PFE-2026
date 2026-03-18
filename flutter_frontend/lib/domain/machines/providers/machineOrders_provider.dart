@@ -62,10 +62,15 @@ class MachineordersProvider with ChangeNotifier {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }*/
 
-  Stream<List<OperationStatusAndProgressModel>>
-  getMachineOperationStatusAndProgressStream(String machineNo) {
-    return _service.streamMachinesOperationStatusAndProgress(machineNo);
-  }
+  Stream<List<OperationStatusAndProgressModel>> getMachineOperationStatusAndProgressStream(
+    String machineNo, bool fetchFinished) {
+  return _service.streamMachinesOperationStatusAndProgress(machineNo, fetchFinished);
+}
+  //__________fetch machine orders history
+
+Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machineNo) async {
+  return await _service.fetchMachineOperationStatusAndProgress(machineNo, true);
+}
 
   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
     String machineNo,
@@ -112,20 +117,6 @@ class MachineordersProvider with ChangeNotifier {
     );
   }
 
-  //__________fetch machine orders history
 
-  Future<void> fetchMachineHistory(String machineNo) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      machineOrdersHistory = await _service.fetchMachineHistory(machineNo);
-    } catch (e) {
-      errorMessage = e.toString();
-    }
-
-    isLoading = false;
-    notifyListeners();
-  }
+ 
 }

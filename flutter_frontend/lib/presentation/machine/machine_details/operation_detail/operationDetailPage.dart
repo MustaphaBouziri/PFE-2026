@@ -29,16 +29,18 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
         final liveData = liveSnapshot.data;
         //merged cuz i have static values from the operationData and the actual live data from livedata (steam ya3ni)
         final merged = OperationStatusAndProgressModel(
-          prodOrderNo: widget.operationData.prodOrderNo,
-          machineNo: widget.operationData.machineNo,
-          operationNo: widget.operationData.operationNo,
-          itemDescription: widget.operationData.itemDescription,
-          orderQuantity: widget.operationData.orderQuantity,
-          lastUpdatedAt: liveData?.lastUpdatedAt ?? widget.operationData.lastUpdatedAt,
-          operationStatus: liveData?.operationStatus ?? widget.operationData.operationStatus,
+          prodOrderNo:           widget.operationData.prodOrderNo,
+          machineNo:             widget.operationData.machineNo,
+          operationNo:           widget.operationData.operationNo,
+          itemDescription:       widget.operationData.itemDescription,
+          orderQuantity:         widget.operationData.orderQuantity,
+          startDateTime:         widget.operationData.startDateTime,
+          endDateTime:           liveData?.endDateTime           ?? widget.operationData.endDateTime,
+          lastUpdatedAt:         liveData?.lastUpdatedAt         ?? widget.operationData.lastUpdatedAt,
+          operationStatus:       liveData?.operationStatus       ?? widget.operationData.operationStatus,
           totalProducedQuantity: liveData?.totalProducedQuantity ?? widget.operationData.totalProducedQuantity,
-          scrapQuantity: liveData?.scrapQuantity ?? widget.operationData.scrapQuantity,
-          progressPercent: liveData?.progressPercent ?? widget.operationData.progressPercent,
+          scrapQuantity:         liveData?.scrapQuantity         ?? widget.operationData.scrapQuantity,
+          progressPercent:       liveData?.progressPercent       ?? widget.operationData.progressPercent,
         );
 
         return StreamBuilder<List<ProductionCycleModel>>(

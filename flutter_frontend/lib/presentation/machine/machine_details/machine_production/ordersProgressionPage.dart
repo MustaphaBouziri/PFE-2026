@@ -23,7 +23,7 @@ class OrdersProgressionPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<OperationStatusAndProgressModel>>(
-        stream: provider.getMachineOperationStatusAndProgressStream(machineNo),
+        stream: provider.getMachineOperationStatusAndProgressStream(machineNo,false),
         builder: (context, snapshot) {
           
           // ── Loading ──────────────────────────────────────────────────────
