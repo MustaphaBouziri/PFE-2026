@@ -336,7 +336,7 @@ codeunit 50130 "MES Machine Actions"
     //_____________progress + status merge___________________
 
 
-    procedure fetchOperationsStatusAndProgress(machineNo: Code[20]): Text
+    procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
     var
         MESOperationStatus: Record "MES Operation Status";
         MESOperationProgress: Record "MES Operation Progression";
@@ -344,6 +344,14 @@ codeunit 50130 "MES Machine Actions"
         MESOperationStatusArr: JsonArray;
         LastProdOrder: Code[20];
         LastOperation: Code[10];
+        ShouldInclude: Boolean;
+        EndDateTime: DateTime;
+        StartDateTime: DateTime;
+        CurrentProdOrderNo: Code[20];
+        CurrentOperationNo: Code[10];
+        CurrentMachineNo: Code[20];
+        CurrentOperationStatus: Text;
+        CurrentLastUpdatedAt: DateTime;
     begin
         Clear(MESOperationStatusArr);
 
@@ -360,18 +368,65 @@ codeunit 50130 "MES Machine Actions"
 
                     LastProdOrder := MESOperationStatus."Prod Order No";
                     LastOperation := MESOperationStatus."Operation No";
-                    // we skip the finished operations
-                    if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
-                       (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
+
+                    // if fetchFinished is true , shouldInclude will return true if the record we r in rn have status finished else it will have false which mean skip
+                    //so basicaly skip those who have status not finished  
+                    // fetchFinished= true -> include only Finished ,fetchFinished=false -> include only running or paused
+                    if fetchFinished then
+                        ShouldInclude := MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Finished
+                    else
+                        ShouldInclude :=
+                            (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
+                            (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused);
+
+                    if ShouldInclude then begin
+                        Clear(StartDateTime);
+                        Clear(EndDateTime);
+
+                        // save current record values before we move the pointer find first and find last
+                        CurrentProdOrderNo := MESOperationStatus."Prod Order No";
+                        CurrentOperationNo := MESOperationStatus."Operation No";
+                        CurrentMachineNo := MESOperationStatus."Machine No";
+                        CurrentOperationStatus := Format(MESOperationStatus."Operation Status");
+                        CurrentLastUpdatedAt := MESOperationStatus."Last Updated At";
+
+                        // find start time = oldest running record
+                        MESOperationStatus.SetRange("Prod Order No", LastProdOrder);
+                        MESOperationStatus.SetRange("Operation No", LastOperation);
+                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Running);
+                        if MESOperationStatus.FindFirst() then
+                            StartDateTime := MESOperationStatus."Last Updated At";
+
+                        // find end time = newest finished record
+                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Finished);
+                        if MESOperationStatus.FindLast() then
+                            EndDateTime := MESOperationStatus."Last Updated At";
+
+                        // restore filters for main loop
+                        // if u do setrange without parameter = clear that filter 
+                        // u see in our main loop we filter with machine if we dont remove them
+                        // the NEXT() will tries to move with this conditions : 
+                        /**
+                        - Machine No = machineNo
+                        - Prod Order No = '1011003'  ← still active
+                        - Operation No  = '40'       ← still active
+                        - Operation Status = Finished ← still active
+                        */
+
+                        MESOperationStatus.SetRange("Operation Status");
+                        MESOperationStatus.SetRange("Prod Order No");
+                        MESOperationStatus.SetRange("Operation No");
 
                         Clear(MESOperationStatusObj);
 
-                        // adding status fields
-                        MESOperationStatusObj.Add('prodOrderNo', MESOperationStatus."Prod Order No");
-                        MESOperationStatusObj.Add('machineNo', MESOperationStatus."Machine No");
-                        MESOperationStatusObj.Add('operationNo', MESOperationStatus."Operation No");
-                        MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
-                        MESOperationStatusObj.Add('lastUpdatedAt', Format(MESOperationStatus."Last Updated At"));
+                        // adding status fields — use saved variables not MESOperationStatus directly
+                        MESOperationStatusObj.Add('prodOrderNo', CurrentProdOrderNo);
+                        MESOperationStatusObj.Add('machineNo', CurrentMachineNo);
+                        MESOperationStatusObj.Add('operationNo', CurrentOperationNo);
+                        MESOperationStatusObj.Add('operationStatus', CurrentOperationStatus);
+                        MESOperationStatusObj.Add('startDateTime', Format(StartDateTime));
+                        MESOperationStatusObj.Add('endDateTime', Format(EndDateTime));
+                        MESOperationStatusObj.Add('lastUpdatedAt', Format(CurrentLastUpdatedAt));
 
                         /*
                         so basicly for status we don't know what's there, so we explore the whole table
@@ -384,8 +439,8 @@ codeunit 50130 "MES Machine Actions"
                         MESOperationProgress.Reset();
                         MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
                         MESOperationProgress.SetRange("Machine No", machineNo);
-                        MESOperationProgress.SetRange("Prod Order No", MESOperationStatus."Prod Order No");
-                        MESOperationProgress.SetRange("Operation No", MESOperationStatus."Operation No");
+                        MESOperationProgress.SetRange("Prod Order No", CurrentProdOrderNo);
+                        MESOperationProgress.SetRange("Operation No", CurrentOperationNo);
                         MESOperationProgress.Ascending(false);
 
                         // add progress fields
@@ -411,29 +466,19 @@ codeunit 50130 "MES Machine Actions"
           {
             "prodOrderNo":           "1011003",
             "operationNo":           "40",
-            "operationStatus":       "Running",
-            "lastUpdatedAt":         "14:00",
+            "operationStatus":       "Finished",
+            "startDateTime":         "08:00",
+            "endDateTime":           "16:00",
             "totalProducedQuantity": 50,
             "scrapQuantity":         2,
             "orderQuantity":         100,
             "progressPercent":       50.0
-          },
-          {
-            "prodOrderNo":           "1011002",
-            "operationNo":           "40",
-            "operationStatus":       "Paused",
-            "lastUpdatedAt":         "13:39",
-            "totalProducedQuantity": 80,
-            "scrapQuantity":         3,
-            "orderQuantity":         100,
-            "progressPercent":       80.0
           }
         ]
         */
+
         exit(JsonToTextArr(MESOperationStatusArr));
     end;
-
-
     //______________________________________________________________________
 
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20];
@@ -642,58 +687,6 @@ codeunit 50130 "MES Machine Actions"
 
         exit(JsonToTextArr(CycleArr));
     end;
-
-    //__________machine history_____
-    procedure fetchMachineHistory(machineNo: Text): Text
-    var
-        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
-        ProductOrderLine: Record "Prod. Order Line";
-        ProductOrderRoutingLineArr: JsonArray;
-        ProductOrderRoutingLineObj: JsonObject;
-        MESOperation: Record "MES Operation Status";
-    begin
-
-        if MachineNo = '' then Error('Machine Number is required');
-
-        ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center");
-
-        ProductOrderRoutingLine.SetRange("No.", MachineNo);
-
-        ProductOrderRoutingLine.SetRange(Status, ProductOrderRoutingLine.Status::Finished);
-
-        if ProductOrderRoutingLine.FindSet() then
-            repeat
-                MESOperation.Reset();
-                MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
-                MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
-                MESOperation.SetRange("Machine No", MachineNo);
-
-                Clear(ProductOrderRoutingLineObj);
-
-                ProductOrderLine.Reset();
-                ProductOrderLine.SetRange("Prod. Order No.", ProductOrderRoutingLine."Prod. Order No.");
-
-                if ProductOrderLine.FindFirst() then begin
-                    //so the prod line is used for to know the order info and prod order routing line is used to know the operation details.
-                    ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
-                    ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
-                    ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
-                    ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
-                    ProductOrderRoutingLineObj.Add('plannedEnd', ProductOrderRoutingLine."Ending Date-Time");
-                    ProductOrderRoutingLineObj.Add('itemNo', ProductOrderLine."Item No.");
-                    ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
-                    ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
-                    ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
-
-                    ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
-                end;
-
-            until ProductOrderRoutingLine.Next() = 0;
-
-        exit(JsonToTextArr(ProductOrderRoutingLineArr));
-
-    end;
-
 
 }
 
