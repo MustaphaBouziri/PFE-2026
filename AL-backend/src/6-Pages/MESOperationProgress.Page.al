@@ -58,7 +58,12 @@ page 50109 "MES Operation Progression"
                     ApplicationArea = All;
                 }
 
-                field("Produced Quantity"; Rec."Produced Quantity")
+                field("Cycle Quantity"; Rec."Cycle Quantity")
+                {
+                    ApplicationArea = All;
+                }
+
+                field("Total Produced Quantity"; Rec."Total Produced Quantity")
                 {
                     ApplicationArea = All;
                 }

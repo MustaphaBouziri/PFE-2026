@@ -1,6 +1,8 @@
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
+import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
 import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/services/erp_order_service.dart';
@@ -9,8 +11,22 @@ class MachineordersProvider with ChangeNotifier {
   final ErpMachineOrdersService _service = ErpMachineOrdersService();
 
   List<MachineOrderModel> machineOrders = [];
+  List<MachineOrderModel> machineOrdersHistory = [];
   bool isLoading = false;
   String? errorMessage;
+
+  final StreamController<void> _refreshController =
+      StreamController<void>.broadcast();
+
+  void triggerRefresh() {
+    _refreshController.add(());
+  }
+
+  @override
+  void dispose() {
+    _refreshController.close();
+    super.dispose();
+  }
 
   Future<void> getMachineOrders(String machineNo) async {
     try {
@@ -28,44 +44,79 @@ class MachineordersProvider with ChangeNotifier {
   }
 
   Future<bool> startOrder(
-  String prodOderNo,
-  String operationNo,
-  String machineNo,
-) async {
-  final result = await _service.getStartOperationValidation(
-    prodOderNo,
-    operationNo,
-    machineNo,
-  );
+    String prodOderNo,
+    String operationNo,
+    String machineNo,
+  ) async {
+    final result = await _service.getStartOperationValidation(
+      prodOderNo,
+      operationNo,
+      machineNo,
+    );
 
-  return result;
-}
-//________________machine operations status stream __________
+    return result;
+  }
+  //________________machine operations status stream __________
 
-
-
- /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
+  /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
     return _service.streamMachinesOperationStatusAndProgress(machineNo);
   }*/
 
-   Stream<List<OperationStatusAndProgressModel>>  getMachineOperationStatusAndProgressStream(String machineNo) {
-    return _service.streamMachinesOperationStatusAndProgress(machineNo);
-  }
-
-  Stream<OperationStatusAndProgressModel?>  fetchOperationLiveDataStream(String machineNo,String prodOderNo,String operationNo) {
-    return _service.streamFetchOperationLiveData(machineNo, prodOderNo, operationNo);
-  }
-
-  //_______declaire Production 
-  Future<bool> declareProduction(
-  String prodOderNo,
-  String operationNo,
-  String machineNo,
-  double input
-) async {
-  final result = await _service.declareProduction(prodOderNo, operationNo, machineNo, input);
-  
-
-  return result;
+  Stream<List<OperationStatusAndProgressModel>> getMachineOperationStatusAndProgressStream(
+    String machineNo, bool fetchFinished) {
+  return _service.streamMachinesOperationStatusAndProgress(machineNo, fetchFinished);
 }
+  //__________fetch machine orders history
+
+Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machineNo) async {
+  return await _service.fetchMachineOperationStatusAndProgress(machineNo, true);
+}
+
+  Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
+    String machineNo,
+    String prodOderNo,
+    String operationNo,
+  ) {
+    return _service.streamFetchOperationLiveData(
+      machineNo,
+      prodOderNo,
+      operationNo,
+      _refreshController.stream,
+    );
+  }
+
+  //_______declaire Production
+  Future<bool> declareProduction(
+    String prodOderNo,
+    String operationNo,
+    String machineNo,
+    double input,
+  ) async {
+    final result = await _service.declareProduction(
+      prodOderNo,
+      operationNo,
+      machineNo,
+      input,
+    );
+    triggerRefresh();
+
+    return result;
+  }
+  //__________fetch production cycle
+
+  Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+  ) {
+    return _service.streamProductionCycles(
+      machineNo,
+      prodOrderNo,
+      operationNo,
+      _refreshController.stream,
+    );
+  }
+
+
+ 
 }

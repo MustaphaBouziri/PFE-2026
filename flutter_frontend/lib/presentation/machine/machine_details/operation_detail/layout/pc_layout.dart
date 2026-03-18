@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
+import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/Current_order_info_container.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/action_Buttons_Container.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/appBar.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/production_chart.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/production_cycle.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/required_componment.dart';
 
 class PcLayout extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
-  const PcLayout({super.key, required this.operationData});
+  final List<ProductionCycleModel> cycles;
+  const PcLayout({super.key, required this.operationData,required this.cycles});
 
   @override
   State<PcLayout> createState() => _PcLayoutState();
@@ -37,7 +40,10 @@ class _PcLayoutState extends State<PcLayout> {
                       operationData: widget.operationData,
                     ),
                     const SizedBox(height: 16),
-                    ProductionChart(),
+                    ProductionChart(cycles: widget.cycles),
+                    const SizedBox(height: 16),
+                    ProductionCycle(cycles: widget.cycles),
+
                   ],
                 ),
               ),

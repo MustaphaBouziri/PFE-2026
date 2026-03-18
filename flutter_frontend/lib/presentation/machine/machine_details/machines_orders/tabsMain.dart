@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machine_history/machineHistoryPage.dart';
 
 import '../../../widgets/navBar.dart';
 import 'machineOrderPage.dart';
@@ -71,7 +72,7 @@ class _MachineMainPageState extends State<MachineMainPage> {
                 Machineorderpage(machineNo: widget.machineNo),
                 OrdersProgressionPage(machineNo: widget.machineNo),
                 //Page3(machineNo: widget.machineNo),
-                //Page4(machineNo: widget.machineNo),
+                MachineHistoryPage(machineNo: widget.machineNo),
               ],
             ),
           ),

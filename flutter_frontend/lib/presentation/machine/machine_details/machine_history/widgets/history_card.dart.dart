@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machine_history/layout/narrow_layout.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machine_history/layout/wide_layout.dart';
 
-import '../../../../../data/machine/models/erp_order_model.dart';
-import '../layout/narrow_layout.dart';
-import '../layout/wide_layout.dart';
-import '../models/badge_style.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machines_orders/models/badge_style.dart';
 
-class OrderCard extends StatelessWidget {
-  final MachineOrderModel order;
+class HistoryCard extends StatelessWidget {
+  final OperationStatusAndProgressModel order;
   final BadgeStyle badgeStyle;
-  final String machineNo;
-  final bool showActions;
   final VoidCallback? onTap;
 
-  const OrderCard({
+  const HistoryCard({
     required this.order,
     required this.badgeStyle,
-    required this.machineNo,
-    this.showActions = true,
     this.onTap,
   });
 
@@ -44,18 +40,8 @@ class OrderCard extends StatelessWidget {
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 600;
               return isWide
-                  ? WideLayout(
-                      order: order,
-                      badgeStyle: badgeStyle,
-                      machineNo: machineNo,
-                      showActions: showActions,
-                    )
-                  : NarrowLayout(
-                      order: order,
-                      badgeStyle: badgeStyle,
-                      machineNo: machineNo,
-                      showActions: showActions,
-                    );
+                  ? WideLayout(order: order, badgeStyle: badgeStyle)
+                  : NarrowLayout(order: order, badgeStyle: badgeStyle);
             },
           ),
         ),

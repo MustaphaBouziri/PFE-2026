@@ -23,7 +23,7 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
   String? _errorMessage;
 
   double get _remaining =>
-      widget.operationData.orderQty - widget.operationData.producedQty;
+      widget.operationData.orderQuantity - widget.operationData.totalProducedQuantity;
 
   @override
   void dispose() {
