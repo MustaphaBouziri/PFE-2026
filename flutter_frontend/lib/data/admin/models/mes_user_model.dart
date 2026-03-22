@@ -5,6 +5,7 @@ class MesUser {
   final String firstName;
   final String lastName;
   final String email;
+  final String workCenterName;
   final String authId;
 
   MesUser({
@@ -15,6 +16,8 @@ class MesUser {
     this.firstName = '',
     this.lastName = '',
     this.email = '',
+    required this.workCenterName
+
   });
 
   factory MesUser.fromJson(Map<String, dynamic> json) {
@@ -25,6 +28,7 @@ class MesUser {
       firstName: json['firstName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
+      workCenterName: json['workCenterName']?.toString() ?? '',
       authId: json['authId'],
     );
   }
