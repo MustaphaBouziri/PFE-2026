@@ -167,6 +167,7 @@ codeunit 50130 "MES Machine Actions"
         if Success then begin
             InsertMESOperation(prodOderNo, operationNo, machineNo);
             InsertMESOperationProgression(prodOderNo, operationNo, machineNo);
+            InsertMESMachineStatus(prodOderNo, machineNo);
             ResultJson.Add('value', true);
         end else begin
             ErrorMessage := GetLastErrorText();
@@ -302,6 +303,20 @@ codeunit 50130 "MES Machine Actions"
         MESOperation."Operation Status" := MESOperation."Operation Status"::Running;
         MESOperation.Insert(true);
     end;
+
+    local procedure InsertMESMachineStatus(
+    prodOrderNo: Code[20];
+    machineNo: Code[20]
+)
+var
+    MESMachineStatus: Record "MES Machine Status";
+begin
+    MESMachineStatus.Init();
+    MESMachineStatus."Machine No." := machineNo;
+    MESMachineStatus.Status := MESMachineStatus.Status::Starting;
+    MESMachineStatus."Current Prod. Order No." := prodOrderNo;
+    MESMachineStatus.Insert(true);
+end;
 
     local procedure InsertMESOperationProgression(
     prodOderNo: Code[20];
