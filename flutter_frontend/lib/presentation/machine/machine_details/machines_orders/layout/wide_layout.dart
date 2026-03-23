@@ -11,12 +11,14 @@ class WideLayout extends StatelessWidget {
   final BadgeStyle badgeStyle;
   final String machineNo;
   final bool showActions;
+  final VoidCallback? onSwitchToProgress;
 
   const WideLayout({
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
     this.showActions = true,
+    this.onSwitchToProgress,
   });
 
   @override
@@ -36,7 +38,11 @@ class WideLayout extends StatelessWidget {
         ),
         if (showActions) ...[
           const SizedBox(width: 16),
-          ActionButtons(order: order, machineNo: machineNo),
+          ActionButtons(
+            order: order,
+            machineNo: machineNo,
+            onSwitchToProgress: onSwitchToProgress,
+          ),
         ],
       ],
     );

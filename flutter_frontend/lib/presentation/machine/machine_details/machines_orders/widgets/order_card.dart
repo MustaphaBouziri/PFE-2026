@@ -11,6 +11,7 @@ class OrderCard extends StatelessWidget {
   final String machineNo;
   final bool showActions;
   final VoidCallback? onTap;
+  final VoidCallback? onSwitchToProgress;
 
   const OrderCard({
     required this.order,
@@ -18,6 +19,7 @@ class OrderCard extends StatelessWidget {
     required this.machineNo,
     this.showActions = true,
     this.onTap,
+    this.onSwitchToProgress,
   });
 
   @override
@@ -45,17 +47,19 @@ class OrderCard extends StatelessWidget {
               final isWide = constraints.maxWidth > 600;
               return isWide
                   ? WideLayout(
-                      order: order,
-                      badgeStyle: badgeStyle,
-                      machineNo: machineNo,
-                      showActions: showActions,
-                    )
+                order: order,
+                badgeStyle: badgeStyle,
+                machineNo: machineNo,
+                showActions: showActions,
+                onSwitchToProgress: onSwitchToProgress,
+              )
                   : NarrowLayout(
-                      order: order,
-                      badgeStyle: badgeStyle,
-                      machineNo: machineNo,
-                      showActions: showActions,
-                    );
+                order: order,
+                badgeStyle: badgeStyle,
+                machineNo: machineNo,
+                showActions: showActions,
+                onSwitchToProgress: onSwitchToProgress,
+              );
             },
           ),
         ),

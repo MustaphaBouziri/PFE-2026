@@ -3,10 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../data/machine/models/mes_machine_model.dart';
 import '../machine_details/machines_orders/tabsMain.dart';
 
-class MachineCard extends StatelessWidget {
+class MachineCard extends StatefulWidget {
   final MachineModel machine;
 
   const MachineCard({super.key, required this.machine});
+
+  @override
+  State<MachineCard> createState() => _MachineCardState();
+}
+
+class _MachineCardState extends State<MachineCard> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +27,7 @@ class MachineCard extends StatelessWidget {
         final statusHeight = isLarge ? 36.0 : 30.0;
         final statusWidth = isLarge ? 120.0 : 100.0;
 
-        final status = (machine.status ?? '').toString().trim().toLowerCase();
+        final status = (widget.machine.status ?? '').toString().trim().toLowerCase();
 
         Color statusBg;
         Color statusText;
@@ -40,110 +47,125 @@ class MachineCard extends StatelessWidget {
           leftBorder = Colors.green;
         }
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    MachineMainPage(machineNo: machine.machineNo,machineName: machine.machineName),
-              ),
-            );
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) {
+            setState(() {
+              _isHovered = true;
+            });
           },
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    width: 5,
-                    child: ColoredBox(color: leftBorder),
+          onExit: (_) {
+            setState(() {
+              _isHovered = false;
+            });
+          },
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MachineMainPage(
+                    machineNo: widget.machine.machineNo,
+                    machineName: widget.machine.machineName,
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: padding + 5,
-                      right: padding,
-                      top: padding,
-                      bottom: padding,
+                ),
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: Colors.white,
+                border: Border.all(
+                  color: _isHovered
+                      ? Theme.of(context).primaryColor.withOpacity(0.35)
+                      : Colors.transparent,
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(_isHovered ? 0.18 : 0.08),
+                    blurRadius: _isHovered ? 14 : 10,
+                    spreadRadius: _isHovered ? -2 : 0,
+                    offset: _isHovered ? const Offset(0, 10) : const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      width: 5,
+                      child: ColoredBox(color: leftBorder),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                machine.machineName,
-                                style: TextStyle(
-                                  fontSize: titleSize,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              height: statusHeight,
-                              width: statusWidth,
-                              decoration: BoxDecoration(
-                                color: statusBg,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Center(
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: padding + 5,
+                        right: padding,
+                        top: padding,
+                        bottom: padding,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
                                 child: Text(
-                                  machine.status ?? 'Running',
+                                  widget.machine.machineName,
                                   style: TextStyle(
-                                    fontSize: textSize,
+                                    fontSize: titleSize,
                                     fontWeight: FontWeight.bold,
-                                    color: statusText,
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text("departmentName", style: TextStyle(fontSize: textSize)),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("Current Order:", style: TextStyle(fontSize: textSize)),
-                            Text(
-                              machine.currentOrder.isEmpty
-                                  ? 'No active order'
-                                  : machine.currentOrder,
-                              style: TextStyle(fontSize: textSize),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("Operator:", style: TextStyle(fontSize: textSize)),
-                            Text("ahmed ben salah", style: TextStyle(fontSize: textSize)),
-                          ],
-                        ),
-                      ],
+                              Container(
+                                height: statusHeight,
+                                width: statusWidth,
+                                decoration: BoxDecoration(
+                                  color: statusBg,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    widget.machine.status ?? 'Running',
+                                    style: TextStyle(
+                                      fontSize: textSize,
+                                      fontWeight: FontWeight.bold,
+                                      color: statusText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Current Order:",
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                              Text(
+                                widget.machine.currentOrder.isEmpty
+                                    ? 'No active order'
+                                    : widget.machine.currentOrder,
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
