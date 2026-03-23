@@ -14,15 +14,15 @@ class HistoryInfoGrid extends StatelessWidget {
       children: [
         InfoCell(label: 'Product', value: order.itemDescription.isEmpty ? '—' : order.itemDescription),
         const SizedBox(width: 16),
-        InfoCell(label: 'Produced Qty', value: '${order.totalProducedQuantity.toInt()} Units'),
+        InfoCell(label: 'Produced Quantity', value: '${order.totalProducedQuantity.toInt()} Units'),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'Start',
+          label: 'Started At',
           value: Utils.formatTimestamp(order.startDateTime),
         ),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'End',
+          label: 'Ended At',
           value: order.endDateTime.isEmpty ? 'In progress' : Utils.formatTimestamp(order.endDateTime),
         ),
       ],

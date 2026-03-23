@@ -124,7 +124,12 @@ class MachineCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text("Current Order:", style: TextStyle(fontSize: textSize)),
-                            Text("bluhbluh", style: TextStyle(fontSize: textSize)),
+                            Text(
+                              machine.currentOrder.isEmpty
+                                  ? 'No active order'
+                                  : machine.currentOrder,
+                              style: TextStyle(fontSize: textSize),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),

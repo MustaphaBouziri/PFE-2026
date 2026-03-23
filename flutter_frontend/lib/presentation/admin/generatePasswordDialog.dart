@@ -28,6 +28,7 @@ class GeneratePasswordDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: _GeneratePasswordDialogContent(userId: userId, authId: authId),
     );
@@ -85,9 +86,6 @@ class _GeneratePasswordDialogContentState
       if (success) {
         _showResultDialog(success: true);
       } else {
-        // FIX: was silently doing nothing when success == false.
-        // adminSetPassword() returns false (not throw) when the API fails,
-        // so we read the error message from the provider and show it.
         final errorMsg =
             authProvider.errorMessage ??
             'Password update failed. Please try again.';
@@ -104,12 +102,15 @@ class _GeneratePasswordDialogContentState
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(
               success ? Icons.check_circle : Icons.error,
-              color: success ? Colors.green : Colors.red,
+              color: success
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFDC2626),
             ),
             const SizedBox(width: 8),
             Text(success ? 'Success' : 'Failed'),
@@ -120,19 +121,12 @@ class _GeneratePasswordDialogContentState
                 text: TextSpan(
                   style: const TextStyle(color: Colors.black87, fontSize: 14),
                   children: [
-                    const TextSpan(text: 'Password for user '),
+                    const TextSpan(text: 'Password for '),
                     TextSpan(
                       text: widget.userId,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const TextSpan(text: ' ('),
-                    TextSpan(
-                      text: widget.authId,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const TextSpan(
-                      text: ') was updated successfully.\n\nNew password:\n\n',
-                    ),
+                    const TextSpan(text: ' was updated.\n\nNew password:\n\n'),
                     TextSpan(
                       text: _generatedPassword,
                       style: const TextStyle(
@@ -148,8 +142,8 @@ class _GeneratePasswordDialogContentState
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // close result dialog
-              if (success) Navigator.pop(context); // close generate dialog
+              Navigator.pop(context);
+              if (success) Navigator.pop(context);
             },
             child: const Text('OK'),
           ),
@@ -160,59 +154,118 @@ class _GeneratePasswordDialogContentState
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Generate Password',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Generate Password',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
             ),
-            child: Text(
-              _generatedPassword.isEmpty
-                  ? 'No password generated yet'
-                  : _generatedPassword,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-                color: _generatedPassword.isEmpty ? Colors.grey : Colors.black,
+
+            const SizedBox(height: 4),
+
+            Text(
+              'For user: ${widget.userId}',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+            ),
+
+            const SizedBox(height: 16),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
               ),
-              textAlign: TextAlign.center,
+              child: Text(
+                _generatedPassword.isEmpty
+                    ? 'No password generated yet'
+                    : _generatedPassword,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+
+                  color: _generatedPassword.isEmpty
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF1E40AF),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              setState(() {
-                _generatedPassword = GeneratePasswordDialog.generatePassword();
-              });
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Generate Password'),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _confirmPassword,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Confirm'),
-          ),
-        ],
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(
+                      () => _generatedPassword =
+                          GeneratePasswordDialog.generatePassword(),
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Generate'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _confirmPassword,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Confirm',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
