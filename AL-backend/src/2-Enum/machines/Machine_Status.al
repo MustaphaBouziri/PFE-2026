@@ -16,13 +16,9 @@ enum 50101 "MES Machine Status"
         Caption = 'Idle';
     }
 
-    value(1; Starting)
+    value(1; Working)
     {
-        Caption = 'Starting';
+        Caption = 'Working';
     }
 
-    value(2; OutOfOrder)
-    {
-        Caption = 'OutOfOrder';
-    }
 }

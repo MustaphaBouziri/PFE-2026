@@ -9,38 +9,23 @@ table 50108 "MES Operation Status"
         {
             DataClassification = SystemMetadata;
         }
-        field(2; "Prod Order No"; Code[20])
+
+        field(2; "Execution Id"; Code[50])
         {
-            TableRelation = "Prod. Order Routing Line"."Prod. Order No.";
+            TableRelation = "MES Operation Execution"."Execution Id";
         }
 
-       
-
-        field(3; "Operation No"; Code[10])
-        {
-            Caption = 'Operation No';
-        }
-
-        field(4; "Machine No"; Code[20])
-        {
-            TableRelation = "Machine Center"."No.";
-        }
-
-        field(5; "Operator Id"; Code[50])
-        {
-            TableRelation = "MES User"."User Id";
-        }
-
-        
-
-        field(6; "Operation Status"; Enum "MES Operation Status")
+        field(3; "Operation Status"; Enum "MES Operation Status")
         {
             Caption = 'MES Operation Status';
         }
 
-        
+        field(4; "Operator Id"; Code[50])
+        {
+            TableRelation = "MES User"."User Id";
+        }
 
-        field(7; "Last Updated At"; DateTime)
+        field(5; "Last Updated At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
@@ -52,11 +37,7 @@ table 50108 "MES Operation Status"
         {
             Clustered = true;
         }
-
-          key(StatusTimeline; "Prod Order No", "Operation No", "Machine No", "Last Updated At")
-        {
-        }
-        key(MachineKey; "Machine No") { }
+        key(ExecutionTimeline; "Execution Id", "Last Updated At") { }
     }
 
     trigger OnInsert()
@@ -67,7 +48,6 @@ table 50108 "MES Operation Status"
             GuidTxt := Format(CreateGuid());
             "Id" := CopyStr(GuidTxt, 2, 36);
         end;
-
         "Last Updated At" := CurrentDateTime();
     end;
 }

@@ -1,10 +1,10 @@
-page 50109 "MES Operation Progression"
+page 50111 "MES Operation Execution"
 {
     PageType = List;
-    SourceTable = "MES Operation Progression";
+    SourceTable = "MES Operation Execution";
     ApplicationArea = All;
     UsageCategory = Lists;
-    Caption = 'MES Operation Progression';
+    Caption = 'MES Operation Execution';
 
     Editable = true;
     InsertAllowed = true;
@@ -17,41 +17,53 @@ page 50109 "MES Operation Progression"
         {
             repeater(Group)
             {
-                field("Id"; Rec."Id")
-                {
-                    ApplicationArea = All;
-                    Editable = false;
-                }
-
                 field("Execution Id"; Rec."Execution Id")
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
 
-                field("Operator Id"; Rec."Operator Id")
+                field("Machine No"; Rec."Machine No")
                 {
                     ApplicationArea = All;
                 }
 
-                field("Cycle Quantity"; Rec."Cycle Quantity")
+                field("Prod Order No"; Rec."Prod Order No")
                 {
                     ApplicationArea = All;
                 }
 
-                field("Total Produced Quantity"; Rec."Total Produced Quantity")
+                field("Operation No"; Rec."Operation No")
                 {
                     ApplicationArea = All;
                 }
 
-                field("Scrap Quantity"; Rec."Scrap Quantity")
+                
+
+                field("Item No"; Rec."Item No")
                 {
                     ApplicationArea = All;
                 }
 
-                field("Last Updated At"; Rec."Last Updated At")
+                field("Item Description"; Rec."Item Description")
+                {
+                    ApplicationArea = All;
+                }
+
+                field("Order Quantity"; Rec."Order Quantity")
+                {
+                    ApplicationArea = All;
+                }
+
+                field("Start Time"; Rec."Start Time")
                 {
                     ApplicationArea = All;
                     Editable = false;
+                }
+
+                field("End Time"; Rec."End Time")
+                {
+                    ApplicationArea = All;
                 }
             }
         }
