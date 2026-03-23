@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/declaireProductionDialog.dart';
 
+import '../../../../../domain/auth/providers/auth_provider.dart';
+
 class ActionButtonsContainer extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
-  const ActionButtonsContainer({super.key, required this.operationData});
+
+  const ActionButtonsContainer({
+    super.key,
+    required this.operationData,
+  });
 
   @override
   State<ActionButtonsContainer> createState() => _ActionButtonsContainerState();
@@ -13,6 +20,26 @@ class ActionButtonsContainer extends StatefulWidget {
 class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
+    final userRole =
+        authProvider.userData?['role']?.toString().trim().toLowerCase() ?? '';
+
+    final operationStatus =
+    widget.operationData.operationStatus.trim().toLowerCase();
+
+    final bool isOperator = userRole == 'operator';
+    final bool isSupervisor = userRole == 'supervisor';
+    final bool isFinished = operationStatus == 'finished';
+
+    final bool canDeclareProduction = !isFinished;
+    final bool canReportReject = !isFinished;
+    final bool canEndProductionOrder = !isFinished && isSupervisor;
+
+    // Print label stays enabled if finished, otherwise only at 100%+
+    final bool canPrintLabel =
+        isFinished || widget.operationData.progressPercent >= 100;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -43,31 +70,39 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             title: "Declare Production",
             icon: Icons.add_circle_outline,
             buttonColor: const Color(0xFF2563EB),
-            onTap: () => showDialog(
+            isEnabled: canDeclareProduction,
+            onTap: canDeclareProduction
+                ? () => showDialog(
               context: context,
-              builder: (context) => DeclareProductionDialog(operationData:widget.operationData),
-            ),
+              builder: (context) => DeclareProductionDialog(
+                operationData: widget.operationData,
+              ),
+            )
+                : null,
           ),
           const SizedBox(height: 8),
           _ActionButton(
             title: "Report Reject",
             icon: Icons.warning_amber_outlined,
             buttonColor: const Color(0xFFDC2626),
-            onTap: () {},
+            isEnabled: canReportReject,
+            onTap: canReportReject ? () {} : null,
           ),
           const SizedBox(height: 8),
           _ActionButton(
             title: "End Production Order",
             icon: Icons.check,
             buttonColor: const Color(0xFF4B5563),
-            onTap: () {},
+            isEnabled: canEndProductionOrder,
+            onTap: canEndProductionOrder ? () {} : null,
           ),
           const SizedBox(height: 8),
           _ActionButton(
             title: "Print Label",
             icon: Icons.print_outlined,
             buttonColor: const Color(0xFF16A34A),
-            onTap: () {},
+            isEnabled: canPrintLabel,
+            onTap: canPrintLabel ? () {} : null,
           ),
         ],
       ),
@@ -75,19 +110,19 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
   }
 }
 
-// ── action button design ────────────────────────────────────────────
-
 class _ActionButton extends StatefulWidget {
   final String title;
   final IconData icon;
   final Color buttonColor;
   final VoidCallback? onTap;
+  final bool isEnabled;
 
   const _ActionButton({
     required this.title,
     required this.icon,
     required this.buttonColor,
     this.onTap,
+    this.isEnabled = true,
   });
 
   @override
@@ -99,28 +134,47 @@ class _ActionButtonState extends State<_ActionButton> {
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveColor = widget.isEnabled
+        ? (_hovered
+        ? widget.buttonColor.withOpacity(0.85)
+        : widget.buttonColor)
+        : const Color(0xFFCBD5E1);
+
+    final Color textAndIconColor = widget.isEnabled
+        ? Colors.white
+        : const Color(0xFF64748B);
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      cursor: widget.isEnabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.forbidden,
+      onEnter: (_) {
+        if (widget.isEnabled) {
+          setState(() => _hovered = true);
+        }
+      },
+      onExit: (_) {
+        if (widget.isEnabled) {
+          setState(() => _hovered = false);
+        }
+      },
       child: Material(
-        color: _hovered
-            ? widget.buttonColor.withOpacity(0.85)
-            : widget.buttonColor,
+        color: effectiveColor,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
-          onTap: widget.onTap,
+          onTap: widget.isEnabled ? widget.onTap : null,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(widget.icon, color: Colors.white, size: 22),
+                Icon(widget.icon, color: textAndIconColor, size: 22),
                 const SizedBox(width: 10),
                 Text(
                   widget.title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textAndIconColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),

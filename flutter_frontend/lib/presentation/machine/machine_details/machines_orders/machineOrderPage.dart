@@ -8,8 +8,13 @@ import 'widgets/order_card.dart';
 
 class Machineorderpage extends StatefulWidget {
   final String machineNo;
+  final VoidCallback onSwitchToProgress;
 
-  const Machineorderpage({super.key, required this.machineNo});
+  const Machineorderpage({
+    super.key,
+    required this.machineNo,
+    required this.onSwitchToProgress,
+  });
 
   @override
   State<Machineorderpage> createState() => _MachineorderpageState();
@@ -20,6 +25,7 @@ class _MachineorderpageState extends State<Machineorderpage> {
   final List<String> status = ['All', 'Planned', 'Firm Planned', 'Released'];
   bool sortAscending = true;
   final TextEditingController searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -40,15 +46,15 @@ class _MachineorderpageState extends State<Machineorderpage> {
           order.orderNo.toLowerCase().contains(
             searchController.text.toLowerCase(),
           ) ||
-          order.itemDescription.toLowerCase().contains(
-            searchController.text.toLowerCase(),
-          ) ||
-          order.plannedStart.toString().contains(
-            searchController.text.toLowerCase(),
-          ) ||
-          order.plannedEnd.toString().toLowerCase().contains(
-            searchController.text.toLowerCase(),
-          );
+              order.itemDescription.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              ) ||
+              order.plannedStart.toString().contains(
+                searchController.text.toLowerCase(),
+              ) ||
+              order.plannedEnd.toString().toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              );
 
       return statusMatch && searchMatch;
     }).toList();
@@ -67,47 +73,48 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : machineOrdersList.isEmpty
           ? const Center(child: Text('No Orders Found'))
           : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: GlobalSearchBar(
-                    controller: searchController,
-                    onSearchChanged: (_) => setState(() {}),
-                    dropdownItems: status,
-                    selectedValue: selectedStatus,
-                    onDropdownChanged: (value) {
-                      setState(() => selectedStatus = value!);
-                    },
-                    sortAscending: sortAscending,
-                    onSortPressed: () {
-                      setState(() {
-                        sortAscending = !sortAscending;
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredOrders.length,
-                    itemBuilder: (context, index) {
-                      final order = filteredOrders[index];
-                      final style = badgeStyleFromStatus(order.status);
-
-                      return Opacity(
-                        opacity: order.status == 'Firm Planned' ? 1.0 : 0.75,
-                        child: OrderCard(
-                          order: order,
-                          badgeStyle: style,
-                          machineNo: widget.machineNo,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: GlobalSearchBar(
+              controller: searchController,
+              onSearchChanged: (_) => setState(() {}),
+              dropdownItems: status,
+              selectedValue: selectedStatus,
+              onDropdownChanged: (value) {
+                setState(() => selectedStatus = value!);
+              },
+              sortAscending: sortAscending,
+              onSortPressed: () {
+                setState(() {
+                  sortAscending = !sortAscending;
+                });
+              },
             ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredOrders.length,
+              itemBuilder: (context, index) {
+                final order = filteredOrders[index];
+                final style = badgeStyleFromStatus(order.status);
+
+                return Opacity(
+                  opacity: order.status == 'Released' ? 1.0 : 0.75,
+                  child: OrderCard(
+                    order: order,
+                    badgeStyle: style,
+                    machineNo: widget.machineNo,
+                    onSwitchToProgress: widget.onSwitchToProgress,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
