@@ -65,7 +65,7 @@ page 50143 "MES Machine List"
                 begin
                     MESMachineStatus.Init();
                     MESMachineStatus."Machine No." := Rec."No.";
-                    MESMachineStatus.Status := MESMachineStatus.Status::Starting;
+                    MESMachineStatus.Status := MESMachineStatus.Status::Working;
                     MESMachineStatus."Last Updated At" := CurrentDateTime();
                     MESMachineStatus.Insert(true);
                 end;
@@ -88,22 +88,7 @@ page 50143 "MES Machine List"
                 end;
             }
 
-            action(SetOutOfOrder)
-            {
-                Caption = 'Set Out Of Order';
-                ApplicationArea = All;
-
-                trigger OnAction()
-                var
-                    MESMachineStatus: Record "MES Machine Status";
-                begin
-                    MESMachineStatus.Init();
-                    MESMachineStatus."Machine No." := Rec."No.";
-                    MESMachineStatus.Status := MESMachineStatus.Status::OutOfOrder;
-                    MESMachineStatus."Last Updated At" := CurrentDateTime();
-                    MESMachineStatus.Insert(true);
-                end;
-            }
+           
         }
     }
 

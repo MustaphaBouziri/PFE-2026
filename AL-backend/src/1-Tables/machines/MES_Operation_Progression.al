@@ -1,7 +1,7 @@
 table 50109 "MES Operation Progression"
 {
     DataClassification = CustomerContent;
-    Caption = 'MES Operation progression';
+    Caption = 'MES Operation Progression';
 
     fields
     {
@@ -9,53 +9,33 @@ table 50109 "MES Operation Progression"
         {
             DataClassification = SystemMetadata;
         }
-        field(2; "Prod Order No"; Code[20])
+
+        field(2; "Execution Id"; Code[50])
         {
-            TableRelation = "Prod. Order Routing Line"."Prod. Order No.";
+            TableRelation = "MES Operation Execution"."Execution Id";
         }
 
-
-
-        field(3; "Operation No"; Code[10])
+        field(3; "Cycle Quantity"; Decimal)
         {
-            TableRelation = "Prod. Order Routing Line"."Operation No.";
-
+            DecimalPlaces = 0 : 5;
         }
 
-        field(4; "Machine No"; Code[20])
+        field(4; "Scrap Quantity"; Decimal)
         {
-            TableRelation = "Machine Center"."No.";
+            DecimalPlaces = 0 : 5;
         }
 
-        field(5; "Operator Id"; Code[50])
+        field(5; "Total Produced Quantity"; Decimal)
+        {
+            DecimalPlaces = 0 : 5;
+        }
+
+        field(6; "Operator Id"; Code[50])
         {
             TableRelation = "MES User"."User Id";
         }
 
-        field(6; "Item No"; Code[20]) { }
-
-        field(7; "Item Description"; Text[100]) { }
-
-        field(8; "Order Quantity"; Decimal) { }
-
-        field(9; "Cycle Quantity"; Decimal)
-        {
-            DecimalPlaces = 0 : 5;
-        }
-
-        field(10; "Scrap Quantity"; Decimal)
-        {
-            DecimalPlaces = 0 : 5;
-        }
-
-        field(11; "Total Produced Quantity"; Decimal)
-        {
-            DecimalPlaces = 0 : 5;
-        }
-
-
-
-        field(12; "Last Updated At"; DateTime)
+        field(7; "Last Updated At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
@@ -67,11 +47,7 @@ table 50109 "MES Operation Progression"
         {
             Clustered = true;
         }
-
-        key(StatusTimeline; "Prod Order No", "Operation No", "Machine No", "Last Updated At")
-        {
-        }
-        key(MachineKey; "Machine No") { }
+        key(ExecutionTimeline; "Execution Id", "Last Updated At") { }
     }
 
     trigger OnInsert()
@@ -82,7 +58,6 @@ table 50109 "MES Operation Progression"
             GuidTxt := Format(CreateGuid());
             "Id" := CopyStr(GuidTxt, 2, 36);
         end;
-
         "Last Updated At" := CurrentDateTime();
     end;
 }

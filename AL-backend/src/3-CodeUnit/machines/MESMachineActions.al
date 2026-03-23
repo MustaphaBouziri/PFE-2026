@@ -63,7 +63,6 @@ codeunit 50130 "MES Machine Actions"
                 MachineObj.Add('machineNo', Machine."No.");
                 MachineObj.Add('machineName', Machine."Name");
                 MachineObj.Add('status', 'Idle');
-
                 MachineObj.Add('currentOrder', 'No operator yet');
 
                 MESMachineStatus.Reset();
@@ -78,11 +77,9 @@ codeunit 50130 "MES Machine Actions"
                 MachineArr.Add(MachineObj);
             until Machine.Next() = 0;// go to next record
         exit(JsonToTextArr(MachineArr));
-
     end;
 
     //______________________________fetching machine orders _____________________________________
-
 
     procedure getMachineOrders(machineNo: Text): Text
     var
@@ -90,14 +87,12 @@ codeunit 50130 "MES Machine Actions"
         ProductOrderLine: Record "Prod. Order Line";
         ProductOrderRoutingLineArr: JsonArray;
         ProductOrderRoutingLineObj: JsonObject;
-        MESOperation: Record "MES Operation Status";
+        MESExecution: Record "MES Operation Execution";
     begin
-
         if MachineNo = '' then Error('Machine Number is required');
 
         ProductOrderRoutingLine.SetRange(Type, ProductOrderRoutingLine.Type::"Machine Center");
         // the "::" used to acess the available options of the fild "Type" by options I mean enum values.
-
         ProductOrderRoutingLine.SetRange("No.", MachineNo);
 
         // setRange used for simple comperation , setFilter for complex comperation
@@ -105,20 +100,17 @@ codeunit 50130 "MES Machine Actions"
                                           // %1|%2|%3 means get me orders where status = ? or ? or ?
                                           ProductOrderRoutingLine.Status::Planned,
                                           ProductOrderRoutingLine.Status::"Firm Planned",
-                                          ProductOrderRoutingLine.Status::Released
-                                         );
+                                          ProductOrderRoutingLine.Status::Released);
 
         if ProductOrderRoutingLine.FindSet() then
             repeat
-                MESOperation.Reset();
-                MESOperation.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
-                MESOperation.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
-                MESOperation.SetRange("Machine No", MachineNo);
+                MESExecution.Reset();
+                MESExecution.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
+                MESExecution.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
+                MESExecution.SetRange("Machine No", MachineNo);
 
-                // if this order/operation does not exist in the mes operation table enter the body
-
-                if not MESOperation.FindFirst() then begin
-
+                // if this order/operation does not exist in the mes execution table enter the body
+                if not MESExecution.FindFirst() then begin
                     Clear(ProductOrderRoutingLineObj);
 
                     ProductOrderLine.Reset();
@@ -135,18 +127,13 @@ codeunit 50130 "MES Machine Actions"
                         ProductOrderRoutingLineObj.Add('ItemDescription', ProductOrderLine.Description);
                         ProductOrderRoutingLineObj.Add('OrderQuantity', ProductOrderLine.Quantity);
                         ProductOrderRoutingLineObj.Add('operationDescription', ProductOrderRoutingLine.Description);
-
                         ProductOrderRoutingLineArr.Add(ProductOrderRoutingLineObj);
                     end;
-
                 end;
-
             until ProductOrderRoutingLine.Next() = 0;
 
         exit(JsonToTextArr(ProductOrderRoutingLineArr));
-
     end;
-    // you need to explain this why did you remove the arrtotext func just to replace it with another func that does thhe same thing
 
     //____________________________________________________________________________________________________________
 
@@ -159,14 +146,16 @@ codeunit 50130 "MES Machine Actions"
         ResultJson: JsonObject;
         Success: Boolean;
         ErrorMessage: Text;
+        ExecutionId: Code[50];
     begin
         ClearLastError();
 
         Success := TryStartOperation(prodOderNo, operationNo, machineNo);
 
         if Success then begin
-            InsertMESOperation(prodOderNo, operationNo, machineNo);
-            InsertMESOperationProgression(prodOderNo, operationNo, machineNo);
+            ExecutionId := InsertMESOperationExecution(prodOderNo, operationNo, machineNo);
+            InsertMESOperation(ExecutionId);
+            InsertMESOperationProgression(ExecutionId, prodOderNo, machineNo);
             InsertMESMachineStatus(prodOderNo, machineNo);
             ResultJson.Add('value', true);
         end else begin
@@ -187,13 +176,11 @@ codeunit 50130 "MES Machine Actions"
     var
         ProdOrderRoutingLine: Record "Prod. Order Routing Line";
         PreviousProdOrderRoutingLine: Record "Prod. Order Routing Line";
-        MESOperation: Record "MES Operation Status";
-        PreviousMESOperation: Record "MES Operation Status";
+        MESExecution: Record "MES Operation Execution";
+        MESOperationStatus: Record "MES Operation Status";
         TotalProducedQuantity: Decimal;
-
     begin
         //get current order routing line mainly to know what operation u on  10 20 30 
-
         ProdOrderRoutingLine.Reset();
         ProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status::Released);
         ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOderNo);
@@ -202,32 +189,37 @@ codeunit 50130 "MES Machine Actions"
         if not ProdOrderRoutingLine.FindFirst() then
             Error('Routing line not found.');
 
-
         // now we prevent starting the same operation twice
-
-        MESOperation.Reset();
-        MESOperation.SetRange("Prod Order No", prodOderNo);
-        MESOperation.SetRange("Operation No", operationNo);
-        MESOperation.SetRange("Operation Status", MESOperation."Operation Status"::Running);
-
-        if MESOperation.FindFirst() then
-            Error('This operation is already running.');
-
-        // we check if there is a curently worked on operation of a diferent order 
-        MESOperation.Reset();
-        MESOperation.SetCurrentKey("Machine No", "Last Updated At");
-        MESOperation.SetRange("Machine No", machineNo);
-
-        if MESOperation.FindLast() then begin
-            if MESOperation."Operation Status" = MESOperation."Operation Status"::Running then
-                Error(
-                    'Machine %1 is already running another operation (Order %2 - Operation %3). Pause or finish it first.',
-                    MESOperation."Machine No",
-                    MESOperation."Prod Order No",
-                    MESOperation."Operation No"
-                );
+        MESExecution.Reset();
+        MESExecution.SetRange("Prod Order No", prodOderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+        if MESExecution.FindFirst() then begin
+            MESOperationStatus.Reset();
+            MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
+            MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Running);
+            if MESOperationStatus.FindFirst() then
+                Error('This operation is already running.');
         end;
 
+        // we check if there is a curently worked on operation of a diferent order 
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        if MESExecution.FindSet() then
+            repeat
+                MESOperationStatus.Reset();
+                MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+                MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
+                MESOperationStatus.Ascending(false);
+                if MESOperationStatus.FindFirst() then begin
+                    if MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running then
+                        Error(
+                            'Machine %1 is already running another operation (Order %2 - Operation %3). Pause or finish it first.',
+                            MESExecution."Machine No",
+                            MESExecution."Prod Order No",
+                            MESExecution."Operation No"
+                        );
+                end;
+            until MESExecution.Next() = 0;
 
         // now we find the previous order routing line 
         PreviousProdOrderRoutingLine.Reset();
@@ -285,108 +277,107 @@ codeunit 50130 "MES Machine Actions"
                   if TotalProducedQuantity < PreviousProdOrderRoutingLine."Send-Ahead Quantity" then Error('You must produce at least %1 units in previous operation before starting this one.', PreviousProdOrderRoutingLine."Send-Ahead Quantity");*/
 
         end;
-
     end;
 
-    local procedure InsertMESOperation(
-    prodOderNo: Code[20];
-    operationNo: Code[10];
-    machineNo: Code[20])
+    local procedure InsertMESOperationExecution(
+        prodOderNo: Code[20];
+        operationNo: Code[10];
+        machineNo: Code[20]
+    ): Code[50]
     var
-        MESOperation: Record "MES Operation Status";
-    begin
-        MESOperation.Init();
-        MESOperation."Prod Order No" := prodOderNo;
-        MESOperation."Operation No" := operationNo;
-        MESOperation."Machine No" := machineNo;
-        MESOperation."Operator Id" := UserId;
-        MESOperation."Operation Status" := MESOperation."Operation Status"::Running;
-        MESOperation.Insert(true);
-    end;
-
-    local procedure InsertMESMachineStatus(
-    prodOrderNo: Code[20];
-    machineNo: Code[20]
-)
-var
-    MESMachineStatus: Record "MES Machine Status";
-begin
-    MESMachineStatus.Init();
-    MESMachineStatus."Machine No." := machineNo;
-    MESMachineStatus.Status := MESMachineStatus.Status::Starting;
-    MESMachineStatus."Current Prod. Order No." := prodOrderNo;
-    MESMachineStatus.Insert(true);
-end;
-
-    local procedure InsertMESOperationProgression(
-    prodOderNo: Code[20];
-    operationNo: Code[10];
-    machineNo: Code[20])
-    var
-        MESOperationProgress: Record "MES Operation Progression";
+        MESExecution: Record "MES Operation Execution";
         ProdOrderLine: Record "Prod. Order Line";
     begin
-
         // i need to do setRange otherwise i wont be able to know order details like quantity
         ProdOrderLine.Reset();
         ProdOrderLine.SetRange("Prod. Order No.", prodOderNo);
-
         if not ProdOrderLine.FindFirst() then
             Error('Production order line not found.');
 
+        MESExecution.Init();
+        MESExecution."Machine No" := machineNo;
+        MESExecution."Prod Order No" := prodOderNo;
+        MESExecution."Operation No" := operationNo;
+        MESExecution."Item No" := ProdOrderLine."Item No.";
+        MESExecution."Item Description" := ProdOrderLine.Description;
+        MESExecution."Order Quantity" := ProdOrderLine.Quantity;
+        MESExecution.Insert(true);
+        exit(MESExecution."Execution Id");
+    end;
+
+    local procedure InsertMESOperation(executionId: Code[50])
+    var
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        MESOperationStatus.Init();
+        MESOperationStatus."Execution Id" := executionId;
+        MESOperationStatus."Operation Status" := MESOperationStatus."Operation Status"::Running;
+        MESOperationStatus."Operator Id" := UserId;
+        MESOperationStatus.Insert(true);
+    end;
+
+    local procedure InsertMESMachineStatus(
+        prodOrderNo: Code[20];
+        machineNo: Code[20]
+    )
+    var
+        MESMachineStatus: Record "MES Machine Status";
+    begin
+        MESMachineStatus.Init();
+        MESMachineStatus."Machine No." := machineNo;
+        MESMachineStatus.Status := MESMachineStatus.Status::Working;
+        MESMachineStatus."Current Prod. Order No." := prodOrderNo;
+        
+        MESMachineStatus.Insert(true);
+    end;
+
+    local procedure InsertMESOperationProgression(
+        executionId: Code[50];
+        prodOderNo: Code[20];
+        machineNo: Code[20]
+    )
+    var
+        MESOperationProgress: Record "MES Operation Progression";
+    begin
         MESOperationProgress.Init();
-        MESOperationProgress."Prod Order No" := prodOderNo;
-        MESOperationProgress."Operation No" := operationNo;
-        MESOperationProgress."Machine No" := machineNo;
-        MESOperationProgress."Operator Id" := UserId;
-        MESOperationProgress."Item No" := ProdOrderLine."Item No.";
-        MESOperationProgress."Item Description" := ProdOrderLine.Description;
-        MESOperationProgress."Order Quantity" := ProdOrderLine.Quantity;
-        MESOperationProgress."Total Produced Quantity" := 0;
+        MESOperationProgress."Execution Id" := executionId;
         MESOperationProgress."Cycle Quantity" := 0;
         MESOperationProgress."Scrap Quantity" := 0;
+        MESOperationProgress."Total Produced Quantity" := 0;
+        MESOperationProgress."Operator Id" := UserId;
         MESOperationProgress.Insert(true);
     end;
 
     //_____________progress + status merge___________________
 
-
     procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
     var
+        MESExecution: Record "MES Operation Execution";
         MESOperationStatus: Record "MES Operation Status";
         MESOperationProgress: Record "MES Operation Progression";
         MESOperationStatusObj: JsonObject;
         MESOperationStatusArr: JsonArray;
-        LastProdOrder: Code[20];
-        LastOperation: Code[10];
         ShouldInclude: Boolean;
         EndDateTime: DateTime;
         StartDateTime: DateTime;
-        CurrentProdOrderNo: Code[20];
-        CurrentOperationNo: Code[10];
-        CurrentMachineNo: Code[20];
         CurrentOperationStatus: Text;
         CurrentLastUpdatedAt: DateTime;
     begin
         Clear(MESOperationStatusArr);
 
-        MESOperationStatus.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-        MESOperationStatus.SetRange("Machine No", machineNo);
-        MESOperationStatus.Ascending(false);
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
 
-        if MESOperationStatus.FindSet() then begin
+        if MESExecution.FindSet() then
             repeat
-                // since we are sorted by newest first,
-                // the first time we see a group = latest status
-                if (MESOperationStatus."Prod Order No" <> LastProdOrder) or
-                   (MESOperationStatus."Operation No" <> LastOperation) then begin
+                // get latest status for this execution
+                MESOperationStatus.Reset();
+                MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+                MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
+                MESOperationStatus.Ascending(false);
 
-                    LastProdOrder := MESOperationStatus."Prod Order No";
-                    LastOperation := MESOperationStatus."Operation No";
-
-                    // if fetchFinished is true , shouldInclude will return true if the record we r in rn have status finished else it will have false which mean skip
-                    //so basicaly skip those who have status not finished  
-                    // fetchFinished= true -> include only Finished ,fetchFinished=false -> include only running or paused
+                if MESOperationStatus.FindFirst() then begin
+                    // fetchFinished= true -> include only Finished, fetchFinished=false -> include only running or paused
                     if fetchFinished then
                         ShouldInclude := MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Finished
                     else
@@ -397,47 +388,27 @@ end;
                     if ShouldInclude then begin
                         Clear(StartDateTime);
                         Clear(EndDateTime);
-
-                        // save current record values before we move the pointer find first and find last
-                        CurrentProdOrderNo := MESOperationStatus."Prod Order No";
-                        CurrentOperationNo := MESOperationStatus."Operation No";
-                        CurrentMachineNo := MESOperationStatus."Machine No";
                         CurrentOperationStatus := Format(MESOperationStatus."Operation Status");
                         CurrentLastUpdatedAt := MESOperationStatus."Last Updated At";
 
                         // find start time = oldest running record
-                        MESOperationStatus.SetRange("Prod Order No", LastProdOrder);
-                        MESOperationStatus.SetRange("Operation No", LastOperation);
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Running);
-                        if MESOperationStatus.FindFirst() then
+                        if MESOperationStatus.FindLast() then
                             StartDateTime := MESOperationStatus."Last Updated At";
 
                         // find end time = newest finished record
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Finished);
-                        if MESOperationStatus.FindLast() then
+                        if MESOperationStatus.FindFirst() then
                             EndDateTime := MESOperationStatus."Last Updated At";
 
-                        // restore filters for main loop
-                        // if u do setrange without parameter = clear that filter 
-                        // u see in our main loop we filter with machine if we dont remove them
-                        // the NEXT() will tries to move with this conditions : 
-                        /**
-                        - Machine No = machineNo
-                        - Prod Order No = '1011003'  ← still active
-                        - Operation No  = '40'       ← still active
-                        - Operation Status = Finished ← still active
-                        */
-
                         MESOperationStatus.SetRange("Operation Status");
-                        MESOperationStatus.SetRange("Prod Order No");
-                        MESOperationStatus.SetRange("Operation No");
 
                         Clear(MESOperationStatusObj);
 
-                        // adding status fields — use saved variables not MESOperationStatus directly
-                        MESOperationStatusObj.Add('prodOrderNo', CurrentProdOrderNo);
-                        MESOperationStatusObj.Add('machineNo', CurrentMachineNo);
-                        MESOperationStatusObj.Add('operationNo', CurrentOperationNo);
+                        // adding status fields
+                        MESOperationStatusObj.Add('prodOrderNo', MESExecution."Prod Order No");
+                        MESOperationStatusObj.Add('machineNo', MESExecution."Machine No");
+                        MESOperationStatusObj.Add('operationNo', MESExecution."Operation No");
                         MESOperationStatusObj.Add('operationStatus', CurrentOperationStatus);
                         MESOperationStatusObj.Add('startDateTime', Format(StartDateTime));
                         MESOperationStatusObj.Add('endDateTime', Format(EndDateTime));
@@ -452,29 +423,25 @@ end;
                         */
 
                         MESOperationProgress.Reset();
-                        MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-                        MESOperationProgress.SetRange("Machine No", machineNo);
-                        MESOperationProgress.SetRange("Prod Order No", CurrentProdOrderNo);
-                        MESOperationProgress.SetRange("Operation No", CurrentOperationNo);
+                        MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+                        MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
                         MESOperationProgress.Ascending(false);
 
-                        // add progress fields
                         // FindFirst cuz we did ascending false so the newest row is on top
                         if MESOperationProgress.FindFirst() then begin
                             MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
                             MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
-                            MESOperationStatusObj.Add('orderQuantity', MESOperationProgress."Order Quantity");
-                            MESOperationStatusObj.Add('itemDescription', MESOperationProgress."Item Description");
-                            if MESOperationProgress."Order Quantity" <> 0 then
+                            MESOperationStatusObj.Add('orderQuantity', MESExecution."Order Quantity");
+                            MESOperationStatusObj.Add('itemDescription', MESExecution."Item Description");
+                            if MESExecution."Order Quantity" <> 0 then
                                 MESOperationStatusObj.Add('progressPercent',
-                                    (MESOperationProgress."Total Produced Quantity" / MESOperationProgress."Order Quantity") * 100);
+                                    (MESOperationProgress."Total Produced Quantity" / MESExecution."Order Quantity") * 100);
                         end;
 
                         MESOperationStatusArr.Add(MESOperationStatusObj);
                     end;
                 end;
-            until MESOperationStatus.Next() = 0;
-        end;
+            until MESExecution.Next() = 0;
 
         /* _____________final json _____________
         [
@@ -494,11 +461,13 @@ end;
 
         exit(JsonToTextArr(MESOperationStatusArr));
     end;
+
     //______________________________________________________________________
 
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20];
         operationNo: Code[10]): Text
     var
+        MESExecution: Record "MES Operation Execution";
         MESOperationStatus: Record "MES Operation Status";
         MESOperationProgress: Record "MES Operation Progression";
         MESOperationStatusObj: JsonObject;
@@ -506,40 +475,40 @@ end;
     begin
         Clear(MESOperationStatusArr);
 
-        MESOperationStatus.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-        MESOperationStatus.SetRange("Machine No", machineNo);
-        MESOperationStatus.SetRange("Prod Order No", prodOderNo);
-        MESOperationStatus.SetRange("Operation No", operationNo);
-        MESOperationStatus.Ascending(false);
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOderNo);
+        MESExecution.SetRange("Operation No", operationNo);
 
-        if MESOperationStatus.FindFirst() then begin
+        if MESExecution.FindFirst() then begin
+            MESOperationStatus.Reset();
+            MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+            MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
+            MESOperationStatus.Ascending(false);
 
-            if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
-               (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
+            if MESOperationStatus.FindFirst() then begin
+                if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
+                   (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
 
-                Clear(MESOperationStatusObj);
+                    Clear(MESOperationStatusObj);
+                    MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
 
-                MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
+                    MESOperationProgress.Reset();
+                    MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+                    MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
+                    MESOperationProgress.Ascending(false);
 
-                MESOperationProgress.Reset();
-                MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-                MESOperationProgress.SetRange("Machine No", machineNo);
-                MESOperationProgress.SetRange("Prod Order No", MESOperationStatus."Prod Order No");
-                MESOperationProgress.SetRange("Operation No", MESOperationStatus."Operation No");
-                MESOperationProgress.Ascending(false);
+                    if MESOperationProgress.FindFirst() then begin
+                        MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
+                        MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
+                        if MESExecution."Order Quantity" <> 0 then
+                            MESOperationStatusObj.Add('progressPercent',
+                                (MESOperationProgress."Total Produced Quantity" / MESExecution."Order Quantity") * 100);
+                    end;
 
-                if MESOperationProgress.FindFirst() then begin
-                    MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
-                    MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
-
-                    if MESOperationProgress."Order Quantity" <> 0 then
-                        MESOperationStatusObj.Add('progressPercent',
-                            (MESOperationProgress."Total Produced Quantity" / MESOperationProgress."Order Quantity") * 100);
+                    MESOperationStatusArr.Add(MESOperationStatusObj);
                 end;
-
-                MESOperationStatusArr.Add(MESOperationStatusObj);
             end;
-
         end;
 
         exit(JsonToTextArr(MESOperationStatusArr));
@@ -562,7 +531,7 @@ end;
         Success := TryDeclareProduction(machineNo, prodOderNo, operationNo, input);
 
         if Success then begin
-            InsertMESOperationProgression(machineNo, prodOderNo, operationNo, input);
+            InsertNewProgressionCycle(machineNo, prodOderNo, operationNo, input);
             ResultJson.Add('value', true);
         end else begin
             ErrorMessage := GetLastErrorText();
@@ -581,12 +550,20 @@ end;
         input: Decimal
     )
     var
+        MESExecution: Record "MES Operation Execution";
         MESOperationProgress: Record "MES Operation Progression";
     begin
-        MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-        MESOperationProgress.SetRange("Machine No", machineNo);
-        MESOperationProgress.SetRange("Prod Order No", prodOderNo);
-        MESOperationProgress.SetRange("Operation No", operationNo);
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+
+        if not MESExecution.FindFirst() then
+            Error('Operation execution record not found.');
+
+        MESOperationProgress.Reset();
+        MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
         MESOperationProgress.Ascending(false);
 
         if not MESOperationProgress.FindFirst() then
@@ -595,77 +572,76 @@ end;
         if input <= 0 then
             Error('Declared quantity must be greater than zero.');
 
-        if (MESOperationProgress."Total Produced Quantity" + input) > MESOperationProgress."Order Quantity" then
+        if (MESOperationProgress."Total Produced Quantity" + input) > MESExecution."Order Quantity" then
             Error('Declared quantity exceeds the remaining order quantity.');
     end;
 
-    local procedure InsertMESOperationProgression(
+    local procedure InsertNewProgressionCycle(
         machineNo: Code[20];
         prodOderNo: Code[20];
         operationNo: Code[10];
         input: Decimal
     )
     var
+        MESExecution: Record "MES Operation Execution";
         MESOperationProgress: Record "MES Operation Progression";
         NewMESOperationProgress: Record "MES Operation Progression";
     begin
-        MESOperationProgress.SetCurrentKey("Machine No", "Prod Order No", "Operation No", "Last Updated At");
-        MESOperationProgress.SetRange("Machine No", machineNo);
-        MESOperationProgress.SetRange("Prod Order No", prodOderNo);
-        MESOperationProgress.SetRange("Operation No", operationNo);
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+        MESExecution.FindFirst();
+
+        MESOperationProgress.Reset();
+        MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
         MESOperationProgress.Ascending(false);
         MESOperationProgress.FindFirst();
 
         NewMESOperationProgress.Init();
-        NewMESOperationProgress."Prod Order No" := prodOderNo;
-        NewMESOperationProgress."Operation No" := operationNo;
-        NewMESOperationProgress."Machine No" := machineNo;
+        NewMESOperationProgress."Execution Id" := MESExecution."Execution Id";
         NewMESOperationProgress."Operator Id" := UserId;
-        NewMESOperationProgress."Item No" := MESOperationProgress."Item No";
-        NewMESOperationProgress."Item Description" := MESOperationProgress."Item Description";
-        NewMESOperationProgress."Order Quantity" := MESOperationProgress."Order Quantity";
         NewMESOperationProgress."Cycle Quantity" := input;
         NewMESOperationProgress."Total Produced Quantity" := MESOperationProgress."Total Produced Quantity" + input;
         NewMESOperationProgress."Scrap Quantity" := 0;
         NewMESOperationProgress.Insert(true);
     end;
 
-
     //___________________________
-
 
     procedure fetchProductionCycles(
         machineNo: Code[20];
         prodOrderNo: Code[20];
         operationNo: Code[10]): Text
     var
+        MESExecution: Record "MES Operation Execution";
         OperationCycle: Record "MES Operation Progression";
         MESUser: Record "MES User";
         Employee: Record Employee;
         CycleObj: JsonObject;
         CycleArr: JsonArray;
-        a: Record "Prod. Order Component";
-
     begin
         Clear(CycleArr);
-        OperationCycle.Reset();
-        OperationCycle.SetCurrentKey(
-            "Machine No",
-            "Prod Order No",
-            "Operation No",
-            "Last Updated At"
-        );
 
-        OperationCycle.SetRange("Machine No", machineNo);
-        OperationCycle.SetRange("Prod Order No", prodOrderNo);
-        OperationCycle.SetRange("Operation No", operationNo);
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOrderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+
+        if not MESExecution.FindFirst() then
+            exit(JsonToTextArr(CycleArr));
+
+        OperationCycle.Reset();
+        OperationCycle.SetCurrentKey("Execution Id", "Last Updated At");
+        OperationCycle.SetRange("Execution Id", MESExecution."Execution Id");
         OperationCycle.Ascending(false);
 
         if OperationCycle.FindSet() then begin
             repeat
                 Clear(CycleObj);
 
-                CycleObj.Add('orderQuantity', OperationCycle."Order Quantity");
+                CycleObj.Add('orderQuantity', MESExecution."Order Quantity");
                 CycleObj.Add('cycleQuantity', OperationCycle."Cycle Quantity");
                 CycleObj.Add('totalProducedQuantity', OperationCycle."Total Produced Quantity");
                 CycleObj.Add('scrapQuantity', OperationCycle."Scrap Quantity");
@@ -696,12 +672,9 @@ end;
                 end;
 
                 CycleArr.Add(CycleObj);
-
             until OperationCycle.Next() = 0;
         end;
 
         exit(JsonToTextArr(CycleArr));
     end;
-
 }
-

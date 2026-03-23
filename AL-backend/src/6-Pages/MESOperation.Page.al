@@ -23,22 +23,7 @@ page 50108 "MES Operations"
                     Editable = false; // Auto-generated GUID
                 }
 
-                field("Prod Order No"; Rec."Prod Order No")
-                {
-                    ApplicationArea = All;
-                }
-
-                field("Operation No"; Rec."Operation No")
-                {
-                    ApplicationArea = All;
-                }
-
-                field("Machine No"; Rec."Machine No")
-                {
-                    ApplicationArea = All;
-                }
-
-                field("Operator Id"; Rec."Operator Id")
+                field("Execution Id"; Rec."Execution Id")
                 {
                     ApplicationArea = All;
                 }

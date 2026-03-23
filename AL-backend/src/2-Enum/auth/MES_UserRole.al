@@ -23,12 +23,12 @@ enum 50100 "MES User Role"
 
     value(0; Operator)
     {
-        Caption = 'Opérateur';
+        Caption = 'Operator';
     }
 
     value(1; Supervisor)
     {
-        Caption = 'Superviseur';
+        Caption = 'Supervisor';
     }
 
     value(2; Admin)
