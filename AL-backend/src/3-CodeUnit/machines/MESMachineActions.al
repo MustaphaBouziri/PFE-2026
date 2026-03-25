@@ -277,7 +277,7 @@ codeunit 50130 "MES Machine Actions"
         MESMachineStatus."Machine No." := machineNo;
         MESMachineStatus.Status := MESMachineStatus.Status::Working;
         MESMachineStatus."Current Prod. Order No." := prodOrderNo;
-
+        
         MESMachineStatus.Insert(true);
     end;
 
@@ -638,6 +638,112 @@ codeunit 50130 "MES Machine Actions"
 
         exit(JsonToTextArr(CycleArr));
     end;
+
+    //_________________fetch bom________
+
+    procedure fetchBom(
+        prodOrderNo: Code[20];
+        operationNo: Code[10]): Text
+
+    var
+        ProductOrderComponent: Record "Prod. Order Component";
+        ProductOrderRoutingLine: Record "Prod. Order Routing Line";
+        MESComponentConsumption: Record "MES Component Consumption";
+        MESExecution: Record "MES Operation Execution";
+        ExecutionId: Code[50];
+        CurrentRoutingLinkCode: Code[10];
+        HasAnyRoutingLink: Boolean;
+        TotalConsumed: Decimal;
+
+        BomObj: JsonObject;
+        BomArr: JsonArray;
+    begin
+        Clear(BomArr);
+
+        MESExecution.Reset();
+        MESExecution.SetRange("Prod Order No", prodOrderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+        if MESExecution.FindFirst() then
+            ExecutionId := MESExecution."Execution Id";
+
+        // get routing link code of this operation this will return on row exemple :
+        /*
+        | Order | Operation | Routing Link |
+        | ----- | --------- | ------------ |
+        | 1001  | 10        | A            |
+        */
+
+        ProductOrderRoutingLine.Reset();
+        ProductOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProductOrderRoutingLine.SetRange("Operation No.", operationNo);
+        if ProductOrderRoutingLine.FindFirst() then
+            CurrentRoutingLinkCode := ProductOrderRoutingLine."Routing Link Code";
+
+
+        // lets say the component we have routing link r : A,B and (empty)
+        // next the <> filter will keep only records where the link code is not empty 
+        //we do not loop bcz we only care about is there at least one component with routing link or not thats why we did find first
+        //if we find at least one component with link code return true
+        ProductOrderComponent.Reset();
+        ProductOrderComponent.SetRange("Prod. Order No.", prodOrderNo);
+        ProductOrderComponent.SetFilter("Routing Link Code", '<>%1', '');
+        HasAnyRoutingLink := ProductOrderComponent.FindFirst();
+
+        //loop all componenents of this order 
+        ProductOrderComponent.Reset();
+        ProductOrderComponent.SetRange("Prod. Order No.", prodOrderNo);
+        if ProductOrderComponent.FindSet() then
+            repeat
+            // skip only component that belong to another routing
+            // routing = A 
+            /*
+            true and A!= '' and A != A  ---> true ,true ,false = false not(false) = include it 
+            routing = B
+            true and B!= '' and B != A  ---> true ,true ,True = True not(True) = skip it it 
+            routing = empty
+            false + anything + anything = false not(false) = true so include it
+            anyway end result need to be true to perform the filter
+            without not it will include only component that belong to other operations
+            */
+                if not (HasAnyRoutingLink and
+                   (ProductOrderComponent."Routing Link Code" <> '') and
+                   (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
+
+                    TotalConsumed := 0;
+                    if ExecutionId <> '' then begin
+                        MESComponentConsumption.Reset();
+                        MESComponentConsumption.SetRange("Execution Id", ExecutionId);
+                        MESComponentConsumption.SetRange("Item No", ProductOrderComponent."Item No.");
+                        if MESComponentConsumption.FindSet() then
+                            //if there is no record in mes Component json wil return consumed qte 0 
+                            repeat
+                    TotalConsumed += MESComponentConsumption.Quantity;
+                            until MESComponentConsumption.Next() = 0;
+
+                    end;
+                    Clear(BomObj);
+                    BomObj.Add('itemNo', ProductOrderComponent."Item No.");
+                    BomObj.Add('itemDescription', ProductOrderComponent.Description);
+                    BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
+                    BomObj.Add('unitOfMeasure', ProductOrderComponent."Unit of Measure Code");
+                    BomObj.Add('consumedQuantity', TotalConsumed);
+                    BomObj.Add('remainingQuantity', ProductOrderComponent.Quantity - TotalConsumed);
+                    BomArr.Add(BomObj);
+                end;
+
+            until ProductOrderComponent.Next() = 0;
+
+        exit(JsonToTextArr(BomArr));
+
+
+
+
+
+
+    end;
+
+
+
 
     // ──────────────────────────────────────────────────────────────────────────
     // finishOperation  – called when progress = 100 %
