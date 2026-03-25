@@ -162,12 +162,12 @@ page 50140 "MES API Debug"
     begin
         B.AppendLine('Auth  : Login · Logout · Me · ChangePassword');
         B.AppendLine('Admin : AdminCreateUser · AdminSetPassword · AdminSetActive');
-        B.Append('All   : POST /ODataV4/MESUnboundActions_<ProcedureName>');
+        B.Append('All   : POST /ODataV4/MESWebService_<ProcedureName>');
         ApiList := B.ToText();
     end;
 
     var
-        AuthAPI:      Codeunit "MES Unbound Actions";
+        AuthAPI:      Codeunit "MES Web Service";
         ApiList:      Text;
         LastResponse: Text;
         UserId:       Text;

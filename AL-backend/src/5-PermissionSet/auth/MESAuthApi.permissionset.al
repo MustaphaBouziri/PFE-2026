@@ -22,8 +22,10 @@ permissionset 50130 "MES AUTH API"
         table "MES Auth Token"     = X,
 
         // Codeunit execution
-        codeunit "MES Password Mgt"    = X,  // 50110 — crypto primitives
-        codeunit "MES Auth Mgt"        = X,  // 50111 — business logic
-        codeunit "MES Setup"           = X,  // 50120 — initialisation
-        codeunit "MES Unbound Actions" = X;  // 50125 — OData HTTP layer
+        codeunit "MES Password Mgt"    = X,
+        codeunit "MES Auth Mgt"        = X,
+        codeunit "MES Setup"           = X,
+        codeunit "MES Unbound Actions" = X,
+        codeunit "MES Machine Actions" = X,
+        codeunit "MES Web Service"     = X;
 }
