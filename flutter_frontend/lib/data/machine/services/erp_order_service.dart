@@ -32,12 +32,12 @@ class ErpMachineOrdersService {
   }
 
   Future<bool> getStartOperationValidation(
-    String prodOderNo,
+    String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
     final body = jsonEncode({
-      'prodOderNo': prodOderNo,
+      'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
       'machineNo': machineNo,
     });
@@ -205,12 +205,12 @@ class ErpMachineOrdersService {
 
   Future<OperationStatusAndProgressModel?> fetchOperationLiveData(
     String machineNo,
-    String prodOderNo,
+    String prodOrderNo,
     String operationNo,
   ) async {
     final body = jsonEncode({
       'machineNo': machineNo,
-      'prodOderNo': prodOderNo,
+      'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
 
@@ -236,24 +236,24 @@ class ErpMachineOrdersService {
 
   Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
     String machineNo,
-    String prodOderNo,
+    String prodOrderNo,
     String operationNo,
     Stream<void> trigger,
   ) async* {
-    yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+    yield await fetchOperationLiveData(machineNo, prodOrderNo, operationNo);
     await for (final _ in trigger) {
-      yield await fetchOperationLiveData(machineNo, prodOderNo, operationNo);
+      yield await fetchOperationLiveData(machineNo, prodOrderNo, operationNo);
     }
   }
 
   Future<bool> declareProduction(
-    String prodOderNo,
+    String prodOrderNo,
     String operationNo,
     String machineNo,
     double input,
   ) async {
     final body = jsonEncode({
-      'prodOderNo': prodOderNo,
+      'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
       'machineNo': machineNo,
       'input': input,

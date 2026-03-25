@@ -44,12 +44,12 @@ class MachineordersProvider with ChangeNotifier {
   }
 
   Future<bool> startOrder(
-      String prodOderNo,
+      String prodOrderNo,
       String operationNo,
       String machineNo,
       ) async {
     final result = await _service.getStartOperationValidation(
-      prodOderNo,
+      prodOrderNo,
       operationNo,
       machineNo,
     );
@@ -133,25 +133,25 @@ class MachineordersProvider with ChangeNotifier {
 
   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
       String machineNo,
-      String prodOderNo,
+      String prodOrderNo,
       String operationNo,
       ) {
     return _service.streamFetchOperationLiveData(
       machineNo,
-      prodOderNo,
+      prodOrderNo,
       operationNo,
       _refreshController.stream,
     );
   }
 
   Future<bool> declareProduction(
-      String prodOderNo,
+      String prodOrderNo,
       String operationNo,
       String machineNo,
       double input,
       ) async {
     final result = await _service.declareProduction(
-      prodOderNo,
+      prodOrderNo,
       operationNo,
       machineNo,
       input,

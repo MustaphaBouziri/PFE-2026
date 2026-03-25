@@ -63,6 +63,7 @@ table 50107 "MES Machine Status"
             Clustered = true;
         }
         key(MachineKey; "Machine No.") { }
+        key(MachineTimeline; "Machine No.", "Last Updated At") { }
     }
 
     trigger OnInsert()

@@ -3,7 +3,7 @@ codeunit 50132 "MES Machine Write"
     Access = Internal;
 
     procedure startOperation(
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         machineNo: Code[20]
     ): Text
@@ -17,10 +17,10 @@ codeunit 50132 "MES Machine Write"
     begin
         ClearLastError();
 
-        Success := MachineValidation.TryStartOperation(prodOderNo, operationNo, machineNo);
+        Success := MachineValidation.TryStartOperation(prodOrderNo, operationNo, machineNo);
 
         if Success then begin
-            MachineInsert.InsertStartOperationRecords(prodOderNo, operationNo, machineNo);
+            MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo);
             ResultJson.Add('value', true);
         end else begin
             ErrorMessage := GetLastErrorText();
@@ -33,7 +33,7 @@ codeunit 50132 "MES Machine Write"
 
     procedure declareProduction(
         machineNo: Code[20];
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         input: Decimal
     ): Text
@@ -47,10 +47,10 @@ codeunit 50132 "MES Machine Write"
     begin
         ClearLastError();
 
-        Success := MachineValidation.TryDeclareProduction(machineNo, prodOderNo, operationNo, input);
+        Success := MachineValidation.TryDeclareProduction(machineNo, prodOrderNo, operationNo, input);
 
         if Success then begin
-            MachineInsert.InsertNewProgressionCycle(machineNo, prodOderNo, operationNo, input);
+            MachineInsert.InsertNewProgressionCycle(machineNo, prodOrderNo, operationNo, input);
             ResultJson.Add('value', true);
         end else begin
             ErrorMessage := GetLastErrorText();
@@ -87,7 +87,7 @@ codeunit 50132 "MES Machine Write"
         if Success then begin
             MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, targetStatus);
             if targetStatus = MESOperationStatus."Operation Status"::Running then
-                MachineInsert.InsertMESMachineStatus(prodOrderNo, machineNo)
+                MachineInsert.InsertStartMESMachineStatus(prodOrderNo, machineNo)
             else
                 MachineInsert.InsertIdleMachineStatus(machineNo);
 
