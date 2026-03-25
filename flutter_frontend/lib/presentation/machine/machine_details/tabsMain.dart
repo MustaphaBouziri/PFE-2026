@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/machine_history/machineHistoryPage.dart';
 
-import '../../../widgets/navBar.dart';
-import '../machine_consumption/machineConsumptionPage.dart';
-import 'machineOrderPage.dart';
-import '../machine_production/ordersProgressionPage.dart';
+import '../../widgets/navBar.dart';
+import 'machine_consumption/machineConsumptionPage.dart';
+import 'machines_orders/machineOrderPage.dart';
+import 'machine_production/ordersProgressionPage.dart';
 
 class MachineMainPage extends StatefulWidget {
   final String machineNo;

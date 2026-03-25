@@ -227,56 +227,6 @@ codeunit 50130 "MES Machine Actions"
         PreviousProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status); // we use the status of the row the get returned 
         PreviousProdOrderRoutingLine.SetRange("Prod. Order No.", prodOderNo);
         PreviousProdOrderRoutingLine.SetFilter("Operation No.", '<%1', operationNo); // means where operation number < of the current operation number exemple operation number < 30
-
-        if PreviousProdOrderRoutingLine.FindLast() then begin // why FindLast ? let say the filter return 10 20  and our curent operation is 30  we need to use find last since we wanna the 20 not the 10 cuz our goal is to get the previous operation.
-
-            /* now we need to do validation:
-            there is 2 type of factories flow : 
-            1/ the privious operation need to be fully done to move on to the next operation
-            */
-
-            /*   if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
-                                                                                   // we r in findLast thats why its named PreviousMesOpration + we do need to know the previous operation info from mes table
-            /*   if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin // means must finish the previous operation to move in the next one  (if the privious operation didnt send a ahead quantity = to u gotta wait until its fully done )
-                                                                                   // we r in findLast thats why its named PreviousMesOpration + we do need to know the previous operation info from mes table
-
-                  PreviousMESOperation.Reset();
-                  //We check PreviousMESOperation because we need to validate that the previous step has actually finished or at least started before starting the current operation. PreviousRouitng line is just a plan the actual info to use to verrify is in PreviousMESOperation
-                  PreviousMESOperation.Reset();
-                  //We check PreviousMESOperation because we need to validate that the previous step has actually finished or at least started before starting the current operation. PreviousRouitng line is just a plan the actual info to use to verrify is in PreviousMESOperation
-
-                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                  PreviousMESOperation.SetRange("Operation Status", PreviousMESOperation."Operation Status"::Finished);
-                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                  PreviousMESOperation.SetRange("Operation Status", PreviousMESOperation."Operation Status"::Finished);
-
-                  if not PreviousMESOperation.FindFirst() then // i dont think findFirst or findLast matter here cuz our goal is to find any record thar show a previous operation is finished 
-                      Error('Previous operation must be fully finished before starting this one.');
-                  if not PreviousMESOperation.FindFirst() then // i dont think findFirst or findLast matter here cuz our goal is to find any record thar show a previous operation is finished 
-                      Error('Previous operation must be fully finished before starting this one.');
-
-
-              end */ /*else begin
-                  // 2/ no need to wait for the previous operation to be done to move on to the next one 
-                  PreviousMESOperation.Reset();
-                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                  // no need to do PreviousMESOperation.SetRange("Operation Status",PreviousMESOperation."Operation Status"::Finished); // cuz it do not need ot be finished 
-              end */ /*else begin
-                  // 2/ no need to wait for the previous operation to be done to move on to the next one 
-                  PreviousMESOperation.Reset();
-                  PreviousMESOperation.SetRange("Prod Order No", prodOderNo);
-                  PreviousMESOperation.SetRange("Operation No", PreviousProdOrderRoutingLine."Operation No.");
-                  // no need to do PreviousMESOperation.SetRange("Operation Status",PreviousMESOperation."Operation Status"::Finished); // cuz it do not need ot be finished 
-
-                  if not PreviousMESOperation.FindSet() then Error('Previous operation has not started yet.');
-                  TotalProducedQuantity := 0;
-                  repeat TotalProducedQuantity += PreviousMESOperation."Produced Quantity"; until PreviousMESOperation.Next() = 0;
-                  if TotalProducedQuantity < PreviousProdOrderRoutingLine."Send-Ahead Quantity" then Error('You must produce at least %1 units in previous operation before starting this one.', PreviousProdOrderRoutingLine."Send-Ahead Quantity");*/
-
-        end;
     end;
 
     local procedure InsertMESOperationExecution(
@@ -327,7 +277,7 @@ codeunit 50130 "MES Machine Actions"
         MESMachineStatus."Machine No." := machineNo;
         MESMachineStatus.Status := MESMachineStatus.Status::Working;
         MESMachineStatus."Current Prod. Order No." := prodOrderNo;
-        
+
         MESMachineStatus.Insert(true);
     end;
 
@@ -377,13 +327,19 @@ codeunit 50130 "MES Machine Actions"
                 MESOperationStatus.Ascending(false);
 
                 if MESOperationStatus.FindFirst() then begin
-                    // fetchFinished= true -> include only Finished, fetchFinished=false -> include only running or paused
+                    // fetchFinished= true -> include only Finished or cancelled, fetchFinished=false -> include only running or paused
                     if fetchFinished then
-                        ShouldInclude := MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Finished
+                        ShouldInclude := MESOperationStatus."Operation Status" in
+                        [
+                            MESOperationStatus."Operation Status"::Finished,
+                            MESOperationStatus."Operation Status"::Cancelled
+                        ]
                     else
-                        ShouldInclude :=
-                            (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
-                            (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused);
+                        ShouldInclude := MESOperationStatus."Operation Status" in
+                        [
+                            MESOperationStatus."Operation Status"::Running,
+                            MESOperationStatus."Operation Status"::Paused
+                        ];
 
                     if ShouldInclude then begin
                         Clear(StartDateTime);
@@ -400,6 +356,11 @@ codeunit 50130 "MES Machine Actions"
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Finished);
                         if MESOperationStatus.FindFirst() then
                             EndDateTime := MESOperationStatus."Last Updated At";
+
+                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Cancelled);
+                        if MESOperationStatus.FindFirst() then
+                            EndDateTime := MESOperationStatus."Last Updated At";
+
 
                         MESOperationStatus.SetRange("Operation Status");
 
@@ -677,4 +638,242 @@ codeunit 50130 "MES Machine Actions"
 
         exit(JsonToTextArr(CycleArr));
     end;
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // finishOperation  – called when progress = 100 %
+    // cancelOperation  – called when progress < 100 %
+    // ──────────────────────────────────────────────────────────────────────────
+
+    procedure finishOperation(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        ResultJson: JsonObject;
+        Success: Boolean;
+        ErrorMessage: Text;
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        ClearLastError();
+        Success := TryCloseOperation(machineNo, prodOrderNo, operationNo);
+
+        if Success then begin
+            InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Finished);
+            InsertIdleMachineStatus(machineNo);
+            ResultJson.Add('value', true);
+        end else begin
+            ErrorMessage := GetLastErrorText();
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', ErrorMessage);
+        end;
+
+        exit(JsonToText(ResultJson));
+    end;
+
+    procedure cancelOperation(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        ResultJson: JsonObject;
+        Success: Boolean;
+        ErrorMessage: Text;
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        ClearLastError();
+        Success := TryCloseOperation(machineNo, prodOrderNo, operationNo);
+
+        if Success then begin
+            InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled);
+            InsertIdleMachineStatus(machineNo);
+            ResultJson.Add('value', true);
+        end else begin
+            ErrorMessage := GetLastErrorText();
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', ErrorMessage);
+        end;
+
+        exit(JsonToText(ResultJson));
+    end;
+
+    procedure pauseOperation(
+    machineNo: Code[20];
+    prodOrderNo: Code[20];
+    operationNo: Code[10]): Text
+    var
+        ResultJson: JsonObject;
+        Success: Boolean;
+        ErrorMessage: Text;
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        ClearLastError();
+        Success := TryPauseOperation(machineNo, prodOrderNo, operationNo);
+
+        if Success then begin
+            InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Paused);
+            InsertIdleMachineStatus(machineNo);
+            ResultJson.Add('value', true);
+        end else begin
+            ErrorMessage := GetLastErrorText();
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', ErrorMessage);
+        end;
+
+        exit(JsonToText(ResultJson));
+    end;
+
+    procedure resumeOperation(
+    machineNo: Code[20];
+    prodOrderNo: Code[20];
+    operationNo: Code[10]): Text
+    var
+        ResultJson: JsonObject;
+        Success: Boolean;
+        ErrorMessage: Text;
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        ClearLastError();
+        Success := TryResumeOperation(machineNo, prodOrderNo, operationNo);
+
+        if Success then begin
+            InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Running);
+            InsertIdleMachineStatus(machineNo);
+            ResultJson.Add('value', true);
+        end else begin
+            ErrorMessage := GetLastErrorText();
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', ErrorMessage);
+        end;
+
+        exit(JsonToText(ResultJson));
+    end;
+
+    local procedure GetExecutionAndLatestStatus(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        var MESExecution: Record "MES Operation Execution";
+        var MESOperationStatus: Record "MES Operation Status"
+    )
+    begin
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOrderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+
+        if not MESExecution.FindFirst() then
+            Error(
+                'Operation execution record not found for Machine %1, Order %2, Operation %3.',
+                machineNo,
+                prodOrderNo,
+                operationNo
+            );
+
+        MESOperationStatus.Reset();
+        MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
+        MESOperationStatus.Ascending(false);
+
+        if not MESOperationStatus.FindFirst() then
+            Error(
+                'No operation status found for Machine %1, Order %2, Operation %3.',
+                machineNo,
+                prodOrderNo,
+                operationNo
+            );
+    end;
+
+    [TryFunction]
+    local procedure TryPauseOperation(
+    machineNo: Code[20];
+    prodOrderNo: Code[20];
+    operationNo: Code[10]
+)
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        GetExecutionAndLatestStatus(machineNo,prodOrderNo,operationNo,MESExecution,MESOperationStatus);
+        if MESOperationStatus."Operation Status" <> MESOperationStatus."Operation Status"::Running then
+            Error('Operation needs to be running to be paused.');
+    end;
+
+    [TryFunction]
+    local procedure TryResumeOperation(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    )
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
+        if MESOperationStatus."Operation Status" <> MESOperationStatus."Operation Status"::Paused then
+            Error('Operation needs to be paused to be resumed.');
+    end;
+
+    [TryFunction]
+    local procedure TryCloseOperation(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    )
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+       GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
+        if MESOperationStatus."Operation Status" in
+           [
+               MESOperationStatus."Operation Status"::Finished,
+               MESOperationStatus."Operation Status"::Cancelled
+           ]
+        then
+            Error('Operation is already finished or cancelled.');
+    end;
+
+    // Insert a new MES Operation Status row with status = status.
+    local procedure InsertOperationStatus(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        status: Enum "MES Operation Status"
+    )
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESOperationStatus: Record "MES Operation Status";
+    begin
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOrderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+        MESExecution.FindFirst();
+
+        MESOperationStatus.Init();
+        MESOperationStatus."Execution Id" := MESExecution."Execution Id";
+        MESOperationStatus."Operation Status" := status;
+        MESOperationStatus."Operator Id" := UserId;
+        MESOperationStatus.Insert(true);
+
+        // Stamp the end time on the execution record
+        MESExecution."End Time" := CurrentDateTime();
+        MESExecution.Modify(true);
+    end;
+
+
+    // Insert a new MES Machine Status row with status = Idle.
+    local procedure InsertIdleMachineStatus(machineNo: Code[20])
+    var
+        MESMachineStatus: Record "MES Machine Status";
+    begin
+        MESMachineStatus.Init();
+        MESMachineStatus."Machine No." := machineNo;
+        MESMachineStatus.Status := MESMachineStatus.Status::Idle;
+        MESMachineStatus."Current Prod. Order No." := '';
+        MESMachineStatus.Insert(true);
+    end;
+
 }

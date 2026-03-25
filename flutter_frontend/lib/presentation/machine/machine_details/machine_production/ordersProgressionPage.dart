@@ -5,16 +5,40 @@ import 'package:provider/provider.dart';
 import '../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'widgets/operation_card.dart';
 
-/// Displays a live-updating list of machine operation statuses for [machineNo].
-///
-/// Architecture mirrors [Machineorderpage]:
-///   - page holds the [StreamBuilder] + empty/error states
-///   - visual logic is delegated to [OperationCard] and its sub-widgets
-///   - styling data is resolved through [operationStatusStyleFromStatus]
 class OrdersProgressionPage extends StatelessWidget {
   final String machineNo;
 
   const OrdersProgressionPage({super.key, required this.machineNo});
+
+  Future<void> _handleToggle(
+    BuildContext context,
+    OperationStatusAndProgressModel op,
+  ) async {
+    final provider = Provider.of<MachineordersProvider>(context, listen: false);
+    final isRunning = op.operationStatus.trim().toLowerCase() == 'running';
+
+    try {
+      if (isRunning) {
+        await provider.pauseOperation(
+          machineNo: machineNo,
+          prodOrderNo: op.prodOrderNo,
+          operationNo: op.operationNo,
+        );
+      } else {
+        await provider.resumeOperation(
+          machineNo: machineNo,
+          prodOrderNo: op.prodOrderNo,
+          operationNo: op.operationNo,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,32 +47,34 @@ class OrdersProgressionPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<OperationStatusAndProgressModel>>(
-        stream: provider.getMachineOperationStatusAndProgressStream(machineNo,false),
+        stream: provider.getMachineOperationStatusAndProgressStream(
+          machineNo,
+          false,
+        ),
         builder: (context, snapshot) {
-          
-          // ── Loading ──────────────────────────────────────────────────────
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // ── Error ────────────────────────────────────────────────────────
           if (snapshot.hasError) {
             return _ErrorState(error: snapshot.error.toString());
           }
 
           final operations = snapshot.data!;
 
-          // ── Empty state ──────────────────────────────────────────────────
           if (operations.isEmpty) {
             return const _EmptyState();
           }
 
-          // ── List ─────────────────────────────────────────────────────────
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: operations.length,
             itemBuilder: (context, index) {
-              return OperationCard(operationData: operations[index]);
+              final op = operations[index];
+              return OperationCard(
+                operationData: op,
+                onTogglePauseResume: () => _handleToggle(context, op),
+              );
             },
           );
         },
@@ -56,8 +82,6 @@ class OrdersProgressionPage extends StatelessWidget {
     );
   }
 }
-
-// ── Private: empty state ─────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
@@ -88,8 +112,6 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-// ── Private: error state ──────────────────────────────────────────────────────
 
 class _ErrorState extends StatelessWidget {
   final String error;

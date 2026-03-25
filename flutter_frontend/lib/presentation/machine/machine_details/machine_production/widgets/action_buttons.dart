@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Pause / Resume toggle button only — Details are accessed by tapping the card.
-/// Supports [fullWidth] mode for narrow (single-column) layouts.
-/// Mirrors the role of [ActionButtons] in machineOrderPage.
-///
-/// [onTogglePauseResume] is optional and left as a stub until the backend
-/// endpoint is wired up.
-class OperationActionButtons extends StatelessWidget {
+class OperationActionButtons extends StatefulWidget {
   final bool fullWidth;
   final String operationStatus;
-
-  /// Called when the user taps Pause or Resume.
   final VoidCallback? onTogglePauseResume;
 
   const OperationActionButtons({
@@ -20,29 +12,55 @@ class OperationActionButtons extends StatelessWidget {
     this.onTogglePauseResume,
   });
 
-  bool get _isRunning => operationStatus == 'Running';
+  @override
+  State<OperationActionButtons> createState() => _OperationActionButtonsState();
+}
+
+class _OperationActionButtonsState extends State<OperationActionButtons> {
+  bool _isToggleLoading = false;
+
+  bool get _isRunning =>
+      widget.operationStatus.trim().toLowerCase() == 'running';
+
+  bool get _canToggle {
+    final status = widget.operationStatus.trim().toLowerCase();
+    return status == 'running' || status == 'paused';
+  }
+
+  Future<void> _runToggle() async {
+    if (widget.onTogglePauseResume == null) return;
+    setState(() => _isToggleLoading = true);
+    try {
+      await Future.microtask(widget.onTogglePauseResume!);
+    } finally {
+      if (mounted) setState(() => _isToggleLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final toggleBtn = ElevatedButton.icon(
-      onPressed: onTogglePauseResume,
-      icon: Icon(
+      onPressed: (_isToggleLoading || !_canToggle) ? null : _runToggle,
+      icon: _isToggleLoading
+          ? const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+      )
+          : Icon(
         _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
         size: 16,
         color: Colors.white,
       ),
       label: Text(
         _isRunning ? 'Pause' : 'Resume',
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: _isRunning
-            ? const Color(0xFFF59E0B) // amber for Pause
-            : const Color(0xFF22C55E), // green for Resume
+        backgroundColor: _isRunning ? const Color(0xFFF59E0B) : const Color(0xFF22C55E),
+        disabledBackgroundColor: _isRunning ? const Color(0xFFF59E0B) : const Color(0xFF22C55E),
+        disabledForegroundColor: Colors.white,
+        foregroundColor: Colors.white,
         shadowColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -50,7 +68,7 @@ class OperationActionButtons extends StatelessWidget {
       ),
     );
 
-    if (fullWidth) {
+    if (widget.fullWidth) {
       return SizedBox(width: double.infinity, child: toggleBtn);
     }
 

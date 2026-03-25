@@ -43,4 +43,22 @@ class OperationStatusAndProgressModel {
       itemDescription:       json['itemDescription']       ?? '',
     );
   }
+
+  @override
+  String toString() {
+    return 'OperationStatusAndProgressModel('
+        'prodOrderNo: $prodOrderNo, '
+        'machineNo: $machineNo, '
+        'operationNo: $operationNo, '
+        'operationStatus: $operationStatus, '
+        'startDateTime: $startDateTime, '
+        'endDateTime: $endDateTime, '
+        'lastUpdatedAt: $lastUpdatedAt, '
+        'totalProducedQuantity: $totalProducedQuantity, '
+        'scrapQuantity: $scrapQuantity, '
+        'orderQuantity: $orderQuantity, '
+        'progressPercent: $progressPercent, '
+        'itemDescription: $itemDescription'
+        ')';
+  }
 }

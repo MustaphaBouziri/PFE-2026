@@ -17,4 +17,8 @@ enum 50102 "MES Operation Status"
     {
         Caption = 'Finished';
     }
+    value(3; Cancelled)
+    {
+        Caption = 'Cancelled';
+    }
 }

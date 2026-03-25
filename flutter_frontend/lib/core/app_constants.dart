@@ -1,15 +1,12 @@
 class AppConstants {
-  // ─── SERVER ────────────────────────────────────────────────────────────────
   static const String host = 'http://localhost:7048';
   static const String instance = 'BC210';
   static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
 
-  // ─── BASE URLS ─────────────────────────────────────────────────────────────
   static const String _odataBase = '$host/$instance/ODataV4';
   static const String _apiBase = '$host/$instance/api/yourcompany/v1/v1.0';
   static const String _company = 'company=$companyId';
 
-  // ─── AUTH ENDPOINTS ────────────────────────────────────────────────────────
   static const String _authBase = '$_odataBase/MESAuthEndpoints_';
 
   static const String loginUrl = '${_authBase}Login?$_company';
@@ -20,7 +17,6 @@ class AppConstants {
   static const String adminSetPasswordUrl =
       '${_authBase}AdminSetPassword?$_company';
 
-  // ─── MACHINES ENDPOINTS ────────────────────────────────────────────────────
   static const String _machinesBase =
       '$_odataBase/MESMachinesActionsEndpoints_';
 
@@ -32,32 +28,41 @@ class AppConstants {
 
   static const String getStartOrderValidation =
       '${_machinesBase}startOperation?$_company';
- // might remove it 
-      static const String fetchMachineOperationStatus =
+
+  static const String fetchMachineOperationStatus =
       '${_machinesBase}fetchOperationsStatus?$_company';
 
-      static const String fetchMachineOperationStatusAndProgress =
+  static const String fetchMachineOperationStatusAndProgress =
       '${_machinesBase}fetchOperationsStatusAndProgress?$_company';
 
-      static const String fetchOperationLiveData =
+  static const String fetchOperationLiveData =
       '${_machinesBase}fetchOperationLiveData?$_company';
 
-      static const String declareProduction =
+  static const String declareProduction =
       '${_machinesBase}declareProduction?$_company';
 
-       static const String fetchProductionCycles =
+  static const String fetchProductionCycles =
       '${_machinesBase}fetchProductionCycles?$_company';
 
-      static const String fetchMachineHistory =
+  static const String fetchMachineHistory =
       '${_machinesBase}fetchMachineHistory?$_company';
 
+  // ── finish / cancel / Pause ────────────────────────────────────────────────────────
+  // finishOperation  → progress = 100 %  (order fully completed)
+  // cancelOperation  → progress < 100 %  (order cut short)
+  // PauseOperation
+  static const String finishOperationUrl =
+      '${_machinesBase}finishOperation?$_company';
 
-      
+  static const String cancelOperationUrl =
+      '${_machinesBase}cancelOperation?$_company';
+
+  static const String pauseOperationUrl =
+      '${_machinesBase}pauseOperation?$_company';
+  static const String resumeOperationUrl =
+      '${_machinesBase}resumeOperation?$_company';
 
 
-
-
-  // ─── ERP API ENDPOINTS ─────────────────────────────────────────────────────
   static String get employeesUrl => '$_apiBase/companies($companyId)/employees';
 
   static String get workCentersUrl =>
@@ -68,7 +73,6 @@ class AppConstants {
   static String get createMesUserUrl =>
       '$_apiBase/companies($companyId)/createMesUsers';
 
-  // ─── HTTP HEADERS ──────────────────────────────────────────────────────────
   static const Map<String, String> jsonHeaders = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',

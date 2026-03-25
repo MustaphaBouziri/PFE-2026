@@ -37,6 +37,13 @@ BadgeStyle badgeStyleFromStatus(String status) {
         text: Color(0xFF1D4ED8),
         label: 'FINISHED',
       );
+    case 'Cancelled':
+      return const BadgeStyle(
+        bg: Color(0xFFFFD1D1),
+        border: Color(0xFFFF9393),
+        text: Color(0xFFFF0000),
+        label: 'CANCELLED',
+      );
     case 'Released':
     default:
       return const BadgeStyle(
