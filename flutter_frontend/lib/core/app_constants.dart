@@ -7,61 +7,57 @@ class AppConstants {
   static const String _apiBase = '$host/$instance/api/yourcompany/v1/v1.0';
   static const String _company = 'company=$companyId';
 
-  static const String _authBase = '$_odataBase/MESAuthEndpoints_';
+  static const String _webServiceBase = '$_odataBase/MESWebService_';
 
-  static const String loginUrl = '${_authBase}Login?$_company';
-  static const String meUrl = '${_authBase}Me?$_company';
+  static const String loginUrl = '${_webServiceBase}Login?$_company';
+  static const String meUrl = '${_webServiceBase}Me?$_company';
   static const String changePasswordUrl =
-      '${_authBase}ChangePassword?$_company';
-  static const String logoutUrl = '${_authBase}Logout?$_company';
+      '${_webServiceBase}ChangePassword?$_company';
+  static const String logoutUrl = '${_webServiceBase}Logout?$_company';
   static const String adminSetPasswordUrl =
-      '${_authBase}AdminSetPassword?$_company';
-
-  static const String _machinesBase =
-      '$_odataBase/MESMachinesActionsEndpoints_';
+      '${_webServiceBase}AdminSetPassword?$_company';
 
   static const String fetchMachinesUrl =
-      '${_machinesBase}FetchMachines?$_company';
+      '${_webServiceBase}FetchMachines?$_company';
 
   static const String getMachineOrdersUrl =
-      '${_machinesBase}getMachineOrders?$_company';
+      '${_webServiceBase}getMachineOrders?$_company';
 
   static const String getStartOrderValidation =
-      '${_machinesBase}startOperation?$_company';
+      '${_webServiceBase}startOperation?$_company';
 
   static const String fetchMachineOperationStatus =
-      '${_machinesBase}fetchOperationsStatus?$_company';
+      '${_webServiceBase}fetchOperationsStatus?$_company';
 
   static const String fetchMachineOperationStatusAndProgress =
-      '${_machinesBase}fetchOperationsStatusAndProgress?$_company';
+      '${_webServiceBase}fetchOperationsStatusAndProgress?$_company';
 
   static const String fetchOperationLiveData =
-      '${_machinesBase}fetchOperationLiveData?$_company';
+      '${_webServiceBase}fetchOperationLiveData?$_company';
 
   static const String declareProduction =
-      '${_machinesBase}declareProduction?$_company';
+      '${_webServiceBase}declareProduction?$_company';
 
   static const String fetchProductionCycles =
-      '${_machinesBase}fetchProductionCycles?$_company';
+      '${_webServiceBase}fetchProductionCycles?$_company';
 
   static const String fetchMachineHistory =
-      '${_machinesBase}fetchMachineHistory?$_company';
+      '${_webServiceBase}fetchMachineHistory?$_company';
 
   // ── finish / cancel / Pause ────────────────────────────────────────────────────────
   // finishOperation  → progress = 100 %  (order fully completed)
   // cancelOperation  → progress < 100 %  (order cut short)
   // PauseOperation
   static const String finishOperationUrl =
-      '${_machinesBase}finishOperation?$_company';
+      '${_webServiceBase}finishOperation?$_company';
 
   static const String cancelOperationUrl =
-      '${_machinesBase}cancelOperation?$_company';
+      '${_webServiceBase}cancelOperation?$_company';
 
   static const String pauseOperationUrl =
-      '${_machinesBase}pauseOperation?$_company';
+      '${_webServiceBase}pauseOperation?$_company';
   static const String resumeOperationUrl =
-      '${_machinesBase}resumeOperation?$_company';
-
+      '${_webServiceBase}resumeOperation?$_company';
 
   static String get employeesUrl => '$_apiBase/companies($companyId)/employees';
 

@@ -33,6 +33,7 @@ codeunit 50111 "MES Auth Mgt"
 {
     var
         PwMgt: Codeunit "MES Password Mgt";
+        AuthValidation: Codeunit "MES Auth Validation";
 
     // =========================================================================
     // SECTION 1 — USER CRUD
@@ -87,7 +88,7 @@ codeunit 50111 "MES Auth Mgt"
         if not U.Get(UserId) then
             Error('User %1 not found.', UserId);
 
-        if not IsPasswordStrong(NewPassword) then
+        if not AuthValidation.IsPasswordStrong(NewPassword) then
             Error('Password must be at least 8 characters and contain uppercase, lowercase, number, and special character.');
 
         Salt := PwMgt.MakeSalt();
@@ -99,7 +100,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Modify(true);
 
         // Invalidate all active sessions — a compromised token cannot persist after a reset.
-        RevokeAllTokensForUser(UserId);
+        AuthValidation.RevokeAllTokensForUser(UserId);
     end;
 
     // =========================================================================
@@ -203,7 +204,7 @@ codeunit 50111 "MES Auth Mgt"
             Error('Unauthorized. Please login again.');
         if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt") then
             Error('Current password is incorrect.');
-        if not IsPasswordStrong(NewPassword) then
+        if not AuthValidation.IsPasswordStrong(NewPassword) then
             Error('Password must be at least 8 characters and contain uppercase, lowercase, number, and special character.');
         OutUserId := U."User Id";
     end;
@@ -266,7 +267,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Modify(true);
 
         if not Active then
-            RevokeAllTokensForUser(TargetUserId);
+            AuthValidation.RevokeAllTokensForUser(TargetUserId);
 
         exit(true);
     end;
@@ -316,51 +317,4 @@ codeunit 50111 "MES Auth Mgt"
         exit(T);
     end;
 
-    /// <summary>
-    /// Marks every token belonging to UserId as Revoked = true.
-    /// Uses the UserTokens secondary index — no full table scan.
-    /// Called by: SetPassword(), SetActive(false).
-    /// </summary>
-    local procedure RevokeAllTokensForUser(UserId: Code[50])
-    var
-        T: Record "MES Auth Token";
-    begin
-        T.SetRange("User Id", UserId);
-        if T.FindSet(true) then
-            repeat
-                T.Revoked := true;
-                T.Modify(true);
-            until T.Next() = 0;
-    end;
-
-    /// <summary>
-    /// Returns TRUE when the password satisfies ALL complexity rules:
-    ///   ≥ 8 characters | ≥1 uppercase | ≥1 lowercase | ≥1 digit | ≥1 special char.
-    /// Server-side guard — never rely solely on client-side validation.
-    /// </summary>
-    local procedure IsPasswordStrong(Password: Text): Boolean
-    var
-        HasUpper, HasLower, HasDigit, HasSpecial : Boolean;
-        i: Integer;
-        c: Char;
-    begin
-        if StrLen(Password) < 8 then exit(false);
-
-        for i := 1 to StrLen(Password) do begin
-            c := Password[i];
-            case true of
-                (c in ['A' .. 'Z']):
-                    HasUpper := true;
-                (c in ['a' .. 'z']):
-                    HasLower := true;
-                (c in ['0' .. '9']):
-                    HasDigit := true;
-                else
-                    HasSpecial := true;
-            end;
-        end;
-        exit(true); // during developement 
-        // TODO: return this to how it is after it is no longer needed
-        //exit(HasUpper and HasLower and HasDigit and HasSpecial);
-    end;
 }
