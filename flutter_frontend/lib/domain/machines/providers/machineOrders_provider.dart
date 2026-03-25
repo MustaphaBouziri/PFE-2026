@@ -16,7 +16,7 @@ class MachineordersProvider with ChangeNotifier {
   String? errorMessage;
 
   final StreamController<void> _refreshController =
-      StreamController<void>.broadcast();
+  StreamController<void>.broadcast();
 
   void triggerRefresh() {
     _refreshController.add(());
@@ -44,39 +44,98 @@ class MachineordersProvider with ChangeNotifier {
   }
 
   Future<bool> startOrder(
-    String prodOderNo,
-    String operationNo,
-    String machineNo,
-  ) async {
+      String prodOderNo,
+      String operationNo,
+      String machineNo,
+      ) async {
     final result = await _service.getStartOperationValidation(
       prodOderNo,
       operationNo,
       machineNo,
     );
-
     return result;
   }
-  //________________machine operations status stream __________
 
-  /* Stream<List<OperationStatusAndProgressModel>>  getMachineOperationsStatusStream(String machineNo) {
-    return _service.streamMachinesOperationStatusAndProgress(machineNo);
-  }*/
+  // ── finish / cancel ────────────────────────────────────────────────────────
 
-  Stream<List<OperationStatusAndProgressModel>> getMachineOperationStatusAndProgressStream(
-    String machineNo, bool fetchFinished) {
-  return _service.streamMachinesOperationStatusAndProgress(machineNo, fetchFinished);
-}
-  //__________fetch machine orders history
+  /// Called when progress = 100 %.
+  Future<bool> finishOperation({
+    required String machineNo,
+    required String prodOrderNo,
+    required String operationNo,
+  }) async {
+    final result = await _service.finishOperation(
+      machineNo: machineNo,
+      prodOrderNo: prodOrderNo,
+      operationNo: operationNo,
+    );
+    triggerRefresh();
+    return result;
+  }
 
-Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machineNo) async {
-  return await _service.fetchMachineOperationStatusAndProgress(machineNo, true);
-}
+  Future<bool> pauseOperation({
+    required String machineNo,
+    required String prodOrderNo,
+    required String operationNo,
+  }) async {
+    final result = await _service.pauseOperation(
+      machineNo: machineNo,
+      prodOrderNo: prodOrderNo,
+      operationNo: operationNo,
+    );
+    triggerRefresh();
+    return result;
+  }
+
+  Future<bool> resumeOperation({
+    required String machineNo,
+    required String prodOrderNo,
+    required String operationNo,
+  }) async {
+    final result = await _service.resumeOperation(
+      machineNo: machineNo,
+      prodOrderNo: prodOrderNo,
+      operationNo: operationNo,
+    );
+    triggerRefresh();
+    return result;
+  }
+
+
+  /// Called when progress < 100 %.
+  Future<bool> cancelOperation({
+    required String machineNo,
+    required String prodOrderNo,
+    required String operationNo,
+  }) async {
+    final result = await _service.cancelOperation(
+      machineNo: machineNo,
+      prodOrderNo: prodOrderNo,
+      operationNo: operationNo,
+    );
+    triggerRefresh();
+    return result;
+  }
+
+  // ── existing stream methods (unchanged) ───────────────────────────────────
+
+  Stream<List<OperationStatusAndProgressModel>>
+  getMachineOperationStatusAndProgressStream(
+      String machineNo, bool fetchFinished) {
+    return _service.streamMachinesOperationStatusAndProgress(
+        machineNo, fetchFinished);
+  }
+
+  Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(
+      String machineNo) async {
+    return await _service.fetchMachineOperationStatusAndProgress(machineNo, true);
+  }
 
   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
-    String machineNo,
-    String prodOderNo,
-    String operationNo,
-  ) {
+      String machineNo,
+      String prodOderNo,
+      String operationNo,
+      ) {
     return _service.streamFetchOperationLiveData(
       machineNo,
       prodOderNo,
@@ -85,13 +144,12 @@ Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machine
     );
   }
 
-  //_______declaire Production
   Future<bool> declareProduction(
-    String prodOderNo,
-    String operationNo,
-    String machineNo,
-    double input,
-  ) async {
+      String prodOderNo,
+      String operationNo,
+      String machineNo,
+      double input,
+      ) async {
     final result = await _service.declareProduction(
       prodOderNo,
       operationNo,
@@ -99,16 +157,14 @@ Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machine
       input,
     );
     triggerRefresh();
-
     return result;
   }
-  //__________fetch production cycle
 
   Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
-    String machineNo,
-    String prodOrderNo,
-    String operationNo,
-  ) {
+      String machineNo,
+      String prodOrderNo,
+      String operationNo,
+      ) {
     return _service.streamProductionCycles(
       machineNo,
       prodOrderNo,
@@ -116,7 +172,4 @@ Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(String machine
       _refreshController.stream,
     );
   }
-
-
- 
 }

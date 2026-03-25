@@ -18,15 +18,17 @@
        POST  <baseUrl>/ODataV4/MESUnboundActions_AdminCreateUser
        POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetPassword
        POST  <baseUrl>/ODataV4/MESUnboundActions_AdminSetActive
+       POST  <baseUrl>/ODataV4/MESUnboundActions_finishOperation
+       POST  <baseUrl>/ODataV4/MESUnboundActions_cancelOperation
 
-     ── BASE URL BY ENVIRONMENT ────────────────────────────────────────────────
+     ── BASE URL BY ENVIRONMENT ───────────────────────────────────────────────
      On-premises / Docker:
        http://<server>:<port>/<instance>/ODataV4/
 
      BC SaaS cloud (production or sandbox):
        https://api.businesscentral.dynamics.com/v2.0/<tenantId>/<environment>/ODataV4/
 
-     ── COMPANY SCOPING ────────────────────────────────────────────────────────
+     ── COMPANY SCOPING ───────────────────────────────────────────────────────
      ODataV4 unbound actions are not bound to any entity, but Business Central
      is a multi-company system, so you must tell BC which company to run the
      call against.  There are THREE supported ways to do this:
@@ -55,7 +57,7 @@
         If your BC tenant has exactly one company, BC will use it automatically.
         No header or query parameter is needed.
 
-     ── IMPORTANT ──────────────────────────────────────────────────────────────
+     ── IMPORTANT ─────────────────────────────────────────────────────────────
      The AL codeunit (50125) does NOT handle company routing itself.
      Company scoping is resolved entirely by the BC OData middleware before
      your AL code ever runs.  You do NOT need to pass the company ID as a

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/machine/models/mes_machine_model.dart';
-import '../machine_details/machines_orders/tabsMain.dart';
+import '../machine_details/tabsMain.dart';
 
 class MachineCard extends StatefulWidget {
   final MachineModel machine;

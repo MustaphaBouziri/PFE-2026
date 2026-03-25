@@ -6,10 +6,6 @@ import '../widgets/info_grid.dart';
 import '../widgets/progress_bar.dart';
 import '../widgets/status_badge.dart';
 
-/// Two-column layout: info on the left, Pause/Resume on the right.
-/// Used at widths > 600 px. Mirrors the role of [WideLayout] in machineOrderPage.
-///
-/// Left column order: badge → status + last updated → progress bar → tap hint
 class OperationWideLayout extends StatelessWidget {
   final String prodOrderNo;
   final String operationNo;
@@ -35,7 +31,6 @@ class OperationWideLayout extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Left: badge + meta + progress + hint ─────────────────────────
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,14 +45,9 @@ class OperationWideLayout extends StatelessWidget {
               const SizedBox(height: 12),
               OperationProgressBar(progress: progress, style: style),
               const SizedBox(height: 8),
-              // ── Tap hint ───────────────────────────────────────────────
               Row(
                 children: [
-                  Icon(
-                    Icons.touch_app_rounded,
-                    size: 12,
-                    color: Colors.grey.shade400,
-                  ),
+                  Icon(Icons.touch_app_rounded, size: 12, color: Colors.grey.shade400),
                   const SizedBox(width: 4),
                   Text(
                     'Tap card to view details',
@@ -68,16 +58,12 @@ class OperationWideLayout extends StatelessWidget {
             ],
           ),
         ),
-
-        // ── Divider ──────────────────────────────────────────────────────
         Container(
           width: 1,
           height: 80,
           margin: const EdgeInsets.symmetric(horizontal: 20),
           color: const Color(0xFFE2E8F0),
         ),
-
-        // ── Right: Pause / Resume only ───────────────────────────────────
         OperationActionButtons(
           operationStatus: operationStatus,
           onTogglePauseResume: onTogglePauseResume,
