@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
+import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
+import 'package:pfe_mes/domain/machines/providers/machineOrders_provider.dart';
+import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/layout/mobile_tablet_layout.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/layout/pc_layout.dart';
 import 'package:provider/provider.dart';
-import '../../../../domain/machines/providers/machineOrders_provider.dart';
+
 
 class OperationDetailPage extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
@@ -18,6 +21,7 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<MachineordersProvider>(context, listen: false);
+    final componentProvider = Provider.of<MesComponentconsumptionProvider>(context, listen: false);
 
     return StreamBuilder<OperationStatusAndProgressModel?>(
       stream: provider.fetchOperationLiveDataStream(
@@ -52,13 +56,23 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
           builder: (context, cyclesSnapshot) {
             final cycles = cyclesSnapshot.data ?? [];
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 1024) {
-                  return MobileTabletLayout(operationData: merged, cycles: cycles);
-                } else {
-                  return PcLayout(operationData: merged, cycles: cycles);
-                }
+            return StreamBuilder<List<ComponentConsumptionModel>>(
+              stream: componentProvider.getBomStream(
+                widget.operationData.prodOrderNo,
+                widget.operationData.operationNo,
+              ),
+              builder: (context, bomSnapshot) {
+                final components = bomSnapshot.data ?? [];
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 1024) {
+                      return MobileTabletLayout(operationData: merged, cycles: cycles, components: components);
+                    } else {
+                      return PcLayout(operationData: merged, cycles: cycles, components: components);
+                    }
+                  },
+                );
               },
             );
           },

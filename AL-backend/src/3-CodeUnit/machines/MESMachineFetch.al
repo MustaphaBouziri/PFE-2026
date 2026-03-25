@@ -303,10 +303,10 @@ codeunit 50131 "MES Machine Fetch"
         HasAnyRoutingLink: Boolean;
         TotalConsumed: Decimal;
         TotalScanned: Decimal;
+        BelongsToThisOperation: Boolean;
 
         BomObj: JsonObject;
         BomArr: JsonArray;
-        JsonHelper: Codeunit "MES Json Helper";
     begin
         Clear(BomArr);
 
@@ -316,49 +316,97 @@ codeunit 50131 "MES Machine Fetch"
         if MESExecution.FindFirst() then
             ExecutionId := MESExecution."Execution Id";
 
+        // get routing link code of this operation this will return on row exemple :
+        /*
+        | Order | Operation | Routing Link |
+        | ----- | --------- | ------------ |
+        | 1001  | 10        | A            |
+        */
+
         ProductOrderRoutingLine.Reset();
         ProductOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         ProductOrderRoutingLine.SetRange("Operation No.", operationNo);
         if ProductOrderRoutingLine.FindFirst() then
             CurrentRoutingLinkCode := ProductOrderRoutingLine."Routing Link Code";
 
+
+        // lets say the component we have routing link r : A,B and (empty)
+        // next the <> filter will keep only records where the link code is not empty 
+        //we do not loop bcz we only care about is there at least one component with routing link or not thats why we did find first
+        //if we find at least one component with link code return true
         ProductOrderComponent.Reset();
         ProductOrderComponent.SetRange("Prod. Order No.", prodOrderNo);
         ProductOrderComponent.SetFilter("Routing Link Code", '<>%1', '');
         HasAnyRoutingLink := ProductOrderComponent.FindFirst();
 
+        //loop all componenents of this order 
         ProductOrderComponent.Reset();
         ProductOrderComponent.SetRange("Prod. Order No.", prodOrderNo);
         if ProductOrderComponent.FindSet() then
             repeat
+                // skip only component that belong to another routing
+                // routing = A 
+                /*
+                true and A!= '' and A != A  ---> true ,true ,false = false not(false) = include it 
+                routing = B
+                true and B!= '' and B != A  ---> true ,true ,True = True not(True) = skip it it 
+                routing = empty
+                false + anything + anything = false not(false) = true so include it
+                anyway end result need to be true to perform the filter
+                without not it will include only component that belong to other operations
+                */
                 if not (HasAnyRoutingLink and
                    (ProductOrderComponent."Routing Link Code" <> '') and
                    (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
 
                     TotalConsumed := 0;
                     TotalScanned := 0;
+
+                    BelongsToThisOperation := false;
+                    if ProductOrderComponent."Routing Link Code" <> '' then
+                        if ProductOrderComponent."Routing Link Code" = CurrentRoutingLinkCode then
+                            BelongsToThisOperation := true;
+
                     if ExecutionId <> '' then begin
                         MESComponentConsumption.Reset();
                         MESComponentConsumption.SetRange("Execution Id", ExecutionId);
                         MESComponentConsumption.SetRange("Item No", ProductOrderComponent."Item No.");
                         if MESComponentConsumption.FindSet() then
+                            //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
                                 TotalConsumed += MESComponentConsumption."Quantity Consumed";
                             until MESComponentConsumption.Next() = 0;
+
                     end;
                     Clear(BomObj);
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
+                    BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
+                    BomObj.Add('lineNUmber', ProductOrderComponent."Line No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
-                    BomObj.Add('scannedQuantity', TotalScanned);
-                    BomObj.Add('consumedQuantity', TotalConsumed);
+                    BomObj.Add('quantityScanned', TotalScanned);
+                    BomObj.Add('quantityConsumed', TotalConsumed);
                     BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
+                    BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
                     BomArr.Add(BomObj);
+                    /**
+                     {
+                     "plannedQuantity": 10,
+                     "scannedQuantity": 5,
+                     "consumedQuantity": 3,
+                     "remainingQuantity": 2
+                     belongsToThisOperation', true / false )
+                     }
+                    */
+
                 end;
 
             until ProductOrderComponent.Next() = 0;
 
-        exit(JsonHelper.JsonToTextArr(BomArr));
+        exit(JsonToTextArr(BomArr));
+
     end;
+
 }
+

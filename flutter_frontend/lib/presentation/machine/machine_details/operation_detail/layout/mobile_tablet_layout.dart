@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../data/machine/models/mes_componentConsumption_model.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
 import '../../../../../data/machine/models/mes_production_cycle.dart';
@@ -13,11 +14,13 @@ import '../widgets/required_componment.dart';
 class MobileTabletLayout extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
   final List<ProductionCycleModel> cycles;
+  final List<ComponentConsumptionModel> components;
 
   const MobileTabletLayout({
     super.key,
     required this.operationData,
     required this.cycles,
+    required this.components
   });
 
   @override
@@ -62,7 +65,7 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
               NoInfoAvailable(),
 
             const SizedBox(height: 16),
-            RequiredComponent(),
+            RequiredComponent(components:widget.components)
           ],
         ),
       ),
