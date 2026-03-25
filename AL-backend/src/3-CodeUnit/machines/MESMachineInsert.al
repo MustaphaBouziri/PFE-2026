@@ -3,7 +3,7 @@ codeunit 50133 "MES Machine Insert"
     Access = Internal;
 
     procedure InsertMESOperationExecution(
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         machineNo: Code[20]
     ): Code[50]
@@ -13,13 +13,13 @@ codeunit 50133 "MES Machine Insert"
     begin
         // i need to do setRange otherwise i wont be able to know order details like quantity
         ProdOrderLine.Reset();
-        ProdOrderLine.SetRange("Prod. Order No.", prodOderNo);
+        ProdOrderLine.SetRange("Prod. Order No.", prodOrderNo);
         if not ProdOrderLine.FindFirst() then
             Error('Production order line not found.');
 
         MESExecution.Init();
         MESExecution."Machine No" := machineNo;
-        MESExecution."Prod Order No" := prodOderNo;
+        MESExecution."Prod Order No" := prodOrderNo;
         MESExecution."Operation No" := operationNo;
         MESExecution."Item No" := ProdOrderLine."Item No.";
         MESExecution."Item Description" := ProdOrderLine.Description;
@@ -39,7 +39,7 @@ codeunit 50133 "MES Machine Insert"
         MESOperationStatus.Insert(true);
     end;
 
-    procedure InsertMESMachineStatus(
+    procedure InsertStartMESMachineStatus(
         prodOrderNo: Code[20];
         machineNo: Code[20]
     )
@@ -55,7 +55,7 @@ codeunit 50133 "MES Machine Insert"
 
     procedure InsertMESOperationProgression(
         executionId: Code[50];
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         machineNo: Code[20]
     )
     var
@@ -88,9 +88,13 @@ codeunit 50133 "MES Machine Insert"
         MESOperationStatus."Operator Id" := UserId;
         MESOperationStatus.Insert(true);
 
-        // Stamp the end time on the execution record
-        MESExecution."End Time" := CurrentDateTime();
-        MESExecution.Modify(true);
+        if status in [
+            "MES Operation Status"::Finished,
+            "MES Operation Status"::Cancelled
+        ] then begin
+            MESExecution."End Time" := CurrentDateTime();
+            MESExecution.Modify(true);
+        end;
     end;
 
     procedure InsertIdleMachineStatus(machineNo: Code[20])
@@ -111,13 +115,13 @@ codeunit 50133 "MES Machine Insert"
         ExecutionId := InsertMESOperationExecution(prodOrderNo, operationNo, machineNo);
         InsertMESOperation(ExecutionId);
         InsertMESOperationProgression(ExecutionId, prodOrderNo, machineNo);
-        InsertMESMachineStatus(prodOrderNo, machineNo);
+        InsertStartMESMachineStatus(prodOrderNo, machineNo);
         exit(ExecutionId);
     end;
 
     procedure InsertNewProgressionCycle(
         machineNo: Code[20];
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         input: Decimal
     )
@@ -126,7 +130,7 @@ codeunit 50133 "MES Machine Insert"
         MESOperationProgress: Record "MES Operation Progression";
         NewMESOperationProgress: Record "MES Operation Progression";
     begin
-        GetExecution(machineNo, prodOderNo, operationNo, MESExecution);
+        GetExecution(machineNo, prodOrderNo, operationNo, MESExecution);
         GetLatestProgression(MESExecution."Execution Id", MESOperationProgress);
 
         NewMESOperationProgress.Init();

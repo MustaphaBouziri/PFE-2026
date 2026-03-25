@@ -22,9 +22,11 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('currentOrder', 'No operator yet');
 
                 MESMachineStatus.Reset();
+                MESMachineStatus.SetCurrentKey("Machine No.", "Last Updated At");
                 MESMachineStatus.SetRange("Machine No.", Machine."No.");
+                MESMachineStatus.Ascending(false);  // most recent first
 
-                if MESMachineStatus.FindLast() then begin
+                if MESMachineStatus.FindFirst() then begin
                     MachineObj.Replace('status', Format(MESMachineStatus.Status));
                     MachineObj.Replace('currentOrder', MESMachineStatus."Current Prod. Order No.");
                 end;

@@ -19,4 +19,9 @@ class MachineModel {
       currentOrder: json['currentOrder'] ?? '',
     );
   }
+
+  @override
+  String toString() {
+    return 'MachineModel(machineNo: $machineNo, machineName: $machineName, status: $status, currentOrder: $currentOrder)';
+  }
 }

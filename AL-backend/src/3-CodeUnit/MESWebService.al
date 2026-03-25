@@ -60,9 +60,9 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.getMachineOrders(machineNo));
     end;
 
-    procedure startOperation(prodOderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
+    procedure startOperation(prodOrderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
     begin
-        exit(MachineWrite.startOperation(prodOderNo, operationNo, machineNo));
+        exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo));
     end;
 
     procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
@@ -70,14 +70,14 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchOperationsStatusAndProgress(machineNo, fetchFinished));
     end;
 
-    procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20]; operationNo: Code[10]): Text
+    procedure fetchOperationLiveData(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineFetch.fetchOperationLiveData(machineNo, prodOderNo, operationNo));
+        exit(MachineFetch.fetchOperationLiveData(machineNo, prodOrderNo, operationNo));
     end;
 
-    procedure declareProduction(machineNo: Code[20]; prodOderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
+    procedure declareProduction(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
     begin
-        exit(MachineWrite.declareProduction(machineNo, prodOderNo, operationNo, input));
+        exit(MachineWrite.declareProduction(machineNo, prodOrderNo, operationNo, input));
     end;
 
     procedure fetchProductionCycles(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text

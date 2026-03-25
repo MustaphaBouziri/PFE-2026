@@ -4,7 +4,7 @@ codeunit 50134 "MES Machine Validation"
 
     [TryFunction]
     procedure TryStartOperation(
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         machineNo: Code[20]
     )
@@ -15,25 +15,25 @@ codeunit 50134 "MES Machine Validation"
         //get current order routing line mainly to know what operation u on  10 20 30 
         ProdOrderRoutingLine.Reset();
         ProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status::Released);
-        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOderNo);
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
 
         if not ProdOrderRoutingLine.FindFirst() then
             Error('Routing line not found.');
 
-        EnsureNoRunningOperation(machineNo, prodOderNo, operationNo);
+        EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
 
         // now we find the previous order routing line 
         PreviousProdOrderRoutingLine.Reset();
-        PreviousProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status); 
-        PreviousProdOrderRoutingLine.SetRange("Prod. Order No.", prodOderNo);
+        PreviousProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status);
+        PreviousProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         PreviousProdOrderRoutingLine.SetFilter("Operation No.", '<%1', operationNo);
     end;
 
     [TryFunction]
     procedure TryDeclareProduction(
         machineNo: Code[20];
-        prodOderNo: Code[20];
+        prodOrderNo: Code[20];
         operationNo: Code[10];
         input: Decimal
     )
@@ -42,7 +42,7 @@ codeunit 50134 "MES Machine Validation"
         MESOperationProgress: Record "MES Operation Progression";
         MachineInsert: Codeunit "MES Machine Insert";
     begin
-        MachineInsert.GetExecution(machineNo, prodOderNo, operationNo, MESExecution);
+        MachineInsert.GetExecution(machineNo, prodOrderNo, operationNo, MESExecution);
         if MESExecution."Execution Id" = '' then
             Error('Operation execution record not found.');
 
@@ -85,7 +85,7 @@ codeunit 50134 "MES Machine Validation"
         GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
         if MESOperationStatus."Operation Status" <> MESOperationStatus."Operation Status"::Paused then
             Error('Operation needs to be paused to be resumed.');
-            
+
         EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
     end;
 
