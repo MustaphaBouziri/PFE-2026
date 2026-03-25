@@ -51,6 +51,9 @@ class AppConstants {
       static const String fetchMachineHistory =
       '${_machinesBase}fetchMachineHistory?$_company';
 
+      static const String fetchBom =
+      '${_machinesBase}fetchBom?$_company';
+
 
       
 

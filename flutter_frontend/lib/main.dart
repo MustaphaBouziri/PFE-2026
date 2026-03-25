@@ -1,6 +1,8 @@
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
@@ -17,7 +19,7 @@ import 'presentation/machine/machine_List/machineListPage.dart';
 void main() {
   runApp(
     DevicePreview(
-      enabled: true, // Set to false in production
+      enabled: !kReleaseMode, // Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -26,6 +28,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
           ChangeNotifierProvider(create: (_) => MachineordersProvider()),
           Provider(create: (_) => MesMachinesProvider()),
+          Provider(create: (_)=> MesComponentconsumptionProvider())
         ],
         child: const MyApp(),
       ),
@@ -91,9 +94,10 @@ class _AuthGateState extends State<_AuthGate> {
           if (role == 'Admin') return const AddUserPage();
           return const Machinelistpage();
         }
-        return const LoginPage();
-      },
-    );*/
-    return Machinelistpage();
+        return const LoginPage();*/
+      
+      return Machinelistpage();
+    
+  
   }
 }

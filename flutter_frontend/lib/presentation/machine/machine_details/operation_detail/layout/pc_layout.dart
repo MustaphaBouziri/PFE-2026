@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../data/machine/models/mes_componentConsumption_model.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
 import '../../../../../data/machine/models/mes_production_cycle.dart';
@@ -13,11 +14,13 @@ import '../widgets/required_componment.dart';
 class PcLayout extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
   final List<ProductionCycleModel> cycles;
+  final List<ComponentConsumptionModel> components;
 
   const PcLayout({
     super.key,
     required this.operationData,
     required this.cycles,
+    required this.components
   });
 
   @override
@@ -69,7 +72,7 @@ class _PcLayoutState extends State<PcLayout> {
                   children: [
                     ActionButtonsContainer(operationData: widget.operationData),
                     const SizedBox(height: 16),
-                    RequiredComponent(),
+                    RequiredComponent(components: widget.components)
                   ],
                 ),
               ),

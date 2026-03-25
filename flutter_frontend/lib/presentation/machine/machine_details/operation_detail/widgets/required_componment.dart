@@ -1,33 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 
-class _ComponentItem {
-  final String name;
-  final double stock;
-  final String status;
+class RequiredComponent extends StatelessWidget {
+  final List<ComponentConsumptionModel> components;
 
-  const _ComponentItem({
-    required this.name,
-    required this.stock,
-    required this.status,
-  });
-}
+  const RequiredComponent({super.key, required this.components});
 
-class RequiredComponent extends StatefulWidget {
-  const RequiredComponent({super.key});
-
-  @override
-  State<RequiredComponent> createState() => _RequiredComponentState();
-}
-
-class _RequiredComponentState extends State<RequiredComponent> {
-
-  final List<_ComponentItem> _components = const [
-    _ComponentItem(name: 'Steel Plate', stock: 120, status: 'Available'),
-    _ComponentItem(name: 'Bolt M8', stock: 15, status: 'Low Stock'),
-    _ComponentItem(name: 'Rubber Gasket', stock: 0, status: 'Missing'),
-    _ComponentItem(name: 'Gear Shaft', stock: 45, status: 'Available'),
-    _ComponentItem(name: 'Bearing 6205', stock: 3, status: 'Low Stock'),
-  ];
+  String getStatus(double planned, double scanned) {
+    if (scanned == 0) return 'Missing';
+    if (scanned < planned) return 'Low Stock';
+    return 'Available';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +30,6 @@ class _RequiredComponentState extends State<RequiredComponent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // title
             const Text(
               "Required Components",
               style: TextStyle(
@@ -59,14 +41,22 @@ class _RequiredComponentState extends State<RequiredComponent> {
       
             const SizedBox(height: 16),
       
-            // list
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _components.length,
+              itemCount: components.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final component = _components[index];
+                final component = components[index];
+
+                final planned = component.plannedQuantity;
+                final scanned = component.quantityScanned;
+                final consumed = component.quantityConsumed;
+                final remaining = component.remainingQuantity;
+
+                final isSpecific = component.belongsToThisOperation;
+
+                final status = isSpecific ? getStatus(planned, scanned) : '';
       
                 return Container(
                   padding: const EdgeInsets.symmetric(
@@ -74,32 +64,39 @@ class _RequiredComponentState extends State<RequiredComponent> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: component.status == 'Available'
+                    color: !isSpecific
+                        ? const Color(0xFFF1F5F9)
+                        : status == 'Available'
                         ? const Color(0xFFF0FDF4)
-                        : component.status == 'Low Stock'
+                        : status == 'Low Stock'
                         ? const Color(0xFFFEFCE8)
                         : const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: component.status == 'Available'
+                      color: !isSpecific
+                          ? const Color(0xFFCBD5F5).withOpacity(0.2)
+                          : status == 'Available'
                           ? const Color(0xFF1AA44D).withOpacity(0.2)
-                          : component.status == 'Low Stock'
+                          : status == 'Low Stock'
                           ? const Color(0xFFD39D2B).withOpacity(0.2)
                           : const Color(0xFFE03B3B).withOpacity(0.2),
                     ),
                   ),
                   child: Row(
                     children: [
-                      // icon
                       Icon(
-                        component.status == 'Available'
+                        !isSpecific
+                            ? Icons.remove_circle_outline
+                            : status == 'Available'
                             ? Icons.check_circle_outline
-                            : component.status == 'Low Stock'
+                            : status == 'Low Stock'
                             ? Icons.warning_amber_outlined
                             : Icons.cancel_outlined,
-                        color: component.status == 'Available'
+                        color: !isSpecific
+                            ? const Color(0xFF64748B)
+                            : status == 'Available'
                             ? const Color(0xFF1AA44D)
-                            : component.status == 'Low Stock'
+                            : status == 'Low Stock'
                             ? const Color(0xFFD39D2B)
                             : const Color(0xFFE03B3B),
                         size: 22,
@@ -107,13 +104,12 @@ class _RequiredComponentState extends State<RequiredComponent> {
       
                       const SizedBox(width: 12),
       
-                      // name +stock
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              component.name,
+                              component.itemDescription,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -122,7 +118,8 @@ class _RequiredComponentState extends State<RequiredComponent> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Stock: ${component.stock}',
+                              // Very short and clean format
+                              '$scanned scanned | $remaining left |  $consumed used',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF64748B),
@@ -132,19 +129,19 @@ class _RequiredComponentState extends State<RequiredComponent> {
                         ),
                       ),
       
-                      // status label
-                      Text(
-                        component.status,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: component.status == 'Available'
-                              ? const Color(0xFF1AA44D)
-                              : component.status == 'Low Stock'
-                              ? const Color(0xFFD39D2B)
-                              : const Color(0xFFE03B3B),
+                      if (isSpecific)
+                        Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: status == 'Available'
+                                ? const Color(0xFF1AA44D)
+                                : status == 'Low Stock'
+                                ? const Color(0xFFD39D2B)
+                                : const Color(0xFFE03B3B),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 );
