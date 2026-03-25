@@ -694,6 +694,7 @@ codeunit 50130 "MES Machine Actions"
         HasAnyRoutingLink: Boolean;
         TotalConsumed: Decimal;
         TotalScanned: Decimal;
+        BelongsToThisOperation: Boolean;
 
         BomObj: JsonObject;
         BomArr: JsonArray;
@@ -751,6 +752,12 @@ codeunit 50130 "MES Machine Actions"
 
                     TotalConsumed := 0;
                     TotalScanned := 0;
+
+                    BelongsToThisOperation := false;
+                    if ProductOrderComponent."Routing Link Code" <> '' then
+                        if ProductOrderComponent."Routing Link Code" = CurrentRoutingLinkCode then
+                            BelongsToThisOperation := true;
+
                     if ExecutionId <> '' then begin
                         MESComponentConsumption.Reset();
                         MESComponentConsumption.SetRange("Execution Id", ExecutionId);
@@ -765,36 +772,32 @@ codeunit 50130 "MES Machine Actions"
                     end;
                     Clear(BomObj);
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
+                    BomObj.Add('prodorderid',ProductOrderComponent."Prod. Order No.");
+                    BomObj.Add('lineNUmber',ProductOrderComponent."Line No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
-                    BomObj.Add('scannedQuantity', TotalScanned);
-                    BomObj.Add('consumedQuantity', TotalConsumed);
+                    BomObj.Add('quantityScanned', TotalScanned);
+                    BomObj.Add('quantityConsumed', TotalConsumed);
                     BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
+                    BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
                     BomArr.Add(BomObj);
-                               /**
-                                {
-                                "plannedQuantity": 10,
-                                "scannedQuantity": 5,
-                                "consumedQuantity": 3,
-                                "remainingQuantity": 2
-                                }
-                               */   
-                    
+                    /**
+                     {
+                     "plannedQuantity": 10,
+                     "scannedQuantity": 5,
+                     "consumedQuantity": 3,
+                     "remainingQuantity": 2
+                     belongsToThisOperation', true / false )
+                     }
+                    */
+
                 end;
 
             until ProductOrderComponent.Next() = 0;
 
         exit(JsonToTextArr(BomArr));
 
-
-
-
-
-
     end;
-
-
-
 
 }
 
