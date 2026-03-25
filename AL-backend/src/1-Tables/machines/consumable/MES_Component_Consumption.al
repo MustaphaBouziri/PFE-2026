@@ -40,19 +40,24 @@ table 50111 "MES Component Consumption"
             DataClassification = CustomerContent;
         }
 
-        field(7; "Quantity"; Decimal)
+        field(7; "Quantity Scanned"; Decimal)
         {
-            Caption = 'Quantity';
+            Caption = 'Quantity Scanned';
+            DataClassification = CustomerContent;
+        }
+        field(8; "Quantity Consumed"; Decimal)
+        {
+            Caption = 'Quantity Consumed';
             DataClassification = CustomerContent;
         }
 
-        field(8; "Operator Id"; Code[50])
+        field(9; "Operator Id"; Code[50])
         {
             TableRelation = "MES User"."User Id";
             DataClassification = CustomerContent;
         }
 
-        field(9; "Scanned At"; DateTime)
+        field(10; "Scanned At"; DateTime)
         {
             Caption = 'Scanned At';
             DataClassification = SystemMetadata;

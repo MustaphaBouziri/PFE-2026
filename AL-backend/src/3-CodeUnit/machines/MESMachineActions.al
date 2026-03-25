@@ -654,6 +654,7 @@ codeunit 50130 "MES Machine Actions"
         CurrentRoutingLinkCode: Code[10];
         HasAnyRoutingLink: Boolean;
         TotalConsumed: Decimal;
+        TotalScanned: Decimal;
 
         BomObj: JsonObject;
         BomArr: JsonArray;
@@ -694,22 +695,23 @@ codeunit 50130 "MES Machine Actions"
         ProductOrderComponent.SetRange("Prod. Order No.", prodOrderNo);
         if ProductOrderComponent.FindSet() then
             repeat
-            // skip only component that belong to another routing
-            // routing = A 
-            /*
-            true and A!= '' and A != A  ---> true ,true ,false = false not(false) = include it 
-            routing = B
-            true and B!= '' and B != A  ---> true ,true ,True = True not(True) = skip it it 
-            routing = empty
-            false + anything + anything = false not(false) = true so include it
-            anyway end result need to be true to perform the filter
-            without not it will include only component that belong to other operations
-            */
+                // skip only component that belong to another routing
+                // routing = A 
+                /*
+                true and A!= '' and A != A  ---> true ,true ,false = false not(false) = include it 
+                routing = B
+                true and B!= '' and B != A  ---> true ,true ,True = True not(True) = skip it it 
+                routing = empty
+                false + anything + anything = false not(false) = true so include it
+                anyway end result need to be true to perform the filter
+                without not it will include only component that belong to other operations
+                */
                 if not (HasAnyRoutingLink and
                    (ProductOrderComponent."Routing Link Code" <> '') and
                    (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
 
                     TotalConsumed := 0;
+                    TotalScanned := 0;
                     if ExecutionId <> '' then begin
                         MESComponentConsumption.Reset();
                         MESComponentConsumption.SetRange("Execution Id", ExecutionId);
@@ -717,7 +719,8 @@ codeunit 50130 "MES Machine Actions"
                         if MESComponentConsumption.FindSet() then
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
-                    TotalConsumed += MESComponentConsumption.Quantity;
+                                TotalScanned += MESComponentConsumption."Quantity Scanned";
+                                TotalConsumed += MESComponentConsumption."Quantity Consumed";
                             until MESComponentConsumption.Next() = 0;
 
                     end;
@@ -725,10 +728,19 @@ codeunit 50130 "MES Machine Actions"
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
-                    BomObj.Add('unitOfMeasure', ProductOrderComponent."Unit of Measure Code");
+                    BomObj.Add('scannedQuantity', TotalScanned);
                     BomObj.Add('consumedQuantity', TotalConsumed);
-                    BomObj.Add('remainingQuantity', ProductOrderComponent.Quantity - TotalConsumed);
+                    BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomArr.Add(BomObj);
+                               /**
+                                {
+                                "plannedQuantity": 10,
+                                "scannedQuantity": 5,
+                                "consumedQuantity": 3,
+                                "remainingQuantity": 2
+                                }
+                               */   
+                    
                 end;
 
             until ProductOrderComponent.Next() = 0;
