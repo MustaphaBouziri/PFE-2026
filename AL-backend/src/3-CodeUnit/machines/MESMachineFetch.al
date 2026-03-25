@@ -294,6 +294,7 @@ codeunit 50131 "MES Machine Fetch"
         operationNo: Code[10]): Text
 
     var
+        JsonHelper: Codeunit "MES Json Helper";
         ProductOrderComponent: Record "Prod. Order Component";
         ProductOrderRoutingLine: Record "Prod. Order Routing Line";
         MESComponentConsumption: Record "MES Component Consumption";
@@ -404,7 +405,7 @@ codeunit 50131 "MES Machine Fetch"
 
             until ProductOrderComponent.Next() = 0;
 
-        exit(JsonToTextArr(BomArr));
+        exit(JsonHelper.JsonToTextArr(BomArr));
 
     end;
 
