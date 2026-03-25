@@ -2,7 +2,9 @@ codeunit 50126 "MES Web Service"
 {
     var
         UnboundActions: Codeunit "MES Unbound Actions";
-        MachineActions: Codeunit "MES Machine Actions";
+        MachineFetch: Codeunit "MES Machine Fetch";
+        MachineWrite: Codeunit "MES Machine Write";
+
 
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
@@ -50,61 +52,61 @@ codeunit 50126 "MES Web Service"
 
     procedure FetchMachines(workCenterNo: Text): Text
     begin
-        exit(MachineActions.FetchMachines(workCenterNo));
+        exit(MachineFetch.FetchMachines(workCenterNo));
     end;
 
     procedure getMachineOrders(machineNo: Text): Text
     begin
-        exit(MachineActions.getMachineOrders(machineNo));
+        exit(MachineFetch.getMachineOrders(machineNo));
     end;
 
     procedure startOperation(prodOderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
     begin
-        exit(MachineActions.startOperation(prodOderNo, operationNo, machineNo));
+        exit(MachineWrite.startOperation(prodOderNo, operationNo, machineNo));
     end;
 
     procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
     begin
-        exit(MachineActions.fetchOperationsStatusAndProgress(machineNo, fetchFinished));
+        exit(MachineFetch.fetchOperationsStatusAndProgress(machineNo, fetchFinished));
     end;
 
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.fetchOperationLiveData(machineNo, prodOderNo, operationNo));
+        exit(MachineFetch.fetchOperationLiveData(machineNo, prodOderNo, operationNo));
     end;
 
     procedure declareProduction(machineNo: Code[20]; prodOderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
     begin
-        exit(MachineActions.declareProduction(machineNo, prodOderNo, operationNo, input));
+        exit(MachineWrite.declareProduction(machineNo, prodOderNo, operationNo, input));
     end;
 
     procedure fetchProductionCycles(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.fetchProductionCycles(machineNo, prodOrderNo, operationNo));
+        exit(MachineFetch.fetchProductionCycles(machineNo, prodOrderNo, operationNo));
     end;
 
     procedure fetchBom(prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.fetchBom(prodOrderNo, operationNo));
+        exit(MachineFetch.fetchBom(prodOrderNo, operationNo));
     end;
 
     procedure finishOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.finishOperation(machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.finishOperation(machineNo, prodOrderNo, operationNo));
     end;
 
     procedure cancelOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.cancelOperation(machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.cancelOperation(machineNo, prodOrderNo, operationNo));
     end;
 
     procedure pauseOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.pauseOperation(machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.pauseOperation(machineNo, prodOrderNo, operationNo));
     end;
 
     procedure resumeOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
-        exit(MachineActions.resumeOperation(machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo));
     end;
 }

@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
-import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
 import '../../../data/machine/models/erp_order_model.dart';
+import '../../../data/machine/models/mes_operation_model.dart';
+import '../../../data/machine/models/mes_production_cycle.dart';
 import '../../../data/machine/services/erp_order_service.dart';
 
 class MachineordersProvider with ChangeNotifier {

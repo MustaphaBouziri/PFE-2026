@@ -28,7 +28,9 @@ class _ActionButtonsState extends State<ActionButtons> {
 
   bool get _canStart => widget.order.status == 'Released';
 
-  // ── Start ──────────────────────────────────────────────────────────────────
+  Future<void> _reloadOrders() async {
+    await context.read<MachineordersProvider>().getMachineOrders(widget.machineNo);
+  }
 
   Future<void> _handleStart() async {
     if (_isStartLoading || !_canStart) return;
@@ -41,22 +43,25 @@ class _ActionButtonsState extends State<ActionButtons> {
         widget.order.operationNo,
         widget.machineNo,
       );
+
       if (!mounted) return;
-      if (success) widget.onSwitchToProgress?.call();
+
+      if (success) {
+        widget.onSwitchToProgress?.call();
+      }
     } catch (e) {
       if (!mounted) return;
       _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _isStartLoading = false);
+      if (mounted) {
+        setState(() => _isStartLoading = false);
+      }
     }
   }
-
-  // ── Close (cancel — orders page orders are never at 100 %) ────────────────
 
   Future<void> _handleClose() async {
     if (_isCancelLoading) return;
 
-    // Confirm before cancelling
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -100,7 +105,9 @@ class _ActionButtonsState extends State<ActionButtons> {
         operationNo: widget.order.operationNo,
       );
 
+      await _reloadOrders();
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Order cancelled successfully.')),
       );
@@ -108,11 +115,11 @@ class _ActionButtonsState extends State<ActionButtons> {
       if (!mounted) return;
       _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _isCancelLoading = false);
+      if (mounted) {
+        setState(() => _isCancelLoading = false);
+      }
     }
   }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -132,8 +139,6 @@ class _ActionButtonsState extends State<ActionButtons> {
     );
   }
 
-  // ── Widgets ────────────────────────────────────────────────────────────────
-
   Widget _buildStartButton() {
     if (_canStart) {
       return ElevatedButton.icon(
@@ -143,13 +148,22 @@ class _ActionButtonsState extends State<ActionButtons> {
           width: 16,
           height: 16,
           child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white),
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
         )
-            : const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
+            : const Icon(
+          Icons.play_arrow_rounded,
+          size: 16,
+          color: Colors.white,
+        ),
         label: const Text(
           'Start Order',
           style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0F172A),
@@ -159,33 +173,37 @@ class _ActionButtonsState extends State<ActionButtons> {
           overlayColor: Colors.transparent,
           shadowColor: Colors.transparent,
           elevation: 0,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
       );
     }
 
-    // Disabled appearance when status is not Released
     return ElevatedButton.icon(
       onPressed: null,
-      icon: const Icon(Icons.play_arrow_rounded,
-          size: 16, color: Color(0xFFB0B7C3)),
+      icon: const Icon(
+        Icons.play_arrow_rounded,
+        size: 16,
+        color: Color(0xFFB0B7C3),
+      ),
       label: const Text(
         'Start Order',
         style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFB0B7C3)),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFFB0B7C3),
+        ),
       ),
       style: ElevatedButton.styleFrom(
         disabledBackgroundColor: const Color(0xFFF1F5F9),
         disabledForegroundColor: const Color(0xFFB0B7C3),
         shadowColor: Colors.transparent,
         elevation: 0,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
@@ -198,8 +216,10 @@ class _ActionButtonsState extends State<ActionButtons> {
           ? const SizedBox(
         width: 14,
         height: 14,
-        child:
-        CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF334155)),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Color(0xFF334155),
+        ),
       )
           : const Icon(Icons.close_rounded, size: 16),
       label: const Text(
@@ -209,7 +229,9 @@ class _ActionButtonsState extends State<ActionButtons> {
       style: OutlinedButton.styleFrom(
         foregroundColor: const Color(0xFF334155),
         side: const BorderSide(color: Color(0xFFCBD5E1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );

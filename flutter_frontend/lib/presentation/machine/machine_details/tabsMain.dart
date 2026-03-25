@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/presentation/machine/machine_details/machine_history/machineHistoryPage.dart';
+import 'package:provider/provider.dart';
 
+import '../../../domain/machines/providers/machineOrders_provider.dart';
 import '../../widgets/navBar.dart';
 import 'machine_consumption/machineConsumptionPage.dart';
+import 'machine_history/machineHistoryPage.dart';
 import 'machines_orders/machineOrderPage.dart';
 import 'machine_production/ordersProgressionPage.dart';
 
@@ -22,6 +24,17 @@ class MachineMainPage extends StatefulWidget {
 
 class _MachineMainPageState extends State<MachineMainPage> {
   int selectedIndex = 0;
+
+  void _handleStartOrderSuccess() {
+    setState(() {
+      selectedIndex = 1;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<MachineordersProvider>().getMachineOrders(widget.machineNo);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +83,7 @@ class _MachineMainPageState extends State<MachineMainPage> {
               children: [
                 Machineorderpage(
                   machineNo: widget.machineNo,
-                  onSwitchToProgress: () => setState(() => selectedIndex = 1),
+                  onSwitchToProgress: _handleStartOrderSuccess,
                 ),
                 OrdersProgressionPage(machineNo: widget.machineNo),
                 OrderConsumptionPage(),

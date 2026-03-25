@@ -11,7 +11,7 @@
       "authentication": "Windows",
       "startupObjectType": "Page",
       "startupObjectId": 22,
-      "schemaUpdateMode": "Synchronize",
+      "schemaUpdateMode": "Recreate",
       "tenant": "default"
     }
   ]

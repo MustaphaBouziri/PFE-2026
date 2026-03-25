@@ -26,6 +26,5 @@ permissionset 50130 "MES AUTH API"
         codeunit "MES Auth Mgt"        = X,
         codeunit "MES Setup"           = X,
         codeunit "MES Unbound Actions" = X,
-        codeunit "MES Machine Actions" = X,
         codeunit "MES Web Service"     = X;
 }
