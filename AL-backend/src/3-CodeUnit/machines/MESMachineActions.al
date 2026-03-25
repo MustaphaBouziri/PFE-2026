@@ -1,5 +1,7 @@
 codeunit 50130 "MES Machine Actions"
 {
+    Access = Internal;
+
     local procedure JsonToText(J: JsonObject): Text
     var
         JsonText: Text;
