@@ -73,13 +73,22 @@ class _ProductionChartState extends State<ProductionChart> {
       return FlSpot(entry.key.toDouble(), entry.value.cycleQuantity);
     }).toList();
 
-    final highestValue = orderedCycles
-        .map((c) => c.cycleQuantity)
-        .reduce((a, b) => a > b ? a : b);
+    final firstValue = orderedCycles.first.cycleQuantity;
+
+    double highestValue = firstValue;
+    double lowestValue = firstValue;
+
+    for (final cycle in orderedCycles.skip(1)) {
+      final value = cycle.cycleQuantity;
+
+      if (value > highestValue) highestValue = value;
+      if (value < lowestValue) lowestValue = value;
+    }
 
     final interval = math.max(1, (highestValue / 10).floor()).toDouble();
-    final rawMaxY = highestValue * 1.2;
-    final maxY = (rawMaxY / interval).ceil() * interval;
+    final maxY = ((highestValue * 1.2) / interval).ceil() * interval;
+    final minY = ((lowestValue * 0.8) / interval).floor() * interval;
+
 
     Widget chartContent = LayoutBuilder(
       builder: (context, constraints) {
@@ -201,7 +210,7 @@ class _ProductionChartState extends State<ProductionChart> {
                     ),
                     minX: 0,
                     maxX: (orderedCycles.length - 1).toDouble(),
-                    minY: 0,
+                    minY: minY,
                     maxY: maxY,
                     lineBarsData: [
                       LineChartBarData(

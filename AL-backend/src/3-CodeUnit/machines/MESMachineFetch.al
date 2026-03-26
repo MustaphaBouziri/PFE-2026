@@ -89,7 +89,7 @@ codeunit 50131 "MES Machine Fetch"
     procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
         MESOperationProgress: Record "MES Operation Progression";
         MESOperationStatusObj: JsonObject;
         MESOperationStatusArr: JsonArray;
@@ -183,7 +183,7 @@ codeunit 50131 "MES Machine Fetch"
         operationNo: Code[10]): Text
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
         MESOperationProgress: Record "MES Operation Progression";
         MESOperationStatusObj: JsonObject;
         MESOperationStatusArr: JsonArray;

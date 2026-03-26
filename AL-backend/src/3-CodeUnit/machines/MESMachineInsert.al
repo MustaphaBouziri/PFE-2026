@@ -30,7 +30,7 @@ codeunit 50133 "MES Machine Insert"
 
     procedure InsertMESOperation(executionId: Code[50])
     var
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         MESOperationStatus.Init();
         MESOperationStatus."Execution Id" := executionId;
@@ -78,7 +78,7 @@ codeunit 50133 "MES Machine Insert"
     )
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         GetExecution(machineNo, prodOrderNo, operationNo, MESExecution);
 

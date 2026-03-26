@@ -69,7 +69,7 @@ codeunit 50132 "MES Machine Write"
         MachineValidation: Codeunit "MES Machine Validation";
         MachineInsert: Codeunit "MES Machine Insert";
         JsonHelper: Codeunit "MES Json Helper";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         ClearLastError();
 
@@ -107,7 +107,7 @@ codeunit 50132 "MES Machine Write"
         operationNo: Code[10]
     ): Text
     var
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Finished));
     end;
@@ -118,7 +118,7 @@ codeunit 50132 "MES Machine Write"
         operationNo: Code[10]
     ): Text
     var
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled));
     end;
@@ -129,7 +129,7 @@ codeunit 50132 "MES Machine Write"
         operationNo: Code[10]
     ): Text
     var
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Paused));
     end;
@@ -140,7 +140,7 @@ codeunit 50132 "MES Machine Write"
         operationNo: Code[10]
     ): Text
     var
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Running));
     end;

@@ -1,7 +1,7 @@
 page 50108 "MES Operations"
 {
     PageType = List;
-    SourceTable = "MES Operation Status";
+    SourceTable = "MES Operation State";
     ApplicationArea = All;
     UsageCategory = Lists;
     Caption = 'MES Operations';
