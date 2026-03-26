@@ -1,4 +1,4 @@
-table 50108 "MES Operation Status"
+table 50108 "MES Operation State"
 {
     DataClassification = CustomerContent;
     Caption = 'MES Operation Status';

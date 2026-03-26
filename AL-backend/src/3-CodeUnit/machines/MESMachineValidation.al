@@ -65,10 +65,10 @@ codeunit 50134 "MES Machine Validation"
     )
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationState: Record "MES Operation State";
     begin
-        GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
-        if MESOperationStatus."Operation Status" <> MESOperationStatus."Operation Status"::Running then
+        GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationState);
+        if MESOperationState."Operation Status" <> MESOperationState."Operation Status"::Running then
             Error('Operation needs to be running to be paused.');
     end;
 
@@ -80,7 +80,7 @@ codeunit 50134 "MES Machine Validation"
     )
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationStatus: Record "MES Operation State";
     begin
         GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
         if MESOperationStatus."Operation Status" <> MESOperationStatus."Operation Status"::Paused then
@@ -97,13 +97,13 @@ codeunit 50134 "MES Machine Validation"
     )
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationState: Record "MES Operation State";
     begin
-        GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationStatus);
-        if MESOperationStatus."Operation Status" in
+        GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationState);
+        if MESOperationState."Operation Status" in
            [
-               MESOperationStatus."Operation Status"::Finished,
-               MESOperationStatus."Operation Status"::Cancelled
+               MESOperationState."Operation Status"::Finished,
+               MESOperationState."Operation Status"::Cancelled
            ]
         then
             Error('Operation is already finished or cancelled.');
@@ -112,15 +112,15 @@ codeunit 50134 "MES Machine Validation"
     procedure EnsureNoRunningOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10])
     var
         MESExecution: Record "MES Operation Execution";
-        MESOperationStatus: Record "MES Operation Status";
+        MESOperationState: Record "MES Operation State";
     begin
         // prevent starting the same operation twice
         MESExecution.Reset();
         MESExecution.SetRange("Prod Order No", prodOrderNo);
         MESExecution.SetRange("Operation No", operationNo);
         if MESExecution.FindFirst() then begin
-            GetLatestOperationStatus(MESExecution."Execution Id", MESOperationStatus);
-            if MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running then
+            GetLatestOperationStatus(MESExecution."Execution Id", MESOperationState);
+            if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Running then
                 Error('This operation is already running.');
         end;
 
@@ -129,8 +129,8 @@ codeunit 50134 "MES Machine Validation"
         MESExecution.SetRange("Machine No", machineNo);
         if MESExecution.FindSet() then
             repeat
-                GetLatestOperationStatus(MESExecution."Execution Id", MESOperationStatus);
-                if MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running then
+                GetLatestOperationStatus(MESExecution."Execution Id", MESOperationState);
+                if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Running then
                     Error(
                         'Machine %1 is already running another operation (Order %2 - Operation %3). Pause or finish it first.',
                         MESExecution."Machine No",
@@ -145,7 +145,7 @@ codeunit 50134 "MES Machine Validation"
         prodOrderNo: Code[20];
         operationNo: Code[10];
         var MESExecution: Record "MES Operation Execution";
-        var MESOperationStatus: Record "MES Operation Status"
+        var MESOperationState: Record "MES Operation State"
     )
     var
         MachineInsert: Codeunit "MES Machine Insert";
@@ -160,9 +160,9 @@ codeunit 50134 "MES Machine Validation"
                 operationNo
             );
 
-        GetLatestOperationStatus(MESExecution."Execution Id", MESOperationStatus);
+        GetLatestOperationStatus(MESExecution."Execution Id", MESOperationState);
 
-        if MESOperationStatus."Execution Id" = '' then
+        if MESOperationState."Execution Id" = '' then
             Error(
                 'No operation status found for Machine %1, Order %2, Operation %3.',
                 machineNo,
@@ -171,12 +171,12 @@ codeunit 50134 "MES Machine Validation"
             );
     end;
 
-    procedure GetLatestOperationStatus(executionId: Code[50]; var MESOperationStatus: Record "MES Operation Status")
+    procedure GetLatestOperationStatus(executionId: Code[50]; var MESOperationState: Record "MES Operation State")
     begin
-        MESOperationStatus.Reset();
-        MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
-        MESOperationStatus.SetRange("Execution Id", executionId);
-        MESOperationStatus.Ascending(false);
-        MESOperationStatus.FindFirst();
+        MESOperationState.Reset();
+        MESOperationState.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationState.SetRange("Execution Id", executionId);
+        MESOperationState.Ascending(false);
+        MESOperationState.FindFirst();
     end;
 }
