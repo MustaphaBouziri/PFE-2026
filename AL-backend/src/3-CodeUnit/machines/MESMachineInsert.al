@@ -1,7 +1,7 @@
 codeunit 50133 "MES Machine Insert"
 {
     Access = Internal;
-
+// here we put procedure that will be used multiple times 
     procedure InsertMESOperationExecution(
         prodOrderNo: Code[20];
         operationNo: Code[10];
