@@ -123,7 +123,10 @@ class MachineordersProvider with ChangeNotifier {
   getMachineOperationStatusAndProgressStream(
       String machineNo, bool fetchFinished) {
     return _service.streamMachinesOperationStatusAndProgress(
-        machineNo, fetchFinished);
+      machineNo,
+      fetchFinished,
+      trigger: _refreshController.stream,
+    );
   }
 
   Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(

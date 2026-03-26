@@ -25,7 +25,6 @@ class MESMachineListService {
           .map((machine) => MachineModel.fromJson(machine))
           .toList();
     } else {
-      print("${response.statusCode} ${response.body}");
       throw Exception(
         'Failed to fetch machines: ${response.statusCode} ${response.body}',
       );

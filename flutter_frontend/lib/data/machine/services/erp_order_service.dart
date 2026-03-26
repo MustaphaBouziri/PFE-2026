@@ -187,8 +187,9 @@ class ErpMachineOrdersService {
   Stream<List<OperationStatusAndProgressModel>>
   streamMachinesOperationStatusAndProgress(
     String machineNo,
-    bool fetchFinished,
-  ) async* {
+    bool fetchFinished, {
+    Stream<void>? trigger,
+  }) async* {
     while (true) {
       try {
         final data = await fetchMachineOperationStatusAndProgress(
@@ -199,7 +200,15 @@ class ErpMachineOrdersService {
       } catch (e) {
         yield [];
       }
-      await Future.delayed(const Duration(seconds: 5));
+
+      // Wait for either the 5-second poll interval OR an on-demand refresh
+      // trigger — whichever comes first — before fetching again.
+      final delay = Future.delayed(const Duration(seconds: 5));
+      if (trigger != null) {
+        await Future.any([delay, trigger.first.catchError((_) {})]);
+      } else {
+        await delay;
+      }
     }
   }
 
@@ -321,24 +330,5 @@ class ErpMachineOrdersService {
     }
   }
 
-  Future<List<MachineOrderModel>> fetchMachineHistory(String machineNo) async {
-    final body = jsonEncode({'machineNo': machineNo});
-
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchMachineHistory),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list.map((e) => MachineOrderModel.fromJson(e)).toList();
-    } else {
-      throw Exception(
-        'Failed to fetch machine orders history: ${response.statusCode} ${response.body}',
-      );
-    }
-  }
+  
 }

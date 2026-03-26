@@ -41,17 +41,7 @@ class AppConstants {
   static const String fetchProductionCycles =
       '${_webServiceBase}fetchProductionCycles?$_company';
 
-  static const String fetchMachineHistory =
-      '${_webServiceBase}fetchMachineHistory?$_company';
-  
-      static const String fetchBom =
-      '${_webServiceBase}fetchBom?$_company';
-
-
-      
-
-
-
+  static const String fetchBom = '${_webServiceBase}fetchBom?$_company';
 
   // ── finish / cancel / Pause ────────────────────────────────────────────────────────
   // finishOperation  → progress = 100 %  (order fully completed)
