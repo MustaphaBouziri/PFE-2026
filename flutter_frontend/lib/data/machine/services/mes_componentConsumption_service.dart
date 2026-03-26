@@ -21,7 +21,6 @@ class MesComponentconsumptionService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print('Response Body: ${response.body}');
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list.map((e) => ComponentConsumptionModel.fromJson(e)).toList();
