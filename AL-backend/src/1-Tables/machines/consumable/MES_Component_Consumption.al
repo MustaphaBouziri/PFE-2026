@@ -28,7 +28,7 @@ table 50111 "MES Component Consumption"
             DataClassification = CustomerContent;
         }
 
-        field(5; "Barcode"; Code[50])
+        field(5; "Barcode";Text[250] )
         {
             Caption = 'Barcode';
             DataClassification = CustomerContent;

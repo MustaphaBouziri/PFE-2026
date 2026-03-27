@@ -144,4 +144,72 @@ codeunit 50132 "MES Machine Write"
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Running));
     end;
+
+    //insert scans into the mes Component table
+
+
+    procedure insertScans(
+     executionId: Code[50];
+     scansJson: Text
+ ): Text
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESConsumption: Record "MES Component Consumption";
+        JsonHelper: Codeunit "MES Json Helper";
+
+        ResultJson: JsonObject;
+        ScansArr: JsonArray;
+        ScanToken: JsonToken;
+        ScanObj: JsonObject;
+
+        ItemNoToken: JsonToken;
+        BarcodeToken: JsonToken;
+        UOMToken: JsonToken;
+        QtyScannedToken: JsonToken;
+
+        ItemNo: Code[20];
+        UOMCode: Code[10];
+        QtyScanned: Decimal;
+        LineNo: Integer;
+    begin
+
+        if not MESExecution.Get(executionId) then begin
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', 'Execution not found');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        ScansArr.ReadFrom(scansJson);
+
+        foreach ScanToken in ScansArr do begin
+            ScanObj := ScanToken.AsObject();
+
+            ScanObj.Get('itemNo', ItemNoToken);
+            ScanObj.Get('barcode', BarcodeToken);
+            ScanObj.Get('unitOfMeasure', UOMToken);
+            ScanObj.Get('quantityScanned', QtyScannedToken);
+
+            ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+            UOMCode := CopyStr(UOMToken.AsValue().AsText(), 1, 10);
+            QtyScanned := QtyScannedToken.AsValue().AsDecimal();
+
+
+            MESConsumption.Init();
+            MESConsumption."Execution Id" := executionId;
+            MESConsumption."Prod Order No" := MESExecution."Prod Order No";
+            MESConsumption."Item No" := ItemNo;
+            MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
+            MESConsumption."Unit of Measure" := UOMCode;
+            MESConsumption."Quantity Scanned" := QtyScanned;
+            MESConsumption."Operator Id" := UserId;
+
+            MESConsumption.Insert(true);
+        end;
+
+        ResultJson.Add('value', true);
+        ResultJson.Add('message', 'Inserted successfully');
+
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
 }

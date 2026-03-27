@@ -109,4 +109,21 @@ codeunit 50126 "MES Web Service"
     begin
         exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo));
     end;
+
+    procedure fetchAllItemBarcodes(): Text
+    begin
+        exit(MachineFetch.fetchAllItemBarcodes())
+    end;
+
+    procedure insertScans(executionId: Code[50]; scansJson: Text): Text
+    begin
+        exit(MachineWrite.insertScans(executionId, scansJson));
+    end;
+
+
+
+
+
+
+
 }
