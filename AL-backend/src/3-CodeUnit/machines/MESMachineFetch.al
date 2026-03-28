@@ -216,6 +216,8 @@ codeunit 50131 "MES Machine Fetch"
 
                     if MESOperationProgress.FindFirst() then begin
                         MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
+                        MESOperationStatusObj.Add('executionId', MESOperationStatus."Execution Id");
+
                         MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
                         if MESExecution."Order Quantity" <> 0 then
                             MESOperationStatusObj.Add('progressPercent',
@@ -376,7 +378,7 @@ codeunit 50131 "MES Machine Fetch"
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
-                                TotalConsumed += MESComponentConsumption."Quantity Consumed";
+                               // TotalConsumed += MESComponentConsumption."Quantity Consumed";
                             until MESComponentConsumption.Next() = 0;
 
                     end;
@@ -387,9 +389,10 @@ codeunit 50131 "MES Machine Fetch"
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
                     BomObj.Add('quantityScanned', TotalScanned);
-                    BomObj.Add('quantityConsumed', TotalConsumed);
-                    BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
+                    //BomObj.Add('quantityConsumed', TotalConsumed);
+                    //BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
+                    BomObj.Add('quantityPer', ProductOrderComponent."Quantity per");
                     BomArr.Add(BomObj);
                     /**
                      {
@@ -408,6 +411,71 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(BomArr));
 
     end;
+
+
+    /**
+        procedure fetchItemBarcode(ItemNo: Code[20]; var EncodedText: Text; var ItemDescription: Text; var BaseUOM: Code[10])
+        var
+            Item: Record Item;
+            BarcodeGen: Codeunit "MES Barcode Generator";
+        begin
+            if not Item.Get(ItemNo) then
+                Error('Item %1 not found.', ItemNo);
+    
+            if Item."MES Datamatrix Encoded" = '' then
+                BarcodeGen.GenerateAndSaveBarcodeText(ItemNo);
+    
+            Item.Get(ItemNo);
+            EncodedText := Item."MES Datamatrix Encoded";
+            ItemDescription := Item.Description;
+            BaseUOM := Item."Base Unit of Measure";
+    
+    
+            /**
+              "@odata.context": "...",
+              "EncodedText": "0101234567890123",
+              "ItemDescription": "Steel Bolt M8x40",
+              "BaseUOM": "PCS"
+            }
+            
+        end;
+    */
+
+    procedure fetchAllItemBarcodes(): Text
+    var
+        JsonHelper: Codeunit "MES Json Helper";
+        Item: Record Item;
+        BarcodeGen: Codeunit "MES Barcode Generator";
+        ResultArray: JsonArray;
+        ItemObj: JsonObject;
+        ResultText: Text;
+    begin
+        Item.FindSet();
+        repeat
+            /**
+                if Item."MES Barcode Text" = '' then
+                    BarcodeGen.GenerateAndSaveBarcodeText(Item."No.");
+                Item.Get(Item."No.");
+            */
+
+            Clear(ItemObj);
+            ItemObj.Add('itemNo', Item."No.");
+            ItemObj.Add('description', Item.Description);
+            ItemObj.Add('baseUOM', Item."Base Unit of Measure");
+            ItemObj.Add('inventory', Item.Inventory);
+            ItemObj.Add('shelfNo', Item."Shelf No.");
+            ItemObj.Add('lotSize', Item."Lot Size");
+            ItemObj.Add('flushingMethod', Format(Item."Flushing Method"));
+            ItemObj.Add('barcodeText', Item."MES Barcode Text");
+
+            ResultArray.Add(ItemObj);
+        until Item.Next() = 0;
+
+
+        exit(JsonHelper.JsonToTextArr(ResultArray));
+    end;
+
+
 
 }
 

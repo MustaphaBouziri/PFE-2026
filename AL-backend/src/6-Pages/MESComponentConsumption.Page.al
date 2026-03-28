@@ -43,20 +43,17 @@ page 50115 "MES Component Consumption"
                     ApplicationArea = All;
                 }
 
-                field("Unit of Measure"; Rec."Unit of Measure")
-                {
-                    ApplicationArea = All;
-                }
+               
 
                 field("Quantity Scanned"; Rec."Quantity Scanned")
                 {
                     ApplicationArea = All;
                 }
 
-                field("Quantity Consumed"; Rec."Quantity Consumed")
-                {
-                    ApplicationArea = All;
-                }
+                //field("Quantity Consumed"; Rec."Quantity Consumed")
+                //{
+                //    ApplicationArea = All;
+                //}
 
                 field("Operator Id"; Rec."Operator Id")
                 {

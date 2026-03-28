@@ -1,7 +1,10 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
+import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
@@ -26,6 +29,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
           ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
           ChangeNotifierProvider(create: (_) => MachineordersProvider()),
+          ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
           Provider(create: (_) => MesMachinesProvider()),
           Provider(create: (_)=> MesComponentconsumptionProvider())
         ],
@@ -95,7 +99,7 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();*/
       
-      return Machinelistpage();
+      return Machinelistpage() ;
     
   
   }

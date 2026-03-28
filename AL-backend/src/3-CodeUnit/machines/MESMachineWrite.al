@@ -144,4 +144,85 @@ codeunit 50132 "MES Machine Write"
     begin
         exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Running));
     end;
+
+    //insert scans into the mes Component table
+
+
+    procedure insertScans(
+     executionId: Code[50];
+     scansJson: Text
+ ): Text
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESConsumption: Record "MES Component Consumption";
+        JsonHelper: Codeunit "MES Json Helper";
+
+        ResultJson: JsonObject;
+        ScansArr: JsonArray;//[{}]the array that hold the array of scans objs from he input
+        ScanToken: JsonToken;//used to iterate over the array,jsonTocken is a generic representation of any json element object array value... act like a cursor
+        ScanObj: JsonObject;//{} jsonObkect we extract from each token to access the fields
+       
+       // imagin these like blank paper with no type
+       //using a token allows us to later ask ''what type is this?'' and convert it
+        ItemNoToken: JsonToken;
+        BarcodeToken: JsonToken;
+        UOMToken: JsonToken;
+        QtyScannedToken: JsonToken;
+        // variables that will hold the converted token into a jsonValue=> asText as DECIMAL...
+        ItemNo: Code[20];
+        QtyScanned: Decimal;
+        LineNo: Integer;
+    begin
+         /**
+         request look like :
+            {
+              "executionId": "EX123",
+              "scansJson": "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
+            }
+         */
+
+       //  first we check if the execution id exist
+        if not MESExecution.Get(executionId) then begin
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', 'Execution not found');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+        //convert the string "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
+        //to jsonArray [  { "itemNo": "A1", "quantity": 5 },{}]
+        ScansArr.ReadFrom(scansJson);
+
+        // we iterate over each scan in the array 
+        foreach ScanToken in ScansArr do begin
+            Clear(MESConsumption);
+
+            //convert the scanToken into a jsonObject { "itemNo": "A1", "quantity": 5 }
+            ScanObj := ScanToken.AsObject();
+
+            //and as i said token bcz the json value could be of any type and then we decide what type the value will be .
+            // get the value associated with the key into the json token = itemNo value insert it to ItemNoToken
+            ScanObj.Get('itemNo', ItemNoToken);
+            ScanObj.Get('barcode', BarcodeToken);
+            ScanObj.Get('quantityScanned', QtyScannedToken);
+
+            ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+            QtyScanned := QtyScannedToken.AsValue().AsDecimal();
+
+
+            MESConsumption.Init();
+            MESConsumption."Execution Id" := executionId;
+            MESConsumption."Prod Order No" := MESExecution."Prod Order No";
+            MESConsumption."Item No" := ItemNo;
+            MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
+            MESConsumption."Quantity Scanned" := QtyScanned;
+            MESConsumption."Operator Id" := UserId;
+
+            MESConsumption.Insert(true);
+        end;
+
+        ResultJson.Add('value', true);
+        ResultJson.Add('message', 'Inserted successfully');
+
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
 }

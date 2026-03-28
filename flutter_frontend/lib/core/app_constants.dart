@@ -1,4 +1,9 @@
 class AppConstants {
+  static const Map<String, String> jsonHeaders = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+
   static const String host = 'http://localhost:7048';
   static const String instance = 'BC210';
   static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
@@ -68,8 +73,14 @@ class AppConstants {
   static String get createMesUserUrl =>
       '$_apiBase/companies($companyId)/createMesUsers';
 
-  static const Map<String, String> jsonHeaders = {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  };
+  //____fetch barcodes______
+
+  static const String fetchAllItemBarcodes =
+      '${_webServiceBase}fetchAllItemBarcodes?$_company';
+
+  //__________insert scan____
+  static const String insertScans =
+      '${_webServiceBase}insertScans?$_company';
+
+  
 }
