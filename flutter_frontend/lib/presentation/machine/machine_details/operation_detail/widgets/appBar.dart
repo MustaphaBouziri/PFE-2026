@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
+import '../../machine_production/models/status_style.dart';
+
 class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
   final OperationStatusAndProgressModel operationData;
   final bool isPhone;
@@ -16,6 +18,8 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = operationStatusStyleFromStatus(operationData.operationStatus);
+
     return AppBar(
       title: Row(
         children: [
@@ -23,15 +27,15 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Order: " + operationData.prodOrderNo,
-                style: TextStyle(
+                'Order: ${operationData.prodOrderNo}',
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: Color(0xFF0F172A),
                 ),
               ),
               Text(
-                "Operation: " + operationData.operationNo,
+                'Operation: ${operationData.operationNo}',
                 style: TextStyle(
                   fontSize: isPhone ? 13 : 11,
                   color: const Color(0xFF64748B),
@@ -46,31 +50,17 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
               vertical: isPhone ? 6 : 8,
             ),
             decoration: BoxDecoration(
-              color: operationData.operationStatus == 'Running'
-                  ? const Color(0xFFECFDF5)
-                  : operationData.operationStatus == 'Paused'
-                      ? const Color(0xFFFFFBEB)
-                      : const Color(0xFFEFF6FF),
-              border: Border.all(
-                color: operationData.operationStatus == 'Running'
-                    ? const Color(0xFFA7F3D0)
-                    : operationData.operationStatus == 'Paused'
-                        ? const Color(0xFFFDE68A)
-                        : const Color(0xFFBFDBFE),
-              ),
+              color: style.badgeBg,
+              border: Border.all(color: style.badgeBorder),
               borderRadius: BorderRadius.circular(11),
             ),
             child: Text(
-              operationData.operationStatus,
+              style.label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: operationData.operationStatus == 'Running'
-                    ? const Color(0xFF065F46)
-                    : operationData.operationStatus == 'Paused'
-                        ? const Color(0xFF92400E)
-                        : const Color(0xFF1E40AF),
+                color: style.badgeText,
               ),
             ),
           ),

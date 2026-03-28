@@ -33,6 +33,15 @@ OperationStatusStyle operationStatusStyleFromStatus(String status) {
         leftRail: Color(0xFF22C55E),
         label: 'RUNNING',
       );
+    case 'Cancelled':
+      return const OperationStatusStyle(
+        badgeBg: Color(0xFFFDECEC),
+        badgeBorder: Color(0xFFF3A7A7),
+        badgeText: Color(0xFF5F0606),
+        progressColor: Color(0xFFC52222),
+        leftRail: Color(0xFFC52222),
+        label: 'CANCELLED',
+      );
 
     case 'Paused':
       return const OperationStatusStyle(

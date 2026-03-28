@@ -1,5 +1,4 @@
 import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
@@ -19,7 +18,7 @@ import 'presentation/machine/machine_List/machineListPage.dart';
 void main() {
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode, // Set to false in production
+      enabled: false, // Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
