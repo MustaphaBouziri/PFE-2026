@@ -216,6 +216,8 @@ codeunit 50131 "MES Machine Fetch"
 
                     if MESOperationProgress.FindFirst() then begin
                         MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
+                        MESOperationStatusObj.Add('executionId', MESOperationStatus."Execution Id");
+
                         MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
                         if MESExecution."Order Quantity" <> 0 then
                             MESOperationStatusObj.Add('progressPercent',
@@ -376,7 +378,7 @@ codeunit 50131 "MES Machine Fetch"
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
-                                TotalConsumed += MESComponentConsumption."Quantity Consumed";
+                               // TotalConsumed += MESComponentConsumption."Quantity Consumed";
                             until MESComponentConsumption.Next() = 0;
 
                     end;
@@ -387,9 +389,10 @@ codeunit 50131 "MES Machine Fetch"
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
                     BomObj.Add('quantityScanned', TotalScanned);
-                    BomObj.Add('quantityConsumed', TotalConsumed);
-                    BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
+                    //BomObj.Add('quantityConsumed', TotalConsumed);
+                    //BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
+                    BomObj.Add('quantityPer', ProductOrderComponent."Quantity per");
                     BomArr.Add(BomObj);
                     /**
                      {
