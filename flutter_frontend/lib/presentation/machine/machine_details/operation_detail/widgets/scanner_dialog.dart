@@ -6,7 +6,8 @@ import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:provider/provider.dart';
 
 class ScannerWidget extends StatefulWidget {
-  const ScannerWidget({super.key});
+  final String executionId;
+  const ScannerWidget({super.key,required this.executionId});
 
   @override
   State<ScannerWidget> createState() => _ScannerWidgetState();
@@ -131,19 +132,13 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     });
   }
 
-  List<Map<String, dynamic>> jsonScans(List<ItemBarcodeModel> items) {
-    return items
-        .map(
-          (e) => {
-            'itemNo': e.itemNo,
-            'barcode': e.barcodeText,
-            'unitOfMeasure': e.baseUOM,
-            'quantityScanned': e.quantity,
-            'lineNo': 0,
-          },
-        )
-        .toList();
-  }
+  // convert the list items into json to pass to the al
+  /*
+  [
+   {...},
+   {...}
+ ]
+ */
 
   @override
   Widget build(BuildContext context) {
@@ -281,24 +276,27 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                 },
               ),
             ),
-
+            // confirm scans button
             ElevatedButton(
               onPressed: () async {
                 final provider = context.read<MesBarcodeProvider>();
+                //call the toJson methode in the barcode mode
+                //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
+                //then convert toList = [{},{}]
 
-                final scans = jsonScans(items);
+                final scans = items.map((e) => e.toJson()).toList();
 
                 final success = await provider.insertScans(
-                  '568C7259-3686-4E38-B6C1-4A75A4253642',
+                  widget.executionId,
                   scans,
                 );
 
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Inserted successfully ✅')),
+                    const SnackBar(content: Text('Inserted successfully')),
                   );
 
-                  Navigator.pop(context); 
+                  Navigator.pop(context);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(provider.errorMessage ?? 'Error')),

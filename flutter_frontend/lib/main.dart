@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
-import 'package:pfe_mes/presentation/machine/barCode/widgets/scanner_dialog.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';

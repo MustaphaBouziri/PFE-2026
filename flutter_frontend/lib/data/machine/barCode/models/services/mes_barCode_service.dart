@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import '../../../../../core/app_constants.dart';
 import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
 
-
 class MesBarcodeService {
   Future<List<ItemBarcodeModel>> fetchAllBarcodes() async {
     // Use the same POST pattern as MesComponentconsumptionService
@@ -15,7 +14,6 @@ class MesBarcodeService {
     );
 
     if (response.statusCode == 200) {
-      
       final data = jsonDecode(response.body);
       print(data);
       final String valueString = data['value'] ?? '[]';
@@ -27,27 +25,37 @@ class MesBarcodeService {
   }
 
   Future<bool> insertScans(
-  String executionId,
-  List<Map<String, dynamic>> scans,
-) async {
-  final body = jsonEncode({
-    'executionId': executionId,
-    'scansJson': jsonEncode(scans),
-  });
+    String executionId,
+    List<Map<String, dynamic>> scans,
+  ) async {
+    //jsonEncode convert a dart obj into json string
+    // why 2 encode ? the al expect scansJson to be a string that contain JSON array
+    /**
+    {
+    "executionId": "EX123",
+    "scansJson": "[{\"itemNo\":\"A1\",...}, ...]"
+    }
+  */
+    final body = jsonEncode({
+      'executionId': executionId,
+      'scansJson': jsonEncode(scans),
+    });
 
-  final response = await http.post(
-    Uri.parse(AppConstants.insertScans),
-    headers: AppConstants.jsonHeaders,
-    body: body,
-  );
+    final response = await http.post(
+      Uri.parse(AppConstants.insertScans),
+      headers: AppConstants.jsonHeaders,
+      body: body,
+    );
 
-  if (response.statusCode == 200) {
-    final outerJson = jsonDecode(response.body);
-    final innerJson = jsonDecode(outerJson['value']);
-    if (innerJson['value'] == true) return true;
-    throw Exception(innerJson['message'] ?? 'Unknown error');
-  } else {
-    throw Exception('Failed to insert scans: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final result = jsonDecode(data['value'] ?? '{}'); //decode from string to map
+
+      if (result['value'] == true) return true;
+
+      throw Exception(result['message'] ?? 'Unknown error');
+    } else {
+      throw Exception('Failed to insert scans: ${response.statusCode}');
+    }
   }
-}
 }

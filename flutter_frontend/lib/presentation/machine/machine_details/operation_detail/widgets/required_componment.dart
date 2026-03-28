@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
-import 'package:pfe_mes/presentation/machine/barCode/widgets/scanner_dialog.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
 
 class RequiredComponent extends StatelessWidget {
   final List<ComponentConsumptionModel> components;
+  final double totalProduced;
+  final String executionId;
 
-  const RequiredComponent({super.key, required this.components});
+  const RequiredComponent({
+    super.key,
+    required this.components,
+    required this.totalProduced,
+    required this.executionId
+  });
 
   String getStatus(double planned, double scanned) {
     if (scanned == 0) return 'Missing';
@@ -41,12 +48,12 @@ class RequiredComponent extends StatelessWidget {
                   color: Color(0xFF0F172A),
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               ElevatedButton(
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (context) => const ScannerWidget(),
+                    builder: (context) => ScannerWidget(executionId:executionId),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -78,11 +85,15 @@ class RequiredComponent extends StatelessWidget {
               final component = components[index];
 
               final planned = component.plannedQuantity;
-              final scanned = component.quantityScanned;
-              final consumed = component.quantityConsumed;
-              final remaining = component.remainingQuantity;
-
               final isSpecific = component.belongsToThisOperation;
+
+              // how much u consumed of this material
+              final consumed = totalProduced * component.quantityPer;
+              // how qte u scanned of this item
+              final scanned = component.quantityScanned;
+
+              // remaining =  the qte u scanned - what was consumed
+              final remaining = scanned - consumed;
 
               final status = isSpecific ? getStatus(planned, scanned) : '';
 
@@ -146,8 +157,7 @@ class RequiredComponent extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            // Very short and clean format
-                            '$scanned scanned | $remaining left |  $consumed used',
+                            '$scanned scanned | ${consumed.toString()} used | ${remaining.toString()} left',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF64748B),

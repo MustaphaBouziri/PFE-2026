@@ -171,7 +171,9 @@ class ErpMachineOrdersService {
     );
 
     if (response.statusCode == 200) {
+      print(response.body);
       final data = jsonDecode(response.body);
+      
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list

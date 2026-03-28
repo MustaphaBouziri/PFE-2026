@@ -18,7 +18,7 @@ class ItemBarcodeModel {
     required this.lotSize,
     required this.flushingMethod,
     required this.barcodeText,
-    this.quantity=1
+    this.quantity = 1,
   });
 
   factory ItemBarcodeModel.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +31,15 @@ class ItemBarcodeModel {
         lotSize: (json['lotSize'] ?? 0).toDouble(),
         flushingMethod: json['flushingMethod'] ?? '',
         barcodeText: json['barcodeText'] ?? '',
-        
       );
+//convert list item "scans" to json
+  Map<String, dynamic> toJson() {
+    return {
+      'itemNo': itemNo,
+      'barcode': barcodeText,
+      'unitOfMeasure': baseUOM,
+      'quantityScanned': quantity,
+      'lineNo': 0,
+    };
+  }
 }

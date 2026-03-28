@@ -65,7 +65,7 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
               NoInfoAvailable(),
 
             const SizedBox(height: 16),
-            RequiredComponent(components:widget.components)
+            RequiredComponent(components:widget.components,totalProduced: widget.operationData.totalProducedQuantity,executionId:widget.operationData.executionId)
           ],
         ),
       ),
