@@ -329,6 +329,4 @@ class ErpMachineOrdersService {
       yield await fetchProductionCycles(machineNo, prodOrderNo, operationNo);
     }
   }
-
-  
 }

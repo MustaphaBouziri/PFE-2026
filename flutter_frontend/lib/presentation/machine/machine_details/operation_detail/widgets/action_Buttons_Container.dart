@@ -172,13 +172,13 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
     widget.operationData.operationStatus.trim().toLowerCase();
 
     final bool isSupervisor = userRole == 'supervisor';
-    final bool isClosed = ['finished', 'cancelled'].contains(operationStatus);
+    final bool isClosed = ['finished','cancelled'].contains(operationStatus);
 
-    final bool canDeclareProduction = !isClosed;
-    final bool canReportReject = !isClosed;
+    final bool canDeclareProduction = !['finished','cancelled','paused'].contains(operationStatus);
+    final bool canReportReject = !['finished','cancelled','paused'].contains(operationStatus);
     final bool canCloseProductionOrder = /*isSupervisor &&*/ !isClosed;
     final bool canPrintLabel =
-        isClosed || widget.operationData.progressPercent >= 100;
+        ['finished'].contains(operationStatus) || widget.operationData.progressPercent >= 100;
 
     return Container(
       padding: const EdgeInsets.all(16),
