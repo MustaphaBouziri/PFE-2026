@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'changePassForm.dart';
@@ -51,12 +52,12 @@ class ChangePassWebLayout extends StatelessWidget {
               children: [
                 //___________________ LOGO / TITLE ___________________
                 Column(
-                  children: const [
+                  children: [
                     Icon(Icons.factory_outlined, size: 60, color: mainColor),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
-                      "Login Page",
-                      style: TextStyle(
+                      "changePasswordPage".tr(),
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: mainColor,
@@ -80,9 +81,9 @@ class ChangePassWebLayout extends StatelessWidget {
                 const SizedBox(height: 30),
 
                 //___________________ FOOTER ___________________
-                const Text(
-                  "© 2026  - All rights reserved",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                Text(
+                  "copyright".tr(),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),

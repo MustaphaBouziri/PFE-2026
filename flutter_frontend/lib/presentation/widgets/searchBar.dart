@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class GlobalSearchBar extends StatelessWidget {
@@ -40,7 +41,7 @@ class GlobalSearchBar extends StatelessWidget {
                   filled: true,
                   fillColor: Colors.white,
                   prefixIcon: const Icon(Icons.search),
-                  hintText: 'Search',
+                  hintText: 'search'.tr(),
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
@@ -251,8 +252,8 @@ class _ProductionChartState extends State<ProductionChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Production Declarations",
+          Text(
+            "productionDeclarations".tr(),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

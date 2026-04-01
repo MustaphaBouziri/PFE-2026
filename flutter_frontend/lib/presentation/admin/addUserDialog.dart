@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
@@ -64,8 +65,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Add New MES User',
+                   Text(
+                    'addNewMesUser'.tr(),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -87,8 +88,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // employee search
-                    const Text(
-                      'Select Employee',
+                     Text(
+                      'selectEmployee'.tr(),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -205,21 +206,21 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       children: [
                         _roleButton(
                           0,
-                          'Operator',
+                          'operator'.tr(),
                           const Color(0xFF2563EB),
                           const Color(0xFFEFF6FF),
                         ),
                         const SizedBox(width: 10),
                         _roleButton(
                           1,
-                          'Supervisor',
+                          'supervisor'.tr(),
                           const Color(0xFF16A34A),
                           const Color(0xFFF0FDF4),
                         ),
                         const SizedBox(width: 10),
                         _roleButton(
                           2,
-                          'Admin',
+                          'admin'.tr(),
                           const Color(0xFF7C3AED),
                           const Color(0xFFF5F3FF),
                         ),
@@ -229,8 +230,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     const SizedBox(height: 20),
 
                     // work center selection
-                    const Text(
-                      'Select Work Center',
+                     Text(
+                      'selectWorkCenter'.tr(),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -305,9 +306,9 @@ class _AddUserDialogState extends State<AddUserDialog> {
                               selectWorkCenterId == null ||
                               selectedRoleIndex == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                               SnackBar(
                                 content: Text(
-                                  'Please select employee, role, and work center',
+                                  'pleaseSelectEmployeeRoleWorkCenter'.tr(),
                                 ),
                               ),
                             );
@@ -320,8 +321,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           );
                           if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('User added successfully!'),
+                               SnackBar(
+                                content: Text('userAddedSuccessfully'.tr()),
                               ),
                             );
                             Navigator.of(context).pop();
@@ -330,7 +331,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                               SnackBar(
                                 content: Text(
                                   mesUserProvider.errorMessage ??
-                                      'Failed to add user',
+                                      'failedToAddUser'.tr(),
                                 ),
                               ),
                             );
@@ -342,8 +343,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Add User',
+                        child: Text(
+                          'addUser'.tr(),
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -41,15 +42,15 @@ class _LoginPageState extends State<LoginPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Login Failed"),
+          title: Text("loginFailed".tr()),
           content: Text(
             authProvider.errorMessage ??
-                "Unknown error occurred. Please try again.",
+                "unknownError".tr(),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+              child: Text("ok".tr()),
             ),
           ],
         ),
@@ -99,16 +100,16 @@ class _LoginPageState extends State<LoginPage> {
                 if (auth.isLoading)
                   Container(
                     color: Colors.black.withOpacity(0.3),
-                    child: const Center(
+                    child:  Center(
                       child: Card(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('Authenticating...'),
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
+                              Text('authenticating'.tr()),
                             ],
                           ),
                         ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/domain/machines/providers/machineOrders_provider.dart';
@@ -62,7 +63,7 @@ class _MachineHistoryPageState extends State<MachineHistoryPage> {
           });
 
           if (filteredOrdersHistory.isEmpty) {
-            return const Center(child: Text('No History Found'));
+            return Center(child: Text('noHistoryFound'.tr()));
           }
 
           return Column(

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -71,7 +72,7 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : provider.errorMessage != null
           ? Center(child: Text(provider.errorMessage!))
           : machineOrdersList.isEmpty
-          ? const Center(child: Text('No Orders Found'))
+          ?  Center(child: Text('noOrdersFound'.tr()))
           : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

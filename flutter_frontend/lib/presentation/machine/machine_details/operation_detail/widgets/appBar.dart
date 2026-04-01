@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 
@@ -27,7 +28,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Order: ${operationData.prodOrderNo}',
+                'orderLabel'.tr() + '${operationData.prodOrderNo}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -35,7 +36,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               Text(
-                'Operation: ${operationData.operationNo}',
+                'operationLabel'.tr() + '${operationData.operationNo}',
                 style: TextStyle(
                   fontSize: isPhone ? 13 : 11,
                   color: const Color(0xFF64748B),

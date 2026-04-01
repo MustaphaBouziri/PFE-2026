@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
 
@@ -122,11 +123,11 @@ class _AdminPageState extends State<AdminPage> {
           Expanded(
             child: IndexedStack(
               index: _selectedIndex,
-              children: const [
-                AddUserPage(),
-                Center(child: Text('Machines')),
-                Center(child: Text('Reports')),
-                Center(child: Text('Settings')),
+              children: [
+                const AddUserPage(),
+                Center(child: Text('machines'.tr())),
+                Center(child: Text('reports'.tr())),
+                Center(child: Text('settings'.tr())),
               ],
             ),
           ),

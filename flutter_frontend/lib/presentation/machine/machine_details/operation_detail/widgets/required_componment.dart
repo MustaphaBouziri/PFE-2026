@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
@@ -14,10 +15,14 @@ class RequiredComponent extends StatelessWidget {
     required this.executionId
   });
 
+  static const statusMissing = 'missing';
+  static const statusLowStock = 'lowStock';
+  static const statusAvailable = 'available';
+
   String getStatus(double planned, double scanned) {
-    if (scanned == 0) return 'Missing';
-    if (scanned < planned) return 'Low Stock';
-    return 'Available';
+    if (scanned == 0) return statusMissing;
+    if (scanned < planned) return statusLowStock;
+    return statusAvailable;
   }
 
   @override
@@ -40,8 +45,8 @@ class RequiredComponent extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
-                "Required Components",
+              Text(
+                "requiredComponents".tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -66,9 +71,9 @@ class RequiredComponent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  "Scan Item",
-                  style: TextStyle(color: Colors.white),
+                child: Text(
+                  'scanItem'.tr(),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],
@@ -105,18 +110,18 @@ class RequiredComponent extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: !isSpecific
                       ? const Color(0xFFF1F5F9)
-                      : status == 'Available'
+                      : status == statusAvailable
                       ? const Color(0xFFF0FDF4)
-                      : status == 'Low Stock'
+                      : status == statusLowStock
                       ? const Color(0xFFFEFCE8)
                       : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: !isSpecific
                         ? const Color(0xFFCBD5F5).withOpacity(0.2)
-                        : status == 'Available'
+                        : status == statusAvailable
                         ? const Color(0xFF1AA44D).withOpacity(0.2)
-                        : status == 'Low Stock'
+                        : status == statusLowStock
                         ? const Color(0xFFD39D2B).withOpacity(0.2)
                         : const Color(0xFFE03B3B).withOpacity(0.2),
                   ),
@@ -157,7 +162,7 @@ class RequiredComponent extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '$scanned scanned | ${consumed.toString()} used | ${remaining.toString()} left',
+                            '${scanned.toString()} ${'scanned'.tr()} | ${consumed.toString()} ${'used'.tr()} | ${remaining.toString()} ${'left'.tr()}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF64748B),
@@ -169,13 +174,13 @@ class RequiredComponent extends StatelessWidget {
 
                     if (isSpecific)
                       Text(
-                        status,
+                        status.tr(),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: status == 'Available'
+                          color: status == statusAvailable
                               ? const Color(0xFF1AA44D)
-                              : status == 'Low Stock'
+                              : status == statusLowStock
                               ? const Color(0xFFD39D2B)
                               : const Color(0xFFE03B3B),
                         ),

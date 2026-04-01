@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,12 +38,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Password Error"),
-          content: const Text("New passwords do not match. Please try again."),
+          title: Text("passwordError".tr()),
+          content: Text("passwordsDoNotMatch".tr()),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+              child: Text("ok".tr()),
             ),
           ],
         ),
@@ -73,9 +74,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Success"),
-          content: const Text(
-            "Password changed successfully! You can now use your new password.",
+          title: Text("success".tr()),
+          content: Text(
+            "passwordChanged".tr(),
           ),
           actions: [
             TextButton(
@@ -84,7 +85,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 // The main.dart will handle navigation automatically
                 // since needsPasswordChange is now false
               },
-              child: const Text("OK"),
+              child: Text("ok".tr()),
             ),
           ],
         ),
@@ -93,15 +94,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Error"),
+          title: Text("error".tr()),
           content: Text(
             authProvider.errorMessage ??
-                "Password change failed. Please try again.",
+                "passwordChangeFailed".tr(),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+              child: Text("ok".tr()),
             ),
           ],
         ),
@@ -154,7 +155,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 if (auth.isLoading)
                   Container(
                     color: Colors.black.withOpacity(0.3),
-                    child: const Center(
+                    child:  Center(
                       child: Card(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
@@ -163,7 +164,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             children: [
                               CircularProgressIndicator(),
                               SizedBox(height: 16),
-                              Text('Changing password...'),
+                              Text('changingPassword'.tr()),
                             ],
                           ),
                         ),

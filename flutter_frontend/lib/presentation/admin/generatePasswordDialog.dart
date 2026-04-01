@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -58,7 +59,7 @@ class _GeneratePasswordDialogContentState
     if (_generatedPassword.isEmpty) {
       _showResultDialog(
         success: false,
-        message: 'Please generate a password first.',
+        message: 'pleaseGeneratePasswordFirst'.tr(),
       );
       return;
     }
@@ -88,7 +89,7 @@ class _GeneratePasswordDialogContentState
       } else {
         final errorMsg =
             authProvider.errorMessage ??
-            'Password update failed. Please try again.';
+            'passwordUpdateFailed'.tr();
         _showResultDialog(success: false, message: errorMsg);
       }
     } finally {
@@ -113,7 +114,7 @@ class _GeneratePasswordDialogContentState
                   : const Color(0xFFDC2626),
             ),
             const SizedBox(width: 8),
-            Text(success ? 'Success' : 'Failed'),
+            Text(success ? 'success'.tr() : 'failed'.tr()),
           ],
         ),
         content: success
@@ -121,12 +122,12 @@ class _GeneratePasswordDialogContentState
                 text: TextSpan(
                   style: const TextStyle(color: Colors.black87, fontSize: 14),
                   children: [
-                    const TextSpan(text: 'Password for '),
+                     TextSpan(text: 'passwordFor'.tr()),
                     TextSpan(
                       text: widget.userId,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const TextSpan(text: ' was updated.\n\nNew password:\n\n'),
+                     TextSpan(text: 'wasUpdated'.tr()),
                     TextSpan(
                       text: _generatedPassword,
                       style: const TextStyle(
@@ -138,14 +139,14 @@ class _GeneratePasswordDialogContentState
                   ],
                 ),
               )
-            : Text(message ?? 'An unexpected error occurred.'),
+            : Text(message ?? 'unexpectedError'.tr()),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               if (success) Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: Text('ok'.tr()),
           ),
         ],
       ),
@@ -165,8 +166,8 @@ class _GeneratePasswordDialogContentState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Generate Password',
+                 Text(
+                  'generatePassword'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -183,7 +184,7 @@ class _GeneratePasswordDialogContentState
             const SizedBox(height: 4),
 
             Text(
-              'For user: ${widget.userId}',
+              'forUser'.tr() + '${widget.userId}',
               style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
 
@@ -199,7 +200,7 @@ class _GeneratePasswordDialogContentState
               ),
               child: Text(
                 _generatedPassword.isEmpty
-                    ? 'No password generated yet'
+                    ? 'noPasswordGenerated'.tr()
                     : _generatedPassword,
                 style: TextStyle(
                   fontSize: 16,
@@ -224,7 +225,7 @@ class _GeneratePasswordDialogContentState
                           GeneratePasswordDialog.generatePassword(),
                     ),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Generate'),
+                    label: Text('generate'.tr()),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -253,8 +254,8 @@ class _GeneratePasswordDialogContentState
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Confirm',
+                        : Text(
+                            'confirm'.tr(),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

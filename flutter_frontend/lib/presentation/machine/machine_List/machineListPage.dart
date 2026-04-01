@@ -1,7 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/mes_machines_provider.dart';
+import '../../widgets/language_selector.dart';
 import 'MachineCard.dart';
 
 class Machinelistpage extends StatefulWidget {
@@ -42,14 +44,16 @@ class _MachinelistpageState extends State<Machinelistpage> {
               ],
             ),
             const Spacer(),
+            const LanguageSelector(isCompact: true),
             TextButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.logout, size: 16),
-              label: const Text('Logout'),
+              label:  Text('logout'.tr()),
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
             ),
           ],
         ),
+        
       ),
 
       body: StreamBuilder(
@@ -64,7 +68,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
               snapshot.data!; // snapshot.data means the latest emitted value
 
           if (machines.isEmpty) {
-            return const Center(child: Text('no machines found'));
+            return  Center(child: Text('noMachinesFound'.tr()));
           }
 
           return Column(
@@ -73,8 +77,8 @@ class _MachinelistpageState extends State<Machinelistpage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    const Text(
-                      "Machines List",
+                     Text(
+                      "machinesList".tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

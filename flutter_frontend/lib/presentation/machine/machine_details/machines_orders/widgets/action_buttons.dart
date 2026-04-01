@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -67,24 +68,23 @@ class _ActionButtonsState extends State<ActionButtons> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Cancel Order'),
+        title: Text('cancelOrder'.tr()),
         content: Text(
-          'Are you sure you want to cancel order ${widget.order.orderNo}?\n\n'
-              'This will mark the operation as finished and free the machine.',
+          'cancelOrderConfirm'.tr(args: [widget.order.orderNo]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: Text('no'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
             ),
-            child: const Text(
-              'Yes, Cancel',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              'yesCancelOrder'.tr(),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -109,7 +109,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order cancelled successfully.')),
+        SnackBar(content: Text('orderCancelledSuccessfully'.tr())),
       );
     } catch (e) {
       if (!mounted) return;
@@ -127,12 +127,12 @@ class _ActionButtonsState extends State<ActionButtons> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Error'),
+        title: Text('error'.tr()),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text('ok'.tr()),
           ),
         ],
       ),
@@ -157,8 +157,8 @@ class _ActionButtonsState extends State<ActionButtons> {
           size: 16,
           color: Colors.white,
         ),
-        label: const Text(
-          'Start Order',
+        label: Text(
+          'startOrder'.tr(),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -188,8 +188,8 @@ class _ActionButtonsState extends State<ActionButtons> {
         size: 16,
         color: Color(0xFFB0B7C3),
       ),
-      label: const Text(
-        'Start Order',
+      label: Text(
+        'startOrder'.tr(),
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
@@ -222,8 +222,8 @@ class _ActionButtonsState extends State<ActionButtons> {
         ),
       )
           : const Icon(Icons.close_rounded, size: 16),
-      label: const Text(
-        'Close',
+      label: Text(
+        'close'.tr(),
         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
       style: OutlinedButton.styleFrom(
