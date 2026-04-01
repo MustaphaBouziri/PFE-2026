@@ -12,7 +12,7 @@ table 50111 "MES Component Consumption"
 
         field(2; "Execution Id"; Code[50])
         {
-            TableRelation = "MES Operation Execution"."Execution Id";
+            TableRelation = "MES User Execution Interaction"."Execution Id";
             DataClassification = CustomerContent;
         }
 
@@ -46,7 +46,7 @@ table 50111 "MES Component Consumption"
 
         field(7; "Operator Id"; Code[50])
         {
-            TableRelation = "MES User"."User Id";
+            TableRelation = "MES User Execution Interaction"."User Id";
             DataClassification = CustomerContent;
         }
 

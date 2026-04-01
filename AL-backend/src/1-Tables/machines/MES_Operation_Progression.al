@@ -12,7 +12,7 @@ table 50109 "MES Operation Progression"
 
         field(2; "Execution Id"; Code[50])
         {
-            TableRelation = "MES Operation Execution"."Execution Id";
+            TableRelation = "MES User Execution Interaction"."Execution Id";
         }
 
         field(3; "Cycle Quantity"; Decimal)
@@ -32,7 +32,7 @@ table 50109 "MES Operation Progression"
 
         field(6; "Operator Id"; Code[50])
         {
-            TableRelation = "MES User"."User Id";
+            TableRelation = "MES User Execution Interaction"."User Id";
         }
 
         field(7; "Last Updated At"; DateTime)
