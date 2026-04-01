@@ -12,7 +12,7 @@ table 50108 "MES Operation State"
 
         field(2; "Execution Id"; Code[50])
         {
-            TableRelation = "MES Operation Execution"."Execution Id";
+            TableRelation = "MES User Execution Interaction"."Execution Id";
         }
 
         field(3; "Operation Status"; Enum "MES Operation Status")
@@ -22,7 +22,7 @@ table 50108 "MES Operation State"
 
         field(4; "Operator Id"; Code[50])
         {
-            TableRelation = "MES User"."User Id";
+            TableRelation = "MES User Execution Interaction"."User Id";
         }
 
         field(5; "Last Updated At"; DateTime)
