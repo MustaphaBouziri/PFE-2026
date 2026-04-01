@@ -41,7 +41,7 @@ page 50103 "MES User Create API"
                 field(employeeId;     Rec."employee ID")       { }
                 field(authId;         Rec."Auth ID")           { }
                 field(role;           Rec.Role)                { }
-                field(workCenterNo;   Rec."Work Center No.")   { }
+                //field(workCenterNo;   Rec."Work Center No.")   { }
                 field(isActive;       Rec."Is Active")         { }
                 field(needToChangePw; Rec."Need To Change Pw") { }
                 field(createdAt;      Rec."Created At")        { }
@@ -66,8 +66,8 @@ page 50103 "MES User Create API"
         if Rec."employee ID" <> '' then
             if not EmployeeRec.Get(Rec."employee ID") then
                 Clear(EmployeeRec);
-        if Rec."Work Center No." <> '' then
+       /* if Rec."Work Center No." <> '' then
             if not WorkCenterRec.Get(Rec."Work Center No.") then
-                Clear(WorkCenterRec);
+                Clear(WorkCenterRec);*/
     end;
 }

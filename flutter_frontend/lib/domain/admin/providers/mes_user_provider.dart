@@ -28,8 +28,8 @@ class MesUserProvider with ChangeNotifier {
 
   Future<bool> addUser({
     required String employeeId,
-    required String role,
-    required String workCenterNo,
+    required int roleInt,
+    required List<String> workCenterList,
   }) async {
     try {
       isLoading = true;
@@ -38,8 +38,8 @@ class MesUserProvider with ChangeNotifier {
 
       final success = await _service.createMesUser(
         employeeId: employeeId,
-        role: role,
-        workCenterNo: workCenterNo,
+        roleInt: roleInt,
+        workCenterList: workCenterList,
       );
       if (success) {
         await fetchUsers(); // to refresh the mes list user if i dont do it it wont show the new user

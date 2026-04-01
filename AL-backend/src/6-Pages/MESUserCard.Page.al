@@ -56,11 +56,11 @@ page 50142 "MES User Card"
                 }
 
                 // The production work center this user is assigned to.
-                field("Work Center No."; Rec."Work Center No.")
+               /* field("Work Center No."; Rec."Work Center No.")
                 {
                     ApplicationArea = All;
                     ToolTip         = 'The production work center assigned to this user.  The MES frontend scopes its UI to this work center on login.';
-                }
+                }*/
             }
 
             // -----------------------------------------------------------------

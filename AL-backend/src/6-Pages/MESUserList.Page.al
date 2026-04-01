@@ -51,11 +51,11 @@ page 50141 "MES User List"
                 }
 
                 // Production work center assignment.
-                field("Work Center No."; Rec."Work Center No.")
+                /*field("Work Center No."; Rec."Work Center No.")
                 {
                     ApplicationArea = All;
                     ToolTip         = 'The work center this user is assigned to.';
-                }
+                }*/
 
                 // Account lock status — false means the user cannot log in.
                 field("Is Active"; Rec."Is Active")

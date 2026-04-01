@@ -4,7 +4,9 @@ import '../../../data/machine/services/mes_MachineList.dart';
 class MesMachinesProvider {
   final MESMachineListService _service = MESMachineListService();
 
-  Stream<List<MachineModel>> getMachinesStream(String workCenterNo) {
-    return _service.streamMachines(workCenterNo);
+  Stream<Map<String, List<MachineModel>>> streamOrderedMachinePerDepartments(
+    List<String> workCenterList,
+  ) {
+    return _service.streamFetchOrderedMachinePerDepartments(workCenterList);
   }
 }

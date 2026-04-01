@@ -18,12 +18,51 @@ class AddUserDialog extends StatefulWidget {
 class _AddUserDialogState extends State<AddUserDialog> {
   int? selectedEmployeeIndex;
   int? selectedRoleIndex;
-  int? selectedWorkCenterIndex;
+
+  // changed from single to list to support multi select for supervisor
+  List<int> selectedWorkCenterIndexes = [];
+  List<String> selectedWorkCenterIds = [];
+
   String? selectedEmployeeId;
-  String? selectWorkCenterId;
   String? selectedRole;
 
+  // only supervisor can select multiple work centers
+  // operator gets one, admin gets none
+  bool get isMultiSelect => selectedRole == 'Supervisor';
+
   final TextEditingController searchController = TextEditingController();
+
+  // handles work center tap — toggle off if already selected,
+  // clear and replace if operator, just add if supervisor
+  void workCenterSelection(int index, String workCenterId) {
+    setState(() {
+      if (selectedWorkCenterIndexes.contains(index)) {
+        // toggle off — same item tapped again
+        selectedWorkCenterIndexes.remove(index);
+        selectedWorkCenterIds.remove(workCenterId);
+      } else {
+        if (!isMultiSelect && selectedWorkCenterIndexes.isNotEmpty) {
+          // operator already has one selected — clear it first
+          selectedWorkCenterIndexes.clear();
+          selectedWorkCenterIds.clear();
+        }
+        // add the new selection
+        selectedWorkCenterIndexes.add(index);
+        selectedWorkCenterIds.add(workCenterId);
+      }
+    });
+  }
+
+  
+  void _selectRole(int index, String role) {
+    setState(() {
+      selectedRoleIndex = index;
+      selectedRole = role;
+      
+      selectedWorkCenterIndexes = [];
+      selectedWorkCenterIds = [];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +104,9 @@ class _AddUserDialogState extends State<AddUserDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Text(
+                  Text(
                     'addNewMesUser'.tr(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF0F172A),
@@ -88,9 +127,9 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // employee search
-                     Text(
+                    Text(
                       'selectEmployee'.tr(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
@@ -98,7 +137,6 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     ),
                     const SizedBox(height: 10),
 
-                    // search bar wrapped to remove its internal spacing mismatch
                     Theme(
                       data: Theme.of(context).copyWith(
                         inputDecorationTheme: const InputDecorationTheme(
@@ -230,15 +268,26 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     const SizedBox(height: 20),
 
                     // work center selection
-                     Text(
+                    Text(
                       'selectWorkCenter'.tr(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
                       ),
                     ),
+                    // hint shown only for supervisor
+                    if (isMultiSelect)
+                      const Text(
+                        'You can select multiple departments',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
                     const SizedBox(height: 10),
+
+                    // work center list
                     SizedBox(
                       height: 200,
                       child: ListView.separated(
@@ -246,13 +295,12 @@ class _AddUserDialogState extends State<AddUserDialog> {
                         separatorBuilder: (_, __) => const SizedBox(height: 6),
                         itemBuilder: (context, index) {
                           final wc = workCenters[index];
-                          final isSelected = selectedWorkCenterIndex == index;
+                          final isSelected = selectedWorkCenterIndexes.contains(
+                            index,
+                          );
 
                           return GestureDetector(
-                            onTap: () => setState(() {
-                              selectedWorkCenterIndex = index;
-                              selectWorkCenterId = wc.id;
-                            }),
+                            onTap: () => workCenterSelection(index, wc.id),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
@@ -303,10 +351,10 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (selectedEmployeeIndex == null ||
-                              selectWorkCenterId == null ||
+                              selectedWorkCenterIds.isEmpty ||
                               selectedRoleIndex == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(
+                              SnackBar(
                                 content: Text(
                                   'pleaseSelectEmployeeRoleWorkCenter'.tr(),
                                 ),
@@ -316,12 +364,13 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           }
                           final success = await mesUserProvider.addUser(
                             employeeId: selectedEmployeeId!,
-                            role: selectedRole!,
-                            workCenterNo: selectWorkCenterId!,
+                            roleInt: selectedRoleIndex!,
+                            // pass the full list — provider handles sending it to BC
+                            workCenterList: selectedWorkCenterIds,
                           );
                           if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(
+                              SnackBar(
                                 content: Text('userAddedSuccessfully'.tr()),
                               ),
                             );
@@ -345,7 +394,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                         ),
                         child: Text(
                           'addUser'.tr(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
@@ -367,10 +416,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
     final isSelected = selectedRoleIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() {
-          selectedRoleIndex = index;
-          selectedRole = label;
-        }),
+        onTap: () => _selectRole(index, label),
         child: Container(
           height: 44,
           alignment: Alignment.center,
