@@ -48,6 +48,12 @@ class AppConstants {
 
   static const String fetchBom = '${_webServiceBase}fetchBom?$_company';
 
+  static String get scrapCodesUrl =>
+      '$_apiBase/companies($companyId)/scrapCodes';
+
+  static const String declareScrapUrl =
+      '${_webServiceBase}declareScrap?$_company';
+
   // ── finish / cancel / Pause ────────────────────────────────────────────────────────
   // finishOperation  → progress = 100 %  (order fully completed)
   // cancelOperation  → progress < 100 %  (order cut short)
@@ -79,8 +85,5 @@ class AppConstants {
       '${_webServiceBase}fetchAllItemBarcodes?$_company';
 
   //__________insert scan____
-  static const String insertScans =
-      '${_webServiceBase}insertScans?$_company';
-
-  
+  static const String insertScans = '${_webServiceBase}insertScans?$_company';
 }

@@ -67,10 +67,7 @@ class _ProductionChartState extends State<ProductionChart> {
       return const SizedBox();
     }
 
-    final spots = orderedCycles
-        .asMap()
-        .entries
-        .map((entry) {
+    final spots = orderedCycles.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value.cycleQuantity);
     }).toList();
 
@@ -90,7 +87,6 @@ class _ProductionChartState extends State<ProductionChart> {
     final maxY = ((highestValue * 1.2) / interval).ceil() * interval;
     final minY = ((lowestValue * 0.8) / interval).floor() * interval;
 
-
     Widget chartContent = LayoutBuilder(
       builder: (context, constraints) {
         final safePerScreenDataPoints =
@@ -105,134 +101,150 @@ class _ProductionChartState extends State<ProductionChart> {
             : constraints.maxWidth;
 
         return SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            physics: widget.horizontalScrollable
-                ? const BouncingScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.only(
-                right: 20,
-                top: 12,
-              ),
-              child: SizedBox(
-                width: chartWidth,
-                child: LineChart(
-                  LineChartData(
-                    lineTouchData: LineTouchData(
-                      enabled: true,
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipItems: (touchedSpots) {
-                          return touchedSpots.map((spot) {
-                            final index = spot.x.toInt();
-                            if (index < 0 || index >= orderedCycles.length) {
-                              return null;
-                            }
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: widget.horizontalScrollable
+              ? const BouncingScrollPhysics()
+              : const NeverScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              right: 20,
+              top: 12,
+            ),
+            child: SizedBox(
+              width: chartWidth,
+              child: LineChart(
+                LineChartData(
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final index = spot.x.toInt();
+                          if (index < 0 || index >= orderedCycles.length) {
+                            return null;
+                          }
 
-                            final cycle = orderedCycles[index];
-                            return LineTooltipItem(
-                              '${cycle.fullName}\n'
-                                  'Declared ${spot.y.toInt()} units\n'
-                                  'Total: ${cycle.totalProducedQuantity
-                                  .toInt()} units\n'
-                                  '${cycle.fullLabel}',
-                              const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                          final cycle = orderedCycles[index];
+                          return LineTooltipItem(
+                            '${cycle.fullName}\n'
+                                'Declared ${spot.y.toInt()} units\n'
+                                'Total: ${cycle.totalProducedQuantity.toInt()} units\n'
+                                '${cycle.fullLabel}',
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: interval,
+                    verticalInterval: 1,
+                    getDrawingHorizontalLine: (_) =>
+                    const FlLine(color: Color(0xFFE2E8F0), strokeWidth: 1),
+                    getDrawingVerticalLine: (_) =>
+                    const FlLine(color: Color(0xFFE2E8F0), strokeWidth: 1),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 34,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= orderedCycles.length) {
+                            return const SizedBox();
+                          }
+
+                          return SideTitleWidget(
+                            meta: meta,
+                            child: Text(
+                              orderedCycles[index].timeLabel,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF94A3B8),
                               ),
-                            );
-                          }).toList();
+                            ),
+                            fitInside: SideTitleFitInsideData(
+                              enabled: true,
+                              axisPosition: meta.axisPosition,
+                              parentAxisSize: meta.parentAxisSize,
+                              distanceFromEdge: 0,
+                            ),
+                          );
                         },
                       ),
                     ),
-                    gridData: FlGridData(
-                      show: true,
-                      drawVerticalLine: true,
-                      horizontalInterval: interval,
-                      verticalInterval: 1,
-                      getDrawingHorizontalLine: (_) =>
-                      const FlLine(color: Color(0xFFE2E8F0), strokeWidth: 1),
-                      getDrawingVerticalLine: (_) =>
-                      const FlLine(color: Color(0xFFE2E8F0), strokeWidth: 1),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                          interval: 1,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index < 0 || index >= orderedCycles.length) {
-                              return const SizedBox();
-                            }
-
-                            return SideTitleWidget(
-                              meta: meta,
-                              child: Text(
-                                orderedCycles[index].timeLabel,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Color(0xFF94A3B8),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          interval: interval,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, meta) {
-                            return Text(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: interval,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            child: Text(
                               value.toInt().toString(),
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: Color(0xFF94A3B8),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                            fitInside: SideTitleFitInsideData(
+                              enabled: true,
+                              axisPosition: meta.axisPosition,
+                              parentAxisSize: meta.parentAxisSize,
+                              distanceFromEdge: 5,
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    minX: 0,
-                    maxX: (orderedCycles.length - 1).toDouble(),
-                    minY: minY,
-                    maxY: maxY,
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: spots,
-                        isCurved: true,
-                        color: const Color(0xFF2563EB),
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: true),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                        ),
-                      ),
-                    ],
                   ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  minX: 0,
+                  maxX: (orderedCycles.length - 1).toDouble(),
+                  minY: minY,
+                  maxY: maxY,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: const Color(0xFF2563EB),
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            )
+            ),
+          ),
         );
-        },
+      },
     );
 
     return Container(
@@ -254,7 +266,7 @@ class _ProductionChartState extends State<ProductionChart> {
         children: [
           Text(
             "productionDeclarations".tr(),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF0F172A),
@@ -262,7 +274,7 @@ class _ProductionChartState extends State<ProductionChart> {
           ),
           const SizedBox(height: 24),
           AspectRatio(
-            aspectRatio: 1.70,
+            aspectRatio: 1.45,
             child: Padding(
               padding: const EdgeInsets.only(
                 right: 20,

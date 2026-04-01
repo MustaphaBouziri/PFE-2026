@@ -25,7 +25,7 @@ table 50108 "MES Operation State"
             TableRelation = "MES User Execution Interaction"."User Id";
         }
 
-        field(5; "Last Updated At"; DateTime)
+        field(5; "Declared At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
@@ -37,7 +37,7 @@ table 50108 "MES Operation State"
         {
             Clustered = true;
         }
-        key(ExecutionTimeline; "Execution Id", "Last Updated At") { }
+        key(ExecutionTimeline; "Execution Id", "Declared At") { }
     }
 
     trigger OnInsert()
@@ -48,6 +48,6 @@ table 50108 "MES Operation State"
             GuidTxt := Format(CreateGuid());
             "Id" := CopyStr(GuidTxt, 2, 36);
         end;
-        "Last Updated At" := CurrentDateTime();
+        "Declared At" := CurrentDateTime();
     end;
 }

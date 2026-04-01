@@ -35,7 +35,7 @@ table 50109 "MES Operation Progression"
             TableRelation = "MES User Execution Interaction"."User Id";
         }
 
-        field(7; "Last Updated At"; DateTime)
+        field(7; "Declared At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
@@ -47,7 +47,7 @@ table 50109 "MES Operation Progression"
         {
             Clustered = true;
         }
-        key(ExecutionTimeline; "Execution Id", "Last Updated At") { }
+        key(ExecutionTimeline; "Execution Id", "Declared At") { }
     }
 
     trigger OnInsert()
@@ -58,6 +58,6 @@ table 50109 "MES Operation Progression"
             GuidTxt := Format(CreateGuid());
             "Id" := CopyStr(GuidTxt, 2, 36);
         end;
-        "Last Updated At" := CurrentDateTime();
+        "Declared At" := CurrentDateTime();
     end;
 }

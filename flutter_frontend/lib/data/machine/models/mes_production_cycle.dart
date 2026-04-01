@@ -6,7 +6,7 @@ class ProductionCycleModel {
   final String operatorId;
   final String firstName;
   final String lastName;
-  final String lastUpdatedAt;
+  final String declaredAt;
 
   ProductionCycleModel({
     required this.orderQuantity,
@@ -16,32 +16,32 @@ class ProductionCycleModel {
     required this.operatorId,
     required this.firstName,
     required this.lastName,
-    required this.lastUpdatedAt,
+    required this.declaredAt,
   });
 
   String get fullName => '$firstName $lastName'.trim();
 
   String get timeLabel {
     try {
-      final dt = DateTime.parse(lastUpdatedAt);
+      final dt = DateTime.parse(declaredAt);
       final h = dt.hour.toString().padLeft(2, '0');
       final m = dt.minute.toString().padLeft(2, '0');
       return '$h:$m';
     } catch (_) {
-      return lastUpdatedAt;
+      return declaredAt;
     }
   }
 
   String get fullLabel {
     try {
-      final dt = DateTime.parse(lastUpdatedAt);
+      final dt = DateTime.parse(declaredAt);
       final h = dt.hour.toString().padLeft(2, '0');
       final m = dt.minute.toString().padLeft(2, '0');
       final d = dt.day.toString().padLeft(2, '0');
       final mo = dt.month.toString().padLeft(2, '0');
       return '$d/$mo ${h}:${m}';
     } catch (_) {
-      return lastUpdatedAt;
+      return declaredAt;
     }
   }
 
@@ -54,7 +54,7 @@ class ProductionCycleModel {
       operatorId:             json['operatorId']            ?? '',
       firstName:              json['firstName']             ?? '',
       lastName:               json['lastName']              ?? '',
-      lastUpdatedAt:          json['lastUpdatedAt']         ?? '',
+      declaredAt:             json['declaredAt']            ?? '',
     );
   }
 }

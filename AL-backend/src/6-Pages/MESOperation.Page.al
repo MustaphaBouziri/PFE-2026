@@ -33,7 +33,7 @@ page 50108 "MES Operations"
                     ApplicationArea = All;
                 }
 
-                field("Last Updated At"; Rec."Last Updated At")
+                field("Last Updated At"; Rec."Declared At")
                 {
                     ApplicationArea = All;
                     Editable = false; // Updated automatically

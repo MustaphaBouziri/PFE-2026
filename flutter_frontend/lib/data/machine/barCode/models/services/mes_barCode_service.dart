@@ -15,7 +15,6 @@ class MesBarcodeService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print(data);
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list.map((e) => ItemBarcodeModel.fromJson(e)).toList();

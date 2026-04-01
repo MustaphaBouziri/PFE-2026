@@ -19,7 +19,7 @@ class OperationCard extends StatelessWidget {
   String get _prodOrderNo => operationData.prodOrderNo;
   String get _operationNo => operationData.operationNo;
   String get _operationStatus => operationData.operationStatus;
-  String get _lastUpdatedAt => operationData.lastUpdatedAt;
+  String get _lastUpdatedAt => operationData.declaredAt;
 
   double get _progress {
     if (operationData.orderQuantity != 0) {
@@ -75,7 +75,7 @@ class OperationCard extends StatelessWidget {
                           prodOrderNo: _prodOrderNo,
                           operationNo: _operationNo,
                           operationStatus: _operationStatus,
-                          lastUpdatedAt: _lastUpdatedAt,
+                          declaredAt: _lastUpdatedAt,
                           progress: _progress,
                           style: style,
                           onTogglePauseResume: onTogglePauseResume,
@@ -85,7 +85,7 @@ class OperationCard extends StatelessWidget {
                           prodOrderNo: _prodOrderNo,
                           operationNo: _operationNo,
                           operationStatus: _operationStatus,
-                          lastUpdatedAt: _lastUpdatedAt,
+                          declaredAt: _lastUpdatedAt,
                           progress: _progress,
                           style: style,
                           onTogglePauseResume: onTogglePauseResume,

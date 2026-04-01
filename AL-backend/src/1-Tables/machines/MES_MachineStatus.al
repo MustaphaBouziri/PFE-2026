@@ -49,9 +49,9 @@ table 50107 "MES Machine Status"
         }
 
         // UTC timestamp — set on every insert to track when the status was recorded.
-        field(5; "Last Updated At"; DateTime)
+        field(5; "Updated At"; DateTime)
         {
-            Caption = 'Last Updated At';
+            Caption = 'Updated At';
             DataClassification = SystemMetadata;
         }
     }
@@ -63,7 +63,7 @@ table 50107 "MES Machine Status"
             Clustered = true;
         }
         key(MachineKey; "Machine No.") { }
-        key(MachineTimeline; "Machine No.", "Last Updated At") { }
+        key(MachineTimeline; "Machine No.", "Updated At") { }
     }
 
     trigger OnInsert()
@@ -74,7 +74,7 @@ table 50107 "MES Machine Status"
             GuidTxt := Format(CreateGuid());
             "Id" := CopyStr(GuidTxt, 2, 36);
         end;
-        "Last Updated At" := CurrentDateTime();
+        "Updated At" := CurrentDateTime();
     end;
 }
 

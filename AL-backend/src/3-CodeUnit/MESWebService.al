@@ -5,7 +5,7 @@ codeunit 50126 "MES Web Service"
         MachineFetch: Codeunit "MES Machine Fetch";
         MachineWrite: Codeunit "MES Machine Write";
 
-
+    // These are the functions that handle authentication and user administration.
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
     begin
@@ -50,6 +50,7 @@ codeunit 50126 "MES Web Service"
         exit(UnboundActions.AdminSetActive(token, userId, isActive));
     end;
 
+    // These are the functions that fetch and read MES data.
     procedure FetchMachines(workCenterNo: Text): Text
     begin
         exit(MachineFetch.FetchMachines(workCenterNo));
@@ -58,11 +59,6 @@ codeunit 50126 "MES Web Service"
     procedure getMachineOrders(machineNo: Text): Text
     begin
         exit(MachineFetch.getMachineOrders(machineNo));
-    end;
-
-    procedure startOperation(prodOrderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
-    begin
-        exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo));
     end;
 
     procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
@@ -75,11 +71,6 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchOperationLiveData(machineNo, prodOrderNo, operationNo));
     end;
 
-    procedure declareProduction(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
-    begin
-        exit(MachineWrite.declareProduction(machineNo, prodOrderNo, operationNo, input));
-    end;
-
     procedure fetchProductionCycles(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
         exit(MachineFetch.fetchProductionCycles(machineNo, prodOrderNo, operationNo));
@@ -88,6 +79,22 @@ codeunit 50126 "MES Web Service"
     procedure fetchBom(prodOrderNo: Code[20]; operationNo: Code[10]): Text
     begin
         exit(MachineFetch.fetchBom(prodOrderNo, operationNo));
+    end;
+
+    procedure fetchAllItemBarcodes(): Text
+    begin
+        exit(MachineFetch.fetchAllItemBarcodes())
+    end;
+
+    // These are the functions that insert, update, and write MES operation data.
+    procedure startOperation(prodOrderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
+    begin
+        exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo));
+    end;
+
+    procedure declareProduction(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
+    begin
+        exit(MachineWrite.declareProduction(machineNo, prodOrderNo, operationNo, input));
     end;
 
     procedure finishOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
@@ -110,20 +117,18 @@ codeunit 50126 "MES Web Service"
         exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo));
     end;
 
-    procedure fetchAllItemBarcodes(): Text
-    begin
-        exit(MachineFetch.fetchAllItemBarcodes())
-    end;
-
     procedure insertScans(executionId: Code[50]; scansJson: Text): Text
     begin
         exit(MachineWrite.insertScans(executionId, scansJson));
     end;
 
-
-
-
-
-
-
+    procedure declareScrap(
+        executionId: Code[50];
+        description: Text;
+        scrapCode: Code[10];
+        quantity: Decimal
+    ): Text
+    begin
+        exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity))
+    end;
 }

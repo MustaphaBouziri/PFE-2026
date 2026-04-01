@@ -10,7 +10,7 @@ class OperationNarrowLayout extends StatelessWidget {
   final String prodOrderNo;
   final String operationNo;
   final String operationStatus;
-  final String? lastUpdatedAt;
+  final String? declaredAt;
   final double progress;
   final OperationStatusStyle style;
   final VoidCallback? onTogglePauseResume;
@@ -20,7 +20,7 @@ class OperationNarrowLayout extends StatelessWidget {
     required this.prodOrderNo,
     required this.operationNo,
     required this.operationStatus,
-    this.lastUpdatedAt,
+    this.declaredAt,
     required this.progress,
     required this.style,
     this.onTogglePauseResume,
@@ -37,7 +37,7 @@ class OperationNarrowLayout extends StatelessWidget {
           style: style,
         ),
         const SizedBox(height: 12),
-        OperationInfoGrid(lastUpdatedAt: lastUpdatedAt),
+        OperationInfoGrid(lastUpdatedAt: declaredAt),
         const SizedBox(height: 12),
         OperationProgressBar(progress: progress, style: style),
         const SizedBox(height: 8),
