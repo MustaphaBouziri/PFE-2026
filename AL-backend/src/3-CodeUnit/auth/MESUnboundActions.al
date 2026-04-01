@@ -65,8 +65,10 @@ codeunit 50125 "MES Unbound Actions"
     var
         TokenRec: Record "MES Auth Token";
         U: Record "MES User";
+        WCRec: Record "MES User Work Center";
         UserIdCode: Code[50];
         OutJ: JsonObject;
+        WCArr: JsonArray; 
     begin
         if (userId = '') or (password = '') then
             exit(BuildError('Invalid request', 'Username and password are required'));
@@ -87,13 +89,19 @@ codeunit 50125 "MES Unbound Actions"
         if not U.Get(TokenRec."User Id") then
             exit(BuildError('Internal error', 'User data not found after login'));
 
+       WCRec.SetRange("User Id", U."User Id");
+        if WCRec.FindSet() then
+        repeat
+            WCArr.Add(WCRec."Work Center No.");
+        until WCRec.Next() = 0;
+
         OutJ.Add('success', true);
         OutJ.Add('token', Format(TokenRec."Token"));
         OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
         OutJ.Add('userId', U."User Id");
         OutJ.Add('name', U."Auth ID");
         OutJ.Add('role', Format(U.Role));
-        OutJ.Add('workCenterNo', U."Work Center No.");
+        OutJ.Add('workCenters', WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
 
         exit(JsonToText(OutJ));
@@ -126,7 +134,10 @@ codeunit 50125 "MES Unbound Actions"
     var
         U: Record "MES User";
         T: Record "MES Auth Token";
+        WCRec: Record "MES User Work Center";
+        WCArr: JsonArray;
         OutJ: JsonObject;
+        
     begin
         // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
         if not AuthMgt.ValidateToken(token, U, T) then
@@ -134,12 +145,19 @@ codeunit 50125 "MES Unbound Actions"
 
         // Write Last Seen At OUTSIDE the validation path.
         AuthMgt.TouchToken(T);
+        WCRec.SetRange("User Id", U."User Id");
+       // get all work centers of this user and put them into a json list
+        if WCRec.FindSet() then
+        repeat
+            WCArr.Add(WCRec."Work Center No.");
+            //WCArr = ["WC01", "WC02"]
+        until WCRec.Next() = 0;
 
         OutJ.Add('success', true);
         OutJ.Add('userId', U."User Id");
         OutJ.Add('name', U."Auth ID");
         OutJ.Add('role', Format(U.Role));
-        OutJ.Add('workCenterNo', U."Work Center No.");
+        OutJ.Add('workCenters', WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
         OutJ.Add('isActive', U."Is Active");
 
@@ -186,20 +204,24 @@ codeunit 50125 "MES Unbound Actions"
     ///         the POST API page (MES User Create API, page 50103).
     /// </summary>
     procedure AdminCreateUser(
-        token: Text;
+       // token: Text;
         userId: Text;
         employeeId: Text;
         authId: Text;
         roleInt: Integer;
-        workCenterNo: Text): Text
+        workCenterListJson: Text): Text
     var
         Role: Enum "MES User Role";
+        MESUserWC: Record "MES User Work Center";
+        MESUser: Record "MES User";
         OutJ: JsonObject;
         UserIdCode: Code[50];
         AuthIdCode: Code[50];
         EmployeeIdCode: Code[50];
         WCCode: Code[20];
         AdminUserId: Code[50];
+        WCArr: JsonArray;
+        WCToken: JsonToken;
     begin
         // ── Validate required fields ──────────────────────────────────────────
         if userId = '' then
@@ -221,14 +243,22 @@ codeunit 50125 "MES Unbound Actions"
         UserIdCode := CopyStr(userId, 1, 50);
         AuthIdCode := CopyStr(authId, 1, 50);
         EmployeeIdCode := CopyStr(employeeId, 1, 50);
-        WCCode := CopyStr(workCenterNo, 1, 20);
+
 
         // Step 1 — read-only admin token validation inside a TryFunction.
-        if not TryValidateAdminToken(token, AdminUserId) then
-            exit(BuildErrorFromLastError('User creation failed'));
+        //if not TryValidateAdminToken(token, AdminUserId) then
+           // exit(BuildErrorFromLastError('User creation failed'));
 
         // Step 2 — Insert happens OUTSIDE the TryFunction.
-        AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role, WCCode);
+        AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role);
+        WCArr.ReadFrom(workCenterListJson);
+        foreach WCToken in WCArr do begin
+            WCCode := CopyStr(WCToken.AsValue().AsText(), 1, 20);
+            MESUserWC.Init();
+            MESUserWC."User Id" := UserIdCode;
+            MESUserWC."Work Center No." := WCCode;
+            MESUserWC.Insert(true);
+        end;
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User created successfully');
@@ -253,7 +283,7 @@ codeunit 50125 "MES Unbound Actions"
     begin
         if (userId = '') or (newPassword = '') then
             exit(BuildError('Invalid request', 'User ID and new password are required'));
-            
+
         UserIdCode := CopyStr(userId, 1, 50);
 
         // Step 1 — read-only admin token validation inside a TryFunction.
@@ -383,5 +413,5 @@ codeunit 50125 "MES Unbound Actions"
         exit(BuildError(ErrorCode, Msg));
     end;
 
-    
+
 }

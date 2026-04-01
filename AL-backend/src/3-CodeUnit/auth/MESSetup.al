@@ -42,8 +42,8 @@ codeunit 50115 "MES Setup"
             'ADMIN',                          // User Id      
             'AC',                             // Employee ID 
             'AUTH-ADMIN01',                   // Auth ID      — external identity ref
-            Enum::"MES User Role"::Admin,     // Role         — full admin access
-            '');                              // Work Center  — not assigned to one WC
+            Enum::"MES User Role"::Admin     // Role         — full admin access
+            );                              // Work Center  — not assigned to one WC
 
         // Sets the temporary password and marks Need To Change Pw = true.
         AuthMgt.SetPassword(AdminId, TempPassword, true);

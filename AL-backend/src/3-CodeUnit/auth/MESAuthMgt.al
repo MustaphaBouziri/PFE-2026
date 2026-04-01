@@ -49,8 +49,8 @@ codeunit 50111 "MES Auth Mgt"
         UserId: Code[50];
         EmployeeID: Code[50];
         AuthID: Text[100];
-        Role: Enum "MES User Role";
-        WorkCenterNo: Code[20])
+        Role: Enum "MES User Role"
+        )
     var
         U: Record "MES User";
     begin
@@ -64,7 +64,6 @@ codeunit 50111 "MES Auth Mgt"
         U."employee ID" := EmployeeID;
         U."Auth ID" := AuthID;
         U.Role := Role;
-        U."Work Center No." := WorkCenterNo;
         U."Is Active" := true;
         U."Need To Change Pw" := true;
         U."Created At" := CurrentDateTime();

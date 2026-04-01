@@ -42,7 +42,7 @@ page 50101 "MES User API"
                 field(employeeId;     Rec."employee ID")       { Caption = 'Employee ID'; }
                 field(role;           Rec.Role)                { Caption = 'Role';        }
                 field(authId;         Rec."Auth ID")           { }
-                field(workCenterNo;   Rec."Work Center No.")   { }
+                //field(workCenterNo;   Rec."Work Center No.")   { }
                 field(isActive;       Rec."Is Active")         { }
                 field(needToChangePw; Rec."Need To Change Pw") { }
                 field(createdAt;      Rec."Created At")        { }
@@ -68,7 +68,7 @@ page 50101 "MES User API"
         Clear(WorkCenterRec);
         if Rec."employee ID" <> '' then
             if EmployeeRec.Get(Rec."employee ID") then;
-        if Rec."Work Center No." <> '' then
-            if WorkCenterRec.Get(Rec."Work Center No.") then;
+       // if Rec."Work Center No." <> '' then
+          //  if WorkCenterRec.Get(Rec."Work Center No.") then;
     end;
 }

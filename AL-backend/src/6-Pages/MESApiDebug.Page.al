@@ -110,7 +110,7 @@ page 50140 "MES API Debug"
                 {
                     ApplicationArea = All; Caption = 'Admin: Create User';
                     Image = User; Promoted = true; PromotedCategory = Process;
-                    trigger OnAction() begin LastResponse := AuthAPI.AdminCreateUser(Token, UserId, EmployeeId, AuthId, RoleInt, WorkCenterNo); end;
+                    trigger OnAction() begin LastResponse := AuthAPI.AdminCreateUser( UserId, EmployeeId, AuthId, RoleInt, WorkCenterNo); end;
                 }
                 action(AdminSetPassword)
                 {

@@ -29,14 +29,13 @@ codeunit 50126 "MES Web Service"
     end;
 
     procedure AdminCreateUser(
-        token: Text;
         userId: Text;
         employeeId: Text;
         authId: Text;
         roleInt: Integer;
-        workCenterNo: Text): Text
+        workCenterListJson: Text): Text
     begin
-        exit(UnboundActions.AdminCreateUser(token, userId, employeeId, authId, roleInt, workCenterNo));
+        exit(UnboundActions.AdminCreateUser(userId, employeeId, authId, roleInt,workCenterListJson));
     end;
 
     [NonDebuggable]
