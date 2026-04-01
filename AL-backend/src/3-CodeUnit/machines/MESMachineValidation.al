@@ -109,6 +109,39 @@ codeunit 50134 "MES Machine Validation"
             Error('Operation is already finished or cancelled.');
     end;
 
+    [TryFunction]
+    procedure TryDeclareScrap(
+    executionId: Code[50];
+    scrapCode: Code[10];
+    quantity: Decimal
+)
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESOperationState: Record "MES Operation State";
+        ScrapRec: Record Scrap;
+    begin
+        // 1. Execution must exist
+        if not MESExecution.Get(executionId) then
+            Error('Execution %1 not found.', executionId);
+
+        // 2. Operation must be Running (not Paused/Finished/Cancelled)
+        GetLatestOperationStatus(executionId, MESOperationState);
+        if MESOperationState."Operation Status" in [
+            MESOperationState."Operation Status"::Finished,
+            MESOperationState."Operation Status"::Cancelled,
+            MESOperationState."Operation Status"::Paused
+        ] then
+            Error('Cannot declare scrap on a finished or cancelled operation.');
+
+        // 3. Scrap code must exist
+        if not ScrapRec.Get(scrapCode) then
+            Error('Scrap code %1 does not exist.', scrapCode);
+
+        // 4. Quantity must be positive
+        if quantity <= 0 then
+            Error('Scrap quantity must be greater than zero.');
+    end;
+
     procedure EnsureNoRunningOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10])
     var
         MESExecution: Record "MES Operation Execution";

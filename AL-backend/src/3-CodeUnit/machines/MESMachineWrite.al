@@ -156,14 +156,15 @@ codeunit 50132 "MES Machine Write"
         MESExecution: Record "MES Operation Execution";
         MESConsumption: Record "MES Component Consumption";
         JsonHelper: Codeunit "MES Json Helper";
+        MachineInsert: Codeunit "MES Machine Insert";
 
         ResultJson: JsonObject;
         ScansArr: JsonArray;//[{}]the array that hold the array of scans objs from he input
         ScanToken: JsonToken;//used to iterate over the array,jsonTocken is a generic representation of any json element object array value... act like a cursor
         ScanObj: JsonObject;//{} jsonObkect we extract from each token to access the fields
-       
-       // imagin these like blank paper with no type
-       //using a token allows us to later ask ''what type is this?'' and convert it
+
+        // imagin these like blank paper with no type
+        //using a token allows us to later ask ''what type is this?'' and convert it
         ItemNoToken: JsonToken;
         BarcodeToken: JsonToken;
         UOMToken: JsonToken;
@@ -173,15 +174,15 @@ codeunit 50132 "MES Machine Write"
         QtyScanned: Decimal;
         LineNo: Integer;
     begin
-         /**
-         request look like :
-            {
-              "executionId": "EX123",
-              "scansJson": "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
-            }
-         */
+        /**
+        request look like :
+           {
+             "executionId": "EX123",
+             "scansJson": "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
+           }
+        */
 
-       //  first we check if the execution id exist
+        //  first we check if the execution id exist
         if not MESExecution.Get(executionId) then begin
             ResultJson.Add('value', false);
             ResultJson.Add('message', 'Execution not found');
@@ -218,9 +219,40 @@ codeunit 50132 "MES Machine Write"
 
             MESConsumption.Insert(true);
         end;
+        MachineInsert.EnsureUserExecutionInteraction(executionId);
 
         ResultJson.Add('value', true);
         ResultJson.Add('message', 'Inserted successfully');
+
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    procedure declareScrap(
+    executionId: Code[50];
+    description: Text;
+    scrapCode: Code[10];
+    quantity: Decimal        // add this parameter
+): Text
+    var
+        ResultJson: JsonObject;
+        Success: Boolean;
+        ErrorMessage: Text;
+        MachineValidation: Codeunit "MES Machine Validation";
+        MachineInsert: Codeunit "MES Machine Insert";
+        JsonHelper: Codeunit "MES Json Helper";
+    begin
+        ClearLastError();
+
+        Success := MachineValidation.TryDeclareScrap(executionId, scrapCode, quantity);
+
+        if Success then begin
+            MachineInsert.InsertScrapRecord(executionId, scrapCode, description, quantity);
+            ResultJson.Add('value', true);
+        end else begin
+            ErrorMessage := GetLastErrorText();
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', ErrorMessage);
+        end;
 
         exit(JsonHelper.JsonToText(ResultJson));
     end;
