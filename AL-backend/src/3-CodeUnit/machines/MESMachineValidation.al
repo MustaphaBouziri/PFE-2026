@@ -207,7 +207,7 @@ codeunit 50134 "MES Machine Validation"
     procedure GetLatestOperationStatus(executionId: Code[50]; var MESOperationState: Record "MES Operation State")
     begin
         MESOperationState.Reset();
-        MESOperationState.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationState.SetCurrentKey("Execution Id", "Declared At");
         MESOperationState.SetRange("Execution Id", executionId);
         MESOperationState.Ascending(false);
         MESOperationState.FindFirst();

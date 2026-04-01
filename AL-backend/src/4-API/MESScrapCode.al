@@ -1,12 +1,12 @@
-page 50120 "MES Reason Code API"
+page 50120 "MES scrap Code API"
 {
     PageType = API;
-    SourceTable = "Reason Code";
+    SourceTable = "scrap";
     APIPublisher = 'yourcompany';
     APIGroup = 'v1';
     APIVersion = 'v1.0';
-    EntityName = 'reasonCode';
-    EntitySetName = 'reasonCodes';
+    EntityName = 'scrapCode';
+    EntitySetName = 'scrapCodes';
     DelayedInsert = true;
     Editable = false;
 
@@ -16,8 +16,8 @@ page 50120 "MES Reason Code API"
         {
             repeater(Group)
             {
-                field(Code; Rec.Code) {}
-                field(Description; Rec.Description) {}
+                field(code; Rec.Code) { }
+                field(description; Rec.Description) { }
             }
         }
     }

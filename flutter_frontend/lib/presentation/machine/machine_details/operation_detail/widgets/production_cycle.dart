@@ -23,7 +23,7 @@ class _ProductionCycleState extends State<ProductionCycle> {
 
   @override
   Widget build(BuildContext context) {
-    final cycles = widget.cycles.where((c) => c.cycleQuantity > 0).toList();
+    final cycles = widget.cycles.where((c) => c.totalProducedQuantity > 0).toList();
 
     if (cycles.isEmpty) {
       return Container(

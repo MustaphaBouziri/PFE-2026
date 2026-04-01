@@ -66,7 +66,7 @@ page 50143 "MES Machine List"
                     MESMachineStatus.Init();
                     MESMachineStatus."Machine No." := Rec."No.";
                     MESMachineStatus.Status := MESMachineStatus.Status::Working;
-                    MESMachineStatus."Last Updated At" := CurrentDateTime();
+                    MESMachineStatus."Updated At" := CurrentDateTime();
                     MESMachineStatus.Insert(true);
                 end;
             }
@@ -83,7 +83,7 @@ page 50143 "MES Machine List"
                     MESMachineStatus.Init();
                     MESMachineStatus."Machine No." := Rec."No.";
                     MESMachineStatus.Status := MESMachineStatus.Status::Idle;
-                    MESMachineStatus."Last Updated At" := CurrentDateTime();
+                    MESMachineStatus."Updated At" := CurrentDateTime();
                     MESMachineStatus.Insert(true);
                 end;
             }

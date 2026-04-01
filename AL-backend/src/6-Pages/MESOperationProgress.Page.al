@@ -48,7 +48,7 @@ page 50109 "MES Operation Progression"
                     ApplicationArea = All;
                 }
 
-                field("Last Updated At"; Rec."Last Updated At")
+                field("Last Updated At"; Rec."Declared At")
                 {
                     ApplicationArea = All;
                     Editable = false;

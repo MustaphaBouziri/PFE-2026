@@ -14,6 +14,7 @@ import '/domain/auth/providers/auth_provider.dart';
 import '/domain/machines/providers/machineOrders_provider.dart';
 import 'domain/admin/providers/erp_employee_provider.dart';
 import 'domain/machines/providers/mes_machines_provider.dart';
+import 'domain/machines/providers/mes_scrap_provider.dart';
 import 'presentation/admin/AddUserPage.dart';
 import 'presentation/auth/ChangePassword/changePassPage.dart';
 import 'presentation/auth/Login/login_page.dart';
@@ -38,6 +39,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
             ChangeNotifierProvider(create: (_) => MachineordersProvider()),
             ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
+            ChangeNotifierProvider(create: (_) => MesScrapProvider()),
             Provider(create: (_) => MesMachinesProvider()),
             Provider(create: (_)=> MesComponentconsumptionProvider())
           ],

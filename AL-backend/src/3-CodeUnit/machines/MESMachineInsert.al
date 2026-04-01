@@ -201,7 +201,7 @@ codeunit 50133 "MES Machine Insert"
     procedure GetLatestProgression(executionId: Code[50]; var MESOperationProgress: Record "MES Operation Progression")
     begin
         MESOperationProgress.Reset();
-        MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+        MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
         MESOperationProgress.SetRange("Execution Id", executionId);
         MESOperationProgress.Ascending(false);
         MESOperationProgress.FindFirst();

@@ -22,7 +22,7 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('currentOrder', 'No operator yet');
 
                 MESMachineStatus.Reset();
-                MESMachineStatus.SetCurrentKey("Machine No.", "Last Updated At");
+                MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
                 MESMachineStatus.SetRange("Machine No.", Machine."No.");
                 MESMachineStatus.Ascending(false);  // most recent first
 
@@ -97,7 +97,7 @@ codeunit 50131 "MES Machine Fetch"
         EndDateTime: DateTime;
         StartDateTime: DateTime;
         CurrentOperationStatus: Text;
-        CurrentLastUpdatedAt: DateTime;
+        CurrentDeclaredAt: DateTime;
         JsonHelper: Codeunit "MES Json Helper";
     begin
         Clear(MESOperationStatusArr);
@@ -108,7 +108,7 @@ codeunit 50131 "MES Machine Fetch"
         if MESExecution.FindSet() then
             repeat
                 MESOperationStatus.Reset();
-                MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+                MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
                 MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
                 MESOperationStatus.Ascending(false);
 
@@ -130,19 +130,19 @@ codeunit 50131 "MES Machine Fetch"
                         Clear(StartDateTime);
                         Clear(EndDateTime);
                         CurrentOperationStatus := Format(MESOperationStatus."Operation Status");
-                        CurrentLastUpdatedAt := MESOperationStatus."Last Updated At";
+                        CurrentDeclaredAt := MESOperationStatus."Declared At";
 
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Running);
                         if MESOperationStatus.FindLast() then
-                            StartDateTime := MESOperationStatus."Last Updated At";
+                            StartDateTime := MESOperationStatus."Declared At";
 
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Finished);
                         if MESOperationStatus.FindFirst() then
-                            EndDateTime := MESOperationStatus."Last Updated At";
+                            EndDateTime := MESOperationStatus."Declared At";
 
                         MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Cancelled);
                         if MESOperationStatus.FindFirst() then
-                            EndDateTime := MESOperationStatus."Last Updated At";
+                            EndDateTime := MESOperationStatus."Declared At";
 
                         MESOperationStatus.SetRange("Operation Status");
 
@@ -154,10 +154,10 @@ codeunit 50131 "MES Machine Fetch"
                         MESOperationStatusObj.Add('operationStatus', CurrentOperationStatus);
                         MESOperationStatusObj.Add('startDateTime', Format(StartDateTime));
                         MESOperationStatusObj.Add('endDateTime', Format(EndDateTime));
-                        MESOperationStatusObj.Add('lastUpdatedAt', Format(CurrentLastUpdatedAt));
+                        MESOperationStatusObj.Add('declaredAt', Format(CurrentDeclaredAt));
 
                         MESOperationProgress.Reset();
-                        MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+                        MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                         MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
                         MESOperationProgress.Ascending(false);
 
@@ -198,7 +198,7 @@ codeunit 50131 "MES Machine Fetch"
 
         if MESExecution.FindFirst() then begin
             MESOperationStatus.Reset();
-            MESOperationStatus.SetCurrentKey("Execution Id", "Last Updated At");
+            MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
             MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
             MESOperationStatus.Ascending(false);
 
@@ -210,7 +210,7 @@ codeunit 50131 "MES Machine Fetch"
                     MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
 
                     MESOperationProgress.Reset();
-                    MESOperationProgress.SetCurrentKey("Execution Id", "Last Updated At");
+                    MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                     MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
                     MESOperationProgress.Ascending(false);
 
@@ -256,7 +256,7 @@ codeunit 50131 "MES Machine Fetch"
             exit(JsonHelper.JsonToTextArr(CycleArr));
 
         OperationCycle.Reset();
-        OperationCycle.SetCurrentKey("Execution Id", "Last Updated At");
+        OperationCycle.SetCurrentKey("Execution Id", "Declared At");
         OperationCycle.SetRange("Execution Id", MESExecution."Execution Id");
         OperationCycle.Ascending(false);
 
@@ -269,7 +269,7 @@ codeunit 50131 "MES Machine Fetch"
                 CycleObj.Add('totalProducedQuantity', OperationCycle."Total Produced Quantity");
                 CycleObj.Add('scrapQuantity', OperationCycle."Scrap Quantity");
                 CycleObj.Add('operatorId', OperationCycle."Operator Id");
-                CycleObj.Add('lastUpdatedAt', OperationCycle."Last Updated At");
+                CycleObj.Add('declaredAt', OperationCycle."Declared At");
 
                 if MESUser.Get(OperationCycle."Operator Id") then begin
                     if Employee.Get(MESUser."Employee ID") then begin
@@ -378,7 +378,7 @@ codeunit 50131 "MES Machine Fetch"
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
-                               // TotalConsumed += MESComponentConsumption."Quantity Consumed";
+                            // TotalConsumed += MESComponentConsumption."Quantity Consumed";
                             until MESComponentConsumption.Next() = 0;
 
                     end;

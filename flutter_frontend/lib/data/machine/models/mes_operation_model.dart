@@ -5,7 +5,7 @@ class OperationStatusAndProgressModel {
   final String operationStatus;
   final String startDateTime;
   final String endDateTime;
-  final String lastUpdatedAt;
+  final String declaredAt;
   final double totalProducedQuantity;
   final double scrapQuantity;
   final double orderQuantity;
@@ -20,7 +20,7 @@ class OperationStatusAndProgressModel {
     required this.operationStatus,
     required this.startDateTime,
     required this.endDateTime,
-    required this.lastUpdatedAt,
+    required this.declaredAt,
     required this.totalProducedQuantity,
     required this.scrapQuantity,
     required this.orderQuantity,
@@ -37,7 +37,7 @@ class OperationStatusAndProgressModel {
       operationStatus: json['operationStatus'] ?? '',
       startDateTime: json['startDateTime'] ?? '',
       endDateTime: json['endDateTime'] ?? '',
-      lastUpdatedAt: json['lastUpdatedAt'] ?? '',
+      declaredAt: json['declaredAt'] ?? '',
       totalProducedQuantity: (json['totalProducedQuantity'] as num? ?? 0)
           .toDouble(),
       scrapQuantity: (json['scrapQuantity'] as num? ?? 0).toDouble(),
@@ -57,7 +57,7 @@ class OperationStatusAndProgressModel {
         'operationStatus: $operationStatus, '
         'startDateTime: $startDateTime, '
         'endDateTime: $endDateTime, '
-        'lastUpdatedAt: $lastUpdatedAt, '
+        'lastUpdatedAt: $declaredAt, '
         'totalProducedQuantity: $totalProducedQuantity, '
         'scrapQuantity: $scrapQuantity, '
         'orderQuantity: $orderQuantity, '
