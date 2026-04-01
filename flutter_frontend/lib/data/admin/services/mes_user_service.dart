@@ -27,17 +27,19 @@ class MesUserService {
 
   Future<bool> createMesUser({
     required String employeeId,
-    required String role,
-    required String workCenterNo,
+    required int roleInt,
+    required List<String> workCenterList,
   }) async {
     final body = jsonEncode({
-      'employeeId': employeeId,
-      'role': role,
-      'workCenterNo': workCenterNo,
+    'userId': employeeId,
+    'employeeId': employeeId,
+    'authId': employeeId,
+    'roleInt': roleInt,
+    'workCenterListJson': jsonEncode(workCenterList),
     });
 
     final response = await http.post(
-      Uri.parse(AppConstants.createMesUserUrl),
+      Uri.parse(AppConstants.AdminCreateUser),
       headers:AppConstants.jsonHeaders,
       body: body,
     );

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/mes_machines_provider.dart';
@@ -48,16 +49,16 @@ class _MachinelistpageState extends State<Machinelistpage> {
             TextButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.logout, size: 16),
-              label:  Text('logout'.tr()),
+              label: Text('logout'.tr()),
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
             ),
           ],
         ),
-        
       ),
 
       body: StreamBuilder(
-        stream: provider.getMachinesStream("100"),
+        //stream: provider.getMachinesStream(user.workCenters),
+        stream: provider.streamOrderedMachinePerDepartments(["100", "200"]),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -68,7 +69,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
               snapshot.data!; // snapshot.data means the latest emitted value
 
           if (machines.isEmpty) {
-            return  Center(child: Text('noMachinesFound'.tr()));
+            return Center(child: Text('noMachinesFound'.tr()));
           }
 
           return Column(
@@ -77,7 +78,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                     Text(
+                    Text(
                       "machinesList".tr(),
                       style: TextStyle(
                         fontSize: 18,
@@ -154,38 +155,63 @@ class _MachinelistpageState extends State<Machinelistpage> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth < 600) {
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(top: 8),
-                        itemCount: machines.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: MachineCard(machine: machines[index]),
-                          );
-                        },
-                      );
-                    } else {
-                      int crossAxisCount = constraints.maxWidth < 1024 ? 2 : 4;
+                    final groupedMachines = snapshot.data!; // ✅ the actual Map
 
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: constraints.maxWidth < 900
-                              ? 1.8 // tablet
-                              : constraints.maxWidth < 1400
-                              ? 1.5 // small PC / laptop
-                              : 1.8, // large desktop
-                        ),
-                        itemCount: machines.length,
-                        itemBuilder: (context, index) {
-                          return MachineCard(machine: machines[index]);
-                        },
-                      );
-                    }
+                    int crossAxisCount = constraints.maxWidth < 600
+                        ? 1
+                        : constraints.maxWidth < 1024
+                        ? 2
+                        : 4;
+
+                    return ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: groupedMachines.entries.map((entry) {
+                        final workCenter = entry.key;
+                        final machinesList = entry.value;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Department title
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                "Department $workCenter",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                            // Grid for this department
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: machinesList.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: constraints.maxWidth < 900
+                                        ? 1.8
+                                        : constraints.maxWidth < 1400
+                                        ? 1.5
+                                        : 1.8,
+                                  ),
+                              itemBuilder: (context, index) {
+                                return MachineCard(
+                                  machine: machinesList[index],
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      }).toList(),
+                    );
                   },
                 ),
               ),
