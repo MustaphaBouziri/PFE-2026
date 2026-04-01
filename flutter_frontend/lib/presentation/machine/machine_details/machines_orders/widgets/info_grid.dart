@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../shared/utils.dart';
@@ -12,20 +13,18 @@ class InfoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        InfoCell(label: 'Product', value: order.itemDescription ?? '—'),
+        InfoCell(label: 'product'.tr(), value: order.itemDescription ?? '—'),
         const SizedBox(width: 16),
-        InfoCell(label: 'Planned Qty', value: '${order.orderQuantity} Units'),
+        InfoCell(label: 'plannedQty'.tr(), value: '${order.orderQuantity} ${'unit'.tr()}'),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'Start',
+          label: 'start'.tr(),
           value: Utils.formatTimestamp(order.plannedStart.toString()),
         ),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'End',
-          value: 
-              Utils.formatTimestamp(order.plannedEnd.toString()),
-            
+          label: 'end'.tr(),
+          value: Utils.formatTimestamp(order.plannedEnd.toString()),
         ),
       ],
     );

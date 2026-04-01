@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import '../../../widgets/language_selector.dart';
 
 class LoginSharedForm extends StatefulWidget {
   final TextEditingController authIdController;
@@ -34,10 +36,19 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //___________________ LANGUAGE SELECTOR ___________________
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: const [
+                LanguageSelector(isCompact: false),
+              ],
+            ),
+            const SizedBox(height: 24),
+
             //___________________ USER ID LABEL ___________________
-            const Text(
-              "Auth ID",
-              style: TextStyle(
+            Text(
+              "authId".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: mainColor,
@@ -49,7 +60,7 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
             TextFormField(
               controller: widget.authIdController,
               decoration: InputDecoration(
-                hintText: "Enter your auth ID (e.g. AUTH-XXXXX)",
+                hintText: "enterAuthId".tr(),
                 hintStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
                 suffixIcon: const Icon(Icons.person, color: mainColor),
                 enabledBorder: OutlineInputBorder(
@@ -73,11 +84,11 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return "Please enter your Auth ID";
+                  return "pleaseEnterAuthId".tr();
                 }
                 if (value.trim().length < 2) {
                   // to change later
-                  return "Auth ID must be at least 8 characters"; // to change later
+                  return "authIdMinLength".tr(); // to change later
                 }
                 return null;
               },
@@ -86,9 +97,9 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
             const SizedBox(height: 36),
 
             //___________________ PASSWORD LABEL ___________________
-            const Text(
-              "Password",
-              style: TextStyle(
+            Text(
+              "password".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: mainColor,
@@ -101,7 +112,7 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
               controller: widget.passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                hintText: "Enter your password",
+                hintText: "enterPassword".tr(),
                 hintStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -135,10 +146,10 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return "Please enter your password";
+                  return "pleaseEnterPassword".tr();
                 }
                 if (value.trim().length < 8) {
-                  return "Password must be at least 8 characters";
+                  return "passwordMinLength".tr();
                 }
                 return null;
               },
@@ -158,9 +169,9 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
                   ),
                 ),
                 onPressed: widget.onLogin,
-                child: const Text(
-                  "Sign in",
-                  style: TextStyle(
+                child: Text(
+                  "signIn".tr(),
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,

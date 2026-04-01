@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
@@ -50,9 +51,9 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Declare Production',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  Text(
+                    'declareProduction'.tr(),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -64,7 +65,7 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
               const SizedBox(height: 4),
 
               Text(
-                '${_remaining.toStringAsFixed(0)} units remaining',
+                '${_remaining.toStringAsFixed(0)} ${'unitsRemaining'.tr()}',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
               ),
 
@@ -77,8 +78,8 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: 'Quantity Created',
-                    hintText: 'e.g. 10',
+                    labelText: 'quantityCreated'.tr(),
+                    hintText: 'exampleQty'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -89,8 +90,10 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
                   ),
                   validator: (value) {
                     final parsed = double.tryParse(value ?? '');
-                    if (parsed == null || parsed <= 0) return 'Enter a valid quantity.';
-                    if (parsed > _remaining) return 'Max allowed is ${_remaining.toStringAsFixed(0)} units.';
+                    if (parsed == null || parsed <= 0) return 'enterValidQuantity'.tr();
+                    if (parsed > _remaining) {
+                      return 'maxAllowedQuantity'.tr(args: [_remaining.toStringAsFixed(0)]);
+                    }
                     return null;
                   },
                 ),
@@ -109,7 +112,7 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
                     child: OutlinedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.qr_code),
-                      label: const Text('Generate QR'),
+                      label: Text('generateQR'.tr()),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -141,7 +144,7 @@ class _DeclaireproductiondialogState extends State<DeclareProductionDialog> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.check, color: Colors.white),
                       label: Text(
-                        _isLoading ? 'Submitting...' : 'Submit',
+                        _isLoading ? 'submitting'.tr() : 'submit'.tr(),
                         style: const TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(

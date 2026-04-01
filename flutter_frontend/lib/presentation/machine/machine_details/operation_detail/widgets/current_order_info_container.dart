@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/machine_production/models/status_style.dart';
@@ -42,7 +43,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
           children: [
             // title
             Text(
-              "Current Production Order",
+              "currentProductionOrder".tr(),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -54,9 +55,9 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
             // order number + product name
             _InfoRow(
-              leftLabel: "Order Number",
+              leftLabel: "orderNumber".tr(),
               leftValue: widget.operationData.operationNo,
-              rightLabel: "Product Name",
+              rightLabel: "productName".tr(),
               rightValue: widget.operationData.itemDescription,
             ),
 
@@ -64,10 +65,10 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
             // required quantity + produced quantity
             _InfoRow(
-              leftLabel: "Required Quantity",
-              leftValue: "${widget.operationData.orderQuantity} Unit",
-              rightLabel: "Produced Quantity",
-              rightValue: "${widget.operationData.totalProducedQuantity} Unit",
+              leftLabel: "requiredQuantity".tr(),
+              leftValue: "${widget.operationData.orderQuantity} ${"unit".tr()}",
+              rightLabel: "producedQuantity".tr(),
+              rightValue: "${widget.operationData.totalProducedQuantity} ${"unit".tr()}",
             ),
 
             const SizedBox(height: 12),
@@ -77,7 +78,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
               children: [
                 Expanded(
                   child: Text(
-                    "Overall Progress",
+                    "overallProgress".tr(),
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF64748B),

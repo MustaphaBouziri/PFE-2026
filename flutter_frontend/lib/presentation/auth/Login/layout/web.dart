@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'login_shared_form.dart';
@@ -49,11 +50,11 @@ class LoginWebLayout extends StatelessWidget {
               children: [
                 //___________________ LOGO / TITLE ___________________
                 Column(
-                  children: const [
+                  children:  [
                     Icon(Icons.factory_outlined, size: 60, color: mainColor),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
-                      "Login Page",
+                      "loginPage".tr(),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -77,8 +78,8 @@ class LoginWebLayout extends StatelessWidget {
                 const SizedBox(height: 30),
 
                 //___________________ FOOTER ___________________
-                const Text(
-                  "© 2026  - All rights reserved",
+                 Text(
+                  "copyright".tr(),
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_production_cycle.dart';
 
@@ -31,8 +32,8 @@ class _ProductionCycleState extends State<ProductionCycle> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Center(
-          child: Text("No production cycles found"),
+        child: Center(
+          child: Text("noProductionCyclesFound".tr()),
         ),
       );
     }
@@ -54,13 +55,13 @@ class _ProductionCycleState extends State<ProductionCycle> {
           color: Color(0xFFF9FAFB),
           border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            TableCellWidget(text: "Operator", width: 180, isHeader: true),
-            TableCellWidget(text: "Cycle Qty", width: 100, isHeader: true),
-            TableCellWidget(text: "Produced", width: 100, isHeader: true),
-            TableCellWidget(text: "Scrap", width: 100, isHeader: true),
-            TableCellWidget(text: "Time", width: 100, isHeader: true),
+            TableCellWidget(text: 'operator'.tr(), width: 180, isHeader: true),
+            TableCellWidget(text: 'cycleQty'.tr(), width: 100, isHeader: true),
+            TableCellWidget(text: 'produced'.tr(), width: 100, isHeader: true),
+            TableCellWidget(text: 'scrap'.tr(), width: 100, isHeader: true),
+            TableCellWidget(text: 'time'.tr(), width: 100, isHeader: true),
           ],
         ),
       );
@@ -94,37 +95,37 @@ class _ProductionCycleState extends State<ProductionCycle> {
           color: Color(0xFFF9FAFB),
           border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Expanded(
               flex: 2,
               child: Text(
-                "Operator",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                'operator'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
             Expanded(
               child: Text(
-                "Cycle Qty",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                'cycleQty'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
             Expanded(
               child: Text(
-                "Produced",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                'produced'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
             Expanded(
               child: Text(
-                "Scrap",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                'scrap'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
             Expanded(
               child: Text(
-                "Time",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                'time'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
           ],
@@ -217,7 +218,7 @@ class _ProductionCycleState extends State<ProductionCycle> {
                 icon: const Icon(Icons.chevron_left),
               ),
               Text(
-                "Page ${safeCurrentPage + 1} / $totalPages",
+                '${'page'.tr()} ${safeCurrentPage + 1} / $totalPages',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               IconButton(

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ChangePasswordSharedForm extends StatefulWidget {
@@ -40,9 +41,9 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //___________________ OLD PASSWORD LABEL ___________________
-            const Text(
-              "Current Password",
-              style: TextStyle(
+            Text(
+              "currentPassword".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: mainColor,
@@ -55,7 +56,7 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
               controller: widget.oldPasswordController,
               obscureText: _obscureOldPassword,
               decoration: InputDecoration(
-                hintText: "Enter your current password",
+                hintText: "enterCurrentPassword".tr(),
                 hintStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -91,7 +92,7 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return "Please enter your current password";
+                  return "pleaseEnterCurrentPassword".tr();
                 }
                 return null;
               },
@@ -100,9 +101,9 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
             const SizedBox(height: 24),
 
             //___________________ NEW PASSWORD LABEL ___________________
-            const Text(
-              "New Password",
-              style: TextStyle(
+            Text(
+              "newPassword".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: mainColor,
@@ -115,7 +116,7 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
               controller: widget.newPasswordController,
               obscureText: _obscureNewPassword,
               decoration: InputDecoration(
-                hintText: "Enter your new password",
+                hintText: "enterNewPassword".tr(),
                 hintStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -151,18 +152,18 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return "Please enter a new password";
+                  return "pleaseEnterNewPassword".tr();
                 }
                 if (value.trim().length < 8) {
-                  return "Password must be at least 8 characters";
+                  return "passwordMinLength".tr();
                 }
                 if (value.trim().length > 20) {
-                  return "Password must be less than 21 characters long";
+                  return "passwordMaxLength".tr();
                 }
 
                 // Check password strength
                 if (!_isPasswordStrong(value)) {
-                  return "Password must contain uppercase, lowercase, number, and special character";
+                  return "passwordStrength".tr();
                 }
 
                 return null;
@@ -172,9 +173,9 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
             const SizedBox(height: 24),
 
             //___________________ CONFIRM PASSWORD LABEL ___________________
-            const Text(
-              "Confirm New Password",
-              style: TextStyle(
+            Text(
+              "confirmNewPassword".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: mainColor,
@@ -187,7 +188,7 @@ class _ChangePasswordSharedFormState extends State<ChangePasswordSharedForm> {
               controller: widget.confirmPasswordController,
               obscureText: _obscureConfirmPassword,
               decoration: InputDecoration(
-                hintText: "Retype your new password",
+                hintText: "retypeNewPassword".tr(),
                 hintStyle: TextStyle(color: Colors.black.withOpacity(0.5)),
                 suffixIcon: IconButton(
                   icon: Icon(

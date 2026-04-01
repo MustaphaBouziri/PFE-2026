@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'login_shared_form.dart';
@@ -57,8 +58,8 @@ class LoginTabletLayout extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    const Text(
-                      "Login Page",
+                     Text(
+                      "loginPage".tr(),
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.bold,
@@ -77,8 +78,8 @@ class LoginTabletLayout extends StatelessWidget {
                       maxWidth: 600,
                     ),
                     SizedBox(height: 26),
-                    const Text(
-                      "© 2026  - All rights reserved",
+                     Text(
+                      "copyright".tr(),
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],

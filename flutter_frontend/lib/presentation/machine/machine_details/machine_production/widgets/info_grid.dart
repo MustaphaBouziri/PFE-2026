@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../shared/utils.dart';
@@ -18,7 +19,7 @@ class OperationInfoGrid extends StatelessWidget {
     return Row(
       children: [
         OperationInfoCell(
-          label: 'Last Updated',
+          label: 'lastUpdated'.tr(),
           value: Utils.formatTimestamp(lastUpdatedAt),
         ),
       ],

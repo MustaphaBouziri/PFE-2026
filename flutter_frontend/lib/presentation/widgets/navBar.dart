@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class TopNavigationBar extends StatelessWidget{
@@ -16,22 +17,22 @@ class TopNavigationBar extends StatelessWidget{
       child: Row(
         children: [
           NavButton(
-            title: "Orders",
+            title: "orders".tr(),
             selected: selectedIndex == 0,
             onTap: () => onTabChanged(0),
           ),
           NavButton(
-            title: "Progress",
+            title: "progress".tr(),
             selected: selectedIndex == 1,
             onTap: () => onTabChanged(1),
           ),
           NavButton(
-            title: "Consumable",
+            title: "consumable".tr(),
             selected: selectedIndex == 2,
             onTap: () => onTabChanged(2),
           ),
           NavButton(
-            title: "History",
+            title: "history".tr(),
             selected: selectedIndex == 3,
             onTap: () => onTabChanged(3),
           ),

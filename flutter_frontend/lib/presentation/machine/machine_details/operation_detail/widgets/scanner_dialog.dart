@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
@@ -14,7 +15,7 @@ class ScannerWidget extends StatefulWidget {
 }
 
 class _ScannerWidgetState extends State<ScannerWidget> {
-  String scannedValue = "Scan something...";
+  String scannedValue = "scanSomething".tr();
 
   List<ItemBarcodeModel> items = []; // list to hold the scanned item
 
@@ -216,8 +217,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                "Scan Again",
+              child: Text(
+                "scanAgain".tr(),
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -249,7 +250,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                                 ),
                               ),
                               subtitle: Text(
-                                "Qty: ${item.quantity}",
+                                "qty".tr() + "${item.quantity}",
                                 style: TextStyle(color: Color(0xFF64748B)),
                               ),
                             ),
@@ -293,17 +294,17 @@ class _ScannerWidgetState extends State<ScannerWidget> {
 
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Inserted successfully')),
+                     SnackBar(content: Text('insertedSuccessfully'.tr())),
                   );
 
                   Navigator.pop(context);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(provider.errorMessage ?? 'Error')),
+                    SnackBar(content: Text(provider.errorMessage ?? 'error'.tr())),
                   );
                 }
               },
-              child: const Text('Confirm Scans'),
+              child:  Text('confirmScans'.tr()),
             ),
           ],
         ),

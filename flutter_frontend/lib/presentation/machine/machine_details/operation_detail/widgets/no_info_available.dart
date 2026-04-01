@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class NoInfoAvailable extends StatelessWidget {
@@ -5,7 +6,7 @@ class NoInfoAvailable extends StatelessWidget {
 
   const NoInfoAvailable({
     super.key,
-    this.message = 'No production information available',
+    this.message = 'noProductionInformationAvailable',
   });
 
   @override
@@ -34,7 +35,7 @@ class NoInfoAvailable extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            message,
+            message.tr(),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 16,

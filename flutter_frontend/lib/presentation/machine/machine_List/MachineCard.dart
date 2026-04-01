@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/machine/models/mes_machine_model.dart';
@@ -134,7 +135,7 @@ class _MachineCardState extends State<MachineCard> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    widget.machine.status ?? 'Running',
+                                    widget.machine.status ?? 'running'.tr(),
                                     style: TextStyle(
                                       fontSize: textSize,
                                       fontWeight: FontWeight.bold,
@@ -150,12 +151,12 @@ class _MachineCardState extends State<MachineCard> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Current Order:",
+                                "currentOrder".tr(),
                                 style: TextStyle(fontSize: textSize),
                               ),
                               Text(
                                 widget.machine.currentOrder.isEmpty
-                                    ? 'No active order'
+                                    ? 'noActiveOrder'.tr()
                                     : widget.machine.currentOrder,
                                 style: TextStyle(fontSize: textSize),
                               ),

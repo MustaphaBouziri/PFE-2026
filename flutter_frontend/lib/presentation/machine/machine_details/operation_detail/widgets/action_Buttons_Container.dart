@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
@@ -70,29 +71,30 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             borderRadius: BorderRadius.circular(12),
           ),
           title: Row(
-            children: const [
-              Icon(Icons.check_circle_outline, color: Color(0xFF16A34A)),
-              SizedBox(width: 8),
-              Text('Finish Production Order'),
+            children:  [
+              const Icon(Icons.check_circle_outline, color: Color(0xFF16A34A)),
+              const SizedBox(width: 8),
+              Text('finishProductionOrder'.tr()),
             ],
           ),
           content: Text(
-            'Production for order ${widget.operationData.prodOrderNo} '
-                'is complete (${widget.operationData.progressPercent.toStringAsFixed(0)}%).\n\n'
-                'Confirm to mark the order as finished and release the machine.',
+            'productionCompleteConfirm'.tr(args: [
+              widget.operationData.prodOrderNo,
+              widget.operationData.progressPercent.toStringAsFixed(0),
+            ]),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text('cancel'.tr()),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
               ),
-              child: const Text(
-                'Finish',
+              child: Text(
+                'finish'.tr(),
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -109,30 +111,30 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           borderRadius: BorderRadius.circular(12),
         ),
         title: Row(
-          children: const [
-            Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
-            SizedBox(width: 8),
-            Text('Cancel Production Order'),
+          children:  [
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
+            const SizedBox(width: 8),
+            Text('cancelProductionOrder'.tr()),
           ],
         ),
         content: Text(
-          'Order ${widget.operationData.prodOrderNo} is only '
-              '${widget.operationData.progressPercent.toStringAsFixed(0)}% complete.\n\n'
-              'This action will cancel the order and release the machine. '
-              'This cannot be undone.\n\nAre you sure?',
+          'productionCancelConfirm'.tr(args: [
+            widget.operationData.prodOrderNo,
+            widget.operationData.progressPercent.toStringAsFixed(0),
+          ]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No, Keep Going'),
+            child: Text('noKeepGoing'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
             ),
-            child: const Text(
-              'Yes, Cancel Order',
+            child: Text(
+              'yesCancelOrder'.tr(),
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -149,12 +151,12 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        title: const Text('Error'),
+        title: Text('error'.tr()),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text('ok'.tr()),
           ),
         ],
       ),
@@ -197,9 +199,9 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
+          Text(
+            'quickActions'.tr(),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF0F172A),
@@ -208,7 +210,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           const SizedBox(height: 24),
 
           _ActionButton(
-            title: 'Declare Production',
+            title: 'declareProduction'.tr(),
             icon: Icons.add_circle_outline,
             buttonColor: const Color(0xFF2563EB),
             isEnabled: canDeclareProduction,
@@ -224,7 +226,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           const SizedBox(height: 8),
 
           _ActionButton(
-            title: 'Report Reject',
+            title: 'reportReject'.tr(),
             icon: Icons.warning_amber_outlined,
             buttonColor: const Color(0xFFDC2626),
             isEnabled: canReportReject,
@@ -234,7 +236,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
 
           _ActionButton(
             title:
-            _isComplete ? 'Finish Production Order' : 'Cancel Production Order',
+            _isComplete ? 'finishProductionOrder'.tr() : 'cancelProductionOrder'.tr(),
             icon: _isComplete
                 ? Icons.check_circle_outline
                 : Icons.cancel_outlined,
@@ -248,7 +250,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           const SizedBox(height: 8),
 
           _ActionButton(
-            title: 'Print Label',
+            title: 'printLabel'.tr(),
             icon: Icons.print_outlined,
             buttonColor: const Color(0xFF16A34A),
             isEnabled: canPrintLabel,

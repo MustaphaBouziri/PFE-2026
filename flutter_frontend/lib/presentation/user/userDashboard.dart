@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,8 +37,8 @@ class UserDashboard extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F172A),
-        title: const Text(
-          'MES System',
+        title: Text(
+          'mesSystem'.tr(),
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -70,7 +71,7 @@ class UserDashboard extends StatelessWidget {
 
                 // Welcome
                 Text(
-                  'Welcome back,',
+                  'welcomeBack'.tr(),
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
@@ -104,20 +105,20 @@ class UserDashboard extends StatelessWidget {
                     children: [
                       _InfoRow(
                         icon: Icons.badge_outlined,
-                        label: 'User ID',
+                        label: 'userId'.tr(),
                         value: userId,
                       ),
                       const Divider(height: 28),
                       _InfoRow(
                         icon: roleIcon,
-                        label: 'Role',
+                        label: 'role'.tr(),
                         value: role,
                         valueColor: roleColor,
                       ),
                       const Divider(height: 28),
                       _InfoRow(
                         icon: Icons.factory_outlined,
-                        label: 'Work Center',
+                        label: 'workCenter'.tr(),
                         value: workCenter.isEmpty ? '—' : workCenter,
                       ),
                     ],
@@ -141,8 +142,8 @@ class UserDashboard extends StatelessWidget {
                       await auth.logout();
                     },
                     icon: const Icon(Icons.logout, color: Color(0xFF0F172A)),
-                    label: const Text(
-                      'Logout',
+                    label: Text(
+                      'logout'.tr(),
                       style: TextStyle(
                         color: Color(0xFF0F172A),
                         fontWeight: FontWeight.bold,

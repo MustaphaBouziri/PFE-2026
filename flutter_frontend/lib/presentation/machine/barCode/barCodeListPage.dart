@@ -1,4 +1,5 @@
 // lib/screens/barcode_list_screen.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
 import 'package:pfe_mes/presentation/machine/barCode/widgets/dataMatrix_card.dart';
@@ -25,7 +26,7 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Barcodes')),
+      appBar: AppBar(title: Text('barcodes'.tr())),
       body: Consumer<MesBarcodeProvider>(
         builder: (ctx, provider, _) {
           if (provider.isLoading) {
@@ -36,18 +37,18 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Error: ${provider.errorMessage}'),
+                  Text('error'.tr() + ': ${provider.errorMessage}'),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.fetchAllBarcodes(),
-                    child: const Text('Retry'),
+                    child: Text('retry'.tr()),
                   ),
                 ],
               ),
             );
           }
           if (provider.barcodes.isEmpty) {
-            return const Center(child: Text('No barcodes found.'));
+            return Center(child: Text('noBarcodesFound'.tr()));
           }
           return GridView.builder(
             padding: const EdgeInsets.all(8),

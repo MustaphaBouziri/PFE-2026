@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,7 @@ class OrdersProgressionPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ).showSnackBar(SnackBar(content: Text('failed'.tr() + ': $e')));
       }
     }
   }

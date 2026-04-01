@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/admin/widgets/Button.dart';
 import 'package:pfe_mes/presentation/admin/widgets/MesListRow.dart';
@@ -102,9 +103,9 @@ class _AddUserPageState extends State<AddUserPage> {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children:  [
             Text(
-              "Users & Roles Management",
+              "usersRolesManagement".tr(),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -112,16 +113,16 @@ class _AddUserPageState extends State<AddUserPage> {
               ),
             ),
             Text(
-              "Manage user accounts, roles, and permissions across your organization",
+              "manageUsers".tr(),
               style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
           ],
         ),
         actions: [
-          Buttons(text: "Export Users", isprimary: false, onTap: () {}),
+          Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
           const SizedBox(width: 8),
           Buttons(
-            text: "Add New User",
+            text: "addNewUser".tr(),
             isprimary: true,
             onTap: _openAddUserDialog,
           ),
@@ -141,7 +142,7 @@ class _AddUserPageState extends State<AddUserPage> {
                     children: [
                       Expanded(
                         child: InfoContainer(
-                          title: "Total Users",
+                          title: "totalUsers".tr(),
                           value: users.length,
                           icon: Icons.people_outline,
                           iconColor: const Color(0xFF2563EB),
@@ -151,7 +152,7 @@ class _AddUserPageState extends State<AddUserPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: InfoContainer(
-                          title: "Active",
+                          title: "active".tr(),
                           value: users.where((u) => u.role != 'Pending').length,
                           icon: Icons.check_circle_outline,
                           iconColor: const Color(0xFF16A34A),
@@ -161,7 +162,7 @@ class _AddUserPageState extends State<AddUserPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: InfoContainer(
-                          title: "Pending Approval",
+                          title: "pendingApproval".tr(),
                           value: users.where((u) => u.role == 'Pending').length,
                           icon: Icons.hourglass_empty_outlined,
                           iconColor: const Color(0xFFD39D2B),
@@ -171,7 +172,7 @@ class _AddUserPageState extends State<AddUserPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: InfoContainer(
-                          title: "Total Roles",
+                          title: "totalRoles".tr(),
                           value: roles.length - 1,
                           icon: Icons.admin_panel_settings_outlined,
                           iconColor: const Color(0xFF7C3AED),
@@ -343,13 +344,13 @@ class _AddUserPageState extends State<AddUserPage> {
                                           ),
                                           onSelected: (val) {},
                                           itemBuilder: (context) => [
-                                            const PopupMenuItem(
+                                            PopupMenuItem(
                                               value: 'edit',
-                                              child: Text('Edit'),
+                                              child: Text('edit'.tr()),
                                             ),
-                                            const PopupMenuItem(
+                                            PopupMenuItem(
                                               value: 'reset',
-                                              child: Text('Reset Password'),
+                                              child: Text('resetPassword'.tr()),
                                             ),
                                             const PopupMenuItem(
                                               value: 'delete',

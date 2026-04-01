@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/machines_orders/widgets/info_cell.dart';
@@ -12,18 +13,18 @@ class HistoryInfoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        InfoCell(label: 'Product', value: order.itemDescription.isEmpty ? '—' : order.itemDescription),
+        InfoCell(label: 'product'.tr(), value: order.itemDescription.isEmpty ? '—' : order.itemDescription),
         const SizedBox(width: 16),
-        InfoCell(label: 'Produced Quantity', value: '${order.totalProducedQuantity.toInt()} Units'),
+        InfoCell(label: 'producedQuantity'.tr(), value: '${order.totalProducedQuantity.toInt()} ${'unit'.tr()}'),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'Started At',
+          label: 'startedAt'.tr(),
           value: Utils.formatTimestamp(order.startDateTime),
         ),
         const SizedBox(width: 16),
         InfoCell(
-          label: 'Ended At',
-          value: order.endDateTime.isEmpty ? 'In progress' : Utils.formatTimestamp(order.endDateTime),
+          label: 'endedAt'.tr(),
+          value: order.endDateTime.isEmpty ? 'inProgress'.tr() : Utils.formatTimestamp(order.endDateTime),
         ),
       ],
     );
