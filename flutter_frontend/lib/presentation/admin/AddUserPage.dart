@@ -36,12 +36,20 @@ class _AddUserPageState extends State<AddUserPage> {
       context.read<MesUserProvider>().fetchUsers();
     });
   }
+  bool isLoading = false;
 
-  void _openAddUserDialog() async {
+void _openAddUserDialog() async {
+  setState(() => isLoading = true);
+  try {
     await context.read<ErpEmployeeProvider>().fetchEmployees();
     await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
-    showDialog(context: context, builder: (context) => const AddUserDialog());
+    if (mounted) {
+      showDialog(context: context, builder: (context) => const AddUserDialog());
+    }
+  } finally {
+    if (mounted) setState(() => isLoading = false);
   }
+}
 
   Color _roleColor(String role) {
     switch (role) {
@@ -125,6 +133,7 @@ class _AddUserPageState extends State<AddUserPage> {
             text: "addNewUser".tr(),
             isprimary: true,
             onTap: _openAddUserDialog,
+            isLoading: isLoading,
           ),
           const SizedBox(width: 16),
         ],
@@ -307,7 +316,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
                                       // department
                                       MesListRow(
-                                        label: user.workCenterName,
+                                        label: user.workCenterNameTextFormat,
                                         flex: 2,
                                       ),
 

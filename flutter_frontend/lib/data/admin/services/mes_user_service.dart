@@ -8,16 +8,17 @@ import '../../../core/app_constants.dart';
 class MesUserService {
 
 
-  Future<List<MesUser>> fetchMesUsers() async {
-    final response = await http.get(
-      Uri.parse(AppConstants.mesUsersUrl),
+  Future<List<MesUser>> fetchAllMESUsers() async {
+    final response = await http.post(
+      Uri.parse(AppConstants.fetchAllMESUsers),
       headers:AppConstants.jsonHeaders,
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final List usersJson = data['value'] ?? [];
-      return usersJson.map((json) => MesUser.fromJson(json)).toList();
+      final String valueString = data['value'] ?? '[]';
+      final List<dynamic> usersList = jsonDecode(valueString);
+      return usersList.map((json) => MesUser.fromJson(json)).toList();
     } else {
       throw Exception(
         'Failed to load MES users: ${response.statusCode} ${response.body}',
