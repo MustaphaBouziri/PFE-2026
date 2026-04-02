@@ -413,5 +413,39 @@ codeunit 50125 "MES Unbound Actions"
         exit(BuildError(ErrorCode, Msg));
     end;
 
+    procedure fetchAllMESUsers(): Text
+var
+    UserRec: Record "MES User";
+    UserWorkCenter: Record "MES User Work Center";
+    WorkCenter: Record "Work Center";
+    JsonHelper: Codeunit "MES Json Helper";
+    UsersArray: JsonArray;
+    UserJson: JsonObject;
+    WorkCentersArray: JsonArray;
+begin
+    if UserRec.FindSet() then
+        repeat
+            Clear(UserJson);
+            Clear(WorkCentersArray);
+
+            UserJson.Add('userId', UserRec."User Id");
+            UserJson.Add('employeeId', UserRec."Employee ID");
+            UserJson.Add('role', Format(UserRec.Role));
+
+            UserWorkCenter.Reset();
+            UserWorkCenter.SetRange("User Id", UserRec."User Id");
+            if UserWorkCenter.FindSet() then
+                repeat
+                    if WorkCenter.Get(UserWorkCenter."Work Center No.") then
+                        WorkCentersArray.Add(WorkCenter.Name);
+                until UserWorkCenter.Next() = 0;
+
+            UserJson.Add('workCenters', WorkCentersArray);
+            UsersArray.Add(UserJson);
+
+        until UserRec.Next() = 0;
+
+    exit(JsonHelper.JsonToTextArr(UsersArray));
+end;
 
 }

@@ -9,6 +9,7 @@ codeunit 50131 "MES Machine Fetch"
         MachineArr: JsonArray;
         MachineObj: JsonObject;
         JsonHelper: Codeunit "MES Json Helper";
+        WorkCenter: Record "Work Center";
     begin
         if workCenterNo = '' then Error('Work Center Number is required');
         Machine.SetRange("Work Center No.", workCenterNo);
@@ -20,6 +21,12 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('machineName', Machine."Name");
                 MachineObj.Add('status', 'Idle');
                 MachineObj.Add('currentOrder', 'No operator yet');
+                MachineObj.Add('workCenterNo', Machine."Work Center No.");
+                // get :goes to the work center table and looks for the row where pk = 100 for exemple
+                if WorkCenter.Get(Machine."Work Center No.") then
+                MachineObj.Add('workCenterName', WorkCenter.Name)
+            else
+                MachineObj.Add('workCenterName', '');
 
                 MESMachineStatus.Reset();
                 MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
@@ -475,6 +482,7 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(ResultArray));
     end;
 
+    
 
 
 }
