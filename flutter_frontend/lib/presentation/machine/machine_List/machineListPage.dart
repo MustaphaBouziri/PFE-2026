@@ -155,7 +155,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final groupedMachines = snapshot.data!; // ✅ the actual Map
+                    final groupedMachines = snapshot.data!;
 
                     int crossAxisCount = constraints.maxWidth < 600
                         ? 1
@@ -166,8 +166,12 @@ class _MachinelistpageState extends State<Machinelistpage> {
                     return ListView(
                       padding: const EdgeInsets.all(16),
                       children: groupedMachines.entries.map((entry) {
-                        final workCenter = entry.key;
+                        final workCenterNo = entry.key;
                         final machinesList = entry.value;
+                        //Since all machines in this group belong to the same work center, they all have the same departement name
+                        final workCenterName = entry.value.isNotEmpty
+                            ? entry.value.first.workCenterName
+                            : ''; //same as saying machines[0].workCenterName
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,12 +179,24 @@ class _MachinelistpageState extends State<Machinelistpage> {
                             // Department title
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                "Department $workCenter",
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    workCenterNo,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    workCenterName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 

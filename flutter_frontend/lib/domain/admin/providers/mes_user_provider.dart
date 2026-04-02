@@ -17,7 +17,7 @@ class MesUserProvider with ChangeNotifier {
       errorMessage = null;
       notifyListeners();
 
-      users = await _service.fetchMesUsers();
+      users = await _service.fetchAllMESUsers();
     } catch (e) {
       errorMessage = e.toString();
     }
