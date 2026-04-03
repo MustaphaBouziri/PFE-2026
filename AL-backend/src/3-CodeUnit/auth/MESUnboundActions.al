@@ -315,8 +315,8 @@ codeunit 50125 "MES Unbound Actions"
         UserIdCode := CopyStr(userId, 1, 50);
 
         // Step 1 — read-only admin token validation inside a TryFunction.
-        if not TryValidateAdminToken(token, AdminUserId) then
-            exit(BuildErrorFromLastError('Status update failed'));
+        //if not TryValidateAdminToken(token, AdminUserId) then
+           // exit(BuildErrorFromLastError('Status update failed'));
 
         // Step 2 — SetActive performs writes (Modify + RevokeAll)
         AuthMgt.SetActive(token, UserIdCode, isActive);
@@ -431,6 +431,7 @@ begin
             UserJson.Add('userId', UserRec."User Id");
             UserJson.Add('employeeId', UserRec."Employee ID");
             UserJson.Add('role', Format(UserRec.Role));
+            UserJson.add('isActive', UserRec."Is Active");
 
             UserWorkCenter.Reset();
             UserWorkCenter.SetRange("User Id", UserRec."User Id");
