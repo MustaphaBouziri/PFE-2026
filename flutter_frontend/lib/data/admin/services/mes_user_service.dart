@@ -6,12 +6,10 @@ import '../models/mes_user_model.dart';
 import '../../../core/app_constants.dart';
 
 class MesUserService {
-
-
   Future<List<MesUser>> fetchAllMESUsers() async {
     final response = await http.post(
       Uri.parse(AppConstants.fetchAllMESUsers),
-      headers:AppConstants.jsonHeaders,
+      headers: AppConstants.jsonHeaders,
     );
 
     if (response.statusCode == 200) {
@@ -26,22 +24,29 @@ class MesUserService {
     }
   }
 
+  Stream<List<MesUser>> streamFetchAllMESUsers({required Stream<void> trigger}) async* {
+  yield await fetchAllMESUsers();
+  await for (final _ in trigger) {
+    yield await fetchAllMESUsers();
+  }
+}
+
   Future<bool> createMesUser({
     required String employeeId,
     required int roleInt,
     required List<String> workCenterList,
   }) async {
     final body = jsonEncode({
-    'userId': employeeId,
-    'employeeId': employeeId,
-    'authId': employeeId,
-    'roleInt': roleInt,
-    'workCenterListJson': jsonEncode(workCenterList),
+      'userId': employeeId,
+      'employeeId': employeeId,
+      'authId': employeeId,
+      'roleInt': roleInt,
+      'workCenterListJson': jsonEncode(workCenterList),
     });
 
     final response = await http.post(
       Uri.parse(AppConstants.AdminCreateUser),
-      headers:AppConstants.jsonHeaders,
+      headers: AppConstants.jsonHeaders,
       body: body,
     );
 

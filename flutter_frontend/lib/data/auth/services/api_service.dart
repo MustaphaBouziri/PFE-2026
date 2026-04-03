@@ -157,6 +157,32 @@ class ApiService {
       return {'success': true};
     }
   }
+  //toggle active /diactivate user
+  Future<bool> toggleUserActiveStatus({
+    required String token,
+    required String userId,
+    required bool isActive,
+  }) async{
+    final response = await http.post(
+      Uri.parse(AppConstants.toggleUserActiveStatus),
+      headers: AppConstants.jsonHeaders,
+      body: jsonEncode({
+        'token': "",
+        'userId': userId,
+        'isActive': isActive,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception(
+        'Failed to toggle user status: ${response.statusCode} ${response.body}',
+      );
+
+  }
+
+  }
+
 
   // Local storage helpers
   Future<void> _saveToken(String token) async {

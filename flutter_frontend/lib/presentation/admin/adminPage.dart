@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
+import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -59,13 +61,13 @@ class _AdminPageState extends State<AdminPage> {
                 ),
                 SidebarItem(
                   icon: Icons.precision_manufacturing_outlined,
-                  label: 'Machines',
+                  label: 'Machine Dashboard',
                   isSelected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
                 SidebarItem(
                   icon: Icons.bar_chart_outlined,
-                  label: 'Reports',
+                  label: 'Activity Logs',
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
                 ),
@@ -125,9 +127,10 @@ class _AdminPageState extends State<AdminPage> {
               index: _selectedIndex,
               children: [
                 const AddUserPage(),
-                Center(child: Text('machines'.tr())),
-                Center(child: Text('reports'.tr())),
-                Center(child: Text('settings'.tr())),
+                const MachineDashboardPage(),
+                const ActivityLogPage(),
+                Center(child: Text('Settings Page - Coming Soon!', style: TextStyle(fontSize: 18, color: Colors.grey.shade600))),
+                
               ],
             ),
           ),

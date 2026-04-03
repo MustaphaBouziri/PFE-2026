@@ -155,4 +155,30 @@ class AuthProvider with ChangeNotifier {
     // For production, install device_info_plus package and get actual device ID
     return 'flutter-device-${DateTime.now().millisecondsSinceEpoch}';
   }
+
+  //toggle use active status
+
+  Future<bool> toggleUserActiveStatus(String userId, bool isActive) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+      //final String? rawToken = await _apiService.getToken() ?? '';
+      
+
+      final success = await _apiService.toggleUserActiveStatus(
+        token: "",
+        userId: userId,
+        isActive: isActive,
+      );
+      return success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

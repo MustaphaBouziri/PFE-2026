@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/widgets/Button.dart';
 import 'package:pfe_mes/presentation/admin/widgets/MesListRow.dart';
+import 'package:pfe_mes/presentation/admin/widgets/addUserDialog.dart';
 import 'package:pfe_mes/presentation/admin/widgets/infoContainer.dart';
 import 'package:pfe_mes/presentation/admin/widgets/tableHeader.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -11,7 +14,7 @@ import '../../domain/admin/providers/erp_employee_provider.dart';
 import '../../domain/admin/providers/erp_workCenter_provider.dart';
 import '../../domain/admin/providers/mes_user_provider.dart';
 import '../widgets/employee_avatar.dart';
-import 'addUserDialog.dart';
+
 import 'generatePasswordDialog.dart';
 
 class AddUserPage extends StatefulWidget {
@@ -29,51 +32,58 @@ class _AddUserPageState extends State<AddUserPage> {
   static const int _pageSize = 10;
   int? _hoveredIndex;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MesUserProvider>().fetchUsers();
-    });
-  }
   bool isLoading = false;
 
-void _openAddUserDialog() async {
-  setState(() => isLoading = true);
-  try {
-    await context.read<ErpEmployeeProvider>().fetchEmployees();
-    await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
-    if (mounted) {
-      showDialog(context: context, builder: (context) => const AddUserDialog());
-    }
-  } finally {
-    if (mounted) setState(() => isLoading = false);
-  }
-}
-
-  Color _roleColor(String role) {
-    switch (role) {
-      case 'Admin':
-        return const Color(0xFF7C3AED);
-      case 'Supervisor':
-        return const Color(0xFF2563EB);
-      case 'Operator':
-        return const Color(0xFF16A34A);
-      default:
-        return const Color(0xFF64748B);
+  void _openAddUserDialog() async {
+    setState(() => isLoading = true);
+    try {
+      await context.read<ErpEmployeeProvider>().fetchEmployees();
+      await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => const AddUserDialog(),
+        ).then((_) {
+          // trigger refresh when dialog closes
+          context.read<MesUserProvider>().triggerRefresh();
+        });
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  Color _roleBg(String role) {
-    switch (role) {
-      case 'Admin':
-        return const Color(0xFFF5F3FF);
-      case 'Supervisor':
-        return const Color(0xFFEFF6FF);
-      case 'Operator':
-        return const Color(0xFFF0FDF4);
-      default:
-        return const Color(0xFFF1F5F9);
+  Color _roleColor(String role, bool isActive) {
+    if (!isActive) {
+      return const Color(0xFF64748B);
+    } else {
+      switch (role) {
+        case 'Admin':
+          return const Color(0xFF7C3AED);
+        case 'Supervisor':
+          return const Color(0xFF2563EB);
+        case 'Operator':
+          return const Color(0xFF16A34A);
+        default:
+          return const Color(0xFF64748B);
+      }
+    }
+  }
+
+  Color _roleBg(String role, bool isActive) {
+    if (!isActive) {
+      return const Color(0xFFF1F5F9);
+    } else {
+      switch (role) {
+        case 'Admin':
+          return const Color(0xFFF5F3FF);
+        case 'Supervisor':
+          return const Color(0xFFEFF6FF);
+        case 'Operator':
+          return const Color(0xFFF0FDF4);
+        default:
+          return const Color(0xFFF1F5F9);
+      }
     }
   }
 
@@ -86,181 +96,197 @@ void _openAddUserDialog() async {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<MesUserProvider>();
-    final users = provider.users;
+    final provider = context.read<MesUserProvider>();
+    final authProvider = context.watch<AuthProvider>();
 
-    final filteredUsers = users.where((user) {
-      final roleMatch = selectedRole == 'All' || user.role == selectedRole;
-      final searchMatch =
-          user.fullName.toLowerCase().contains(
-            searchController.text.toLowerCase(),
-          ) ||
-          user.email.toLowerCase().contains(
-            searchController.text.toLowerCase(),
-          );
-      return roleMatch && searchMatch;
-    }).toList();
+    return StreamBuilder<List<MesUser>>(
+      stream: provider.fetchMesUsers(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    final totalPages = (filteredUsers.length / _pageSize).ceil();
-    final pageUsers = filteredUsers
-        .skip(_currentPage * _pageSize)
-        .take(_pageSize)
-        .toList();
+        if (snapshot.hasError) {
+          return Center(child: Text(snapshot.error.toString()));
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children:  [
-            Text(
-              "usersRolesManagement".tr(),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
+        final users = snapshot.data!;
+
+        final filteredUsers = users.where((user) {
+          final roleMatch = selectedRole == 'All' || user.role == selectedRole;
+          final searchMatch =
+              user.fullName.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              ) ||
+              user.email.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              );
+          return roleMatch && searchMatch;
+        }).toList();
+
+        final totalPages = (filteredUsers.length / _pageSize).ceil();
+        final pageUsers = filteredUsers
+            .skip(_currentPage * _pageSize)
+            .take(_pageSize)
+            .toList();
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "usersRolesManagement".tr(),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  "manageUsers".tr(),
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+              ],
+            ),
+            actions: [
+              Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
+              const SizedBox(width: 8),
+              Buttons(
+                text: "addNewUser".tr(),
+                isprimary: true,
+                onTap: _openAddUserDialog,
+                isLoading: isLoading,
               ),
-            ),
-            Text(
-              "manageUsers".tr(),
-              style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-            ),
-          ],
-        ),
-        actions: [
-          Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
-          const SizedBox(width: 8),
-          Buttons(
-            text: "addNewUser".tr(),
-            isprimary: true,
-            onTap: _openAddUserDialog,
-            isLoading: isLoading,
+              const SizedBox(width: 16),
+            ],
           ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : provider.errorMessage != null
-          ? Center(child: Text(provider.errorMessage!))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // info containers
-                  Row(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // info containers
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoContainer(
+                        title: "totalUsers".tr(),
+                        value: users.length,
+                        icon: Icons.people_outline,
+                        iconColor: const Color(0xFF2563EB),
+                        iconBg: const Color(0xFFEFF6FF),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InfoContainer(
+                        title: "active".tr(),
+                        value: users.where((u) => u.role != 'Pending').length,
+                        icon: Icons.check_circle_outline,
+                        iconColor: const Color(0xFF16A34A),
+                        iconBg: const Color(0xFFF0FDF4),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InfoContainer(
+                        title: "pendingApproval".tr(),
+                        value: users.where((u) => u.role == 'Pending').length,
+                        icon: Icons.hourglass_empty_outlined,
+                        iconColor: const Color(0xFFD39D2B),
+                        iconBg: const Color(0xFFFEFCE8),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InfoContainer(
+                        title: "totalRoles".tr(),
+                        value: roles.length - 1,
+                        icon: Icons.admin_panel_settings_outlined,
+                        iconColor: const Color(0xFF7C3AED),
+                        iconBg: const Color(0xFFF5F3FF),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // search bar
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [_shadow],
+                  ),
+                  child: GlobalSearchBar(
+                    controller: searchController,
+                    onSearchChanged: (val) => setState(() => _currentPage = 0),
+                    dropdownItems: roles,
+                    selectedValue: selectedRole,
+                    onDropdownChanged: (val) => setState(() {
+                      selectedRole = val ?? 'All';
+                      _currentPage = 0;
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // list container
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [_shadow],
+                  ),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: InfoContainer(
-                          title: "totalUsers".tr(),
-                          value: users.length,
-                          icon: Icons.people_outline,
-                          iconColor: const Color(0xFF2563EB),
-                          iconBg: const Color(0xFFEFF6FF),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InfoContainer(
-                          title: "active".tr(),
-                          value: users.where((u) => u.role != 'Pending').length,
-                          icon: Icons.check_circle_outline,
-                          iconColor: const Color(0xFF16A34A),
-                          iconBg: const Color(0xFFF0FDF4),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InfoContainer(
-                          title: "pendingApproval".tr(),
-                          value: users.where((u) => u.role == 'Pending').length,
-                          icon: Icons.hourglass_empty_outlined,
-                          iconColor: const Color(0xFFD39D2B),
-                          iconBg: const Color(0xFFFEFCE8),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InfoContainer(
-                          title: "totalRoles".tr(),
-                          value: roles.length - 1,
-                          icon: Icons.admin_panel_settings_outlined,
-                          iconColor: const Color(0xFF7C3AED),
-                          iconBg: const Color(0xFFF5F3FF),
-                        ),
-                      ),
-                    ],
-                  ),
+                      // header
+                      const TableHeader(),
+                      // rows
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: pageUsers.length,
+                        separatorBuilder: (_, __) =>
+                            Divider(height: 1, color: Colors.grey.shade100),
+                        itemBuilder: (context, index) {
+                          final user = pageUsers[index];
+                          const String status = 'Online';
+                          final bool isOnline = status == 'Online';
+                          final bool hovered = _hoveredIndex == index;
 
-                  const SizedBox(height: 16),
-
-                  // search bar
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [_shadow],
-                    ),
-                    child: GlobalSearchBar(
-                      controller: searchController,
-                      onSearchChanged: (val) =>
-                          setState(() => _currentPage = 0),
-                      dropdownItems: roles,
-                      selectedValue: selectedRole,
-                      onDropdownChanged: (val) => setState(() {
-                        selectedRole = val ?? 'All';
-                        _currentPage = 0;
-                      }),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // list container
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [_shadow],
-                    ),
-                    child: Column(
-                      children: [
-                        // header
-                        const TableHeader(),
-                        // rows
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: pageUsers.length,
-                          separatorBuilder: (_, __) =>
-                              Divider(height: 1, color: Colors.grey.shade100),
-                          itemBuilder: (context, index) {
-                            final user = pageUsers[index];
-                            const String status = 'Online';
-                            final bool isOnline = status == 'Online';
-                            final bool hovered = _hoveredIndex == index;
-
-                            return MouseRegion(
-                              onEnter: (_) =>
-                                  setState(() => _hoveredIndex = index),
-                              onExit: (_) =>
-                                  setState(() => _hoveredIndex = null),
-                              child: GestureDetector(
-                                onTap: () => showDialog(
-                                  context: context,
-                                  builder: (context) => GeneratePasswordDialog(
-                                    userId: user.userId,
-                                    authId: user.authId,
-                                  ),
+                          return MouseRegion(
+                            onEnter: (_) =>
+                                setState(() => _hoveredIndex = index),
+                            onExit: (_) => setState(() => _hoveredIndex = null),
+                            child: GestureDetector(
+                              onTap: user.isActive
+                                  ? () => showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          GeneratePasswordDialog(
+                                            userId: user.userId,
+                                            authId: user.authId,
+                                          ),
+                                    )
+                                  : null,
+                              child: Container(
+                                color: !user.isActive
+                                    ? const Color(0xFFF1F5F9)
+                                    : hovered
+                                    ? const Color(
+                                        0xFFF8FAFC,
+                                      ) // hover only if active
+                                    : Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                                child: Container(
-                                  color: hovered
-                                      ? const Color(0xFFF8FAFC)
-                                      : Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
+                                child: Opacity(
+                                  opacity: user.isActive ? 1.0 : 0.5,
                                   child: Row(
                                     children: [
                                       // user
@@ -310,14 +336,18 @@ void _openAddUserDialog() async {
                                       MesListRow(
                                         label: user.role,
                                         flex: 2,
-                                        color: _roleColor(user.role),
-                                        bg: _roleBg(user.role),
+                                        color: _roleColor(
+                                          user.role,
+                                          user.isActive,
+                                        ),
+                                        bg: _roleBg(user.role, user.isActive),
                                       ),
 
                                       // department
                                       MesListRow(
                                         label: user.workCenterNameTextFormat,
                                         flex: 2,
+                                        isActive: user.isActive,
                                       ),
 
                                       // status
@@ -340,6 +370,7 @@ void _openAddUserDialog() async {
                                           fontSize: 12,
                                           color: Color(0xFF64748B),
                                         ),
+                                        isActive: user.isActive,
                                       ),
 
                                       // actions
@@ -351,25 +382,57 @@ void _openAddUserDialog() async {
                                             size: 20,
                                             color: Color(0xFF64748B),
                                           ),
-                                          onSelected: (val) {},
+                                          onSelected: (val) {
+                                            if (val == 'activate') {
+                                              context
+                                                  .read<AuthProvider>()
+                                                  .toggleUserActiveStatus(
+                                                    user.userId,
+                                                    true,
+                                                  )
+                                                  .then(
+                                                    (_) => context
+                                                        .read<MesUserProvider>()
+                                                        .triggerRefresh(),
+                                                  );
+                                            } else if (val == 'deactivate') {
+                                              context
+                                                  .read<AuthProvider>()
+                                                  .toggleUserActiveStatus(
+                                                    user.userId,
+                                                    false,
+                                                  )
+                                                  .then(
+                                                    (_) => context
+                                                        .read<MesUserProvider>()
+                                                        .triggerRefresh(),
+                                                  );
+                                            }
+                                          },
                                           itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'edit',
-                                              child: Text('edit'.tr()),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'reset',
-                                              child: Text('resetPassword'.tr()),
-                                            ),
-                                            const PopupMenuItem(
-                                              value: 'delete',
-                                              child: Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                  color: Color(0xFFDC2626),
-                                                ),
-                                              ),
-                                            ),
+                                            user.isActive
+                                                ? PopupMenuItem(
+                                                    value: 'deactivate',
+                                                    child: Text(
+                                                      'Deactivate',
+                                                      style: TextStyle(
+                                                        color: Color(
+                                                          0xFFDC2626,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : PopupMenuItem(
+                                                    value: 'activate',
+                                                    child: Text(
+                                                      'Activate',
+                                                      style: TextStyle(
+                                                        color: Color(
+                                                          0xFF16A34A,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                           ],
                                         ),
                                       ),
@@ -377,50 +440,53 @@ void _openAddUserDialog() async {
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
-
-                        // pagination
-                        if (totalPages > 1)
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: Colors.grey.shade200),
-                              ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.chevron_left),
-                                  onPressed: _currentPage > 0
-                                      ? () => setState(() => _currentPage--)
-                                      : null,
-                                ),
-                                Text(
-                                  '${_currentPage + 1} / $totalPages',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.chevron_right),
-                                  onPressed: _currentPage < totalPages - 1
-                                      ? () => setState(() => _currentPage++)
-                                      : null,
-                                ),
-                              ],
+                          );
+                        },
+                      ),
+
+                      // pagination
+                      if (totalPages > 1)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: Colors.grey.shade200),
                             ),
                           ),
-                      ],
-                    ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: _currentPage > 0
+                                    ? () => setState(() => _currentPage--)
+                                    : null,
+                              ),
+                              Text(
+                                '${_currentPage + 1} / $totalPages',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: _currentPage < totalPages - 1
+                                    ? () => setState(() => _currentPage++)
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+        );
+      },
     );
   }
 
