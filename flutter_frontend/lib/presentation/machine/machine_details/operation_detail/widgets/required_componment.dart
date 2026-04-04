@@ -7,12 +7,14 @@ class RequiredComponent extends StatelessWidget {
   final List<ComponentConsumptionModel> components;
   final double totalProduced;
   final String executionId;
+  final GlobalKey? scanButtonKey;
 
   const RequiredComponent({
     super.key,
     required this.components,
     required this.totalProduced,
-    required this.executionId
+    required this.executionId,
+    this.scanButtonKey,
   });
 
   static const statusMissing = 'missing';
@@ -54,26 +56,29 @@ class RequiredComponent extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ScannerWidget(executionId:executionId),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 14,
+              Container(
+                key: scanButtonKey,
+                child: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ScannerWidget(executionId:executionId),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  child: Text(
+                    'scanItem'.tr(),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                ),
-                child: Text(
-                  'scanItem'.tr(),
-                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],

@@ -6,6 +6,7 @@ import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/mes_machines_provider.dart';
+import '../../tutorials/machine_list_tutorial.dart';
 import '../../widgets/language_selector.dart';
 import 'MachineCard.dart';
 
@@ -20,6 +21,12 @@ class _MachinelistpageState extends State<Machinelistpage> {
   final TextEditingController searchController = TextEditingController();
   String selectedStatus = 'All';
   final List<String> statusOptions = ['All', 'Working', 'Idle'];
+
+  // Keys for tutorial
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _machineCardKey = GlobalKey();
+
+  bool _tutorialShown = false;
 
   // filter the grouped map — loop each department list and filter machines inside it
   Map<String, List<MachineModel>> _applyFilters(
@@ -111,6 +118,12 @@ class _MachinelistpageState extends State<Machinelistpage> {
           // apply search and status filter on top of the raw stream data
           final groupedMachines = _applyFilters(snapshot.data!);
 
+          // Show tutorial if data loaded and not shown yet
+          if (!_tutorialShown && groupedMachines.isNotEmpty) {
+            _tutorialShown = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) async => await MachineListTutorial.show(context, [_searchKey, GlobalKey(), GlobalKey(), GlobalKey(), _machineCardKey]));
+          }
+
           return Column(
             children: [
               Padding(
@@ -193,6 +206,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
 
               // search and status filter
               Padding(
+                key: _searchKey,
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: GlobalSearchBar(
                   controller: searchController,
@@ -275,9 +289,17 @@ class _MachinelistpageState extends State<Machinelistpage> {
                                           : 1.8,
                                     ),
                                 itemBuilder: (context, index) {
-                                  return MachineCard(
-                                    machine: machinesList[index],
-                                  );
+                                  final isFirstVisibleCard = groupedMachines.entries.first.value == machinesList && index == 0;
+                                  return isFirstVisibleCard
+                                      ? Container(
+                                          key: _machineCardKey,
+                                          child: MachineCard(
+                                            machine: machinesList[index],
+                                          ),
+                                        )
+                                      : MachineCard(
+                                          machine: machinesList[index],
+                                        );
                                 },
                               ),
 

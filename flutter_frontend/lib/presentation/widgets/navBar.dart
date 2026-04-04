@@ -6,6 +6,7 @@ class TopNavigationBar extends StatelessWidget{
   final Function(int) onTabChanged;
 
   const TopNavigationBar({
+    super.key,
     required this.selectedIndex,
     required this.onTabChanged,
   });

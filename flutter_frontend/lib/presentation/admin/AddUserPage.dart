@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import '../../domain/admin/providers/erp_employee_provider.dart';
 import '../../domain/admin/providers/erp_workCenter_provider.dart';
 import '../../domain/admin/providers/mes_user_provider.dart';
+import '../tutorials/admin_dashboard_tutorial.dart';
 import '../widgets/employee_avatar.dart';
 
 import 'generatePasswordDialog.dart';
@@ -33,6 +34,14 @@ class _AddUserPageState extends State<AddUserPage> {
   int? _hoveredIndex;
 
   bool isLoading = false;
+
+  // Keys for tutorial
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _roleDropdownKey = GlobalKey();
+  final GlobalKey _addUserKey = GlobalKey();
+  final GlobalKey _tableKey = GlobalKey();
+
+  bool _tutorialShown = false;
 
   void _openAddUserDialog() async {
     setState(() => isLoading = true);
@@ -112,6 +121,12 @@ class _AddUserPageState extends State<AddUserPage> {
 
         final users = snapshot.data!;
 
+        // Show tutorial if data loaded and not shown yet
+        if (!_tutorialShown && users.isNotEmpty) {
+          _tutorialShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async => await AdminDashboardTutorial.show(context, [_searchKey, _roleDropdownKey, _addUserKey, _tableKey]));
+        }
+
         final filteredUsers = users.where((user) {
           final roleMatch = selectedRole == 'All' || user.role == selectedRole;
           final searchMatch =
@@ -152,11 +167,14 @@ class _AddUserPageState extends State<AddUserPage> {
             actions: [
               Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
               const SizedBox(width: 8),
-              Buttons(
-                text: "addNewUser".tr(),
-                isprimary: true,
-                onTap: _openAddUserDialog,
-                isLoading: isLoading,
+              Container(
+                key: _addUserKey,
+                child: Buttons(
+                  text: "addNewUser".tr(),
+                  isprimary: true,
+                  onTap: _openAddUserDialog,
+                  isLoading: isLoading,
+                ),
               ),
               const SizedBox(width: 16),
             ],
@@ -214,6 +232,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
                 // search bar
                 Container(
+                  key: _searchKey,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -236,6 +255,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
                 // list container
                 Container(
+                  key: _tableKey,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),

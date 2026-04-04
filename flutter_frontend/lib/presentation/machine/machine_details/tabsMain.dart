@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/machines/providers/machineOrders_provider.dart';
+import '../../tutorials/machine_detail_tabs_tutorial.dart';
 import '../../widgets/navBar.dart';
 import 'machine_consumption/machineConsumptionPage.dart';
 import 'machine_history/machineHistoryPage.dart';
@@ -24,6 +25,8 @@ class MachineMainPage extends StatefulWidget {
 
 class _MachineMainPageState extends State<MachineMainPage> {
   int selectedIndex = 0;
+  final GlobalKey _navBarKey = GlobalKey();
+  bool _tutorialShown = false;
 
   void _handleStartOrderSuccess() {
     setState(() {
@@ -38,6 +41,14 @@ class _MachineMainPageState extends State<MachineMainPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_tutorialShown) {
+      _tutorialShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await MachineDetailTabsTutorial.show(context, _navBarKey);
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -70,6 +81,7 @@ class _MachineMainPageState extends State<MachineMainPage> {
       body: Column(
         children: [
           TopNavigationBar(
+            key: _navBarKey,
             selectedIndex: selectedIndex,
             onTabChanged: (index) {
               setState(() {
