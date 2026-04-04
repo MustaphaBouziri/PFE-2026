@@ -113,6 +113,6 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();*/
 
-    return AdminPage();
+    return Machinelistpage();
   }
 }
