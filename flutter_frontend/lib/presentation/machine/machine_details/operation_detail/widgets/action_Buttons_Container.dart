@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/declaireProductionDialog.dart';
+import 'package:pfe_mes/presentation/machine/printLabelPage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../domain/auth/providers/auth_provider.dart';
@@ -267,7 +268,14 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             icon: Icons.print_outlined,
             buttonColor: const Color(0xFF16A34A),
             isEnabled: canPrintLabel,
-            onTap: canPrintLabel ? () {} : null,
+           onTap: canPrintLabel
+    ? () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PrintLabelPage(operationData: widget.operationData),
+        ),
+      )
+    : null,
           ),
         ],
       ),

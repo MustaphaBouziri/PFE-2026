@@ -9,6 +9,7 @@ import 'package:pfe_mes/domain/machines/providers/mes_scrap_provider.dart';
 import 'package:pfe_mes/presentation/admin/adminPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
+import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
@@ -113,6 +114,6 @@ class _AuthGateState extends State<_AuthGate> {
         }
         return const LoginPage();*/
 
-    return Machinelistpage();
+    return AdminPage();
   }
 }

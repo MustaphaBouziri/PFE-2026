@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
@@ -65,9 +66,24 @@ class _MachinelistpageState extends State<Machinelistpage> {
       appBar: AppBar(
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://picsum.photos/200/200'),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilePage(
+                      fullName: 'John Doe',
+                      email: 'john.doe@example.com',
+                      profilePictureUrl: 'https://picsum.photos/200/200',
+                    ),
+                  ),
+                );
+              },
+
+              child: CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage('https://picsum.photos/200/200'),
+              ),
             ),
             const SizedBox(width: 10),
             Column(
@@ -84,26 +100,26 @@ class _MachinelistpageState extends State<Machinelistpage> {
               ],
             ),
             const Spacer(),
-            const LanguageSelector(isCompact: true),
-             TextButton.icon(
+            TextButton.icon(
               onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MachineDashboardPage(),
-                    ),
-                  );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MachineDashboardPage(),
+                  ),
+                );
               },
               icon: const Icon(Icons.dashboard, size: 16),
               label: Text('MachineDashboard'),
-              
             ),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.logout, size: 16),
-              label: Text('logout'.tr()),
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            ),
+            /**
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.logout, size: 16),
+                label: Text('logout'.tr()),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey),
+              ),
+            */
           ],
         ),
       ),
@@ -121,7 +137,15 @@ class _MachinelistpageState extends State<Machinelistpage> {
           // Show tutorial if data loaded and not shown yet
           if (!_tutorialShown && groupedMachines.isNotEmpty) {
             _tutorialShown = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) async => await MachineListTutorial.show(context, [_searchKey, GlobalKey(), GlobalKey(), GlobalKey(), _machineCardKey]));
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) async => await MachineListTutorial.show(context, [
+                _searchKey,
+                GlobalKey(),
+                GlobalKey(),
+                GlobalKey(),
+                _machineCardKey,
+              ]),
+            );
           }
 
           return Column(
@@ -289,7 +313,10 @@ class _MachinelistpageState extends State<Machinelistpage> {
                                           : 1.8,
                                     ),
                                 itemBuilder: (context, index) {
-                                  final isFirstVisibleCard = groupedMachines.entries.first.value == machinesList && index == 0;
+                                  final isFirstVisibleCard =
+                                      groupedMachines.entries.first.value ==
+                                          machinesList &&
+                                      index == 0;
                                   return isFirstVisibleCard
                                       ? Container(
                                           key: _machineCardKey,
