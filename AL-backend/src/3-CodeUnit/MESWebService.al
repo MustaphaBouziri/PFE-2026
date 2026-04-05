@@ -144,5 +144,18 @@ codeunit 50126 "MES Web Service"
         exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity))
     end;
 
+    procedure fetchActivityLog(hoursBack: Integer): Text
+    begin
+        exit(MachineFetch.fetchActivityLog(hoursBack));
+    end;
+
+    procedure fetchMachineDashboard(hoursBack: Integer): Text
+    begin
+        exit(MachineFetch.fetchMachineDashboard(hoursBack));
+    end;
+
+    
+
+    
 
 }

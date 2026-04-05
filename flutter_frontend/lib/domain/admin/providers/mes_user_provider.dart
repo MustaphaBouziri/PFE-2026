@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../data/admin/models/mes_user_model.dart';
@@ -5,26 +7,25 @@ import '../../../data/admin/services/mes_user_service.dart';
 
 class MesUserProvider with ChangeNotifier {
   final MesUserService _service = MesUserService();
+  final StreamController<void> _refreshController =
+      StreamController<void>.broadcast();
+
+  void triggerRefresh() {
+    _refreshController.add(());
+  }
+
+  @override
+  void dispose() {
+    _refreshController.close();
+    super.dispose();
+  }
 
   List<MesUser> users = [];
   bool isLoading = false;
   String? errorMessage;
 
   // Fetch users
-  Future<void> fetchUsers() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
 
-      users = await _service.fetchAllMESUsers();
-    } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
 
   Future<void> fetchUsersByWc({required String wcId}) async {
     try {
@@ -40,6 +41,9 @@ class MesUserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+  Stream<List<MesUser>> fetchMesUsers() {
+  return _service.streamFetchAllMESUsers(trigger: _refreshController.stream);
+}
 
   Future<bool> addUser({
     required String employeeId,
@@ -56,9 +60,7 @@ class MesUserProvider with ChangeNotifier {
         roleInt: roleInt,
         workCenterList: workCenterList,
       );
-      if (success) {
-        await fetchUsers(); // to refresh the mes list user if i dont do it it wont show the new user
-      }
+
       return success;
     } catch (e) {
       errorMessage = e.toString();

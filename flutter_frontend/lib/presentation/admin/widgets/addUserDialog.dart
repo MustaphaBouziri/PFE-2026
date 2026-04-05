@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
-import '../../domain/admin/providers/erp_employee_provider.dart';
-import '../../domain/admin/providers/erp_workCenter_provider.dart';
-import '../../domain/admin/providers/mes_user_provider.dart';
-import '../widgets/employee_avatar.dart';
+import '../../../domain/admin/providers/erp_employee_provider.dart';
+import '../../../domain/admin/providers/erp_workCenter_provider.dart';
+import '../../../domain/admin/providers/mes_user_provider.dart';
+import '../../widgets/employee_avatar.dart';
 
 class AddUserDialog extends StatefulWidget {
   const AddUserDialog({super.key});

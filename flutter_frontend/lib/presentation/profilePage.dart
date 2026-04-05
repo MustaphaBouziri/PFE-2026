@@ -1,0 +1,153 @@
+import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+class ProfilePage extends StatelessWidget {
+  final String fullName;
+  final String email;
+  final String profilePictureUrl;
+
+  const ProfilePage({
+    super.key,
+    required this.fullName,
+    required this.email,
+    required this.profilePictureUrl,
+  });
+
+  void _showLanguageMenu(BuildContext context, TapDownDetails details) async {
+    final selected = await showMenu<String>(
+      
+      color: Colors.white,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+      ),
+      items: const [
+        PopupMenuItem(value: 'en', child: Text('English')),
+        PopupMenuItem(value: 'fr', child: Text('Français')),
+        PopupMenuItem(value: 'ar', child: Text('العربية')),
+      ],
+    );
+
+    if (selected != null) {
+      context.setLocale(Locale(selected));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPhone = MediaQuery.of(context).size.width < 600;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Account'), centerTitle: true),
+      body: Column(
+        children: [
+          const SizedBox(height: 30),
+          CircleAvatar(
+            radius: 40,
+            backgroundImage: NetworkImage(profilePictureUrl),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            fullName,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            email,
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: isPhone ?  EdgeInsets.all(16) : const EdgeInsets.symmetric(horizontal: 70, vertical: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFFF1F5F9),
+              ),
+              child: Column(
+                children: [
+                  ProfileTile(
+                    title: 'Change Language',
+                    icon: Icons.language,
+                    onTapDown: (details) =>
+                        _showLanguageMenu(context, details),
+                  ),
+                  ProfileTile(
+                    title: 'Change Password',
+                    icon: Icons.lock,
+                    onTap: () {},
+                  ),
+                  ProfileTile(
+                    title: 'Logout',
+                    icon: Icons.logout,
+                    color: Colors.red,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProfileTile extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback? onTap;
+  final void Function(TapDownDetails)? onTapDown;
+  final Color? color;
+
+  const ProfileTile({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.onTap,
+    this.onTapDown,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final itemColor = color ?? Colors.black87;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: Colors.grey.withOpacity(0.08),
+        splashColor: Colors.grey.withOpacity(0.2),
+        onTap: onTap,
+        onTapDown: onTapDown,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: itemColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: itemColor),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: itemColor,
+            ),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        ),
+      ),
+    );
+  }
+}

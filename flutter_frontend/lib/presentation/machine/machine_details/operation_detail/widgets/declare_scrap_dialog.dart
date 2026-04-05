@@ -115,7 +115,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                         borderRadius: BorderRadius.circular(8)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFDC2626)),
+                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
                     ),
                   ),
                   dropdownColor: Colors.white,
@@ -140,6 +140,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     labelText: 'Quantity',
+                    labelStyle: const TextStyle(color: Color(0xFF0F172A)),
                     hintText: 'e.g. 3',
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
@@ -147,7 +148,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                         borderRadius: BorderRadius.circular(8)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFDC2626)),
+                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
                     ),
                   ),
                   validator: (val) {
@@ -167,6 +168,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: 'Note (optional)',
+                    labelStyle: const TextStyle(color: Color(0xFF0F172A)),
                     hintText: 'Describe the defect...',
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
@@ -174,7 +176,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                         borderRadius: BorderRadius.circular(8)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFDC2626)),
+                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
                     ),
                   ),
                 ),
@@ -192,6 +194,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 // ── Submit ──
                 SizedBox(
                   width: double.infinity,
+                  height: 50,
                   child: ElevatedButton.icon(
                     onPressed: _isSubmitting ? null : _submit,
                     icon: _isSubmitting

@@ -7,6 +7,7 @@ class MesListRow extends StatelessWidget {
   final Color? color;
   final Color? bg;
   final TextStyle? textStyle;
+  final bool? isActive;
 
   const MesListRow({
     required this.label,
@@ -14,6 +15,7 @@ class MesListRow extends StatelessWidget {
     this.color,
     this.bg,
     this.textStyle,
+    this.isActive,
   });
 
   @override

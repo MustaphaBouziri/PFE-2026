@@ -90,4 +90,14 @@ class AppConstants {
 
   static String get fetchMESUsersByWC =>
       '${_webServiceBase}fetchMESUsersByWC?$_company';
+// toggle active status of a user
+  static String get toggleUserActiveStatus =>
+      '${_webServiceBase}AdminSetActive?$_company';
+
+ static String get fetchActivityLog =>
+      '${_webServiceBase}fetchActivityLog?$_company';
+
+  static String get fetchMachineDashboard =>
+      '${_webServiceBase}fetchMachineDashboard?$_company';
+
 }

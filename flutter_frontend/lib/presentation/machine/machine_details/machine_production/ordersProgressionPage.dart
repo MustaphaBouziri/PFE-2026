@@ -6,11 +6,16 @@ import 'package:provider/provider.dart';
 import '../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'widgets/operation_card.dart';
 
-class OrdersProgressionPage extends StatelessWidget {
+class OrdersProgressionPage extends StatefulWidget {
   final String machineNo;
 
   const OrdersProgressionPage({super.key, required this.machineNo});
 
+  @override
+  State<OrdersProgressionPage> createState() => _OrdersProgressionPageState();
+}
+
+class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
   Future<void> _handleToggle(
     BuildContext context,
     OperationStatusAndProgressModel op,
@@ -21,13 +26,13 @@ class OrdersProgressionPage extends StatelessWidget {
     try {
       if (isRunning) {
         await provider.pauseOperation(
-          machineNo: machineNo,
+          machineNo: widget.machineNo,
           prodOrderNo: op.prodOrderNo,
           operationNo: op.operationNo,
         );
       } else {
         await provider.resumeOperation(
-          machineNo: machineNo,
+          machineNo: widget.machineNo,
           prodOrderNo: op.prodOrderNo,
           operationNo: op.operationNo,
         );
@@ -49,7 +54,7 @@ class OrdersProgressionPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<OperationStatusAndProgressModel>>(
         stream: provider.getMachineOperationStatusAndProgressStream(
-          machineNo,
+          widget.machineNo,
           false,
         ),
         builder: (context, snapshot) {

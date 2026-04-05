@@ -6,6 +6,7 @@ class MesUser {
   final String email;
   final List<String> workCenterNames;
   final String authId;
+  final bool isActive;
 
   MesUser({
     required this.userId,
@@ -15,22 +16,21 @@ class MesUser {
     this.fullName = '',
     this.email = '',
     required this.workCenterNames,
+    required this.isActive,
   });
 
   factory MesUser.fromJson(Map<String, dynamic> json) {
     return MesUser(
-      userId: json['userId']?.toString() ?? '',
-      employeeId: json['employeeId']?.toString() ?? '',
-      role: json['role']?.toString() ?? '',
-      fullName: json['fullName']?.toString() ?? '',
-
-      email: json['email']?.toString() ?? '',
-      authId: json['authId']?.toString() ?? '',
-      workCenterNames:
-          (json['workCenters'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      userId:     json['userId']?.toString()     ?? '',
+      employeeId: json['employeeId']?.toString()  ?? '',
+      role:       json['role']?.toString()        ?? '',
+      fullName:   json['fullName']?.toString() ?? '',
+      email:      json['email']?.toString()       ?? '',
+      authId:     json['authId']?.toString()      ?? '',
+      workCenterNames: (json['workCenters'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList() ?? [],
+      isActive:   json['isActive'] == true // need to ask about this
     );
   }
 

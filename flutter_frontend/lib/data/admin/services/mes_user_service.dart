@@ -45,6 +45,13 @@ class MesUserService {
     }
   }
 
+  Stream<List<MesUser>> streamFetchAllMESUsers({required Stream<void> trigger}) async* {
+  yield await fetchAllMESUsers();
+  await for (final _ in trigger) {
+    yield await fetchAllMESUsers();
+  }
+}
+
   Future<bool> createMesUser({
     required String employeeId,
     required int roleInt,
@@ -59,7 +66,7 @@ class MesUserService {
 
     final response = await http.post(
       Uri.parse(AppConstants.AdminCreateUser),
-      headers: AppConstants.jsonHeaders,
+      headers:AppConstants.jsonHeaders,
       body: body,
     );
 
