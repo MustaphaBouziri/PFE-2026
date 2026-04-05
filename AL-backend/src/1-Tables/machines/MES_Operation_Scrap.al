@@ -52,6 +52,8 @@ table 50112 "MES Operation Scrap"
         {
             DataClassification = SystemMetadata;
         }
+
+        
     }
 
     keys

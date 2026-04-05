@@ -87,7 +87,7 @@
   "passwordUpdateFailed": "Password update failed. Please try again.",
   "failed": "Failed",
   "passwordFor": "Password for ",
-  "wasUpdated": " was updated.\n\nNew password:\n\n",
+  "loginUpdated": "New login:",
   "unexpectedError": "An unexpected error occurred.",
   "generatePassword": "Generate Password",
   "forUser": "For user:",

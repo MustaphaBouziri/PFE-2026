@@ -74,8 +74,6 @@ class AppConstants {
   static String get workCentersUrl =>
       '$_apiBase/companies($companyId)/workCenters';
 
-
-
   //____fetch barcodes______
 
   static const String fetchAllItemBarcodes =
@@ -86,9 +84,10 @@ class AppConstants {
 
   static String get AdminCreateUser =>
       '${_webServiceBase}AdminCreateUser?$_company';
-      
 
-       static String get fetchAllMESUsers =>
+  static String get fetchAllMESUsers =>
       '${_webServiceBase}fetchAllMESUsers?$_company';
 
+  static String get fetchMESUsersByWC =>
+      '${_webServiceBase}fetchMESUsersByWC?$_company';
 }

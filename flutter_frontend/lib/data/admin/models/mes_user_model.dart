@@ -2,8 +2,7 @@ class MesUser {
   final String userId;
   final String employeeId;
   final String role;
-  final String firstName;
-  final String lastName;
+  final String fullName;
   final String email;
   final List<String> workCenterNames;
   final String authId;
@@ -13,30 +12,26 @@ class MesUser {
     required this.authId,
     required this.employeeId,
     required this.role,
-    this.firstName = '',
-    this.lastName = '',
+    this.fullName = '',
     this.email = '',
     required this.workCenterNames,
   });
 
   factory MesUser.fromJson(Map<String, dynamic> json) {
     return MesUser(
-      userId:     json['userId']?.toString()     ?? '',
-      employeeId: json['employeeId']?.toString()  ?? '',
-      role:       json['role']?.toString()        ?? '',
-      firstName:  json['firstName']?.toString()   ?? '',
-      lastName:   json['lastName']?.toString()    ?? '',
-      email:      json['email']?.toString()       ?? '',
-      authId:     json['authId']?.toString()      ?? '',
-      workCenterNames: (json['workCenters'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ?? [],
-    );
-  }
+      userId: json['userId']?.toString() ?? '',
+      employeeId: json['employeeId']?.toString() ?? '',
+      role: json['role']?.toString() ?? '',
+      fullName: json['fullName']?.toString() ?? '',
 
-  String get fullName {
-    final name = '$firstName $lastName'.trim();
-    return name.isEmpty ? 'No Name' : name;
+      email: json['email']?.toString() ?? '',
+      authId: json['authId']?.toString() ?? '',
+      workCenterNames:
+          (json['workCenters'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+    );
   }
 
   String get workCenterNameTextFormat {

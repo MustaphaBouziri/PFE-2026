@@ -20,10 +20,25 @@ class MesUserProvider with ChangeNotifier {
       users = await _service.fetchAllMESUsers();
     } catch (e) {
       errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
+  }
 
-    isLoading = false;
-    notifyListeners();
+  Future<void> fetchUsersByWc({required String wcId}) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      users = await _service.fetchMESUsersByWC(wcId: wcId);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> addUser({

@@ -14,6 +14,7 @@ import 'domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'domain/machines/providers/mes_machines_provider.dart';
 import 'domain/machines/providers/mes_scrap_provider.dart';
 import 'presentation/admin/AddUserPage.dart';
+import 'presentation/admin/adminPage.dart';
 import 'presentation/auth/ChangePassword/changePassPage.dart';
 import 'presentation/auth/Login/login_page.dart';
 import 'presentation/machine/machine_List/machineListPage.dart';
@@ -106,12 +107,12 @@ class _AuthGateState extends State<_AuthGate> {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
           final role = auth.userData?['role']?.toString() ?? '';
-          if (role == 'Admin') return const AddUserPage();
+          if (role == 'Admin') return const AdminPage();
           return const Machinelistpage();
         }
         return const LoginPage();*/
       
-      return Machinelistpage() ;
+      return AdminPage() ;
     
   
   }

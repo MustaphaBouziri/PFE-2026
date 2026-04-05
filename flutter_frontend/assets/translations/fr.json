@@ -87,7 +87,7 @@
   "passwordUpdateFailed": "Échec de mise à jour",
   "failed": "Échec",
   "passwordFor": "Mot de passe pour ",
-  "wasUpdated": " mis à jour.\n\nNouveau mot de passe :\n\n",
+  "loginUpdated": "Nouveau login :",
   "unexpectedError": "Erreur inattendue",
   "generatePassword": "Générer mot de passe",
   "forUser": "Pour :",
