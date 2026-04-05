@@ -27,23 +27,31 @@ codeunit 50126 "MES Web Service"
     begin
         exit(UnboundActions.ChangePassword(token, oldPassword, newPassword));
     end;
-[NonDebuggable]
+
+    [NonDebuggable]
     procedure AdminCreateUser(
-        userId: Text;
-        employeeId: Text;
-        authId: Text;
-        roleInt: Integer;
-        workCenterListJson: Text): Text
+            userId: Text;
+            employeeId: Text;
+            authId: Text;
+            roleInt: Integer;
+            workCenterListJson: Text): Text
     begin
-        exit(UnboundActions.AdminCreateUser(userId, employeeId, authId, roleInt,workCenterListJson));
+        exit(UnboundActions.AdminCreateUser(userId, employeeId, authId, roleInt, workCenterListJson));
     end;
-     //fetch mes users 
+
+
+    //fetch mes users 
     procedure fetchAllMESUsers(): Text
     begin
         exit(UnboundActions.fetchAllMESUsers());
     end;
 
-    [NonDebuggable]
+    //fetch mes users by work center 
+    procedure fetchMESUsersByWC(wcId: Code[20]): Text
+    begin
+        exit(UnboundActions.fetchMESUsersByWC(wcID));
+    end;
+
     procedure AdminSetPassword(token: Text; userId: Text; newPassword: Text): Text
     begin
         exit(UnboundActions.AdminSetPassword(token, userId, newPassword));
@@ -136,5 +144,5 @@ codeunit 50126 "MES Web Service"
         exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity))
     end;
 
-   
+
 }

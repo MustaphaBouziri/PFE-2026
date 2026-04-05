@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/auth/providers/auth_provider.dart';
@@ -17,17 +18,33 @@ class GeneratePasswordDialog extends StatelessWidget {
   });
 
   static String generatePassword() {
-    const chars =
-        'AZERTYUIOQSDFGHJKXCVBNazertyuioqsdfghjkxcvbn0123456789!@#\$%';
+    const upperChars = 'AZERTYUIOQSDFGHJKXCVBN';
+    const lowerChars = 'azertyuioqsdfghjkxcvbn';
+    const nbrs = '0123456789';
+    const special = '!@#\$%';
+
     final random = Random.secure();
-    return List.generate(
-      10,
-      (index) => chars[random.nextInt(chars.length)],
-    ).join();
+    final allChars = upperChars + lowerChars + nbrs + special;
+
+    final passwordChars = <String>[
+      upperChars[random.nextInt(upperChars.length)],
+      lowerChars[random.nextInt(lowerChars.length)],
+      nbrs[random.nextInt(nbrs.length)],
+      special[random.nextInt(special.length)],
+    ];
+
+    for (int i = passwordChars.length; i < 10; i++) {
+      passwordChars.add(allChars[random.nextInt(allChars.length)]);
+    }
+
+    passwordChars.shuffle(random);
+
+    return passwordChars.join();
   }
 
   @override
   Widget build(BuildContext context) {
+    print(authId);
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -88,8 +105,7 @@ class _GeneratePasswordDialogContentState
         _showResultDialog(success: true);
       } else {
         final errorMsg =
-            authProvider.errorMessage ??
-            'passwordUpdateFailed'.tr();
+            authProvider.errorMessage ?? 'passwordUpdateFailed'.tr();
         _showResultDialog(success: false, message: errorMsg);
       }
     } finally {
@@ -118,26 +134,70 @@ class _GeneratePasswordDialogContentState
           ],
         ),
         content: success
-            ? RichText(
-                text: TextSpan(
-                  style: const TextStyle(color: Colors.black87, fontSize: 14),
-                  children: [
-                     TextSpan(text: 'passwordFor'.tr()),
-                    TextSpan(
-                      text: widget.userId,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'loginUpdated'.tr(),
+                    style: const TextStyle(color: Colors.black87, fontSize: 14),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
-                     TextSpan(text: 'wasUpdated'.tr()),
-                    TextSpan(
-                      text: _generatedPassword,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                        fontSize: 16,
-                      ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: SelectableText(
+                            'Auth ID: ${widget.authId}\nPassword: $_generatedPassword',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                              color: Color(0xFF0F172A),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        IconButton(
+                          tooltip: 'Copy',
+                          onPressed: () async {
+                            await Clipboard.setData(
+                              ClipboardData(
+                                text:
+                                    'Auth ID: ${widget.authId}\nPassword: $_generatedPassword',
+                              ),
+                            );
+
+                            if (!mounted) return;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Copied to clipboard'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.copy_rounded,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               )
             : Text(message ?? 'unexpectedError'.tr()),
         actions: [
@@ -166,7 +226,7 @@ class _GeneratePasswordDialogContentState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Text(
+                Text(
                   'generatePassword'.tr(),
                   style: TextStyle(
                     fontSize: 18,
@@ -184,7 +244,7 @@ class _GeneratePasswordDialogContentState
             const SizedBox(height: 4),
 
             Text(
-              'forUser'.tr() + '${widget.userId}',
+              'forUser'.tr() + '${widget.authId}',
               style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
 

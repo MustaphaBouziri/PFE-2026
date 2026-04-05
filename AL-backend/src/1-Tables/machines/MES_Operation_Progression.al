@@ -39,6 +39,7 @@ table 50109 "MES Operation Progression"
         {
             DataClassification = SystemMetadata;
         }
+        
     }
 
     keys

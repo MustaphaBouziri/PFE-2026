@@ -87,7 +87,7 @@
   "passwordUpdateFailed": "فشل تحديث كلمة المرور",
   "failed": "فشل",
   "passwordFor": "كلمة المرور لـ ",
-  "wasUpdated": " تم تحديثها.\n\nكلمة المرور الجديدة:\n\n",
+  "loginUpdated": "دخول جديد:",
   "unexpectedError": "حدث خطأ غير متوقع",
   "generatePassword": "إنشاء كلمة مرور",
   "forUser": "للمستخدم:",

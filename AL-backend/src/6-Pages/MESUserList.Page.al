@@ -1,12 +1,12 @@
 page 50141 "MES User List"
 {
-    PageType        = List;
+    PageType = List;
     ApplicationArea = All;
-    UsageCategory   = Administration;
-    Caption         = 'MES Users';
-    SourceTable     = "MES User";
-    CardPageId      = "MES User Card";  
-    Editable        = true;           
+    UsageCategory = Administration;
+    Caption = 'MES Users';
+    SourceTable = "MES User";
+    CardPageId = "MES User Card";
+    Editable = true;
 
     layout
     {
@@ -52,6 +52,12 @@ page 50141 "MES User List"
                     Caption = 'Must Change Password';
                 }
 
+                field("Has Password"; GetHasPasswordText())
+                {
+                    ApplicationArea = All;
+                    Caption = 'Has Password';
+                }
+
                 field("Created At"; Rec."Created At")
                 {
                     ApplicationArea = All;
@@ -60,7 +66,14 @@ page 50141 "MES User List"
         }
     }
 
-    // ✅ FUNCTION
+    local procedure GetHasPasswordText(): Text
+    begin
+        if Rec."Hashed Password" <> '' then
+            exit('Yes');
+
+        exit('No');
+    end;
+
     local procedure GetWorkCentersText(): Text
     var
         UserWC: Record "MES User Work Center";

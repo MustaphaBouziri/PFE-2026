@@ -218,7 +218,7 @@ codeunit 50111 "MES Auth Mgt"
         T: Record "MES Auth Token";
     begin
         if not ValidateToken(TokenText, AdminUser, T) then
-            Error('Unauthorized. Please login again.');
+            Error('Token invalid. Please login again.');
         if AdminUser.Role <> AdminUser.Role::Admin then
             Error('Forbidden. Admin access required.');
         OutAdminUserId := AdminUser."User Id";

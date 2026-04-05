@@ -2,11 +2,6 @@ import 'package:device_preview/device_preview.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
-import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
-import 'package:pfe_mes/presentation/admin/adminPage.dart';
-import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
-import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/scanner_dialog.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/admin/providers/erp_workCenter_provider.dart';
@@ -14,8 +9,12 @@ import '/domain/admin/providers/mes_user_provider.dart';
 import '/domain/auth/providers/auth_provider.dart';
 import '/domain/machines/providers/machineOrders_provider.dart';
 import 'domain/admin/providers/erp_employee_provider.dart';
+import 'domain/machines/barCode/provider/mes_barCode_provider.dart';
+import 'domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'domain/machines/providers/mes_machines_provider.dart';
+import 'domain/machines/providers/mes_scrap_provider.dart';
 import 'presentation/admin/AddUserPage.dart';
+import 'presentation/admin/adminPage.dart';
 import 'presentation/auth/ChangePassword/changePassPage.dart';
 import 'presentation/auth/Login/login_page.dart';
 import 'presentation/machine/machine_List/machineListPage.dart';
@@ -39,6 +38,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
             ChangeNotifierProvider(create: (_) => MachineordersProvider()),
             ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
+            ChangeNotifierProvider(create: (_) => MesScrapProvider()),
             Provider(create: (_) => MesMachinesProvider()),
             Provider(create: (_)=> MesComponentconsumptionProvider())
           ],
@@ -107,12 +107,12 @@ class _AuthGateState extends State<_AuthGate> {
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) return const ChangePasswordPage();
           final role = auth.userData?['role']?.toString() ?? '';
-          if (role == 'Admin') return const AddUserPage();
+          if (role == 'Admin') return const AdminPage();
           return const Machinelistpage();
         }
         return const LoginPage();*/
       
-      return Machinelistpage() ;
+      return AdminPage() ;
     
   
   }

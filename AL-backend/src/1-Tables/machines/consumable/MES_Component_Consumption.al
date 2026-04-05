@@ -38,12 +38,7 @@ table 50111 "MES Component Consumption"
             Caption = 'Quantity Scanned';
             DataClassification = CustomerContent;
         }
-        //field(7; "Quantity Consumed"; Decimal)
-       // {
-        //    Caption = 'Quantity Consumed';
-        //    DataClassification = CustomerContent;
-        //}
-
+     
         field(7; "Operator Id"; Code[50])
         {
             TableRelation = "MES User Execution Interaction"."User Id";
