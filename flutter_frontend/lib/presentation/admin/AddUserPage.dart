@@ -124,7 +124,14 @@ class _AddUserPageState extends State<AddUserPage> {
         // Show tutorial if data loaded and not shown yet
         if (!_tutorialShown && users.isNotEmpty) {
           _tutorialShown = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) async => await AdminDashboardTutorial.show(context, [_searchKey, _roleDropdownKey, _addUserKey, _tableKey]));
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) async => await AdminDashboardTutorial.show(context, [
+              _searchKey,
+              _roleDropdownKey,
+              _addUserKey,
+              _tableKey,
+            ]),
+          );
         }
 
         final filteredUsers = users.where((user) {
@@ -397,6 +404,7 @@ class _AddUserPageState extends State<AddUserPage> {
                                       SizedBox(
                                         width: 60,
                                         child: PopupMenuButton<String>(
+                                          color: Colors.white,
                                           icon: const Icon(
                                             Icons.more_vert,
                                             size: 20,
@@ -430,6 +438,14 @@ class _AddUserPageState extends State<AddUserPage> {
                                             }
                                           },
                                           itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 'Change Role',
+                                              child: Text('Change Role'),
+                                            ),
+                                             PopupMenuItem(
+                                              value: 'Change Department',
+                                              child: Text('Change Department'),
+                                            ),
                                             user.isActive
                                                 ? PopupMenuItem(
                                                     value: 'deactivate',
