@@ -1,3 +1,6 @@
+// MESMachineValidation.al
+// Pure validation layer — no inserts, no side effects.
+// Every public procedure is a [TryFunction] so callers can branch on success/failure.
 codeunit 50134 "MES Machine Validation"
 {
     Access = Internal;
@@ -10,24 +13,16 @@ codeunit 50134 "MES Machine Validation"
     )
     var
         ProdOrderRoutingLine: Record "Prod. Order Routing Line";
-        PreviousProdOrderRoutingLine: Record "Prod. Order Routing Line";
     begin
-        //get current order routing line mainly to know what operation u on  10 20 30 
         ProdOrderRoutingLine.Reset();
         ProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status::Released);
         ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
 
         if not ProdOrderRoutingLine.FindFirst() then
-            Error('Routing line not found.');
+            Error('Routing line not found or order is not in Released status.');
 
         EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
-
-        // now we find the previous order routing line 
-        PreviousProdOrderRoutingLine.Reset();
-        PreviousProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status);
-        PreviousProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
-        PreviousProdOrderRoutingLine.SetFilter("Operation No.", '<%1', operationNo);
     end;
 
     [TryFunction]
@@ -101,53 +96,90 @@ codeunit 50134 "MES Machine Validation"
     begin
         GetExecutionAndLatestStatus(machineNo, prodOrderNo, operationNo, MESExecution, MESOperationState);
         if MESOperationState."Operation Status" in
-           [
-               MESOperationState."Operation Status"::Finished,
-               MESOperationState."Operation Status"::Cancelled
-           ]
+           [MESOperationState."Operation Status"::Finished, MESOperationState."Operation Status"::Cancelled]
         then
             Error('Operation is already finished or cancelled.');
     end;
 
     [TryFunction]
     procedure TryDeclareScrap(
-    executionId: Code[50];
-    scrapCode: Code[10];
-    quantity: Decimal
-)
+        executionId: Code[50];
+        scrapCode: Code[10];
+        quantity: Decimal
+    )
     var
         MESExecution: Record "MES Operation Execution";
         MESOperationState: Record "MES Operation State";
         ScrapRec: Record Scrap;
     begin
-        // 1. Execution must exist
         if not MESExecution.Get(executionId) then
             Error('Execution %1 not found.', executionId);
 
-        // 2. Operation must be Running (not Paused/Finished/Cancelled)
         GetLatestOperationStatus(executionId, MESOperationState);
         if MESOperationState."Operation Status" in [
             MESOperationState."Operation Status"::Finished,
             MESOperationState."Operation Status"::Cancelled,
             MESOperationState."Operation Status"::Paused
         ] then
-            Error('Cannot declare scrap on a finished or cancelled operation.');
+            Error('Cannot declare scrap on a finished, cancelled or paused operation.');
 
-        // 3. Scrap code must exist
         if not ScrapRec.Get(scrapCode) then
             Error('Scrap code %1 does not exist.', scrapCode);
 
-        // 4. Quantity must be positive
         if quantity <= 0 then
             Error('Scrap quantity must be greater than zero.');
     end;
+
+    // Validates that a supervisor is allowed to submit records on behalf of an operator.
+    // Rules: supervisor must have Supervisor role; both must share at least one work center.
+    [TryFunction]
+    procedure TryValidateProxyDeclaration(
+        supervisorUserId: Code[50];
+        operatorUserId: Code[50]
+    )
+    var
+        SupervisorUser: Record "MES User";
+        SupervisorWC: Record "MES User Work Center";
+        OperatorWC: Record "MES User Work Center";
+        SharedWorkCenterFound: Boolean;
+    begin
+        if not SupervisorUser.Get(supervisorUserId) then
+            Error('Supervisor user %1 not found.', supervisorUserId);
+
+        if SupervisorUser.Role <> SupervisorUser.Role::Supervisor then
+            Error('User %1 does not have the Supervisor role required for proxy declarations.', supervisorUserId);
+
+        // Walk all work centers the supervisor belongs to and check for overlap with the operator
+        SharedWorkCenterFound := false;
+        SupervisorWC.Reset();
+        SupervisorWC.SetRange("User Id", supervisorUserId);
+        if SupervisorWC.FindSet() then
+            repeat
+                OperatorWC.Reset();
+                OperatorWC.SetRange("User Id", operatorUserId);
+                OperatorWC.SetRange("Work Center No.", SupervisorWC."Work Center No.");
+                if not OperatorWC.IsEmpty() then begin
+                    SharedWorkCenterFound := true;
+                    exit; // TryFunction exits on first shared work center found
+                end;
+            until SupervisorWC.Next() = 0;
+
+        if not SharedWorkCenterFound then
+            Error(
+                'Supervisor %1 and operator %2 do not share any work center. Proxy declaration is not permitted.',
+                supervisorUserId,
+                operatorUserId
+            );
+    end;
+
+    // ── Shared helpers ────────────────────────────────────────────────────────
 
     procedure EnsureNoRunningOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10])
     var
         MESExecution: Record "MES Operation Execution";
         MESOperationState: Record "MES Operation State";
     begin
-        // prevent starting the same operation twice
+        // Block if this specific order+operation is already running
         MESExecution.Reset();
         MESExecution.SetRange("Prod Order No", prodOrderNo);
         MESExecution.SetRange("Operation No", operationNo);
@@ -157,7 +189,7 @@ codeunit 50134 "MES Machine Validation"
                 Error('This operation is already running.');
         end;
 
-        // check if there is a currently worked on operation
+        // Block if the machine itself is running any operation
         MESExecution.Reset();
         MESExecution.SetRange("Machine No", machineNo);
         if MESExecution.FindSet() then
@@ -188,9 +220,7 @@ codeunit 50134 "MES Machine Validation"
         if MESExecution."Execution Id" = '' then
             Error(
                 'Operation execution record not found for Machine %1, Order %2, Operation %3.',
-                machineNo,
-                prodOrderNo,
-                operationNo
+                machineNo, prodOrderNo, operationNo
             );
 
         GetLatestOperationStatus(MESExecution."Execution Id", MESOperationState);
@@ -198,9 +228,7 @@ codeunit 50134 "MES Machine Validation"
         if MESOperationState."Execution Id" = '' then
             Error(
                 'No operation status found for Machine %1, Order %2, Operation %3.',
-                machineNo,
-                prodOrderNo,
-                operationNo
+                machineNo, prodOrderNo, operationNo
             );
     end;
 

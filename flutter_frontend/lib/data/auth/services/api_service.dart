@@ -6,34 +6,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/app_constants.dart';
 
 class ApiService {
-  // Shared headers
+  // ── Token access ─────────────────────────────────────────────────────────
 
-  Future<bool> AdminSetPassword({
-    required String token,
-    required String userId,
-    required String newPassword,
-  }) async {
-    final body = jsonEncode({
-      'token': token,
-      'userId': userId,
-      'newPassword': newPassword,
-    });
-    final response = await http.post(
-      Uri.parse(AppConstants.adminSetPasswordUrl),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return true;
-    } else {
-      throw Exception(
-        'Failed to generate password: ${response.statusCode} ${response.body}',
-      );
+  /// Returns the active auth token.
+  /// If [AppConstants.devToken] is set it takes precedence over SharedPreferences,
+  /// allowing developers to skip the login flow entirely.
+  Future<String?> getToken() async {
+    if (AppConstants.devToken != null && AppConstants.devToken!.isNotEmpty) {
+      return AppConstants.devToken;
     }
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
   }
 
-  // Login
+  // ── Auth endpoints ────────────────────────────────────────────────────────
+
   Future<Map<String, dynamic>> login(
     String authId,
     String password,
@@ -49,27 +36,28 @@ class ApiService {
           'deviceId': deviceId,
         }),
       );
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final result = jsonDecode(data['value'] ?? '{}');
+        final result =
+            jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
 
         if (result['success'] == true) {
-          await _saveToken(result['token']);
+          await _saveToken(result['token'] as String);
           await _saveUserData(result);
         }
         return result;
-      } else {
-        return {
-          'error': 'Request failed',
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
-        };
       }
+
+      return {
+        'error': 'Request failed',
+        'message': 'HTTP ${response.statusCode}: ${response.body}',
+      };
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
   }
 
-  // Get current user info
   Future<Map<String, dynamic>> getCurrentUser(String token) async {
     try {
       final response = await http.post(
@@ -80,17 +68,15 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final result = jsonDecode(data['value'] ?? '{}');
-        return result;
-      } else {
-        return {'error': 'Unauthorized', 'message': 'Failed to get user info'};
+        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
       }
+
+      return {'error': 'Unauthorized', 'message': 'Failed to get user info'};
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
   }
 
-  // Change password
   Future<Map<String, dynamic>> changePassword(
     String token,
     String oldPassword,
@@ -109,32 +95,28 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final result = jsonDecode(data['value'] ?? '{}');
-        return result;
-      } else {
-        // Parse BC's actual error response instead of swallowing it
-        try {
-          final data = jsonDecode(response.body);
-          return {
-            'success': false,
-            'error': 'Failed',
-            'message':
-                data['error']?['message'] ?? 'HTTP ${response.statusCode}',
-          };
-        } catch (_) {
-          return {
-            'success': false,
-            'error': 'Failed',
-            'message': 'HTTP ${response.statusCode}: ${response.body}',
-          };
-        }
+        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
+      }
+
+      try {
+        final data = jsonDecode(response.body);
+        return {
+          'success': false,
+          'error': 'Failed',
+          'message': data['error']?['message'] ?? 'HTTP ${response.statusCode}',
+        };
+      } catch (_) {
+        return {
+          'success': false,
+          'error': 'Failed',
+          'message': 'HTTP ${response.statusCode}: ${response.body}',
+        };
       }
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
   }
 
-  // Logout
   Future<Map<String, dynamic>> logout(String token) async {
     try {
       final response = await http.post(
@@ -147,15 +129,59 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final result = jsonDecode(data['value'] ?? '{}');
-        return result;
-      } else {
-        return {'success': true};
+        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
       }
+      return {'success': true};
     } catch (e) {
       await _clearStorage();
       return {'success': true};
     }
+  }
+
+  Future<bool> AdminSetPassword({
+    required String token,
+    required String userId,
+    required String newPassword,
+  }) async {
+    final response = await http.post(
+      Uri.parse(AppConstants.adminSetPasswordUrl),
+      headers: AppConstants.jsonHeaders,
+      body: jsonEncode({
+        'token': token,
+        'userId': userId,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) return true;
+    throw Exception(
+      'Failed to generate password: ${response.statusCode} ${response.body}',
+    );
+  }
+
+  // ── Persistence ───────────────────────────────────────────────────────────
+
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  Future<void> _saveUserData(Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_data', jsonEncode(userData));
+  }
+
+  Future<Map<String, dynamic>?> getUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('user_data');
+    if (data != null) return jsonDecode(data) as Map<String, dynamic>;
+    return null;
+  }
+
+  Future<void> _clearStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
   }
 
   //toggle active /diactivate user
@@ -176,36 +202,5 @@ class ApiService {
         'Failed to toggle user status: ${response.statusCode} ${response.body}',
       );
     }
-  }
-
-  // Local storage helpers
-  Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-  }
-
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
-  }
-
-  Future<void> _saveUserData(Map<String, dynamic> userData) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_data', jsonEncode(userData));
-  }
-
-  Future<Map<String, dynamic>?> getUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('user_data');
-    if (data != null) {
-      return jsonDecode(data);
-    }
-    return null;
-  }
-
-  Future<void> _clearStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('user_data');
   }
 }

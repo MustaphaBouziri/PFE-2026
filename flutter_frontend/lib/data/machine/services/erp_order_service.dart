@@ -7,7 +7,12 @@ import '../models/erp_order_model.dart';
 import '../models/mes_operation_model.dart';
 import '../models/mes_production_cycle.dart';
 
+/// Handles all machine-order related API calls.
+/// Write operations (start/finish/cancel/pause/resume/declareProduction)
+/// require the session token so the BC backend can resolve the MES user
+/// from the token instead of the BC Windows session.
 class ErpMachineOrdersService {
+  /// Fetches all pending production orders assigned to [machineNo].
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
     final body = jsonEncode({'machineNo': machineNo});
 
@@ -20,23 +25,24 @@ class ErpMachineOrdersService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final String valueString = data['value'] ?? '[]';
-      final List<dynamic> machineOrdersList = jsonDecode(valueString);
-      return machineOrdersList
-          .map((machineOrder) => MachineOrderModel.fromJson(machineOrder))
-          .toList();
-    } else {
-      throw Exception(
-        'Failed to fetch machine orders: ${response.statusCode} ${response.body}',
-      );
+      final List<dynamic> list = jsonDecode(valueString);
+      return list.map((e) => MachineOrderModel.fromJson(e)).toList();
     }
+    throw Exception(
+      'Failed to fetch machine orders: ${response.statusCode} ${response.body}',
+    );
   }
 
+  /// Starts [operationNo] on [machineNo] for [prodOrderNo].
+  /// [token] — session token from the authenticated user.
   Future<bool> getStartOperationValidation(
+    String token,
     String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
     final body = jsonEncode({
+      'token': token,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
       'machineNo': machineNo,
@@ -49,83 +55,82 @@ class ErpMachineOrdersService {
     );
 
     if (response.statusCode == 200) {
-      final outerJson = jsonDecode(response.body);
-      final innerJson = jsonDecode(outerJson['value']);
-      if (innerJson['value'] == true) {
-        return true;
-      } else {
-        throw Exception(innerJson['message'] ?? 'Unknown error');
-      }
-    } else {
-      throw Exception(
-        'Failed to start operation: ${response.statusCode} ${response.body}',
-      );
+      final outer = jsonDecode(response.body);
+      final inner = jsonDecode(outer['value']);
+      if (inner['value'] == true) return true;
+      throw Exception(inner['message'] ?? 'Unknown error');
     }
+    throw Exception(
+      'Failed to start operation: ${response.statusCode} ${response.body}',
+    );
   }
 
-  // ── finish / cancel ──────────────────────────────────────────────────────
-
-  /// Call when progress = 100 % — marks the operation as intentionally finished.
+  /// Marks the operation as Finished.
   Future<bool> finishOperation({
+    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
-  }) async {
-    return _setOperationStatus(
-      url: AppConstants.finishOperationUrl,
-      machineNo: machineNo,
-      prodOrderNo: prodOrderNo,
-      operationNo: operationNo,
-    );
-  }
+  }) => _setOperationStatus(
+    url: AppConstants.finishOperationUrl,
+    token: token,
+    machineNo: machineNo,
+    prodOrderNo: prodOrderNo,
+    operationNo: operationNo,
+  );
 
-  /// Call when progress < 100 % — marks the operation as cancelled.
+  /// Marks the operation as Cancelled.
   Future<bool> cancelOperation({
+    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
-  }) async {
-    return _setOperationStatus(
-      url: AppConstants.cancelOperationUrl,
-      machineNo: machineNo,
-      prodOrderNo: prodOrderNo,
-      operationNo: operationNo,
-    );
-  }
+  }) => _setOperationStatus(
+    url: AppConstants.cancelOperationUrl,
+    token: token,
+    machineNo: machineNo,
+    prodOrderNo: prodOrderNo,
+    operationNo: operationNo,
+  );
 
+  /// Pauses a running operation.
   Future<bool> pauseOperation({
+    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
-  }) async {
-    return _setOperationStatus(
-      url: AppConstants.pauseOperationUrl,
-      machineNo: machineNo,
-      prodOrderNo: prodOrderNo,
-      operationNo: operationNo,
-    );
-  }
+  }) => _setOperationStatus(
+    url: AppConstants.pauseOperationUrl,
+    token: token,
+    machineNo: machineNo,
+    prodOrderNo: prodOrderNo,
+    operationNo: operationNo,
+  );
 
+  /// Resumes a paused operation.
   Future<bool> resumeOperation({
+    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
-  }) async {
-    return _setOperationStatus(
-      url: AppConstants.resumeOperationUrl,
-      machineNo: machineNo,
-      prodOrderNo: prodOrderNo,
-      operationNo: operationNo,
-    );
-  }
+  }) => _setOperationStatus(
+    url: AppConstants.resumeOperationUrl,
+    token: token,
+    machineNo: machineNo,
+    prodOrderNo: prodOrderNo,
+    operationNo: operationNo,
+  );
 
+  /// Shared POST helper for status-transition endpoints.
   Future<bool> _setOperationStatus({
     required String url,
+    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) async {
     final body = jsonEncode({
+      'token': token,
       'machineNo': machineNo,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
@@ -138,21 +143,17 @@ class ErpMachineOrdersService {
     );
 
     if (response.statusCode == 200) {
-      final outerJson = jsonDecode(response.body);
-      final innerJson = jsonDecode(outerJson['value']);
-      if (innerJson['value'] == true) {
-        return true;
-      } else {
-        throw Exception(innerJson['message'] ?? 'Unknown error');
-      }
-    } else {
-      throw Exception(
-        'Request failed: ${response.statusCode} ${response.body}',
-      );
+      final outer = jsonDecode(response.body);
+      final inner = jsonDecode(outer['value']);
+      if (inner['value'] == true) return true;
+      throw Exception(inner['message'] ?? 'Unknown error');
     }
+    throw Exception('Request failed: ${response.statusCode} ${response.body}');
   }
 
-  // ── existing methods below (unchanged) ───────────────────────────────────
+  // ──────────────────────────────────────────────
+  // Read-only endpoints (no token change needed)
+  // ──────────────────────────────────────────────
 
   Future<List<OperationStatusAndProgressModel>>
   fetchMachineOperationStatusAndProgress(
@@ -171,19 +172,14 @@ class ErpMachineOrdersService {
     );
 
     if (response.statusCode == 200) {
-
       final data = jsonDecode(response.body);
-      
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list
           .map((e) => OperationStatusAndProgressModel.fromJson(e))
           .toList();
-    } else {
-      throw Exception(
-        'Failed to fetch machine operations status and progress : ${response.statusCode}',
-      );
     }
+    throw Exception('Failed to fetch operations: ${response.statusCode}');
   }
 
   Stream<List<OperationStatusAndProgressModel>>
@@ -194,17 +190,13 @@ class ErpMachineOrdersService {
   }) async* {
     while (true) {
       try {
-        final data = await fetchMachineOperationStatusAndProgress(
+        yield await fetchMachineOperationStatusAndProgress(
           machineNo,
           fetchFinished,
         );
-        yield data;
-      } catch (e) {
+      } catch (_) {
         yield [];
       }
-
-      // Wait for either the 5-second poll interval OR an on-demand refresh
-      // trigger — whichever comes first — before fetching again.
       final delay = Future.delayed(const Duration(seconds: 5));
       if (trigger != null) {
         await Future.any([delay, trigger.first.catchError((_) {})]);
@@ -238,11 +230,8 @@ class ErpMachineOrdersService {
       return list.isNotEmpty
           ? OperationStatusAndProgressModel.fromJson(list.first)
           : null;
-    } else {
-      throw Exception(
-        'Failed to fetch status and progress : ${response.statusCode}',
-      );
     }
+    throw Exception('Failed to fetch live data: ${response.statusCode}');
   }
 
   Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
@@ -257,17 +246,23 @@ class ErpMachineOrdersService {
     }
   }
 
+  /// Declares [input] produced units for the given operation.
+  /// [token] — session token from the authenticated user.
   Future<bool> declareProduction(
+    String token,
     String prodOrderNo,
     String operationNo,
     String machineNo,
     double input,
+    String onBehalfOfUserId,
   ) async {
     final body = jsonEncode({
+      'token': token,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
       'machineNo': machineNo,
       'input': input,
+      'onBehalfOfUserId': onBehalfOfUserId,
     });
 
     final response = await http.post(
@@ -277,18 +272,14 @@ class ErpMachineOrdersService {
     );
 
     if (response.statusCode == 200) {
-      final outerJson = jsonDecode(response.body);
-      final innerJson = jsonDecode(outerJson['value']);
-      if (innerJson['value'] == true) {
-        return true;
-      } else {
-        throw Exception(innerJson['message'] ?? 'Unknown error');
-      }
-    } else {
-      throw Exception(
-        'Failed to declare production: ${response.statusCode} ${response.body}',
-      );
+      final outer = jsonDecode(response.body);
+      final inner = jsonDecode(outer['value']);
+      if (inner['value'] == true) return true;
+      throw Exception(inner['message'] ?? 'Unknown error');
     }
+    throw Exception(
+      'Failed to declare production: ${response.statusCode} ${response.body}',
+    );
   }
 
   Future<List<ProductionCycleModel>> fetchProductionCycles(
@@ -313,11 +304,8 @@ class ErpMachineOrdersService {
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
-    } else {
-      throw Exception(
-        'Failed to fetch production cycles: ${response.statusCode}',
-      );
     }
+    throw Exception('Failed to fetch cycles: ${response.statusCode}');
   }
 
   Stream<List<ProductionCycleModel>> streamProductionCycles(
