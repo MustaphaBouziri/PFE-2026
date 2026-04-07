@@ -495,8 +495,7 @@ codeunit 50125 "MES Unbound Actions"
 
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
-    exit(JsonHelper.JsonToTextArr(UsersArray));
-end;
+
 
 procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
 var
@@ -527,8 +526,8 @@ end;
  procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
 var
     UserRec: Record "MES User";
-    Role: Enum "MES User Role";
-begin
+    Role: Enum 
+    begin
     case roleInt of
         0:
             Role := Role::Operator;
