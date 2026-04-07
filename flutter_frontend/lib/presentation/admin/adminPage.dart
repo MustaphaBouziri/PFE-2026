@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/tutorials/admin_navigation_tutorial.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -13,14 +14,25 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
+  final GlobalKey _sidebarKey = GlobalKey();
+  bool _tutorialShown = false;
 
   @override
   Widget build(BuildContext context) {
+    if (!_tutorialShown) {
+      _tutorialShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await AdminNavigationTutorial.show(context, _sidebarKey);
+      });
+    }
+
     return Scaffold(
       body: Row(
         children: [
           // sidebar
           Container(
+            key: _sidebarKey,
             width: 220,
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
@@ -55,25 +67,25 @@ class _AdminPageState extends State<AdminPage> {
                 // menu items
                 SidebarItem(
                   icon: Icons.people_outline,
-                  label: 'Users & Roles',
+                  label: 'usersRoles'.tr(),
                   isSelected: _selectedIndex == 0,
                   onTap: () => setState(() => _selectedIndex = 0),
                 ),
                 SidebarItem(
                   icon: Icons.precision_manufacturing_outlined,
-                  label: 'Machine Dashboard',
+                  label: 'machineDashboard'.tr(),
                   isSelected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
                 SidebarItem(
                   icon: Icons.bar_chart_outlined,
-                  label: 'Activity Logs',
+                  label: 'activityLogs'.tr(),
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
                 ),
                 SidebarItem(
                   icon: Icons.settings_outlined,
-                  label: 'Settings',
+                  label: 'settings'.tr(),
                   isSelected: _selectedIndex == 3,
                   onTap: () => setState(() => _selectedIndex = 3),
                 ),

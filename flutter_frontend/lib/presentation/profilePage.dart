@@ -15,7 +15,6 @@ class ProfilePage extends StatelessWidget {
 
   void _showLanguageMenu(BuildContext context, TapDownDetails details) async {
     final selected = await showMenu<String>(
-      
       color: Colors.white,
       context: context,
       position: RelativeRect.fromLTRB(
@@ -24,10 +23,10 @@ class ProfilePage extends StatelessWidget {
         details.globalPosition.dx,
         details.globalPosition.dy,
       ),
-      items: const [
-        PopupMenuItem(value: 'en', child: Text('English')),
-        PopupMenuItem(value: 'fr', child: Text('Français')),
-        PopupMenuItem(value: 'ar', child: Text('العربية')),
+      items: [
+        PopupMenuItem(value: 'en', child: Text('languageEnglish'.tr())),
+        PopupMenuItem(value: 'fr', child: Text('languageFrench'.tr())),
+        PopupMenuItem(value: 'ar', child: Text('languageArabic'.tr())),
       ],
     );
 
@@ -40,7 +39,7 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPhone = MediaQuery.of(context).size.width < 600;
     return Scaffold(
-      appBar: AppBar(title: const Text('Account'), centerTitle: true),
+      appBar: AppBar(title: Text('account'.tr()), centerTitle: true),
       body: Column(
         children: [
           const SizedBox(height: 30),
@@ -54,14 +53,13 @@ class ProfilePage extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            email,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
-          ),
+          Text(email, style: const TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: isPhone ?  EdgeInsets.all(16) : const EdgeInsets.symmetric(horizontal: 70, vertical: 16),
+            padding: isPhone
+                ? EdgeInsets.all(16)
+                : const EdgeInsets.symmetric(horizontal: 70, vertical: 16),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -70,18 +68,17 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 children: [
                   ProfileTile(
-                    title: 'Change Language',
+                    title: 'changeLanguage',
                     icon: Icons.language,
-                    onTapDown: (details) =>
-                        _showLanguageMenu(context, details),
+                    onTapDown: (details) => _showLanguageMenu(context, details),
                   ),
                   ProfileTile(
-                    title: 'Change Password',
+                    title: 'changePassword',
                     icon: Icons.lock,
                     onTap: () {},
                   ),
                   ProfileTile(
-                    title: 'Logout',
+                    title: 'logout',
                     icon: Icons.logout,
                     color: Colors.red,
                     onTap: () {},
@@ -138,7 +135,7 @@ class ProfileTile extends StatelessWidget {
             child: Icon(icon, color: itemColor),
           ),
           title: Text(
-            title,
+            title.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,

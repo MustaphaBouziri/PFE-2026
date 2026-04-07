@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -17,9 +18,17 @@ class AdminDashboardTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "This is the admin dashboard search. Find users by name or email here.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialAdminSearch'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -32,9 +41,17 @@ class AdminDashboardTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "Filter users by role: All, Admin, Supervisor, or Operator.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialAdminRoleFilter'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -47,9 +64,17 @@ class AdminDashboardTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "Click here to add a new user to the system.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialAdminAddUser'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -62,9 +87,17 @@ class AdminDashboardTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "This table shows all users. You can edit or manage user roles here.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialAdminUserTable'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -74,7 +107,7 @@ class AdminDashboardTutorial {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black87,
-      textSkip: "SKIP",
+      textSkip: 'skip'.tr(),
       paddingFocus: 6,
       opacityShadow: 0.95,
       onFinish: () {
