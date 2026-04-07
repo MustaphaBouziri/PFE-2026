@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
@@ -25,10 +26,10 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
   }
 
   String _label(int h) {
-    if (h < 24) return 'Last ${h}h';
-    if (h == 24) return 'Last 24h';
-    if (h == 48) return 'Last 48h';
-    return 'Last 7d';
+    if (h < 24) return 'lastHours'.tr(args: [h.toString()]);
+    if (h == 24) return 'last24h'.tr();
+    if (h == 48) return 'last48h'.tr();
+    return 'last7d'.tr();
   }
 
   @override
@@ -41,9 +42,9 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Machine Dashboard',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        title: Text(
+          'machineDashboardTitle'.tr(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         actions: [
           DropdownButton<int>(

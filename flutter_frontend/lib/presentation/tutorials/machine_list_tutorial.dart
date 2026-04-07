@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -10,16 +11,46 @@ class MachineListTutorial {
 
     final targets = [
       TargetFocus(
-        identify: "search_and_filter",
+        identify: "profile_picture",
         keyTarget: keys[0],
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialProfilePicture'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "search_and_filter",
+        keyTarget: keys[1],
         shape: ShapeLightFocus.RRect,
         radius: 8,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "Use this search bar to find machines by name or work center, and filter them by their status (All, Working, Idle).",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialSearchFilter'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -32,9 +63,17 @@ class MachineListTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "Tap any machine card to view its details, current order, and operations.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialMachineCard'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -44,7 +83,7 @@ class MachineListTutorial {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black87,
-      textSkip: "SKIP",
+      textSkip: 'skip'.tr(),
       paddingFocus: 6,
       opacityShadow: 0.95,
       onFinish: () {

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -17,9 +18,17 @@ class OperationDetailTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: const Text(
-              "This section shows your current production order details: quantity, status, and progress.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialOperationCurrentOrder'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -32,9 +41,17 @@ class OperationDetailTutorial {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child: const Text(
-              "Use these buttons to declare production, report scrap, print labels, or finish/cancel the order.",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = constraints.maxWidth < 600;
+                return Text(
+                  'tutorialOperationActionButtons'.tr(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -44,7 +61,7 @@ class OperationDetailTutorial {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black87,
-      textSkip: "SKIP",
+      textSkip: 'skip'.tr(),
       paddingFocus: 6,
       opacityShadow: 0.95,
       onFinish: () {

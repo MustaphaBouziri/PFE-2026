@@ -26,6 +26,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
   // Keys for tutorial
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _machineCardKey = GlobalKey();
+  final GlobalKey _profileKey = GlobalKey();
 
   bool _tutorialShown = false;
 
@@ -67,6 +68,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
         title: Row(
           children: [
             GestureDetector(
+              key: _profileKey,
               onTap: () {
                 Navigator.push(
                   context,
@@ -110,7 +112,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
                 );
               },
               icon: const Icon(Icons.dashboard, size: 16),
-              label: Text('MachineDashboard'),
+              label: Text('machineDashboard'.tr()),
             ),
             /**
               TextButton.icon(
@@ -139,8 +141,8 @@ class _MachinelistpageState extends State<Machinelistpage> {
             _tutorialShown = true;
             WidgetsBinding.instance.addPostFrameCallback(
               (_) async => await MachineListTutorial.show(context, [
+                _profileKey,
                 _searchKey,
-                GlobalKey(),
                 GlobalKey(),
                 GlobalKey(),
                 _machineCardKey,

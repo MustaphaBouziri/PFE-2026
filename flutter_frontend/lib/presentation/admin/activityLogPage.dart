@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
@@ -61,9 +62,9 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
         .toList();
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Activity Log',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        title: Text(
+          'activityLogTitle'.tr(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         actions: [
           DropdownButton<int>(
@@ -95,10 +96,14 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                   child: GlobalSearchBar(
                     controller: searchController,
                     onSearchChanged: (val) => setState(() => _currentPage = 0),
-                    dropdownItems: type,
-                    selectedValue: selectedType,
+                    dropdownItems: type.map((t) => t.tr()).toList(),
+                    selectedValue: selectedType.tr(),
                     onDropdownChanged: (val) => setState(() {
-                      selectedType = val ?? 'All';
+                      final key = type.firstWhere(
+                        (k) => k.tr() == val,
+                        orElse: () => selectedType,
+                      );
+                      selectedType = key;
                       _currentPage = 0;
                     }),
                   ),
@@ -113,10 +118,10 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 32),
-                      Expanded(flex: 2, child: tabletTitle(title: 'OPERATOR')),
-                      Expanded(flex: 2, child: tabletTitle(title: 'MACHINE')),
-                      Expanded(flex: 3, child: tabletTitle(title: 'ACTION')),
-                      Expanded(flex: 2, child: tabletTitle(title: 'TIME')),
+                      Expanded(flex: 2, child: tabletTitle(title: 'operator')),
+                      Expanded(flex: 2, child: tabletTitle(title: 'machine')),
+                      Expanded(flex: 3, child: tabletTitle(title: 'action')),
+                      Expanded(flex: 2, child: tabletTitle(title: 'time')),
                     ],
                   ),
                 ),
@@ -222,7 +227,7 @@ class tabletTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      title,
+      title.tr(),
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
