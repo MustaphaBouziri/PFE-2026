@@ -204,7 +204,7 @@ codeunit 50125 "MES Unbound Actions"
     ///         the POST API page (MES User Create API, page 50103).
     /// </summary>
     procedure AdminCreateUser(
-        // token: Text;
+        token: Text;
         userId: Text;
         employeeId: Text;
         roleInt: Integer;
@@ -244,8 +244,8 @@ codeunit 50125 "MES Unbound Actions"
 
 
         // Step 1 — read-only admin token validation inside a TryFunction.
-        //if not TryValidateAdminToken(token, AdminUserId) then
-        // exit(BuildErrorFromLastError('User creation failed'));
+        if not TryValidateAdminToken(token, AdminUserId) then
+         exit(BuildErrorFromLastError('User creation failed'));
 
         // Step 2 — Insert happens OUTSIDE the TryFunction.
         AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role);
@@ -495,9 +495,7 @@ codeunit 50125 "MES Unbound Actions"
 
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
-    exit(JsonHelper.JsonToTextArr(UsersArray));
-end;
-
+    
 procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
 var
     UserWorkCenter: Record "MES User Work Center";

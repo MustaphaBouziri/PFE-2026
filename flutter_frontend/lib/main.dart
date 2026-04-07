@@ -38,21 +38,22 @@ void main() async {
       fallbackLocale: Locale('en'),
       child: DevicePreview(
         enabled: true, // ✅ enable for testing
-        builder: (context) => MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => AuthProvider()),
-            ChangeNotifierProvider(create: (_) => MesUserProvider()),
-            ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
-            ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
-            ChangeNotifierProvider(create: (_) => MachineordersProvider()),
-            ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
-            ChangeNotifierProvider(create: (_) => MesScrapProvider()),
-            ChangeNotifierProvider(create: (_) => LogProvider()),
-            Provider(create: (_) => MesMachinesProvider()),
-            Provider(create: (_) => MesComponentconsumptionProvider()),
-          ],
-          child: const MyApp(),
-        ),
+        builder: (context) =>
+            MultiProvider(
+              providers: [
+                ChangeNotifierProvider(create: (_) => AuthProvider()),
+                ChangeNotifierProvider(create: (_) => MesUserProvider()),
+                ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
+                ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
+                ChangeNotifierProvider(create: (_) => MachineordersProvider()),
+                ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
+                ChangeNotifierProvider(create: (_) => MesScrapProvider()),
+                ChangeNotifierProvider(create: (_) => LogProvider()),
+                Provider(create: (_) => MesMachinesProvider()),
+                Provider(create: (_) => MesComponentconsumptionProvider()),
+              ],
+              child: const MyApp(),
+            ),
       ),
     ),
   );
@@ -68,7 +69,8 @@ class MyApp extends StatelessWidget {
       useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
 
-      builder: DevicePreview.appBuilder, // Important for DevicePreview
+      builder: DevicePreview.appBuilder,
+      // Important for DevicePreview
 
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
@@ -110,16 +112,18 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    /* return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        if (auth.isAuthenticated) {
-          if (auth.needsPasswordChange) return const ChangePasswordPage();
-          final role = auth.userData?['role']?.toString() ?? '';
-          if (role == 'Admin') return const AdminPage();
-          return const Machinelistpage();
-        }
-        return const LoginPage();*/
+    return Consumer<AuthProvider>(
+        builder: (context, auth, _) {
+          if (auth.isAuthenticated) {
+            if (auth.needsPasswordChange) return const ChangePasswordPage();
+            final role = auth.userData?['role']?.toString() ?? '';
+            if (role == 'Admin') return const AdminPage();
+            return const Machinelistpage();
+          }
+          return const LoginPage();
 
-    return AdminPage();
+          //return AdminPage();
+        }
+    );
   }
 }

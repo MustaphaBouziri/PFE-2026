@@ -1,16 +1,20 @@
-// lib/data/barcode/services/barcode_service.dart
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
-import '../../../../../core/app_constants.dart';
 import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
 
+import '../../../../../core/app_constants.dart';
+
+/// Handles barcode/item data fetching and scan insertion.
+/// insertScans now requires the session token so the backend can
+/// attribute each scan to the correct MES user.
 class MesBarcodeService {
+  /// Returns all items with their barcode text from the ERP.
   Future<List<ItemBarcodeModel>> fetchAllBarcodes() async {
-    // Use the same POST pattern as MesComponentconsumptionService
     final response = await http.post(
       Uri.parse(AppConstants.fetchAllItemBarcodes),
       headers: AppConstants.jsonHeaders,
-      body: jsonEncode({}), // empty body, or maybe parameters if needed
+      body: jsonEncode({}),
     );
 
     if (response.statusCode == 200) {
@@ -18,26 +22,23 @@ class MesBarcodeService {
       final String valueString = data['value'] ?? '[]';
       final List<dynamic> list = jsonDecode(valueString);
       return list.map((e) => ItemBarcodeModel.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load barcodes: ${response.statusCode}');
     }
+    throw Exception('Failed to load barcodes: ${response.statusCode}');
   }
 
+  /// Submits a batch of component scans for [executionId].
+  /// [token] — session token from the authenticated user.
   Future<bool> insertScans(
+    String token,
     String executionId,
     List<Map<String, dynamic>> scans,
+    String onBehalfOfUserId,
   ) async {
-    //jsonEncode convert a dart obj into json string
-    // why 2 encode ? the al expect scansJson to be a string that contain JSON array
-    /**
-    {
-    "executionId": "EX123",
-    "scansJson": "[{\"itemNo\":\"A1\",...}, ...]"
-    }
-  */
     final body = jsonEncode({
+      'token': token,
       'executionId': executionId,
       'scansJson': jsonEncode(scans),
+      'onBehalfOfUserId': onBehalfOfUserId,
     });
 
     final response = await http.post(
@@ -48,13 +49,10 @@ class MesBarcodeService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final result = jsonDecode(data['value'] ?? '{}'); //decode from string to map
-
+      final result = jsonDecode(data['value'] ?? '{}');
       if (result['value'] == true) return true;
-
       throw Exception(result['message'] ?? 'Unknown error');
-    } else {
-      throw Exception('Failed to insert scans: ${response.statusCode}');
     }
+    throw Exception('Failed to insert scans: ${response.statusCode}');
   }
 }

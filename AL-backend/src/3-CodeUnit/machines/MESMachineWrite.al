@@ -1,67 +1,278 @@
+/// Orchestrates write operations for MES machine executions.
+/// Every public procedure validates the incoming session token first,
+/// resolves the MES User Id from it, then delegates to the insert layer.
 codeunit 50132 "MES Machine Write"
 {
     Access = Internal;
 
+    var
+        AuthMgt: Codeunit "MES Auth Mgt";
+
+    // ──────────────────────────────────────────────
+    // Token resolution helpers
+    // ──────────────────────────────────────────────
+
+    /// Validates the token and returns the authenticated MES User Id.
+    /// Returns empty string and sets errorMessage if validation fails.
+    local procedure TryResolveUser(token: Text; var mesUserId: Code[50]; var errorMessage: Text): Boolean
+    var
+        U: Record "MES User";
+        T: Record "MES Auth Token";
+    begin
+        if not AuthMgt.ValidateToken(token, U, T) then begin
+            errorMessage := 'Unauthorized. Invalid or expired token.';
+            exit(false);
+        end;
+        AuthMgt.TouchToken(T);
+        mesUserId := U."User Id";
+        exit(true);
+    end;
+
+    /// Builds a failure JSON response and returns it.
+    local procedure BuildFailureResponse(message: Text): Text
+    var
+        ResultJson: JsonObject;
+        JsonHelper: Codeunit "MES Json Helper";
+    begin
+        ResultJson.Add('value', false);
+        ResultJson.Add('message', message);
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    // ──────────────────────────────────────────────
+    // Write procedures — each validates token first
+    // ──────────────────────────────────────────────
+
     procedure startOperation(
         prodOrderNo: Code[20];
         operationNo: Code[10];
-        machineNo: Code[20]
+        machineNo: Code[20];
+        operatorId: Code[50]
     ): Text
     var
         ResultJson: JsonObject;
-        Success: Boolean;
-        ErrorMessage: Text;
         MachineValidation: Codeunit "MES Machine Validation";
         MachineInsert: Codeunit "MES Machine Insert";
         JsonHelper: Codeunit "MES Json Helper";
     begin
         ClearLastError();
 
-        Success := MachineValidation.TryStartOperation(prodOrderNo, operationNo, machineNo);
-
-        if Success then begin
-            MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo);
+        if MachineValidation.TryStartOperation(prodOrderNo, operationNo, machineNo) then begin
+            MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo, operatorId);
             ResultJson.Add('value', true);
         end else begin
-            ErrorMessage := GetLastErrorText();
             ResultJson.Add('value', false);
-            ResultJson.Add('message', ErrorMessage);
+            ResultJson.Add('message', GetLastErrorText());
         end;
 
         exit(JsonHelper.JsonToText(ResultJson));
     end;
 
     procedure declareProduction(
-        machineNo: Code[20];
-        prodOrderNo: Code[20];
-        operationNo: Code[10];
-        input: Decimal
-    ): Text
+       machineNo: Code[20];
+       prodOrderNo: Code[20];
+       operationNo: Code[10];
+       input: Decimal;
+       operatorId: Code[50];
+       declaredById: Code[50]
+   ): Text
     var
         ResultJson: JsonObject;
-        Success: Boolean;
-        ErrorMessage: Text;
         MachineValidation: Codeunit "MES Machine Validation";
         MachineInsert: Codeunit "MES Machine Insert";
         JsonHelper: Codeunit "MES Json Helper";
     begin
         ClearLastError();
 
-        Success := MachineValidation.TryDeclareProduction(machineNo, prodOrderNo, operationNo, input);
-
-        if Success then begin
-            MachineInsert.InsertNewProgressionCycle(machineNo, prodOrderNo, operationNo, input);
+        if MachineValidation.TryDeclareProduction(machineNo, prodOrderNo, operationNo, input) then begin
+            MachineInsert.InsertNewProgressionCycle(machineNo, prodOrderNo, operationNo, input, operatorId, declaredById);
             ResultJson.Add('value', true);
         end else begin
-            ErrorMessage := GetLastErrorText();
             ResultJson.Add('value', false);
-            ResultJson.Add('message', ErrorMessage);
+            ResultJson.Add('message', GetLastErrorText());
         end;
 
         exit(JsonHelper.JsonToText(ResultJson));
     end;
 
-    local procedure ExecuteOperationTransition(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; targetStatus: Enum "MES Operation Status"): Text
+    procedure finishOperation(
+        token: Text;
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        MESOperationStatus: Record "MES Operation State";
+        MesUserId: Code[50];
+        ErrorMessage: Text;
+    begin
+        if not TryResolveUser(token, MesUserId, ErrorMessage) then
+            exit(BuildFailureResponse(ErrorMessage));
+
+        exit(ExecuteOperationTransition(
+            machineNo, prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Finished,
+            MesUserId));
+    end;
+
+    procedure cancelOperation(
+        token: Text;
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        MESOperationStatus: Record "MES Operation State";
+        MesUserId: Code[50];
+        ErrorMessage: Text;
+    begin
+        if not TryResolveUser(token, MesUserId, ErrorMessage) then
+            exit(BuildFailureResponse(ErrorMessage));
+
+        exit(ExecuteOperationTransition(
+            machineNo, prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Cancelled,
+            MesUserId));
+    end;
+
+    procedure pauseOperation(
+        token: Text;
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        MESOperationStatus: Record "MES Operation State";
+        MesUserId: Code[50];
+        ErrorMessage: Text;
+    begin
+        if not TryResolveUser(token, MesUserId, ErrorMessage) then
+            exit(BuildFailureResponse(ErrorMessage));
+
+        exit(ExecuteOperationTransition(
+            machineNo, prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Paused,
+            MesUserId));
+    end;
+
+    procedure resumeOperation(
+        token: Text;
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10]
+    ): Text
+    var
+        MESOperationStatus: Record "MES Operation State";
+        MesUserId: Code[50];
+        ErrorMessage: Text;
+    begin
+        if not TryResolveUser(token, MesUserId, ErrorMessage) then
+            exit(BuildFailureResponse(ErrorMessage));
+
+        exit(ExecuteOperationTransition(
+            machineNo, prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Running,
+            MesUserId));
+    end;
+
+    procedure insertScans(
+       executionId: Code[50];
+       scansJson: Text;
+       operatorId: Code[50];
+       declaredById: Code[50]
+   ): Text
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESConsumption: Record "MES Component Consumption";
+        JsonHelper: Codeunit "MES Json Helper";
+        MachineInsert: Codeunit "MES Machine Insert";
+        ResultJson: JsonObject;
+        ScansArr: JsonArray;
+        ScanToken: JsonToken;
+        ScanObj: JsonObject;
+        ItemNoToken: JsonToken;
+        BarcodeToken: JsonToken;
+        QtyScannedToken: JsonToken;
+        ItemNo: Code[20];
+        QtyScanned: Decimal;
+    begin
+        if not MESExecution.Get(executionId) then begin
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', 'Execution not found');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        ScansArr.ReadFrom(scansJson);
+
+        foreach ScanToken in ScansArr do begin
+            Clear(MESConsumption);
+            ScanObj := ScanToken.AsObject();
+
+            ScanObj.Get('itemNo', ItemNoToken);
+            ScanObj.Get('barcode', BarcodeToken);
+            ScanObj.Get('quantityScanned', QtyScannedToken);
+
+            ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+            QtyScanned := QtyScannedToken.AsValue().AsDecimal();
+
+            MESConsumption.Init();
+            MESConsumption."Execution Id" := executionId;
+            MESConsumption."Prod Order No" := MESExecution."Prod Order No";
+            MESConsumption."Item No" := ItemNo;
+            MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
+            MESConsumption."Quantity Scanned" := QtyScanned;
+            MESConsumption."Operator Id" := operatorId;
+            MESConsumption."Declared By" := declaredById;
+            MESConsumption.Insert(true);
+        end;
+
+        MachineInsert.EnsureUserExecutionInteraction(executionId, operatorId);
+
+        ResultJson.Add('value', true);
+        ResultJson.Add('message', 'Inserted successfully');
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    procedure declareScrap(
+       executionId: Code[50];
+       description: Text;
+       scrapCode: Code[10];
+       quantity: Decimal;
+       operatorId: Code[50];
+       declaredById: Code[50]
+   ): Text
+    var
+        ResultJson: JsonObject;
+        MachineValidation: Codeunit "MES Machine Validation";
+        MachineInsert: Codeunit "MES Machine Insert";
+        JsonHelper: Codeunit "MES Json Helper";
+    begin
+        ClearLastError();
+
+        if MachineValidation.TryDeclareScrap(executionId, scrapCode, quantity) then begin
+            MachineInsert.InsertScrapRecord(executionId, scrapCode, description, quantity, operatorId, declaredById);
+            ResultJson.Add('value', true);
+        end else begin
+            ResultJson.Add('value', false);
+            ResultJson.Add('message', GetLastErrorText());
+        end;
+
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+
+    // ──────────────────────────────────────────────
+    // Private helpers
+    // ──────────────────────────────────────────────
+
+    /// Shared state-transition logic for finish/cancel/pause/resume.
+    local procedure ExecuteOperationTransition(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        targetStatus: Enum "MES Operation Status";
+        mesUserId: Code[50]
+    ): Text
     var
         ResultJson: JsonObject;
         Success: Boolean;
@@ -85,12 +296,11 @@ codeunit 50132 "MES Machine Write"
         end;
 
         if Success then begin
-            MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, targetStatus);
+            MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, targetStatus, mesUserId);
             if targetStatus = MESOperationStatus."Operation Status"::Running then
                 MachineInsert.InsertStartMESMachineStatus(prodOrderNo, machineNo)
             else
                 MachineInsert.InsertIdleMachineStatus(machineNo);
-
             ResultJson.Add('value', true);
         end else begin
             ErrorMessage := GetLastErrorText();
@@ -100,161 +310,4 @@ codeunit 50132 "MES Machine Write"
 
         exit(JsonHelper.JsonToText(ResultJson));
     end;
-
-    procedure finishOperation(
-        machineNo: Code[20];
-        prodOrderNo: Code[20];
-        operationNo: Code[10]
-    ): Text
-    var
-        MESOperationStatus: Record "MES Operation State";
-    begin
-        exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Finished));
-    end;
-
-    procedure cancelOperation(
-        machineNo: Code[20];
-        prodOrderNo: Code[20];
-        operationNo: Code[10]
-    ): Text
-    var
-        MESOperationStatus: Record "MES Operation State";
-    begin
-        exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled));
-    end;
-
-    procedure pauseOperation(
-        machineNo: Code[20];
-        prodOrderNo: Code[20];
-        operationNo: Code[10]
-    ): Text
-    var
-        MESOperationStatus: Record "MES Operation State";
-    begin
-        exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Paused));
-    end;
-
-    procedure resumeOperation(
-        machineNo: Code[20];
-        prodOrderNo: Code[20];
-        operationNo: Code[10]
-    ): Text
-    var
-        MESOperationStatus: Record "MES Operation State";
-    begin
-        exit(ExecuteOperationTransition(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Running));
-    end;
-
-    //insert scans into the mes Component table
-
-
-    procedure insertScans(
-     executionId: Code[50];
-     scansJson: Text
- ): Text
-    var
-        MESExecution: Record "MES Operation Execution";
-        MESConsumption: Record "MES Component Consumption";
-        JsonHelper: Codeunit "MES Json Helper";
-        MachineInsert: Codeunit "MES Machine Insert";
-
-        ResultJson: JsonObject;
-        ScansArr: JsonArray;//[{}]the array that hold the array of scans objs from he input
-        ScanToken: JsonToken;//used to iterate over the array,jsonTocken is a generic representation of any json element object array value... act like a cursor
-        ScanObj: JsonObject;//{} jsonObkect we extract from each token to access the fields
-
-        // imagin these like blank paper with no type
-        //using a token allows us to later ask ''what type is this?'' and convert it
-        ItemNoToken: JsonToken;
-        BarcodeToken: JsonToken;
-        UOMToken: JsonToken;
-        QtyScannedToken: JsonToken;
-        // variables that will hold the converted token into a jsonValue=> asText as DECIMAL...
-        ItemNo: Code[20];
-        QtyScanned: Decimal;
-        LineNo: Integer;
-    begin
-        /**
-        request look like :
-           {
-             "executionId": "EX123",
-             "scansJson": "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
-           }
-        */
-
-        //  first we check if the execution id exist
-        if not MESExecution.Get(executionId) then begin
-            ResultJson.Add('value', false);
-            ResultJson.Add('message', 'Execution not found');
-            exit(JsonHelper.JsonToText(ResultJson));
-        end;
-        //convert the string "[{\"itemNo\":\"A1\",\"quantity\":5},{\"itemNo\":\"B2\",\"quantity\":10}]"
-        //to jsonArray [  { "itemNo": "A1", "quantity": 5 },{}]
-        ScansArr.ReadFrom(scansJson);
-
-        // we iterate over each scan in the array 
-        foreach ScanToken in ScansArr do begin
-            Clear(MESConsumption);
-
-            //convert the scanToken into a jsonObject { "itemNo": "A1", "quantity": 5 }
-            ScanObj := ScanToken.AsObject();
-
-            //and as i said token bcz the json value could be of any type and then we decide what type the value will be .
-            // get the value associated with the key into the json token = itemNo value insert it to ItemNoToken
-            ScanObj.Get('itemNo', ItemNoToken);
-            ScanObj.Get('barcode', BarcodeToken);
-            ScanObj.Get('quantityScanned', QtyScannedToken);
-
-            ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
-            QtyScanned := QtyScannedToken.AsValue().AsDecimal();
-
-
-            MESConsumption.Init();
-            MESConsumption."Execution Id" := executionId;
-            MESConsumption."Prod Order No" := MESExecution."Prod Order No";
-            MESConsumption."Item No" := ItemNo;
-            MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
-            MESConsumption."Quantity Scanned" := QtyScanned;
-            MESConsumption."Operator Id" := UserId;
-
-            MESConsumption.Insert(true);
-        end;
-        MachineInsert.EnsureUserExecutionInteraction(executionId);
-
-        ResultJson.Add('value', true);
-        ResultJson.Add('message', 'Inserted successfully');
-
-        exit(JsonHelper.JsonToText(ResultJson));
-    end;
-
-    procedure declareScrap(
-    executionId: Code[50];
-    description: Text;
-    scrapCode: Code[10];
-    quantity: Decimal        // add this parameter
-): Text
-    var
-        ResultJson: JsonObject;
-        Success: Boolean;
-        ErrorMessage: Text;
-        MachineValidation: Codeunit "MES Machine Validation";
-        MachineInsert: Codeunit "MES Machine Insert";
-        JsonHelper: Codeunit "MES Json Helper";
-    begin
-        ClearLastError();
-
-        Success := MachineValidation.TryDeclareScrap(executionId, scrapCode, quantity);
-
-        if Success then begin
-            MachineInsert.InsertScrapRecord(executionId, scrapCode, description, quantity);
-            ResultJson.Add('value', true);
-        end else begin
-            ErrorMessage := GetLastErrorText();
-            ResultJson.Add('value', false);
-            ResultJson.Add('message', ErrorMessage);
-        end;
-
-        exit(JsonHelper.JsonToText(ResultJson));
-    end;
-
 }

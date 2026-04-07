@@ -53,6 +53,12 @@ table 50112 "MES Operation Scrap"
             DataClassification = SystemMetadata;
         }
 
+        field(9; "Declared By"; Code[50])
+        {
+            Caption = 'Declared By';
+            TableRelation = "MES User Execution Interaction"."User Id";
+            DataClassification = CustomerContent;
+        }
         
     }
 

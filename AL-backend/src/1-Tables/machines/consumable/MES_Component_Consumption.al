@@ -18,17 +18,17 @@ table 50111 "MES Component Consumption"
 
         field(3; "Prod Order No"; Code[20])
         {
-             Caption = 'Prod Order No';
+            Caption = 'Prod Order No';
             DataClassification = CustomerContent;
         }
 
         field(4; "Item No"; Code[20])
         {
-           
+
             DataClassification = CustomerContent;
         }
 
-        field(5; "Barcode";Text[500] )
+        field(5; "Barcode"; Text[500])
         {
             Caption = 'Barcode';
             DataClassification = CustomerContent;
@@ -38,7 +38,7 @@ table 50111 "MES Component Consumption"
             Caption = 'Quantity Scanned';
             DataClassification = CustomerContent;
         }
-     
+
         field(7; "Operator Id"; Code[50])
         {
             TableRelation = "MES User Execution Interaction"."User Id";
@@ -49,6 +49,12 @@ table 50111 "MES Component Consumption"
         {
             Caption = 'Scanned At';
             DataClassification = SystemMetadata;
+        }
+        field(9; "Declared By"; Code[50])
+        {
+            Caption = 'Declared By';
+            TableRelation = "MES User Execution Interaction"."User Id";
+            DataClassification = CustomerContent;
         }
     }
 

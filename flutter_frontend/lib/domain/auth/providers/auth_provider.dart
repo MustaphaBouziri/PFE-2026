@@ -10,6 +10,9 @@ class AuthProvider with ChangeNotifier {
   String? _errorMessage;
   Map<String, dynamic>? _userData;
 
+  // Cached in memory after login so service layers can read it without async
+  String? _cachedToken;
+
   bool get isAuthenticated => _isAuthenticated;
 
   bool get isLoading => _isLoading;
@@ -20,14 +23,18 @@ class AuthProvider with ChangeNotifier {
 
   bool get needsPasswordChange => _userData?['needToChangePw'] ?? false;
 
-  // Check if user is already logged in
+  /// Synchronous token access for service layers that already have the provider.
+  /// Falls back to the dev token constant when no real session exists.
+  String get token => _cachedToken ?? '';
+
   Future<void> checkAuthStatus() async {
-    final token = await _apiService.getToken();
-    if (token != null) {
-      final result = await _apiService.getCurrentUser(token);
+    final storedToken = await _apiService.getToken();
+    if (storedToken != null) {
+      final result = await _apiService.getCurrentUser(storedToken);
       if (result['success'] == true) {
         _isAuthenticated = true;
         _userData = result;
+        _cachedToken = storedToken;
         notifyListeners();
       } else {
         await logout();
@@ -35,34 +42,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> adminSetPassword({
-    required String userId,
-    required String newPassword,
-  }) async {
-    try {
-      _isLoading = true;
-      _errorMessage = null;
-      notifyListeners();
-      final String? rawToken = await _apiService.getToken();
-      final String token = rawToken ?? '';
-
-      final success = await _apiService.AdminSetPassword(
-        token: token,
-        userId: userId,
-        newPassword: newPassword,
-      );
-      return success;
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Login
   Future<bool> login(String userId, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -75,16 +54,17 @@ class AuthProvider with ChangeNotifier {
       if (result['success'] == true) {
         _isAuthenticated = true;
         _userData = result;
+        _cachedToken = result['token'] as String?;
         _errorMessage = null;
         _isLoading = false;
         notifyListeners();
         return true;
-      } else {
-        _errorMessage = result['message'] ?? 'Login failed';
-        _isLoading = false;
-        notifyListeners();
-        return false;
       }
+
+      _errorMessage = result['message'] as String? ?? 'Login failed';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _errorMessage = 'Connection error: $e';
       _isLoading = false;
@@ -93,15 +73,14 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Change password
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final token = await _apiService.getToken();
-      if (token == null) {
+      final activeToken = await _apiService.getToken();
+      if (activeToken == null) {
         _errorMessage = 'Not authenticated';
         _isLoading = false;
         notifyListeners();
@@ -109,26 +88,23 @@ class AuthProvider with ChangeNotifier {
       }
 
       final result = await _apiService.changePassword(
-        token,
+        activeToken,
         oldPassword,
         newPassword,
       );
 
       if (result['success'] == true) {
-        // Update user data
-        if (_userData != null) {
-          _userData!['needToChangePw'] = false;
-        }
+        _userData?['needToChangePw'] = false;
         _errorMessage = null;
         _isLoading = false;
         notifyListeners();
         return true;
-      } else {
-        _errorMessage = result['message'] ?? 'Password change failed';
-        _isLoading = false;
-        notifyListeners();
-        return false;
       }
+
+      _errorMessage = result['message'] as String? ?? 'Password change failed';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _errorMessage = 'Connection error: $e';
       _isLoading = false;
@@ -137,15 +113,38 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Logout
-  Future<void> logout() async {
-    final token = await _apiService.getToken();
-    if (token != null) {
-      await _apiService.logout(token);
+  Future<bool> adminSetPassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final activeToken = await _apiService.getToken() ?? '';
+      return await _apiService.AdminSetPassword(
+        token: activeToken,
+        userId: userId,
+        newPassword: newPassword,
+      );
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
+  }
+
+  Future<void> logout() async {
+    final activeToken = await _apiService.getToken();
+    if (activeToken != null) await _apiService.logout(activeToken);
 
     _isAuthenticated = false;
     _userData = null;
+    _cachedToken = null;
     _errorMessage = null;
     notifyListeners();
   }
@@ -164,7 +163,6 @@ class AuthProvider with ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
       //final String? rawToken = await _apiService.getToken() ?? '';
-      
 
       final success = await _apiService.toggleUserActiveStatus(
         token: "",

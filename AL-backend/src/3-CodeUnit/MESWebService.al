@@ -4,8 +4,10 @@ codeunit 50126 "MES Web Service"
         UnboundActions: Codeunit "MES Unbound Actions";
         MachineFetch: Codeunit "MES Machine Fetch";
         MachineWrite: Codeunit "MES Machine Write";
+        AuthMgt: Codeunit "MES Auth Mgt";
 
-    // These are the functions that handle authentication and user administration.
+    // ── Auth endpoints (no token write logic) ─────────────────────────────────
+
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
     begin
@@ -28,28 +30,28 @@ codeunit 50126 "MES Web Service"
         exit(UnboundActions.ChangePassword(token, oldPassword, newPassword));
     end;
 
+    // ── Admin endpoints ───────────────────────────────────────────────────────
+
     [NonDebuggable]
     procedure AdminCreateUser(
-            userId: Text;
-            employeeId: Text;
-            authId: Text;
-            roleInt: Integer;
-            workCenterListJson: Text): Text
+        token: Text;
+        userId: Text;
+        employeeId: Text;
+        roleInt: Integer;
+        workCenterListJson: Text
+    ): Text
     begin
-        exit(UnboundActions.AdminCreateUser(userId, employeeId, authId, roleInt, workCenterListJson));
+        exit(UnboundActions.AdminCreateUser(token, userId, employeeId, roleInt, workCenterListJson));
     end;
 
-
-    //fetch mes users 
     procedure fetchAllMESUsers(): Text
     begin
         exit(UnboundActions.fetchAllMESUsers());
     end;
 
-    //fetch mes users by work center 
     procedure fetchMESUsersByWC(wcId: Code[20]): Text
     begin
-        exit(UnboundActions.fetchMESUsersByWC(wcID));
+        exit(UnboundActions.fetchMESUsersByWC(wcId));
     end;
 
     procedure AdminSetPassword(token: Text; userId: Text; newPassword: Text): Text
@@ -62,7 +64,8 @@ codeunit 50126 "MES Web Service"
         exit(UnboundActions.AdminSetActive(token, userId, isActive));
     end;
 
-    // These are the functions that fetch and read MES data.
+    // ── Read endpoints (no identity needed) ───────────────────────────────────
+
     procedure FetchMachines(workCenterNo: Text): Text
     begin
         exit(MachineFetch.FetchMachines(workCenterNo));
@@ -95,53 +98,161 @@ codeunit 50126 "MES Web Service"
 
     procedure fetchAllItemBarcodes(): Text
     begin
-        exit(MachineFetch.fetchAllItemBarcodes())
+        exit(MachineFetch.fetchAllItemBarcodes());
     end;
 
-    // These are the functions that insert, update, and write MES operation data.
-    procedure startOperation(prodOrderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]): Text
+    // ── Write endpoints ───────────────────────────────────────────────────────
+    // All write procedures follow the same three-step pattern:
+    //   ResolveIdentity → (optional) ValidateProxy → Delegate to MachineWrite
+
+    procedure startOperation(
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        machineNo: Code[20];
+        token: Text
+    ): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo));
+        exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo, OperatorId));
     end;
 
-    procedure declareProduction(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; input: Decimal): Text
+    procedure declareProduction(
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        input: Decimal;
+        token: Text;
+        onBehalfOfUserId: Text
+    ): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.declareProduction(machineNo, prodOrderNo, operationNo, input));
+        if not TryResolveIdentity(token, onBehalfOfUserId, DeclaredById, OperatorId, ErrorResult) then
+            exit(ErrorResult);
+
+        exit(MachineWrite.declareProduction(machineNo, prodOrderNo, operationNo, input, OperatorId, DeclaredById));
     end;
 
-    procedure finishOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
+    procedure finishOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.finishOperation(machineNo, prodOrderNo, operationNo));
+
+        exit(MachineWrite.finishOperation(machineNo, prodOrderNo, operationNo, OperatorId));
     end;
 
-    procedure cancelOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
+    procedure cancelOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.cancelOperation(machineNo, prodOrderNo, operationNo));
+
+        exit(MachineWrite.cancelOperation(machineNo, prodOrderNo, operationNo, OperatorId));
     end;
 
-    procedure pauseOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
+    procedure pauseOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.pauseOperation(machineNo, prodOrderNo, operationNo));
+
+        exit(MachineWrite.pauseOperation(machineNo, prodOrderNo, operationNo, OperatorId));
     end;
 
-    procedure resumeOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text
+    procedure resumeOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo, OperatorId));
     end;
 
-    procedure insertScans(executionId: Code[50]; scansJson: Text): Text
+    procedure insertScans(executionId: Code[50]; scansJson: Text; token: Text; onBehalfOfUserId: Text): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.insertScans(executionId, scansJson));
+        if not TryResolveIdentity(token, onBehalfOfUserId, DeclaredById, OperatorId, ErrorResult) then
+            exit(ErrorResult);
+
+        exit(MachineWrite.insertScans(executionId, scansJson, OperatorId, DeclaredById));
     end;
 
     procedure declareScrap(
         executionId: Code[50];
         description: Text;
         scrapCode: Code[10];
-        quantity: Decimal
+        quantity: Decimal;
+        token: Text;
+        onBehalfOfUserId: Text
     ): Text
+    var
+        DeclaredById: Code[50];
+        OperatorId: Code[50];
+        ErrorResult: Text;
     begin
-        exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity))
+        if not TryResolveIdentity(token, onBehalfOfUserId, DeclaredById, OperatorId, ErrorResult) then
+            exit(ErrorResult);
+
+        exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity, OperatorId, DeclaredById));
+    end;
+
+    // ── Private identity helpers ──────────────────────────────────────────────
+
+    // Validates the token, resolves DeclaredById from it, then resolves OperatorId:
+    //   - If onBehalfOfUserId is empty → OperatorId = DeclaredById (self-declaration)
+    //   - If non-empty → validate proxy permission and set OperatorId = onBehalfOfUserId
+    // Returns false and populates ErrorResult if any check fails.
+    local procedure TryResolveIdentity(
+        token: Text;
+        onBehalfOfUserId: Text;
+        var DeclaredById: Code[50];
+        var OperatorId: Code[50];
+        var ErrorResult: Text
+    ): Boolean
+    var
+        CallerUser: Record "MES User";
+        AuthToken: Record "MES Auth Token";
+        MachineValidation: Codeunit "MES Machine Validation";
+        TargetUserId: Code[50];
+        JsonHelper: Codeunit "MES Json Helper";
+    begin
+        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken) then begin
+            ErrorResult := JsonHelper.BuildError('Unauthorized', 'Invalid or expired token.');
+            exit(false);
+        end;
+
+        AuthMgt.TouchToken(AuthToken);
+        DeclaredById := CallerUser."User Id";
+
+        if onBehalfOfUserId = '' then begin
+            // Self-declaration: operator and submitter are the same person
+            OperatorId := DeclaredById;
+            exit(true);
+        end;
+
+        // Proxy declaration: supervisor submitting on behalf of an operator
+        TargetUserId := CopyStr(onBehalfOfUserId, 1, 50);
+
+        if not MachineValidation.TryValidateProxyDeclaration(DeclaredById, TargetUserId) then begin
+            ErrorResult := JsonHelper.BuildError('Forbidden', GetLastErrorText());
+            ClearLastError();
+            exit(false);
+        end;
+
+        OperatorId := TargetUserId;
+        exit(true);
     end;
 
     procedure fetchActivityLog(hoursBack: Integer): Text
@@ -154,8 +265,8 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchMachineDashboard(hoursBack));
     end;
 
-    
 
-    
+
+
 
 }

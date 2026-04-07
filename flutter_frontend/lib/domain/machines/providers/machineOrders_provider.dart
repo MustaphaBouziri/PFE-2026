@@ -2,25 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../data/auth/services/api_service.dart';
 import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/models/mes_operation_model.dart';
 import '../../../data/machine/models/mes_production_cycle.dart';
 import '../../../data/machine/services/erp_order_service.dart';
 
+/// Provides machine-order state to the UI layer.
+/// All write operations retrieve the current session token via [ApiService]
+/// and forward it to the service layer, which includes it in the request body
+/// so the BC backend can resolve the MES user identity from the token.
 class MachineordersProvider with ChangeNotifier {
   final ErpMachineOrdersService _service = ErpMachineOrdersService();
+  final ApiService _apiService = ApiService();
 
   List<MachineOrderModel> machineOrders = [];
-  List<MachineOrderModel> machineOrdersHistory = [];
   bool isLoading = false;
   String? errorMessage;
 
   final StreamController<void> _refreshController =
-  StreamController<void>.broadcast();
+      StreamController<void>.broadcast();
 
-  void triggerRefresh() {
-    _refreshController.add(());
-  }
+  void triggerRefresh() => _refreshController.add(());
 
   @override
   void dispose() {
@@ -33,38 +36,59 @@ class MachineordersProvider with ChangeNotifier {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
-
       machineOrders = await _service.getMachineOrders(machineNo);
     } catch (e) {
       errorMessage = e.toString();
     }
-
     isLoading = false;
     notifyListeners();
   }
 
+  /// Resolves the current token; throws if the session has expired.
+  Future<String> _requireToken() async {
+    final token = await _apiService.getToken();
+    if (token == null || token.isEmpty) throw Exception('Not authenticated');
+    return token;
+  }
+
   Future<bool> startOrder(
-      String prodOrderNo,
-      String operationNo,
-      String machineNo,
-      ) async {
-    final result = await _service.getStartOperationValidation(
+    String prodOrderNo,
+    String operationNo,
+    String machineNo,
+  ) async {
+    final token = await _requireToken();
+    return _service.getStartOperationValidation(
+      token,
       prodOrderNo,
       operationNo,
       machineNo,
     );
-    return result;
   }
 
-  // ── finish / cancel ────────────────────────────────────────────────────────
-
-  /// Called when progress = 100 %.
   Future<bool> finishOperation({
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) async {
+    final token = await _requireToken();
     final result = await _service.finishOperation(
+      token: token,
+      machineNo: machineNo,
+      prodOrderNo: prodOrderNo,
+      operationNo: operationNo,
+    );
+    triggerRefresh();
+    return result;
+  }
+
+  Future<bool> cancelOperation({
+    required String machineNo,
+    required String prodOrderNo,
+    required String operationNo,
+  }) async {
+    final token = await _requireToken();
+    final result = await _service.cancelOperation(
+      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -78,7 +102,9 @@ class MachineordersProvider with ChangeNotifier {
     required String prodOrderNo,
     required String operationNo,
   }) async {
+    final token = await _requireToken();
     final result = await _service.pauseOperation(
+      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -92,7 +118,9 @@ class MachineordersProvider with ChangeNotifier {
     required String prodOrderNo,
     required String operationNo,
   }) async {
+    final token = await _requireToken();
     final result = await _service.resumeOperation(
+      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -101,27 +129,33 @@ class MachineordersProvider with ChangeNotifier {
     return result;
   }
 
-
-  /// Called when progress < 100 %.
-  Future<bool> cancelOperation({
-    required String machineNo,
-    required String prodOrderNo,
-    required String operationNo,
-  }) async {
-    final result = await _service.cancelOperation(
-      machineNo: machineNo,
-      prodOrderNo: prodOrderNo,
-      operationNo: operationNo,
+  Future<bool> declareProduction(
+    String prodOrderNo,
+    String operationNo,
+    String machineNo,
+    double input,
+    String onBehalfOfUserId,
+  ) async {
+    final token = await _requireToken();
+    final result = await _service.declareProduction(
+      token,
+      prodOrderNo,
+      operationNo,
+      machineNo,
+      input,
+      onBehalfOfUserId,
     );
     triggerRefresh();
     return result;
   }
 
-  // ── existing stream methods (unchanged) ───────────────────────────────────
+  // ── Read-only streams (no token needed) ──────────────────────────────────
 
   Stream<List<OperationStatusAndProgressModel>>
   getMachineOperationStatusAndProgressStream(
-      String machineNo, bool fetchFinished) {
+    String machineNo,
+    bool fetchFinished,
+  ) {
     return _service.streamMachinesOperationStatusAndProgress(
       machineNo,
       fetchFinished,
@@ -130,15 +164,16 @@ class MachineordersProvider with ChangeNotifier {
   }
 
   Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(
-      String machineNo) async {
-    return await _service.fetchMachineOperationStatusAndProgress(machineNo, true);
+    String machineNo,
+  ) {
+    return _service.fetchMachineOperationStatusAndProgress(machineNo, true);
   }
 
   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
-      String machineNo,
-      String prodOrderNo,
-      String operationNo,
-      ) {
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+  ) {
     return _service.streamFetchOperationLiveData(
       machineNo,
       prodOrderNo,
@@ -147,27 +182,11 @@ class MachineordersProvider with ChangeNotifier {
     );
   }
 
-  Future<bool> declareProduction(
-      String prodOrderNo,
-      String operationNo,
-      String machineNo,
-      double input,
-      ) async {
-    final result = await _service.declareProduction(
-      prodOrderNo,
-      operationNo,
-      machineNo,
-      input,
-    );
-    triggerRefresh();
-    return result;
-  }
-
   Stream<List<ProductionCycleModel>> fetchProductionCyclesStream(
-      String machineNo,
-      String prodOrderNo,
-      String operationNo,
-      ) {
+    String machineNo,
+    String prodOrderNo,
+    String operationNo,
+  ) {
     return _service.streamProductionCycles(
       machineNo,
       prodOrderNo,

@@ -44,7 +44,6 @@ class GeneratePasswordDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(authId);
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

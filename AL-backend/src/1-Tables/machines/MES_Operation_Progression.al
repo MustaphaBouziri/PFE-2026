@@ -39,6 +39,13 @@ table 50109 "MES Operation Progression"
         {
             DataClassification = SystemMetadata;
         }
+
+        field(8; "Declared By"; Code[50])
+        {
+            Caption = 'Declared By';
+            TableRelation = "MES User Execution Interaction"."User Id";
+            DataClassification = CustomerContent;
+        }
         
     }
 
