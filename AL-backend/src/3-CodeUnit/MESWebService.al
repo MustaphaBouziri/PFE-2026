@@ -145,7 +145,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.finishOperation(machineNo, prodOrderNo, operationNo, OperatorId));
+        exit(MachineWrite.finishOperation(token,machineNo, prodOrderNo, operationNo));
     end;
 
     procedure cancelOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -155,7 +155,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.cancelOperation(machineNo, prodOrderNo, operationNo, OperatorId));
+        exit(MachineWrite.cancelOperation(token,machineNo, prodOrderNo, operationNo));
     end;
 
     procedure pauseOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -165,7 +165,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.pauseOperation(machineNo, prodOrderNo, operationNo, OperatorId));
+        exit(MachineWrite.pauseOperation(token,machineNo, prodOrderNo, operationNo));
     end;
 
     procedure resumeOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -174,16 +174,16 @@ codeunit 50126 "MES Web Service"
         OperatorId: Code[50];
         ErrorResult: Text;
     begin
-        exit(MachineWrite.resumeOperation(machineNo, prodOrderNo, operationNo, OperatorId));
+        exit(MachineWrite.resumeOperation(token,machineNo, prodOrderNo, operationNo));
     end;
 
-    procedure insertScans(executionId: Code[50]; scansJson: Text; token: Text; onBehalfOfUserId: Text): Text
+    procedure insertScans(executionId: Code[50]; scansJson: Text; token: Text): Text
     var
         DeclaredById: Code[50];
         OperatorId: Code[50];
         ErrorResult: Text;
     begin
-        if not TryResolveIdentity(token, onBehalfOfUserId, DeclaredById, OperatorId, ErrorResult) then
+        if not TryResolveIdentity(token, '', DeclaredById, OperatorId, ErrorResult) then
             exit(ErrorResult);
 
         exit(MachineWrite.insertScans(executionId, scansJson, OperatorId, DeclaredById));
@@ -227,9 +227,10 @@ codeunit 50126 "MES Web Service"
         MachineValidation: Codeunit "MES Machine Validation";
         TargetUserId: Code[50];
         JsonHelper: Codeunit "MES Json Helper";
+        errorMessage: Text;
     begin
-        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken) then begin
-            ErrorResult := JsonHelper.BuildError('Unauthorized', 'Invalid or expired token.');
+        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken,errorMessage) then begin
+            ErrorResult := JsonHelper.BuildError('Unauthorized', errorMessage);
             exit(false);
         end;
 

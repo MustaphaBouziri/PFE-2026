@@ -19,8 +19,8 @@ codeunit 50132 "MES Machine Write"
         U: Record "MES User";
         T: Record "MES Auth Token";
     begin
-        if not AuthMgt.ValidateToken(token, U, T) then begin
-            errorMessage := 'Unauthorized. Invalid or expired token.';
+        if not AuthMgt.ValidateToken(token, U, T, errorMessage) then begin
+            //errorMessage := 'Unauthorized. Invalid or expired token.';
             exit(false);
         end;
         AuthMgt.TouchToken(T);
@@ -145,9 +145,13 @@ codeunit 50132 "MES Machine Write"
         MESOperationStatus: Record "MES Operation State";
         MesUserId: Code[50];
         ErrorMessage: Text;
+        input: Text;
     begin
-        if not TryResolveUser(token, MesUserId, ErrorMessage) then
+        input := token + ' ||' + machineNo + ' ||' + prodOrderNo + ' ||' + operationNo;
+        if not TryResolveUser(token, MesUserId, ErrorMessage) then begin
+            ErrorMessage := ErrorMessage + input;
             exit(BuildFailureResponse(ErrorMessage));
+        end;
 
         exit(ExecuteOperationTransition(
             machineNo, prodOrderNo, operationNo,

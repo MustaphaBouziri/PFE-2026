@@ -65,7 +65,6 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
     });
 
     try {
-      final token = context.read<AuthProvider>().token;
       await context.read<MachineordersProvider>().declareProduction(
         widget.operationData.prodOrderNo,
         widget.operationData.operationNo,
@@ -76,8 +75,8 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
 
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      setState(() =>
-      _errorMessage = e.toString().replaceAll('Exception: ', ''));
+      setState(
+              () => _errorMessage = e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -90,15 +89,20 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       insetPadding: const EdgeInsets.all(30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ────────────────────────────────────────────────────
-              Row(
+        // FIX: added maxHeight so the dialog never overflows the screen,
+        // and the inner scrollable can expand to fill available space.
+        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 620),
+        child: Column(
+          // FIX: mainAxisSize.min removed from the outer Column so the
+          // Column fills the ConstrainedBox height, giving the Expanded
+          // child a finite height to work with.
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header (fixed, never scrolls) ─────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -115,117 +119,155 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                   ),
                 ],
               ),
+            ),
 
-              Text(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 2, 24, 0),
+              child: Text(
                 '${_remaining.toStringAsFixed(0)} ${'unitsRemaining'.tr()}',
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF64748B)),
+                style:
+                const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
               ),
+            ),
 
-              const SizedBox(height: 16),
+            const Divider(height: 20),
 
-              // ── Operator selector (supervisors only) ──────────────────────
-              if (_isSupervisor) ...[
-                OperatorSelector(
-                  workCenterIds: _supervisorWorkCenters,
-                  onOperatorSelected: (userId) =>
-                      setState(() => _onBehalfOfUserId = userId ?? ''),
-                ),
-                const SizedBox(height: 16),
-              ],
+            // ── Scrollable body ────────────────────────────────────────────
+            // FIX: Expanded + SingleChildScrollView gives the content area a
+            // bounded height and lets it scroll if the keyboard or the
+            // OperatorSelector pushes content beyond the dialog's maxHeight.
+            // This prevents the TextFormField from disappearing and stops
+            // text from being painted on top of other widgets.
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+                child: Column(
+                  // FIX: mainAxisSize.min here is correct — the Column
+                  // should only be as tall as its children inside the scroll
+                  // view, not try to fill the scroll viewport.
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Operator selector (supervisors only) ───────────────
+                    // FIX: wrapped in AnimatedSwitcher so the transition from
+                    // the loading state to the dropdown is smooth and does not
+                    // cause a layout jump that overlaps the form field below.
+                    if (_isSupervisor) ...[
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: OperatorSelector(
+                          // FIX: key forces a clean rebuild when workCenters
+                          // change, preventing stale loading-indicator frames
+                          // from being painted over the dropdown.
+                          key: ValueKey(_supervisorWorkCenters.join(',')),
+                          workCenterIds: _supervisorWorkCenters,
+                          onOperatorSelected: (userId) =>
+                              setState(() => _onBehalfOfUserId = userId ?? ''),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
-              // ── Quantity input ────────────────────────────────────────────
-              Form(
-                key: _formKey,
-                child: TextFormField(
-                  controller: _qtyController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: 'quantityCreated'.tr(),
-                    hintText: 'exampleQty'.tr(),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                      const BorderSide(color: Color(0xFF2563EB)),
-                    ),
-                  ),
-                  validator: (value) {
-                    final parsed = double.tryParse(value ?? '');
-                    if (parsed == null || parsed <= 0) {
-                      return 'enterValidQuantity'.tr();
-                    }
-                    if (parsed > _remaining) {
-                      return 'maxAllowedQuantity'
-                          .tr(args: [_remaining.toStringAsFixed(0)]);
-                    }
-                    return null;
-                  },
-                ),
-              ),
-
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(
-                      fontSize: 12, color: Color(0xFFDC2626)),
-                ),
-              ],
-
-              const SizedBox(height: 20),
-
-              // ── Action buttons ────────────────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.qr_code),
-                      label: Text('generateQR'.tr()),
-                      style: OutlinedButton.styleFrom(
-                        padding:
-                        const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                    // ── Quantity input ─────────────────────────────────────
+                    Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        controller: _qtyController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        decoration: InputDecoration(
+                          labelText: 'quantityCreated'.tr(),
+                          hintText: 'exampleQty'.tr(),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                            const BorderSide(color: Color(0xFF2563EB)),
+                          ),
+                        ),
+                        validator: (value) {
+                          final parsed = double.tryParse(value ?? '');
+                          if (parsed == null || parsed <= 0) {
+                            return 'enterValidQuantity'.tr();
+                          }
+                          if (parsed > _remaining) {
+                            return 'maxAllowedQuantity'.tr(
+                                args: [_remaining.toStringAsFixed(0)]);
+                          }
+                          return null;
+                        },
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _submit,
-                      icon: _isLoading
-                          ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white),
-                      )
-                          : const Icon(Icons.check, color: Colors.white),
-                      label: Text(
-                        _isLoading ? 'submitting'.tr() : 'submit'.tr(),
-                        style:
-                        const TextStyle(color: Colors.white),
+
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFFDC2626)),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                        padding:
-                        const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Action buttons ─────────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.qr_code),
+                            label: Text('generateQR'.tr()),
+                            style: OutlinedButton.styleFrom(
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _submit,
+                            icon: _isLoading
+                                ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white),
+                            )
+                                : const Icon(Icons.check,
+                                color: Colors.white),
+                            label: Text(
+                              _isLoading
+                                  ? 'submitting'.tr()
+                                  : 'submit'.tr(),
+                              style:
+                              const TextStyle(color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2563EB),
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

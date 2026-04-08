@@ -23,6 +23,11 @@ codeunit 50127 "MES Dev Setup"
         EnsureDevUser('DEV-SUPERVISOR', 'AF', 'AUTH-DEV-SV', Enum::"MES User Role"::Supervisor);
         EnsureDevUser('DEV-ADMIN', 'CB', 'AUTH-DEV-AD', Enum::"MES User Role"::Admin);
 
+        // Assign work centers to users
+        EnsureOperatorWorkCenter('DEV-OPERATOR');
+        EnsureSupervisorAllWorkCenters('DEV-SUPERVISOR');
+        // Admin gets no work centers
+
         EnsureDevToken(OperatorTokenGuid, 'DEV-OPERATOR');
         EnsureDevToken(SupervisorTokenGuid, 'DEV-SUPERVISOR');
         EnsureDevToken(AdminTokenGuid, 'DEV-ADMIN');
@@ -63,6 +68,52 @@ codeunit 50127 "MES Dev Setup"
 
         // Set a known dev password so the login flow also works manually.
         AuthMgt.SetPassword(userId, 'Dev@1234!', false);
+    end;
+
+    /// Assigns the first available work center to the operator user.
+    /// If no work centers exist, this procedure safely does nothing.
+    local procedure EnsureOperatorWorkCenter(userId: Code[50])
+    var
+        MESUserWC: Record "MES User Work Center";
+        WC: Record "Work Center";
+    begin
+        // Check if this user already has a work center assignment
+        MESUserWC.SetRange("User Id", userId);
+        if not MESUserWC.IsEmpty() then
+            exit; // already assigned — skip
+
+        // Find the first available work center
+        WC.FindFirst();
+        if WC."No." = '' then
+            exit; // no work centers exist — skip
+
+        // Assign the first work center to the operator
+        MESUserWC.Init();
+        MESUserWC."User Id" := userId;
+        MESUserWC."Work Center No." := WC."No.";
+        MESUserWC.Insert(true);
+    end;
+
+    /// Assigns all work centers to the supervisor user.
+    /// Idempotent — only inserts if work center assignments don't already exist.
+    local procedure EnsureSupervisorAllWorkCenters(userId: Code[50])
+    var
+        MESUserWC: Record "MES User Work Center";
+        WC: Record "Work Center";
+    begin
+        // Check if this user already has work center assignments
+        MESUserWC.SetRange("User Id", userId);
+        if not MESUserWC.IsEmpty() then
+            exit; // already assigned — skip
+
+        // Assign all work centers to the supervisor
+        if WC.FindSet() then
+            repeat
+                MESUserWC.Init();
+                MESUserWC."User Id" := userId;
+                MESUserWC."Work Center No." := WC."No.";
+                MESUserWC.Insert(true);
+            until WC.Next() = 0;
     end;
 
     /// Inserts a permanent (year 9999) auth token for a dev user.

@@ -1,63 +1,59 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
+import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../../data/machine/barCode/models/mes_barCode_model.dart';
-import '../../../../../domain/auth/providers/auth_provider.dart';
-import '../../../../../domain/machines/barCode/provider/mes_barCode_provider.dart';
-import '../../../../widgets/expandableText.dart';
-import 'operator_selector.dart';
 
 class ScannerWidget extends StatefulWidget {
   final String executionId;
-
-  const ScannerWidget({super.key, required this.executionId});
+  const ScannerWidget({super.key,required this.executionId});
 
   @override
   State<ScannerWidget> createState() => _ScannerWidgetState();
 }
 
 class _ScannerWidgetState extends State<ScannerWidget> {
-  final MobileScannerController _controller = MobileScannerController();
+  String scannedValue = "scanSomething".tr();
 
-  List<ItemBarcodeModel> _items = [];
-  bool _isScanning = true;
+  List<ItemBarcodeModel> items = []; // list to hold the scanned item
 
-  // Populated by OperatorSelector when the logged-in user is a Supervisor.
-  String _onBehalfOfUserId = '';
+  final MobileScannerController controller = MobileScannerController();
 
-  bool get _isSupervisor {
-    final role =
-        context
-            .read<AuthProvider>()
-            .userData?['role']
-            ?.toString()
-            .trim()
-            .toLowerCase() ??
-        '';
-    return role == 'supervisor';
-  }
+  bool isScanning = true; // used for scan again ?
 
-  List<String> get _supervisorWorkCenters {
-    final wcs = context.read<AuthProvider>().userData?['workCenters'];
-    if (wcs is List) return wcs.map((e) => e.toString()).toList();
-    return [];
-  }
+  // this function takes row barcode string and make it into an itemBarcodeModel
+  ItemBarcodeModel parse(String raw) {
+    // split the string into an array List using the | as separator
+    /**
+        from : Item Number:123|Item Description:Apple|Base UOM:kg
+        to : ["Item Number:123", "Item Description:Apple", "Base UOM:kg"]
+     */
+    final barCodeTextList = raw.split('|');
 
-  // ── Barcode parsing ───────────────────────────────────────────────────────
+    // we create an empty map, store key and  value  pairs
+    Map<String, String> map = {};
 
-  /// Converts the pipe-delimited barcode text into an [ItemBarcodeModel].
-  /// Format: "Item Number: X|Item Description: Y|Base UOM: Z|..."
-  ItemBarcodeModel _parseBarcode(String raw) {
-    final map = <String, String>{};
-    for (final segment in raw.split('|')) {
-      final parts = segment.split(':');
-      if (parts.length == 2) {
-        map[parts[0].trim()] = parts[1].trim();
+    for (var b in barCodeTextList) {
+      //for each element of the carCodeTextList we seperate each element like we did earlier " | "
+      // with a sperator ":"
+
+      /**
+          from: ["Item Number:123", "Item Description:Apple", "Base UOM:kg"]
+          to : keyvalue = ["Item Number", "123"]
+       */
+      var keyValue = b.split(':');
+      if (keyValue.length == 2) {
+        // two part item number + 123
+        //trim keyValue(0) "Item Number"
+        //we set the map its key to its value so it becomes :
+        //{"Item Number": "123", "Item Description": "Apple", "Base UOM": "kg"}
+        map[keyValue[0].trim()] = keyValue[1].trim();
       }
     }
-
+    //we use the map to build the model
+    //After the loop, we have a map where each key is a field name and each value is the corresponding value as a string
     return ItemBarcodeModel(
       itemNo: map['Item Number'] ?? '',
       description: map['Item Description'] ?? '',
@@ -71,122 +67,92 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     );
   }
 
-  // ── Item list management ──────────────────────────────────────────────────
+  //______________________add item
 
-  /// Increments quantity if the item already exists, otherwise appends it.
-  void _addOrIncrement(ItemBarcodeModel newItem) {
-    final index = _items.indexWhere((e) => e.itemNo == newItem.itemNo);
+  // we add new item or we increment qte
+  void addItem(ItemBarcodeModel newItem) {
+    int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
+
     if (index != -1) {
-      _setQuantity(index, _items[index].quantity + 1);
+      items[index] = ItemBarcodeModel(
+        itemNo: items[index].itemNo,
+        description: items[index].description,
+        baseUOM: items[index].baseUOM,
+        inventory: items[index].inventory,
+        shelfNo: items[index].shelfNo,
+        lotSize: items[index].lotSize,
+        flushingMethod: items[index].flushingMethod,
+        barcodeText: items[index].barcodeText,
+        quantity: items[index].quantity + 1,
+      );
     } else {
-      setState(() => _items.add(newItem));
+      items.add(newItem);
     }
   }
 
-  void _increment(int index) => _setQuantity(index, _items[index].quantity + 1);
-
-  void _decrement(int index) {
-    if (_items[index].quantity > 1) {
-      _setQuantity(index, _items[index].quantity - 1);
-    }
-  }
-
-  void _remove(int index) => setState(() => _items.removeAt(index));
-
-  void _setQuantity(int index, double newQty) {
+  //increase quantity
+  void increaseQty(int index) {
     setState(() {
-      final original = _items[index];
-      _items[index] = ItemBarcodeModel(
-        itemNo: original.itemNo,
-        description: original.description,
-        baseUOM: original.baseUOM,
-        inventory: original.inventory,
-        shelfNo: original.shelfNo,
-        lotSize: original.lotSize,
-        flushingMethod: original.flushingMethod,
-        barcodeText: original.barcodeText,
-        quantity: newQty,
+      items[index] = ItemBarcodeModel(
+        itemNo: items[index].itemNo,
+        description: items[index].description,
+        baseUOM: items[index].baseUOM,
+        inventory: items[index].inventory,
+        shelfNo: items[index].shelfNo,
+        lotSize: items[index].lotSize,
+        flushingMethod: items[index].flushingMethod,
+        barcodeText: items[index].barcodeText,
+        quantity: items[index].quantity + 1,
       );
     });
   }
 
-  // ── Scan handling ─────────────────────────────────────────────────────────
-
-  void _onDetect(BarcodeCapture capture) {
-    if (!_isScanning) return;
-
-    final rawValue = capture.barcodes.first.rawValue;
-    if (rawValue == null) return;
-
+  // decrease quantity
+  void decreaseQty(int index) {
     setState(() {
-      _addOrIncrement(_parseBarcode(rawValue));
-      _isScanning = false;
+      if (items[index].quantity > 1) {
+        items[index] = ItemBarcodeModel(
+          itemNo: items[index].itemNo,
+          description: items[index].description,
+          baseUOM: items[index].baseUOM,
+          inventory: items[index].inventory,
+          shelfNo: items[index].shelfNo,
+          lotSize: items[index].lotSize,
+          flushingMethod: items[index].flushingMethod,
+          barcodeText: items[index].barcodeText,
+          quantity: items[index].quantity - 1,
+        );
+      }
     });
-    _controller.stop();
   }
 
-  void _scanAgain() {
-    setState(() => _isScanning = true);
-    _controller.start();
+  //delete item from list
+  void removeItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
   }
 
-  // ── Submission ────────────────────────────────────────────────────────────
-
-  Future<void> _confirmScans() async {
-    final provider = context.read<MesBarcodeProvider>();
-    final token = context.read<AuthProvider>().token;
-
-    final scans = _items.map((e) => e.toJson()).toList();
-
-    final success = await provider.insertScans(
-      widget.executionId,
-      scans,
-      _onBehalfOfUserId,
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('insertedSuccessfully'.tr())));
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage ?? 'error'.tr())),
-      );
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // convert the list items into json to pass to the al
+  /*
+  [
+   {...},
+   {...}
+ ]
+ */
 
   @override
   Widget build(BuildContext context) {
-    final isPhone = MediaQuery.of(context).size.width <= 600;
-
+    final isphone = MediaQuery.of(context).size.width <= 600;
     return Dialog(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Color(0xFFF8FAFC),
       child: SizedBox(
-        width: isPhone ? 400 : 500,
-        height: _isSupervisor ? 680 : 600,
+        width: isphone ? 400 : 500,
+        height: 600,
         child: Column(
           children: [
-            const SizedBox(height: 16),
-
-            // ── Operator selector (supervisors only) ──────────────────────
-            if (_isSupervisor)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OperatorSelector(
-                  workCenterIds: _supervisorWorkCenters,
-                  onOperatorSelected: (userId) =>
-                      setState(() => _onBehalfOfUserId = userId ?? ''),
-                ),
-              ),
-
-            if (_isSupervisor) const SizedBox(height: 12),
-
-            // ── Camera viewfinder ─────────────────────────────────────────
+            SizedBox(height: 16),
+            //scanner box
             Expanded(
               flex: 3,
               child: Center(
@@ -200,18 +166,47 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: MobileScanner(
-                      controller: _controller,
-                      onDetect: _onDetect,
+                      controller: controller,
+                      onDetect: (barcodeCapture) {
+                        if (!isScanning) return;
+
+                        final barcode =
+                            barcodeCapture.barcodes.first; // dependacy made
+                        final value = barcode
+                            .rawValue; // the value of the barcode text scanned
+
+                        if (value != null) {
+                          //final item = parse... its like saying : /**
+                          //so ItemBarcodeModel item = ItemBarcodeModel( itemNo: "ABC123", description: "White Glue", baseUOM: "EA", inventory: 100.0, shelfNo: "B4", lotSize: 25.0, flushingMethod: "Manual", barcodeText: rawString, quantity: 1, ); */
+                          final item = parse(
+                            value,
+                          ); // convert the raw string into ItemBarcodeModel object with ==> ItemBarcodeModel parse(String raw)
+
+                          setState(() {
+                            addItem(item);
+                            isScanning = false; // stop scanning after detection
+                          });
+
+                          controller.stop(); //freeze the camera
+                        }
+                      },
                     ),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
+            //resume camera button
             ElevatedButton(
-              onPressed: _scanAgain,
+              onPressed: () {
+                setState(() {
+                  isScanning = true;
+                });
+
+                controller.start(); // unfreeze camera
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F172A),
                 padding: const EdgeInsets.symmetric(
@@ -223,21 +218,21 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                 ),
               ),
               child: Text(
-                'scanAgain'.tr(),
-                style: const TextStyle(color: Colors.white),
+                "scanAgain".tr(),
+                style: TextStyle(color: Colors.white),
               ),
             ),
 
-            // ── Scanned items list ────────────────────────────────────────
+            // list
             Expanded(
               flex: 4,
               child: ListView.builder(
-                itemCount: _items.length,
+                itemCount: items.length,
                 itemBuilder: (context, index) {
-                  final item = _items[index];
+                  final item = items[index];
 
                   return Padding(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8.0),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
@@ -248,31 +243,29 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                           Expanded(
                             child: ListTile(
                               title: ExpandableText(
-                                text: '${item.itemNo} - ${item.description}',
-                                style: const TextStyle(
-                                  fontSize: 14,
+                                text: "${item.itemNo} - ${item.description}",
+                                style: TextStyle(
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               subtitle: Text(
-                                '${'qty'.tr()}${item.quantity.toInt()}',
-                                style: const TextStyle(
-                                  color: Color(0xFF64748B),
-                                ),
+                                "qty".tr() + "${item.quantity}",
+                                style: TextStyle(color: Color(0xFF64748B)),
                               ),
                             ),
                           ),
                           IconButton(
-                            onPressed: () => _increment(index),
-                            icon: const Icon(Icons.add, color: Colors.black),
+                            onPressed: () => increaseQty(index),
+                            icon: Icon(Icons.add, color: Colors.black),
                           ),
                           IconButton(
-                            onPressed: () => _decrement(index),
-                            icon: const Icon(Icons.remove, color: Colors.black),
+                            onPressed: () => decreaseQty(index),
+                            icon: Icon(Icons.remove, color: Colors.black),
                           ),
                           IconButton(
-                            onPressed: () => _remove(index),
-                            icon: const Icon(
+                            onPressed: () => removeItem(index),
+                            icon: Icon(
                               Icons.delete_outline_sharp,
                               color: Colors.red,
                             ),
@@ -284,27 +277,34 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                 },
               ),
             ),
+            // confirm scans button
+            ElevatedButton(
+              onPressed: () async {
+                final provider = context.read<MesBarcodeProvider>();
+                //call the toJson methode in the barcode mode
+                //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
+                //then convert toList = [{},{}]
 
-            // ── Confirm button ────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _items.isEmpty ? null : _confirmScans,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'confirmScans'.tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
+                final scans = items.map((e) => e.toJson()).toList();
+
+                final success = await provider.insertScans(
+                  widget.executionId,
+                  scans,
+                );
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('insertedSuccessfully'.tr())),
+                  );
+
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(provider.errorMessage ?? 'error'.tr())),
+                  );
+                }
+              },
+              child:  Text('confirmScans'.tr()),
             ),
           ],
         ),

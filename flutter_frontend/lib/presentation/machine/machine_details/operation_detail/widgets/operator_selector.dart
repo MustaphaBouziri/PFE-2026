@@ -37,28 +37,37 @@ class _OperatorSelectorState extends State<OperatorSelector> {
 
   /// Fetches operators for every work center the supervisor belongs to,
   /// merges the results, and deduplicates by userId.
+  ///
+  /// FIX: The original code called setState twice — once to update _errorMessage
+  /// and once to set _operators + _isLoading = false.  The gap between the two
+  /// calls caused a single frame where _isLoading was still true but _operators
+  /// was already populated, which rendered both the loading indicator AND the
+  /// dropdown simultaneously, producing the text-superimposition bug.
+  /// Now all state mutations are batched into a single setState at the end.
   Future<void> _loadOperators() async {
     final provider = context.read<MesUserProvider>();
     final Map<String, MesUser> seen = {};
+    String? error;
 
     try {
       for (final wcId in widget.workCenterIds) {
         await provider.fetchUsersByWc(wcId: wcId);
         for (final user in provider.users) {
-          // Only operators can be the target of a proxy declaration
+          // Only operators can be the target of a proxy declaration.
           if (user.role == 'Operator') {
             seen[user.userId] = user;
           }
         }
       }
     } catch (e) {
-      if (mounted) setState(() => _errorMessage = e.toString());
-      return;
+      error = e.toString();
     }
 
+    // FIX: single setState — no intermediate partial-state frame.
     if (mounted) {
       setState(() {
-        _operators = seen.values.toList();
+        _errorMessage = error;
+        _operators = error == null ? seen.values.toList() : [];
         _isLoading = false;
       });
     }
@@ -114,15 +123,21 @@ class _OperatorSelectorState extends State<OperatorSelector> {
           ),
         ),
         const SizedBox(height: 6),
+        // FIX: ValueKey on the operator count so Flutter fully replaces the
+        // dropdown widget when the list changes, preventing a stale item
+        // reference that could crash or show ghost entries.
         DropdownButtonFormField<MesUser>(
+          key: ValueKey(_operators.length),
           value: _selectedOperator,
+          isExpanded: true,
           decoration: InputDecoration(
             hintText: 'selectOperator'.tr(),
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            border:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF2563EB)),

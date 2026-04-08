@@ -139,19 +139,27 @@ codeunit 50111 "MES Auth Mgt"
     procedure ValidateToken(
         TokenText: Text;
         var U: Record "MES User";
-        var T: Record "MES Auth Token"): Boolean
+        var T: Record "MES Auth Token"; 
+        var errorMessage: Text): Boolean
     var
         TokenGuid: Guid;
     begin
         Clear(U);
         Clear(T);
         if TokenText = '' then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. token text ||';
         if not Evaluate(TokenGuid, TokenText) then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. evaluate ||';
         if not T.Get(TokenGuid) then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. get ||';
         if T.Revoked then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. revoked ||';
         if T."Expires At" <= CurrentDateTime() then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. expired ||';
         if not U.Get(T."User Id") then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. getuser ||';
         if not U."Is Active" then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token. active ||';
         exit(true);
     end;
 
@@ -198,9 +206,10 @@ codeunit 50111 "MES Auth Mgt"
     var
         U: Record "MES User";
         T: Record "MES Auth Token";
+        errorMessage: Text;
     begin
-        if not ValidateToken(TokenText, U, T) then
-            Error('Unauthorized. Please login again.');
+        if not ValidateToken(TokenText, U, T,errorMessage) then
+            Error(errorMessage);
         if not PwMgt.VerifyPassword(OldPassword, U."Hashed Password", U."Password Salt") then
             Error('Current password is incorrect.');
         if not AuthValidation.IsPasswordStrong(NewPassword) then
@@ -216,9 +225,10 @@ codeunit 50111 "MES Auth Mgt"
     var
         AdminUser: Record "MES User";
         T: Record "MES Auth Token";
+        errorMessage: Text;
     begin
-        if not ValidateToken(TokenText, AdminUser, T) then
-            Error('Token invalid. Please login again.');
+        if not ValidateToken(TokenText, AdminUser, T,errorMessage) then
+            Error(errorMessage);
         if AdminUser.Role <> AdminUser.Role::Admin then
             Error('Forbidden. Admin access required.');
         OutAdminUserId := AdminUser."User Id";
@@ -237,9 +247,10 @@ codeunit 50111 "MES Auth Mgt"
     procedure RequireAdmin(TokenText: Text; var AdminUser: Record "MES User")
     var
         T: Record "MES Auth Token";
+        errorMessage: Text;
     begin
-        if not ValidateToken(TokenText, AdminUser, T) then
-            Error('Unauthorized. Please login again.');
+        if not ValidateToken(TokenText, AdminUser, T,errorMessage) then
+            Error(errorMessage);
         if AdminUser.Role <> AdminUser.Role::Admin then
             Error('Forbidden. Admin access required.');
         TouchToken(T);
@@ -255,7 +266,7 @@ codeunit 50111 "MES Auth Mgt"
         AdminUser: Record "MES User";
         U: Record "MES User";
     begin
-       // RequireAdmin(TokenText, AdminUser);
+        // RequireAdmin(TokenText, AdminUser);
 
         if not U.Get(TargetUserId) then
             Error('User %1 not found.', TargetUserId);
