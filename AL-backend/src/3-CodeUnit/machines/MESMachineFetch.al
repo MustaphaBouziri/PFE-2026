@@ -24,9 +24,9 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('workCenterNo', Machine."Work Center No.");
                 // get :goes to the work center table and looks for the row where pk = 100 for exemple
                 if WorkCenter.Get(Machine."Work Center No.") then
-                MachineObj.Add('workCenterName', WorkCenter.Name)
-            else
-                MachineObj.Add('workCenterName', '');
+                    MachineObj.Add('workCenterName', WorkCenter.Name)
+                else
+                    MachineObj.Add('workCenterName', '');
 
                 MESMachineStatus.Reset();
                 MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
@@ -172,6 +172,7 @@ codeunit 50131 "MES Machine Fetch"
                             MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
                             MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
                             MESOperationStatusObj.Add('orderQuantity', MESExecution."Order Quantity");
+                            MESOperationStatusObj.Add('itemNo', MESExecution."Item No");
                             MESOperationStatusObj.Add('itemDescription', MESExecution."Item Description");
                             if MESExecution."Order Quantity" <> 0 then
                                 MESOperationStatusObj.Add('progressPercent',
@@ -308,11 +309,13 @@ codeunit 50131 "MES Machine Fetch"
         ProductOrderRoutingLine: Record "Prod. Order Routing Line";
         MESComponentConsumption: Record "MES Component Consumption";
         MESExecution: Record "MES Operation Execution";
+        ItemUnitOfMeasure: Record "Item Unit of Measure";
         ExecutionId: Code[50];
         CurrentRoutingLinkCode: Code[10];
         HasAnyRoutingLink: Boolean;
         TotalConsumed: Decimal;
         TotalScanned: Decimal;
+        QuantityPerUnit: Decimal;
         BelongsToThisOperation: Boolean;
 
         BomObj: JsonObject;
@@ -372,6 +375,7 @@ codeunit 50131 "MES Machine Fetch"
                     TotalConsumed := 0;
                     TotalScanned := 0;
 
+
                     BelongsToThisOperation := false;
                     if ProductOrderComponent."Routing Link Code" <> '' then
                         if ProductOrderComponent."Routing Link Code" = CurrentRoutingLinkCode then
@@ -389,17 +393,28 @@ codeunit 50131 "MES Machine Fetch"
                             until MESComponentConsumption.Next() = 0;
 
                     end;
+                    // get this item from the item unit table where same number and with this code 
+                    QuantityPerUnit := ProductOrderComponent."Quantity per";
+                    ItemUnitOfMeasure.Reset();
+                    ItemUnitOfMeasure.SetRange("Item No.", ProductOrderComponent."Item No.");
+                    ItemUnitOfMeasure.SetRange(Code, ProductOrderComponent."Unit of Measure Code");
+                    if ItemUnitOfMeasure.FindFirst() then
+                        QuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure" * ProductOrderComponent."Quantity per";
+
                     Clear(BomObj);
+
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                     BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
                     BomObj.Add('lineNUmber', ProductOrderComponent."Line No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
-                    BomObj.Add('quantityScanned', TotalScanned);
+                    BomObj.Add('quantityScanned', TotalScanned); // how much i scanned this qr code
+
+
                     //BomObj.Add('quantityConsumed', TotalConsumed);
                     //BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
-                    BomObj.Add('quantityPer', ProductOrderComponent."Quantity per");
+                    BomObj.Add('QuantityPerUnit', QuantityPerUnit);
                     BomArr.Add(BomObj);
                     /**
                      {
@@ -484,235 +499,235 @@ codeunit 50131 "MES Machine Fetch"
 
 
     procedure fetchActivityLog(hoursBack: Integer): Text
-var
-    MESExecution: Record "MES Operation Execution";
-    MESState: Record "MES Operation State";
-    MESProgression: Record "MES Operation Progression";
-    MESScrap: Record "MES Operation Scrap";
-    MESConsumption: Record "MES Component Consumption";
-    MESUser: Record "MES User";
-    Employee: Record Employee;
-    LogArr: JsonArray;
-    LogObj: JsonObject;
-    JsonHelper: Codeunit "MES Json Helper";
-    CutoffTime: DateTime;
-    OperatorName: Text;
-begin
-    Clear(LogArr);
-    CutoffTime := CreateDateTime(Today - hoursBack / 24, 000000T);
-    CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
-    MESState.Reset();
-    MESState.SetCurrentKey("Execution Id", "Declared At");
-    MESState.SetFilter("Declared At", '>=%1', CutoffTime);
-    if MESState.FindSet() then
-        repeat
-            Clear(LogObj);
+    var
+        MESExecution: Record "MES Operation Execution";
+        MESState: Record "MES Operation State";
+        MESProgression: Record "MES Operation Progression";
+        MESScrap: Record "MES Operation Scrap";
+        MESConsumption: Record "MES Component Consumption";
+        MESUser: Record "MES User";
+        Employee: Record Employee;
+        LogArr: JsonArray;
+        LogObj: JsonObject;
+        JsonHelper: Codeunit "MES Json Helper";
+        CutoffTime: DateTime;
+        OperatorName: Text;
+    begin
+        Clear(LogArr);
+        CutoffTime := CreateDateTime(Today - hoursBack / 24, 000000T);
+        CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
+        MESState.Reset();
+        MESState.SetCurrentKey("Execution Id", "Declared At");
+        MESState.SetFilter("Declared At", '>=%1', CutoffTime);
+        if MESState.FindSet() then
+            repeat
+                Clear(LogObj);
 
-            // to get operator name 
-            OperatorName := '';
-            if MESUser.Get(MESState."Operator Id") then
-                if Employee.Get(MESUser."Employee ID") then
-                    OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                // to get operator name 
+                OperatorName := '';
+                if MESUser.Get(MESState."Operator Id") then
+                    if Employee.Get(MESUser."Employee ID") then
+                        OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
 
-            // get machine and order from execution
-            if MESExecution.Get(MESState."Execution Id") then begin
-                LogObj.Add('type', 'status_change');
-                LogObj.Add('operatorId', MESState."Operator Id");
-                LogObj.Add('operatorName', OperatorName);
-                LogObj.Add('machineNo', MESExecution."Machine No");
-                LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
-                LogObj.Add('operationNo', MESExecution."Operation No");
-                LogObj.Add('action', Format(MESState."Operation Status"));
-                LogObj.Add('timestamp', Format(MESState."Declared At"));
-                LogArr.Add(LogObj);
-            end;
-        until MESState.Next() = 0;
+                // get machine and order from execution
+                if MESExecution.Get(MESState."Execution Id") then begin
+                    LogObj.Add('type', 'status_change');
+                    LogObj.Add('operatorId', MESState."Operator Id");
+                    LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('machineNo', MESExecution."Machine No");
+                    LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
+                    LogObj.Add('operationNo', MESExecution."Operation No");
+                    LogObj.Add('action', Format(MESState."Operation Status"));
+                    LogObj.Add('timestamp', Format(MESState."Declared At"));
+                    LogArr.Add(LogObj);
+                end;
+            until MESState.Next() = 0;
 
-    // operation(meaning production) log
-    MESProgression.Reset();
-    MESProgression.SetCurrentKey("Execution Id", "Declared At");
-    MESProgression.SetFilter("Declared At", '>=%1', CutoffTime);
-    if MESProgression.FindSet() then
-        repeat
-            Clear(LogObj);
+        // operation(meaning production) log
+        MESProgression.Reset();
+        MESProgression.SetCurrentKey("Execution Id", "Declared At");
+        MESProgression.SetFilter("Declared At", '>=%1', CutoffTime);
+        if MESProgression.FindSet() then
+            repeat
+                Clear(LogObj);
 
-            OperatorName := '';
-            if MESUser.Get(MESProgression."Operator Id") then
-                if Employee.Get(MESUser."Employee ID") then
-                    OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                OperatorName := '';
+                if MESUser.Get(MESProgression."Operator Id") then
+                    if Employee.Get(MESUser."Employee ID") then
+                        OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
 
-            if MESExecution.Get(MESProgression."Execution Id") then begin
-                LogObj.Add('type', 'production');
-                LogObj.Add('operatorId', MESProgression."Operator Id");
-                LogObj.Add('operatorName', OperatorName);
-                LogObj.Add('machineNo', MESExecution."Machine No");
-                LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
-                LogObj.Add('operationNo', MESExecution."Operation No");
-                LogObj.Add('action', 'Declared ' + Format(MESProgression."Cycle Quantity") + ' units');
-                LogObj.Add('timestamp', Format(MESProgression."Declared At"));
-                LogArr.Add(LogObj);
-            end;
-        until MESProgression.Next() = 0;
+                if MESExecution.Get(MESProgression."Execution Id") then begin
+                    LogObj.Add('type', 'production');
+                    LogObj.Add('operatorId', MESProgression."Operator Id");
+                    LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('machineNo', MESExecution."Machine No");
+                    LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
+                    LogObj.Add('operationNo', MESExecution."Operation No");
+                    LogObj.Add('action', 'Declared ' + Format(MESProgression."Cycle Quantity") + ' units');
+                    LogObj.Add('timestamp', Format(MESProgression."Declared At"));
+                    LogArr.Add(LogObj);
+                end;
+            until MESProgression.Next() = 0;
 
-    // scrap log
-    MESScrap.Reset();
-    MESScrap.SetCurrentKey("Execution Id", "Declared At");
-    MESScrap.SetFilter("Declared At", '>=%1', CutoffTime);
-    if MESScrap.FindSet() then
-        repeat
-            Clear(LogObj);
+        // scrap log
+        MESScrap.Reset();
+        MESScrap.SetCurrentKey("Execution Id", "Declared At");
+        MESScrap.SetFilter("Declared At", '>=%1', CutoffTime);
+        if MESScrap.FindSet() then
+            repeat
+                Clear(LogObj);
 
-            OperatorName := '';
-            if MESUser.Get(MESScrap."Operator Id") then
-                if Employee.Get(MESUser."Employee ID") then
-                    OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                OperatorName := '';
+                if MESUser.Get(MESScrap."Operator Id") then
+                    if Employee.Get(MESUser."Employee ID") then
+                        OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
 
-            if MESExecution.Get(MESScrap."Execution Id") then begin
-                LogObj.Add('type', 'scrap');
-                LogObj.Add('operatorId', MESScrap."Operator Id");
-                LogObj.Add('operatorName', OperatorName);
-                LogObj.Add('machineNo', MESExecution."Machine No");
-                LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
-                LogObj.Add('operationNo', MESExecution."Operation No");
-                LogObj.Add('action', 'Reported ' + Format(MESScrap."Scrap Quantity") + ' scrap (' + MESScrap."Scrap Code" + ')');
-                LogObj.Add('timestamp', Format(MESScrap."Declared At"));
-                LogArr.Add(LogObj);
-            end;
-        until MESScrap.Next() = 0;
+                if MESExecution.Get(MESScrap."Execution Id") then begin
+                    LogObj.Add('type', 'scrap');
+                    LogObj.Add('operatorId', MESScrap."Operator Id");
+                    LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('machineNo', MESExecution."Machine No");
+                    LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
+                    LogObj.Add('operationNo', MESExecution."Operation No");
+                    LogObj.Add('action', 'Reported ' + Format(MESScrap."Scrap Quantity") + ' scrap (' + MESScrap."Scrap Code" + ')');
+                    LogObj.Add('timestamp', Format(MESScrap."Declared At"));
+                    LogArr.Add(LogObj);
+                end;
+            until MESScrap.Next() = 0;
 
-    // scan log
-    MESConsumption.Reset();
-    MESConsumption.SetCurrentKey("Execution Id", "Scanned At");
-    MESConsumption.SetFilter("Scanned At", '>=%1', CutoffTime);
-    if MESConsumption.FindSet() then
-        repeat
-            Clear(LogObj);
+        // scan log
+        MESConsumption.Reset();
+        MESConsumption.SetCurrentKey("Execution Id", "Scanned At");
+        MESConsumption.SetFilter("Scanned At", '>=%1', CutoffTime);
+        if MESConsumption.FindSet() then
+            repeat
+                Clear(LogObj);
 
-            OperatorName := '';
-            if MESUser.Get(MESConsumption."Operator Id") then
-                if Employee.Get(MESUser."Employee ID") then
-                    OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                OperatorName := '';
+                if MESUser.Get(MESConsumption."Operator Id") then
+                    if Employee.Get(MESUser."Employee ID") then
+                        OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
 
-            if MESExecution.Get(MESConsumption."Execution Id") then begin
-                LogObj.Add('type', 'scan');
-                LogObj.Add('operatorId', MESConsumption."Operator Id");
-                LogObj.Add('operatorName', OperatorName);
-                LogObj.Add('machineNo', MESExecution."Machine No");
-                LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
-                LogObj.Add('operationNo', MESExecution."Operation No");
-                LogObj.Add('action', 'Scanned item ' + MESConsumption."Item No");
-                LogObj.Add('timestamp', Format(MESConsumption."Scanned At"));
-                LogArr.Add(LogObj);
-            end;
-        until MESConsumption.Next() = 0;
+                if MESExecution.Get(MESConsumption."Execution Id") then begin
+                    LogObj.Add('type', 'scan');
+                    LogObj.Add('operatorId', MESConsumption."Operator Id");
+                    LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('machineNo', MESExecution."Machine No");
+                    LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
+                    LogObj.Add('operationNo', MESExecution."Operation No");
+                    LogObj.Add('action', 'Scanned item ' + MESConsumption."Item No");
+                    LogObj.Add('timestamp', Format(MESConsumption."Scanned At"));
+                    LogArr.Add(LogObj);
+                end;
+            until MESConsumption.Next() = 0;
 
-    exit(JsonHelper.JsonToTextArr(LogArr));
-end;
+        exit(JsonHelper.JsonToTextArr(LogArr));
+    end;
 
-procedure fetchMachineDashboard(hoursBack: Integer): Text
-var
-    Machine: Record "Machine Center";
-    MESMachineStatus: Record "MES Machine Status";
-    MESExecution: Record "MES Operation Execution";
-    MachineArr: JsonArray;
-    MachineObj: JsonObject;
-    JsonHelper: Codeunit "MES Json Helper";
-    CutoffTime: DateTime;
-    TotalMinutes: Integer;
-    RunningMinutes: Integer;
-    OperationCount: Integer;
-    TotalProduced: Decimal;
-    TotalScrap: Decimal;
-    UptimePercent: Decimal;
-    PrevTime: DateTime;
-    PrevStatus: Enum "MES Machine Status";
-    MESProgression: Record "MES Operation Progression";
-    MESScrap: Record "MES Operation Scrap";
-begin
-    Clear(MachineArr);
-    CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
-    TotalMinutes := hoursBack * 60;
+    procedure fetchMachineDashboard(hoursBack: Integer): Text
+    var
+        Machine: Record "Machine Center";
+        MESMachineStatus: Record "MES Machine Status";
+        MESExecution: Record "MES Operation Execution";
+        MachineArr: JsonArray;
+        MachineObj: JsonObject;
+        JsonHelper: Codeunit "MES Json Helper";
+        CutoffTime: DateTime;
+        TotalMinutes: Integer;
+        RunningMinutes: Integer;
+        OperationCount: Integer;
+        TotalProduced: Decimal;
+        TotalScrap: Decimal;
+        UptimePercent: Decimal;
+        PrevTime: DateTime;
+        PrevStatus: Enum "MES Machine Status";
+        MESProgression: Record "MES Operation Progression";
+        MESScrap: Record "MES Operation Scrap";
+    begin
+        Clear(MachineArr);
+        CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
+        TotalMinutes := hoursBack * 60;
 
-    Machine.Reset();
-    if Machine.FindSet() then
-        repeat
-            Clear(MachineObj);
-            RunningMinutes := 0;
-            OperationCount := 0;
-            TotalProduced := 0;
-            TotalScrap := 0;
+        Machine.Reset();
+        if Machine.FindSet() then
+            repeat
+                Clear(MachineObj);
+                RunningMinutes := 0;
+                OperationCount := 0;
+                TotalProduced := 0;
+                TotalScrap := 0;
 
-            MESExecution.Reset();
-            MESExecution.SetRange("Machine No", Machine."No.");
-            MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
-            OperationCount := 0;
-            if MESExecution.FindSet() then
-                repeat
-                    OperationCount += 1;
+                MESExecution.Reset();
+                MESExecution.SetRange("Machine No", Machine."No.");
+                MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
+                OperationCount := 0;
+                if MESExecution.FindSet() then
+                    repeat
+                        OperationCount += 1;
 
-                    // sum qte produced for all progressions of this execution
-                    MESProgression.Reset();
-                    MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
-                    MESProgression.SetCurrentKey("Execution Id", "Declared At");
-                    MESProgression.Ascending(false);
-                    // no loop cuz the latest progression record will have the total produced quantity for this execution
-                    if MESProgression.FindFirst() then
-                        TotalProduced += MESProgression."Total Produced Quantity";
+                        // sum qte produced for all progressions of this execution
+                        MESProgression.Reset();
+                        MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
+                        MESProgression.SetCurrentKey("Execution Id", "Declared At");
+                        MESProgression.Ascending(false);
+                        // no loop cuz the latest progression record will have the total produced quantity for this execution
+                        if MESProgression.FindFirst() then
+                            TotalProduced += MESProgression."Total Produced Quantity";
 
-                    MESScrap.Reset();
-                    MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
-                    // here we do need to loop and sum all 
-                    if MESScrap.FindSet() then
-                        repeat
-                            TotalScrap += MESScrap."Scrap Quantity";
-                        until MESScrap.Next() = 0;
+                        MESScrap.Reset();
+                        MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
+                        // here we do need to loop and sum all 
+                        if MESScrap.FindSet() then
+                            repeat
+                                TotalScrap += MESScrap."Scrap Quantity";
+                            until MESScrap.Next() = 0;
 
-                until MESExecution.Next() = 0;
+                    until MESExecution.Next() = 0;
 
-            // calculate uptime from machine status log
-            MESMachineStatus.Reset();
-            MESMachineStatus.SetRange("Machine No.", Machine."No.");
-            MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
-            MESMachineStatus.Ascending(true);
-            Clear(PrevTime);
+                // calculate uptime from machine status log
+                MESMachineStatus.Reset();
+                MESMachineStatus.SetRange("Machine No.", Machine."No.");
+                MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
+                MESMachineStatus.Ascending(true);
+                Clear(PrevTime);
 
-            if MESMachineStatus.FindSet() then
-                repeat
-                    if MESMachineStatus."Updated At" >= CutoffTime then begin
-                        if PrevTime <> 0DT then begin
-                            if PrevStatus = PrevStatus::Working then
-                                RunningMinutes += Round(
-                                    (MESMachineStatus."Updated At" - PrevTime) / 60000, 1);
+                if MESMachineStatus.FindSet() then
+                    repeat
+                        if MESMachineStatus."Updated At" >= CutoffTime then begin
+                            if PrevTime <> 0DT then begin
+                                if PrevStatus = PrevStatus::Working then
+                                    RunningMinutes += Round(
+                                        (MESMachineStatus."Updated At" - PrevTime) / 60000, 1);
+                            end;
+                            PrevTime := MESMachineStatus."Updated At";
+                            PrevStatus := MESMachineStatus.Status;
                         end;
-                        PrevTime := MESMachineStatus."Updated At";
-                        PrevStatus := MESMachineStatus.Status;
-                    end;
-                until MESMachineStatus.Next() = 0;
+                    until MESMachineStatus.Next() = 0;
 
-            // if last known status is running add time until now
-            if PrevStatus = PrevStatus::Working then
-                RunningMinutes += Round((CurrentDateTime() - PrevTime) / 60000, 1);
+                // if last known status is running add time until now
+                if PrevStatus = PrevStatus::Working then
+                    RunningMinutes += Round((CurrentDateTime() - PrevTime) / 60000, 1);
 
-            if TotalMinutes > 0 then
-                UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 1)
-            else
-                UptimePercent := 0;
+                if TotalMinutes > 0 then
+                    UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 1)
+                else
+                    UptimePercent := 0;
 
-            MachineObj.Add('machineNo', Machine."No.");
-            MachineObj.Add('machineName', Machine."Name");
-            MachineObj.Add('workCenterNo', Machine."Work Center No.");
-            MachineObj.Add('operationCount', OperationCount);
-            MachineObj.Add('uptimePercent', UptimePercent);
-            MachineObj.Add('runningMinutes', RunningMinutes);
-            MachineObj.Add('totalProduced', TotalProduced);
-            MachineObj.Add('totalScrap', TotalScrap);
-            MachineArr.Add(MachineObj);
-        until Machine.Next() = 0;
+                MachineObj.Add('machineNo', Machine."No.");
+                MachineObj.Add('machineName', Machine."Name");
+                MachineObj.Add('workCenterNo', Machine."Work Center No.");
+                MachineObj.Add('operationCount', OperationCount);
+                MachineObj.Add('uptimePercent', UptimePercent);
+                MachineObj.Add('runningMinutes', RunningMinutes);
+                MachineObj.Add('totalProduced', TotalProduced);
+                MachineObj.Add('totalScrap', TotalScrap);
+                MachineArr.Add(MachineObj);
+            until Machine.Next() = 0;
 
-    exit(JsonHelper.JsonToTextArr(MachineArr));
-end;
+        exit(JsonHelper.JsonToTextArr(MachineArr));
+    end;
 
-    
+
 
 
 }

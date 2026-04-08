@@ -245,7 +245,7 @@ codeunit 50125 "MES Unbound Actions"
 
         // Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
-         exit(BuildErrorFromLastError('User creation failed'));
+            exit(BuildErrorFromLastError('User creation failed'));
 
         // Step 2 — Insert happens OUTSIDE the TryFunction.
         AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role);
@@ -475,9 +475,6 @@ codeunit 50125 "MES Unbound Actions"
                 if UserRec.Get(UserWorkCenter."User Id") then begin
                     Clear(UserJson);
 
-
-
-
                     UserJson.Add('userId', UserRec."User Id");
                     UserJson.Add('authId', UserRec."Auth ID");
                     UserJson.Add('employeeId', UserRec."Employee ID");
@@ -495,56 +492,56 @@ codeunit 50125 "MES Unbound Actions"
 
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
-    
 
-procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
-var
-    UserWorkCenter: Record "MES User Work Center";
-    WorkCenter: Record "Work Center";
-    JsonHelper: Codeunit "MES Json Helper";
-    WCArr: JsonArray;
-    WCToken: JsonToken;
-begin
-    WCArr.ReadFrom(workCenterListJson);
 
-    UserWorkCenter.Get(userId);
-    // delete existing records for this user
-    if UserWorkCenter.FindSet() then
-        repeat
-            UserWorkCenter.Delete();
-        until UserWorkCenter.Next() = 0;
-// insert new info
-    foreach WCToken in WCArr do begin
-       // idk if u put json here or not
-        UserWorkCenter.Init();
-        UserWorkCenter."User Id" := userId;
-        UserWorkCenter."Work Center No." := WorkCenter."No.";
-        UserWorkCenter.Insert();
-    end;
-end;
-
- procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
-var
-    UserRec: Record "MES User";
-    Role: Enum 
+    procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
+    var
+        UserWorkCenter: Record "MES User Work Center";
+        WorkCenter: Record "Work Center";
+        JsonHelper: Codeunit "MES Json Helper";
+        WCArr: JsonArray;
+        WCToken: JsonToken;
     begin
-    case roleInt of
-        0:
-            Role := Role::Operator;
-        1:
-            Role := Role::Supervisor;
-        2:
-            Role := Role::Admin;
-        else
-            exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+        WCArr.ReadFrom(workCenterListJson);
+
+        UserWorkCenter.Get(userId);
+        // delete existing records for this user
+        if UserWorkCenter.FindSet() then
+            repeat
+                UserWorkCenter.Delete();
+            until UserWorkCenter.Next() = 0;
+        // insert new info
+        foreach WCToken in WCArr do begin
+            // idk if u put json here or not
+            UserWorkCenter.Init();
+            UserWorkCenter."User Id" := userId;
+            UserWorkCenter."Work Center No." := WorkCenter."No.";
+            UserWorkCenter.Insert();
+        end;
     end;
 
-    if UserRec.Get(userId) then begin
-        UserRec.Role := Role;
-        UserRec.Modify();
-    end else
-        exit(BuildError('User not found', 'No user with the specified ID was found'));
-end;
+    procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
+    var
+        UserRec: Record "MES User";
+        Role: Enum "MES User Role";
+    begin
+        case roleInt of
+            0:
+                Role := Role::Operator;
+            1:
+                Role := Role::Supervisor;
+            2:
+                Role := Role::Admin;
+            else
+                exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+        end;
+
+        if UserRec.Get(userId) then begin
+            UserRec.Role := Role;
+            UserRec.Modify();
+        end else
+            exit(BuildError('User not found', 'No user with the specified ID was found'));
+    end;
 
 
 }
