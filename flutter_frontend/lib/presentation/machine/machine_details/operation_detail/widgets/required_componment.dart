@@ -98,9 +98,9 @@ class RequiredComponent extends StatelessWidget {
               final isSpecific = component.belongsToThisOperation;
 
               // how much u consumed of this material
-              final consumed = totalProduced * component.quantityPer;
+              final consumed = totalProduced * component.quantityPerUnit;
               // how qte u scanned of this item
-              final scanned = component.quantityScanned;
+              final scanned = component.quantityScanned * component.quantityPerUnit;
 
               // remaining =  the qte u scanned - what was consumed
               final remaining = scanned - consumed;
@@ -158,7 +158,7 @@ class RequiredComponent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            component.itemDescription,
+                            component.itemDescription +" ( " + component.quantityPerUnit.toString() + " per unit)",
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -167,7 +167,7 @@ class RequiredComponent extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${scanned.toString()} ${'scanned'.tr()} | ${consumed.toString()} ${'used'.tr()} | ${remaining.toString()} ${'left'.tr()}',
+                            '${scanned.toString()} ${'quantity scanned'.tr()} | ${consumed.toString()} ${'used'.tr()} | ${remaining.toString()} ${' quantity left'.tr()}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF64748B),

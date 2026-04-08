@@ -66,7 +66,7 @@ class OperationCard extends StatelessWidget {
                   child: ColoredBox(color: style.leftRail),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 16, top: 16, bottom: 16),
+                  padding: const EdgeInsetsDirectional.only(start: 20, end: 16, top: 16, bottom: 16),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isWide = constraints.maxWidth > 600;

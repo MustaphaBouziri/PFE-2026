@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/DeclarationLabelPage.dart';
+import 'package:pfe_mes/presentation/machine/printLabelPage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
@@ -7,6 +9,7 @@ import '../../../../../domain/auth/providers/auth_provider.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'declaireProductionDialog.dart';
 import 'declare_scrap_dialog.dart';
+import 'package:barcode/src/barcode.dart';
 
 class ActionButtonsContainer extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
@@ -25,8 +28,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
   String get _operationStatus =>
       widget.operationData.operationStatus.trim().toLowerCase();
 
-  bool get _isClosed =>
-      ['finished', 'cancelled'].contains(_operationStatus);
+  bool get _isClosed => ['finished', 'cancelled'].contains(_operationStatus);
 
   bool get _canDeclareProduction =>
       !['finished', 'cancelled', 'paused'].contains(_operationStatus);
@@ -38,7 +40,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
 
   bool get _canPrintLabel =>
       _operationStatus == 'finished' ||
-          widget.operationData.progressPercent >= 100;
+      widget.operationData.progressPercent >= 100;
 
   // ── End-order logic ───────────────────────────────────────────────────────
 
@@ -58,18 +60,19 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           machineNo: widget.operationData.machineNo,
           prodOrderNo: widget.operationData.prodOrderNo,
           operationNo: widget.operationData.operationNo,
-                  );
+        );
       } else {
         await provider.cancelOperation(
           machineNo: widget.operationData.machineNo,
           prodOrderNo: widget.operationData.prodOrderNo,
           operationNo: widget.operationData.operationNo,
-          );
+        );
       }
 
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
+      if (mounted)
+        _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isEndLoading = false);
     }
@@ -81,21 +84,23 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Row(
             children: [
-              const Icon(Icons.check_circle_outline,
-                  color: Color(0xFF16A34A)),
+              const Icon(Icons.check_circle_outline, color: Color(0xFF16A34A)),
               const SizedBox(width: 8),
               Text('finishProductionOrder'.tr()),
             ],
           ),
           content: Text(
-            'productionCompleteConfirm'.tr(args: [
-              widget.operationData.prodOrderNo,
-              widget.operationData.progressPercent.toStringAsFixed(0),
-            ]),
+            'productionCompleteConfirm'.tr(
+              args: [
+                widget.operationData.prodOrderNo,
+                widget.operationData.progressPercent.toStringAsFixed(0),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -105,9 +110,12 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF16A34A)),
-              child:
-              Text('finish'.tr(), style: const TextStyle(color: Colors.white)),
+                backgroundColor: const Color(0xFF16A34A),
+              ),
+              child: Text(
+                'finish'.tr(),
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -118,21 +126,21 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded,
-                color: Color(0xFFDC2626)),
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
             const SizedBox(width: 8),
             Text('cancelProductionOrder'.tr()),
           ],
         ),
         content: Text(
-          'productionCancelConfirm'.tr(args: [
-            widget.operationData.prodOrderNo,
-            widget.operationData.progressPercent.toStringAsFixed(0),
-          ]),
+          'productionCancelConfirm'.tr(
+            args: [
+              widget.operationData.prodOrderNo,
+              widget.operationData.progressPercent.toStringAsFixed(0),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -142,9 +150,12 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626)),
-            child: Text('yesCancelOrder'.tr(),
-                style: const TextStyle(color: Colors.white)),
+              backgroundColor: const Color(0xFFDC2626),
+            ),
+            child: Text(
+              'yesCancelOrder'.tr(),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -156,8 +167,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text('error'.tr()),
         content: Text(message),
         actions: [
@@ -207,11 +217,25 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             buttonColor: const Color(0xFF2563EB),
             isEnabled: _canDeclareProduction,
             onTap: _canDeclareProduction
-                ? () => showDialog(
-              context: context,
-              builder: (_) => DeclareProductionDialog(
-                  operationData: widget.operationData),
-            )
+                ? () async {
+                    final declaredQty = await showDialog<double>(
+                      context: context,
+                      builder: (_) => DeclareProductionDialog(
+                        operationData: widget.operationData,
+                      ),
+                    );
+                    if (declaredQty != null && declaredQty > 0 && mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DeclarationLabelPage(
+                            operationData: widget.operationData,
+                            quantity: declaredQty.toInt(),
+                          ),
+                        ),
+                      );
+                    }
+                  }
                 : null,
           ),
           const SizedBox(height: 8),
@@ -223,10 +247,11 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             isEnabled: _canReportReject,
             onTap: _canReportReject
                 ? () => showDialog(
-              context: context,
-              builder: (_) => DeclareScrapDialog(
-                  executionId: widget.operationData.executionId),
-            )
+                    context: context,
+                    builder: (_) => DeclareScrapDialog(
+                      executionId: widget.operationData.executionId,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(height: 8),
@@ -252,7 +277,17 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             icon: Icons.print_outlined,
             buttonColor: const Color(0xFF16A34A),
             isEnabled: _canPrintLabel,
-            onTap: _canPrintLabel ? () {} : null,
+            onTap: _canPrintLabel
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PrintLabelPage(operationData: widget.operationData),
+                      ),
+                    );
+                  }
+                : null,
           ),
         ],
       ),
@@ -292,8 +327,9 @@ class _ActionButtonState extends State<_ActionButton> {
         ? (_hovered ? widget.buttonColor.withOpacity(0.85) : widget.buttonColor)
         : const Color(0xFFCBD5E1);
 
-    final Color contentColor =
-    widget.isEnabled ? Colors.white : const Color(0xFF64748B);
+    final Color contentColor = widget.isEnabled
+        ? Colors.white
+        : const Color(0xFF64748B);
 
     return MouseRegion(
       cursor: widget.isEnabled
@@ -312,8 +348,7 @@ class _ActionButtonState extends State<_ActionButton> {
           onTap: (widget.isEnabled && !widget.isLoading) ? widget.onTap : null,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -322,7 +357,9 @@ class _ActionButtonState extends State<_ActionButton> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: contentColor),
+                      strokeWidth: 2,
+                      color: contentColor,
+                    ),
                   )
                 else
                   Icon(widget.icon, color: contentColor, size: 22),

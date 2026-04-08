@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
-import 'package:pfe_mes/presentation/tutorials/admin_navigation_tutorial.dart';
+import 'package:pfe_mes/presentation/profilePage.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -14,26 +14,16 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
-  final GlobalKey _sidebarKey = GlobalKey();
-  bool _tutorialShown = false;
 
   @override
   Widget build(BuildContext context) {
-    if (!_tutorialShown) {
-      _tutorialShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await AdminNavigationTutorial.show(context, _sidebarKey);
-      });
-    }
 
     return Scaffold(
       body: Row(
         children: [
           // sidebar
           Container(
-            key: _sidebarKey,
-            width: 220,
+            width: 250,
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
               boxShadow: [
@@ -64,7 +54,7 @@ class _AdminPageState extends State<AdminPage> {
 
                 const SizedBox(height: 8),
 
-                // menu items
+                      // menu items
                 SidebarItem(
                   icon: Icons.people_outline,
                   label: 'usersRoles'.tr(),
@@ -95,38 +85,41 @@ class _AdminPageState extends State<AdminPage> {
                 Divider(color: Colors.white.withOpacity(0.1), height: 1),
 
                 // user info
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundImage: NetworkImage(
-                          'https://picsum.photos/200/200',
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage(fullName: "ali ben sala7", email: "www.foiidfo@gmail.com", profilePictureUrl: "https://picsum.photos/200/200"))),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 18,
+                          backgroundImage: NetworkImage(
+                            'https://picsum.photos/200/200',
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Ahmed Ben Hamed',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Ahmed Ben Hamed',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'ID: 00012036',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF94A3B8),
+                            Text(
+                              'ID: 00012036',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF94A3B8),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

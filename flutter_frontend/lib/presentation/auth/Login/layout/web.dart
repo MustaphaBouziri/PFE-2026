@@ -73,6 +73,7 @@ class LoginWebLayout extends StatelessWidget {
                   formKey: formKey,
                   onLogin: onLogin,
                   maxWidth: 450,
+                  isCompact: false,
                 ),
 
                 const SizedBox(height: 30),

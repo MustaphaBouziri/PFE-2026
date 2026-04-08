@@ -8,7 +8,7 @@ class LoginSharedForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final VoidCallback onLogin;
   final double maxWidth;
-
+  final bool isCompact;
   const LoginSharedForm({
     super.key,
     required this.authIdController,
@@ -16,6 +16,7 @@ class LoginSharedForm extends StatefulWidget {
     required this.formKey,
     required this.onLogin,
     required this.maxWidth,
+    required this.isCompact,
   });
 
   @override
@@ -39,11 +40,11 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
             //___________________ LANGUAGE SELECTOR ___________________
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
-              children: const [
-                LanguageSelector(isCompact: false),
+              children:  [
+                LanguageSelector(isCompact: widget.isCompact),
               ],
             ),
-            const SizedBox(height: 24),
+            
 
             //___________________ USER ID LABEL ___________________
             Text(

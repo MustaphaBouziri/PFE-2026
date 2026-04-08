@@ -78,6 +78,7 @@ class LoginMobileLayout extends StatelessWidget {
                             formKey: formKey,
                             onLogin: onLogin,
                             maxWidth: 420,
+                            isCompact: true,
                           ),
                         ),
                         SizedBox(height: 26),

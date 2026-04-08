@@ -53,12 +53,11 @@ class _AddUserDialogState extends State<AddUserDialog> {
     });
   }
 
-  
   void _selectRole(int index, String role) {
     setState(() {
       selectedRoleIndex = index;
       selectedRole = role;
-      
+
       selectedWorkCenterIndexes = [];
       selectedWorkCenterIds = [];
     });
@@ -231,9 +230,9 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     const SizedBox(height: 20),
 
                     // role selection
-                    const Text(
-                      'Select Role',
-                      style: TextStyle(
+                    Text(
+                      'selectRole'.tr(),
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),

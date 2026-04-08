@@ -439,18 +439,20 @@ class _AddUserPageState extends State<AddUserPage> {
                                           },
                                           itemBuilder: (context) => [
                                             PopupMenuItem(
-                                              value: 'Change Role',
-                                              child: Text('Change Role'),
+                                              value: 'changeRole',
+                                              child: Text('changeRole'.tr()),
                                             ),
-                                             PopupMenuItem(
-                                              value: 'Change Department',
-                                              child: Text('Change Department'),
+                                            PopupMenuItem(
+                                              value: 'changeDepartment',
+                                              child: Text(
+                                                'changeDepartment'.tr(),
+                                              ),
                                             ),
                                             user.isActive
                                                 ? PopupMenuItem(
                                                     value: 'deactivate',
                                                     child: Text(
-                                                      'Deactivate',
+                                                      'deactivate'.tr(),
                                                       style: TextStyle(
                                                         color: Color(
                                                           0xFFDC2626,
@@ -461,7 +463,7 @@ class _AddUserPageState extends State<AddUserPage> {
                                                 : PopupMenuItem(
                                                     value: 'activate',
                                                     child: Text(
-                                                      'Activate',
+                                                      'activate'.tr(),
                                                       style: TextStyle(
                                                         color: Color(
                                                           0xFF16A34A,

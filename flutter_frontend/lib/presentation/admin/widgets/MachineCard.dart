@@ -1,11 +1,11 @@
 import 'dart:ui';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 class AdminMachineCard extends StatelessWidget {
-  
   final MachineDashboardModel machine;
   const AdminMachineCard({required this.machine});
 
@@ -17,13 +17,13 @@ class AdminMachineCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,13 +34,13 @@ class AdminMachineCard extends StatelessWidget {
             children: [
               ExpandableText(
                 text: machine.machineName,
-                style:  TextStyle(
-                  fontSize:20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(6),
@@ -50,7 +50,7 @@ class AdminMachineCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF2563EB),
-                    fontWeight: FontWeight.bold
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -91,13 +91,19 @@ class AdminMachineCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    infoRow('Operations Performed:', machine.operationCount.toString()),
                     infoRow(
-                      'Quantity Produced:',
+                      'operationsPerformed'.tr(),
+                      machine.operationCount.toString(),
+                    ),
+                    infoRow(
+                      'quantityProduced'.tr(),
                       machine.totalProduced.toStringAsFixed(0),
                     ),
-                    infoRow('Scrap Declaired:', machine.totalScrap.toStringAsFixed(0)),
-                    infoRow('Uptime:', '${machine.runningMinutes} min'),
+                    infoRow(
+                      'scrapDeclared'.tr(),
+                      machine.totalScrap.toStringAsFixed(0),
+                    ),
+                    infoRow('uptime'.tr(), '${machine.runningMinutes} min'),
                   ],
                 ),
               ),
