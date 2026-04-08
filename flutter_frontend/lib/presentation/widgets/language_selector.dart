@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 class LanguageSelector extends StatefulWidget {
   final bool isCompact;
 
-  const LanguageSelector({
-    super.key,
-    this.isCompact = false,
-  });
+  const LanguageSelector({super.key, this.isCompact = false});
 
   @override
   State<LanguageSelector> createState() => _LanguageSelectorState();
@@ -31,9 +28,8 @@ class _LanguageSelectorState extends State<LanguageSelector> {
   @override
   Widget build(BuildContext context) {
     if (widget.isCompact) {
-      // Compact version for appbar
       return PopupMenuButton<String>(
-        icon: const Icon(Icons.language, size: 20),
+        color: Colors.white,
         onSelected: (String languageCode) {
           setState(() => _selectedLanguage = languageCode);
           context.setLocale(Locale(languageCode));
@@ -41,20 +37,31 @@ class _LanguageSelectorState extends State<LanguageSelector> {
         itemBuilder: (BuildContext context) {
           return languages.entries.map((entry) {
             return PopupMenuItem<String>(
+              
               value: entry.key,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (entry.key == _selectedLanguage)
                     const Icon(Icons.check, size: 16, color: Colors.blue),
-                  if (entry.key == _selectedLanguage)
-                    const SizedBox(width: 8),
+                  if (entry.key == _selectedLanguage) const SizedBox(width: 8),
                   Text(entry.value),
                 ],
               ),
             );
           }).toList();
         },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _selectedLanguage.toUpperCase(),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.language, size: 20),
+          ],
+        ),
       );
     } else {
       // Full version for login page
@@ -73,10 +80,7 @@ class _LanguageSelectorState extends State<LanguageSelector> {
             items: languages.entries.map((entry) {
               return DropdownMenuItem<String>(
                 value: entry.key,
-                child: Text(
-                  entry.value,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                child: Text(entry.value, style: const TextStyle(fontSize: 14)),
               );
             }).toList(),
             onChanged: (String? newLanguage) {

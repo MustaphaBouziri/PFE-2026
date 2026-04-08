@@ -12,6 +12,7 @@ class OperationStatusAndProgressModel {
   final double progressPercent;
   final String itemDescription;
   final String executionId;
+  final String itemNo;
 
   OperationStatusAndProgressModel({
     required this.prodOrderNo,
@@ -27,6 +28,7 @@ class OperationStatusAndProgressModel {
     required this.progressPercent,
     required this.itemDescription,
     required this.executionId,
+    required this.itemNo,
   });
 
   factory OperationStatusAndProgressModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class OperationStatusAndProgressModel {
       progressPercent: (json['progressPercent'] as num? ?? 0).toDouble(),
       itemDescription: json['itemDescription'] ?? '',
       executionId: json['executionId'] ?? '',
+      itemNo: json['itemNo'] ?? '',
     );
   }
 
@@ -63,6 +66,7 @@ class OperationStatusAndProgressModel {
         'orderQuantity: $orderQuantity, '
         'progressPercent: $progressPercent, '
         'itemDescription: $itemDescription,'
+        'itemNo: $itemNo,'
         'executionId:$executionId'
         ')';
   }

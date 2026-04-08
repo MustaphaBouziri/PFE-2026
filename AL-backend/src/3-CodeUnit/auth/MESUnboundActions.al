@@ -495,9 +495,6 @@ codeunit 50125 "MES Unbound Actions"
                 if UserRec.Get(UserWorkCenter."User Id") then begin
                     Clear(UserJson);
 
-
-
-
                     UserJson.Add('userId', UserRec."User Id");
                     UserJson.Add('authId', UserRec."Auth ID");
                     UserJson.Add('employeeId', UserRec."Employee ID");

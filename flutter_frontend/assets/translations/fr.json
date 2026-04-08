@@ -80,6 +80,10 @@
   "supervisor": "Superviseur",
   "admin": "Administrateur",
   "selectWorkCenter": "Sélectionner un centre de travail",
+  "changeRole": "Modifier le rôle",
+  "changeDepartment": "Changer de département",
+  "deactivate": "Désactiver",
+  "activate": "Activer",
   "pleaseSelectEmployeeRoleWorkCenter": "Veuillez sélectionner un employé, un rôle et un centre de travail",
   "userAddedSuccessfully": "Utilisateur ajouté avec succès !",
   "failedToAddUser": "Échec de l'ajout de l'utilisateur",
@@ -88,6 +92,10 @@
   "passwordUpdateFailed": "Échec de la mise à jour du mot de passe. Veuillez réessayer.",
   "failed": "Échec",
   "passwordFor": "Mot de passe pour ",
+  "operationsPerformed": "Opérations effectuées :",
+  "quantityProduced": "Quantité produite :",
+  "scrapDeclared": "الكمية المهدرة :",
+  "uptime": "وقت التشغيل :",
   "loginUpdated": "Nouvel identifiant :",
   "unexpectedError": "Une erreur inattendue s'est produite.",
   "generatePassword": "Générer un mot de passe",
@@ -197,5 +205,9 @@
   "tutorialOperationCurrentOrder": "Cette section affiche les détails de votre ordre de production actuel : quantité, statut et progression.",
   "tutorialOperationActionButtons": "Utilisez ces boutons pour déclarer la production, signaler un rebut, imprimer des étiquettes, ou terminer/annuler l'ordre.",
   "tutorialMachineDetailTabs": "Utilisez ces onglets pour basculer entre Ordres, Progression, Consommables et Historique pour cette machine :\n\n• Onglet Ordres : Voir tous les ordres assignés à cette machine.\n• Onglet Progression : Suivre les ordres actifs, y compris les opérations en cours et en pause.\n• Onglet Historique : Voir tous les ordres précédemment terminés ou annulés pour cette machine.",
-  "tutorialAdminNavigation": "Utilisez ce menu de navigation pour basculer entre les différentes sections d'administration :\n\n• Utilisateurs et rôles : Gérer les utilisateurs du système et leurs permissions\n• Tableau de bord des machines : Surveiller toutes les machines et leur statut\n• Journaux d'activité : Voir l'activité système et les journaux d'audit\n• Paramètres : Configurer les préférences système"
+  "tutorialAdminNavigation": "Utilisez ce menu de navigation pour basculer entre les différentes sections d'administration :\n\n• Utilisateurs et rôles : Gérer les utilisateurs du système et leurs permissions\n• Tableau de bord des machines : Surveiller toutes les machines et leur statut\n• Journaux d'activité : Voir l'activité système et les journaux d'audit\n• Paramètres : Configurer les préférences système",
+  "tutorialAdminSidebarUsers": "Utilisateurs et rôles : Gérez les utilisateurs du système, leurs rôles et permissions. Ajoutez de nouveaux utilisateurs, modifiez les existants et contrôlez les niveaux d'accès.",
+  "tutorialAdminSidebarMachines": "Tableau de bord des machines : Surveillez toutes les machines de votre installation, consultez leur statut actuel et suivez la progression de la production.",
+  "tutorialAdminSidebarActivity": "Journaux d'activité : Consultez l'activité système, les journaux d'audit et suivez toutes les actions des utilisateurs à des fins de sécurité et de surveillance.",
+  "tutorialAdminSidebarSettings": "Paramètres : Configurez les préférences système, les paramètres d'application et personnalisez le comportement du système MES."
 }

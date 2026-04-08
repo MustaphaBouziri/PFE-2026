@@ -73,7 +73,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
         _onBehalfOfUserId,
       );
 
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) Navigator.of(context).pop(double.parse(_qtyController.text));
     } catch (e) {
       setState(
               () => _errorMessage = e.toString().replaceAll('Exception: ', ''));

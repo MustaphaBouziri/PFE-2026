@@ -19,10 +19,11 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
   bool _isLandscape = false;
 
   String get _barcodeData =>
-      '${widget.operationData.prodOrderNo}'
-      '|${widget.operationData.operationNo}'
-      '|${widget.operationData.machineNo}'
-      '|${widget.operationData.itemDescription}';
+      'productOrder:${widget.operationData.prodOrderNo}'
+      '|machineNumber:${widget.operationData.machineNo}'
+      '|itemNo:${widget.operationData.itemNo}'
+      '|itemDescription:${widget.operationData.itemDescription}'
+      '|orderQuantity:${widget.operationData.orderQuantity}';
 
   Future<void> _print() async {
     final format = _isLandscape
@@ -57,8 +58,8 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
                     ),
                     pw.SizedBox(height: 8),
                     _pdfRow('Order', widget.operationData.prodOrderNo),
-                    _pdfRow('Operation', widget.operationData.operationNo),
                     _pdfRow('Machine', widget.operationData.machineNo),
+                    _pdfRow('Item Number', widget.operationData.itemNo),
                     _pdfRow('Item', widget.operationData.itemDescription),
                     _pdfRow(
                       'Qty',
@@ -172,8 +173,8 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
         const SizedBox(height: 8),
       ],
       _infoRow('Order', widget.operationData.prodOrderNo),
-      _infoRow('Operation', widget.operationData.operationNo),
       _infoRow('Machine', widget.operationData.machineNo),
+      _infoRow('Item Number', widget.operationData.itemNo),
       _infoRow('Item', widget.operationData.itemDescription),
       _infoRow('Qty', widget.operationData.orderQuantity.toStringAsFixed(0)),
     ],

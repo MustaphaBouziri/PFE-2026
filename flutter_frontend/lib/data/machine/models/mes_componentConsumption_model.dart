@@ -14,7 +14,7 @@ class ComponentConsumptionModel {
   final String operatorId;
   final String scannedAt;
   final bool belongsToThisOperation;
-  final double quantityPer;
+  final double quantityPerUnit;
 
   ComponentConsumptionModel({
     required this.id,
@@ -32,7 +32,7 @@ class ComponentConsumptionModel {
     required this.operatorId,
     required this.scannedAt,
     required this.belongsToThisOperation,
-    required this.quantityPer
+    required this.quantityPerUnit
   });
 
   factory ComponentConsumptionModel.fromJson(Map<String, dynamic> json) {
@@ -53,7 +53,7 @@ class ComponentConsumptionModel {
       operatorId: json['operatorId'] ?? '',
       scannedAt: json['scannedAt'] ?? '',
       belongsToThisOperation : json['belongsToThisOperation'] ?? false,
-      quantityPer: (json['quantityPer'] as num? ?? 0).toDouble(),
+      quantityPerUnit: (json['QuantityPerUnit'] as num? ?? 0).toDouble(),
     );
   }
 }
