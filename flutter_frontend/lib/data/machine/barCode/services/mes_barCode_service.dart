@@ -32,13 +32,12 @@ class MesBarcodeService {
     String token,
     String executionId,
     List<Map<String, dynamic>> scans,
-    String onBehalfOfUserId,
-  ) async {
+    ) async {
     final body = jsonEncode({
       'token': token,
       'executionId': executionId,
       'scansJson': jsonEncode(scans),
-      'onBehalfOfUserId': onBehalfOfUserId,
+
     });
 
     final response = await http.post(

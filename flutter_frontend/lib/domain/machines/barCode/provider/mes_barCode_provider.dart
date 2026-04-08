@@ -32,8 +32,7 @@ class MesBarcodeProvider with ChangeNotifier {
   /// Resolves the session token automatically.
   Future<bool> insertScans(
     String executionId,
-    List<Map<String, dynamic>> scans,
-    String onBehalfOfUserId,
+    List<Map<String, dynamic>> scans
   ) async {
     isLoading = true;
     errorMessage = null;
@@ -44,7 +43,6 @@ class MesBarcodeProvider with ChangeNotifier {
         token,
         executionId,
         scans,
-        onBehalfOfUserId,
       );
     } catch (e) {
       errorMessage = e.toString();

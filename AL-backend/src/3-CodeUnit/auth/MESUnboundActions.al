@@ -69,6 +69,7 @@ codeunit 50125 "MES Unbound Actions"
         UserIdCode: Code[50];
         OutJ: JsonObject;
         WCArr: JsonArray;
+        EmployeeRec: Record Employee;
     begin
         if (userId = '') or (password = '') then
             exit(BuildError('Invalid request', 'Username and password are required'));
@@ -90,19 +91,29 @@ codeunit 50125 "MES Unbound Actions"
             exit(BuildError('Internal error', 'User data not found after login'));
 
         WCRec.SetRange("User Id", U."User Id");
+        // get all work centers of this user and put them into a json list
         if WCRec.FindSet() then
             repeat
                 WCArr.Add(WCRec."Work Center No.");
+            //WCArr = ["WC01", "WC02"]
             until WCRec.Next() = 0;
 
         OutJ.Add('success', true);
-        OutJ.Add('token', Format(TokenRec."Token"));
-        OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
-        OutJ.Add('userId', U."User Id");
-        OutJ.Add('authId', U."Auth ID");
-        OutJ.Add('role', Format(U.Role));
         OutJ.Add('workCenters', WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
+        OutJ.Add('userId', U."User Id");
+        OutJ.Add('authId', U."Auth ID");
+        OutJ.Add('employeeId', U."Employee ID");
+        OutJ.Add('role', Format(U.Role));
+        OutJ.add('isActive', U."Is Active");
+        OutJ.Add('token', Format(TokenRec."Token"));
+        OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
+
+        if EmployeeRec.Get(U."Employee ID") then begin
+            OutJ.Add('fullName', EmployeeRec.FullName());
+        end else begin
+            OutJ.Add('fullName', '');
+        end;
 
         exit(JsonToText(OutJ));
     end;
@@ -137,11 +148,12 @@ codeunit 50125 "MES Unbound Actions"
         WCRec: Record "MES User Work Center";
         WCArr: JsonArray;
         OutJ: JsonObject;
-
+        EmployeeRec: Record Employee;
+        errorMessage:Text;
     begin
         // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
-        if not AuthMgt.ValidateToken(token, U, T) then
-            exit(BuildError('Unauthorized', 'Invalid or expired token'));
+        if not AuthMgt.ValidateToken(token, U, T,errorMessage) then
+            exit(BuildError('Unauthorized', errorMessage));
 
         // Write Last Seen At OUTSIDE the validation path.
         AuthMgt.TouchToken(T);
@@ -154,12 +166,20 @@ codeunit 50125 "MES Unbound Actions"
             until WCRec.Next() = 0;
 
         OutJ.Add('success', true);
-        OutJ.Add('userId', U."User Id");
-        OutJ.Add('name', U."Auth ID");
-        OutJ.Add('role', Format(U.Role));
         OutJ.Add('workCenters', WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
-        OutJ.Add('isActive', U."Is Active");
+        OutJ.Add('userId', U."User Id");
+        OutJ.Add('authId', U."Auth ID");
+        OutJ.Add('employeeId', U."Employee ID");
+        OutJ.Add('role', Format(U.Role));
+        OutJ.add('isActive', U."Is Active");
+
+        if EmployeeRec.Get(U."Employee ID") then begin
+            OutJ.Add('fullName', EmployeeRec.FullName());
+        end else begin
+            OutJ.Add('fullName', '');
+        end;
+
 
         exit(JsonToText(OutJ));
     end;
@@ -245,7 +265,7 @@ codeunit 50125 "MES Unbound Actions"
 
         // Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
-         exit(BuildErrorFromLastError('User creation failed'));
+            exit(BuildErrorFromLastError('User creation failed'));
 
         // Step 2 — Insert happens OUTSIDE the TryFunction.
         AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role);
@@ -284,9 +304,9 @@ codeunit 50125 "MES Unbound Actions"
 
         UserIdCode := CopyStr(userId, 1, 50);
 
-        // Step 1 — read-only admin token validation inside a TryFunction.
-        //if not TryValidateAdminToken(token, AdminUserId) then
-        //    exit(BuildErrorFromLastError('Password update failed'));
+        //Step 1 — read-only admin token validation inside a TryFunction.
+        if not TryValidateAdminToken(token, AdminUserId) then
+            exit(BuildErrorFromLastError('Password update failed'));
 
         // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
         AuthMgt.SetPassword(UserIdCode, newPassword, true);
@@ -495,56 +515,56 @@ codeunit 50125 "MES Unbound Actions"
 
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
-    
 
-procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
-var
-    UserWorkCenter: Record "MES User Work Center";
-    WorkCenter: Record "Work Center";
-    JsonHelper: Codeunit "MES Json Helper";
-    WCArr: JsonArray;
-    WCToken: JsonToken;
-begin
-    WCArr.ReadFrom(workCenterListJson);
 
-    UserWorkCenter.Get(userId);
-    // delete existing records for this user
-    if UserWorkCenter.FindSet() then
-        repeat
-            UserWorkCenter.Delete();
-        until UserWorkCenter.Next() = 0;
-// insert new info
-    foreach WCToken in WCArr do begin
-       // idk if u put json here or not
-        UserWorkCenter.Init();
-        UserWorkCenter."User Id" := userId;
-        UserWorkCenter."Work Center No." := WorkCenter."No.";
-        UserWorkCenter.Insert();
-    end;
-end;
-
- procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
-var
-    UserRec: Record "MES User";
-    Role: Enum 
+    procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
+    var
+        UserWorkCenter: Record "MES User Work Center";
+        WorkCenter: Record "Work Center";
+        JsonHelper: Codeunit "MES Json Helper";
+        WCArr: JsonArray;
+        WCToken: JsonToken;
     begin
-    case roleInt of
-        0:
-            Role := Role::Operator;
-        1:
-            Role := Role::Supervisor;
-        2:
-            Role := Role::Admin;
-        else
-            exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+        WCArr.ReadFrom(workCenterListJson);
+
+        UserWorkCenter.Get(userId);
+        // delete existing records for this user
+        if UserWorkCenter.FindSet() then
+            repeat
+                UserWorkCenter.Delete();
+            until UserWorkCenter.Next() = 0;
+        // insert new info
+        foreach WCToken in WCArr do begin
+            // idk if u put json here or not
+            UserWorkCenter.Init();
+            UserWorkCenter."User Id" := userId;
+            UserWorkCenter."Work Center No." := WorkCenter."No.";
+            UserWorkCenter.Insert();
+        end;
     end;
 
-    if UserRec.Get(userId) then begin
-        UserRec.Role := Role;
-        UserRec.Modify();
-    end else
-        exit(BuildError('User not found', 'No user with the specified ID was found'));
-end;
+    procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
+    var
+        UserRec: Record "MES User";
+        Role: Enum "MES User Role";
+    begin
+        case roleInt of
+            0:
+                Role := Role::Operator;
+            1:
+                Role := Role::Supervisor;
+            2:
+                Role := Role::Admin;
+            else
+                exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+        end;
+
+        if UserRec.Get(userId) then begin
+            UserRec.Role := Role;
+            UserRec.Modify();
+        end else
+            exit(BuildError('User not found', 'No user with the specified ID was found'));
+    end;
 
 
 }

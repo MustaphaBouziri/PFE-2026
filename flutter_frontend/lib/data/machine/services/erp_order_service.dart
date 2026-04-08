@@ -135,7 +135,8 @@ class ErpMachineOrdersService {
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
-
+    print(body);
+    print(Uri.parse(url));
     final response = await http.post(
       Uri.parse(url),
       headers: AppConstants.jsonHeaders,
