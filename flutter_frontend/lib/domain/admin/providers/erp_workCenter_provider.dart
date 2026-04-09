@@ -10,7 +10,7 @@ class ErpWorkcenterProvider with ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> fetchWorkCenter() async {
+  Future<void> fetchWorkCenters() async {
     try {
       isLoading = true;
       errorMessage = null;

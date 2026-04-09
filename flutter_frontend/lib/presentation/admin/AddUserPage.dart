@@ -47,7 +47,7 @@ class _AddUserPageState extends State<AddUserPage> {
     setState(() => isLoading = true);
     try {
       await context.read<ErpEmployeeProvider>().fetchEmployees();
-      await context.read<ErpWorkcenterProvider>().fetchWorkCenter();
+      await context.read<ErpWorkcenterProvider>().fetchWorkCenters();
       if (mounted) {
         showDialog(
           context: context,
