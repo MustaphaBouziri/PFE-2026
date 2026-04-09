@@ -47,6 +47,9 @@ class AppConstants {
   static const String fetchAllItemBarcodes =
       '${_webServiceBase}fetchAllItemBarcodes?$_company';
 
+      static const String fetchResolveBarcode = '${_webServiceBase}resolveBarcode?$_company';
+      
+
   // ── Write (all require token + onBehalfOfUserId in the request body) ───────
   static const String getStartOrderValidation =
       '${_webServiceBase}startOperation?$_company';

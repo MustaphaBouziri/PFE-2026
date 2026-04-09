@@ -52,4 +52,14 @@ class MesBarcodeProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<Map<String, dynamic>?> resolveBarcode(String barcode) async {
+  try {
+    return await _service.resolveBarcode(barcode);
+  } catch (e) {
+    errorMessage = e.toString();
+    notifyListeners();
+    return null;
+  }
+}
 }

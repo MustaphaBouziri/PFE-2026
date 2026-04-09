@@ -275,6 +275,12 @@ codeunit 50126 "MES Web Service"
     begin
         exit(UnboundActions.AdminChangeUserRole(token, targetUserId, newRoleInt, workCenterListJson));
     end;
+    procedure resolveBarcode(barcode: Text): Text
+    begin
+        exit(MachineFetch.resolveBarcode(barcode));
+    end;
+
+
 
 
 

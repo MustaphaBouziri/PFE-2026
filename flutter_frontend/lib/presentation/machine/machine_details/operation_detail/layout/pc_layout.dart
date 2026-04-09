@@ -36,7 +36,6 @@ class _PcLayoutState extends State<PcLayout> {
 
   // Keys for tutorial
   final GlobalKey _currentOrderKey = GlobalKey();
-  final GlobalKey _scanButtonKey = GlobalKey();
   final GlobalKey _actionButtonsKey = GlobalKey();
 
   bool _tutorialShown = false;
@@ -47,7 +46,7 @@ class _PcLayoutState extends State<PcLayout> {
     if (!_tutorialShown) {
       _tutorialShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async => 
-        await OperationDetailTutorial.show(context, [_currentOrderKey, _scanButtonKey, _actionButtonsKey])
+        await OperationDetailTutorial.show(context, [_currentOrderKey, _actionButtonsKey])
       );
     }
 
@@ -99,7 +98,6 @@ class _PcLayoutState extends State<PcLayout> {
                       components: widget.components,
                       totalProduced: widget.operationData.totalProducedQuantity,
                       executionId: widget.operationData.executionId,
-                      scanButtonKey: _scanButtonKey,
                     )
                   ],
                 ),
