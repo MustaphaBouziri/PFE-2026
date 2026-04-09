@@ -145,7 +145,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.finishOperation(token,machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.finishOperation(token, machineNo, prodOrderNo, operationNo));
     end;
 
     procedure cancelOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -155,7 +155,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.cancelOperation(token,machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.cancelOperation(token, machineNo, prodOrderNo, operationNo));
     end;
 
     procedure pauseOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -165,7 +165,7 @@ codeunit 50126 "MES Web Service"
         ErrorResult: Text;
     begin
 
-        exit(MachineWrite.pauseOperation(token,machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.pauseOperation(token, machineNo, prodOrderNo, operationNo));
     end;
 
     procedure resumeOperation(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]; token: Text): Text
@@ -174,7 +174,7 @@ codeunit 50126 "MES Web Service"
         OperatorId: Code[50];
         ErrorResult: Text;
     begin
-        exit(MachineWrite.resumeOperation(token,machineNo, prodOrderNo, operationNo));
+        exit(MachineWrite.resumeOperation(token, machineNo, prodOrderNo, operationNo));
     end;
 
     procedure insertScans(executionId: Code[50]; scansJson: Text; token: Text): Text
@@ -229,7 +229,7 @@ codeunit 50126 "MES Web Service"
         JsonHelper: Codeunit "MES Json Helper";
         errorMessage: Text;
     begin
-        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken,errorMessage) then begin
+        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken, errorMessage) then begin
             ErrorResult := JsonHelper.BuildError('Unauthorized', errorMessage);
             exit(false);
         end;
@@ -266,7 +266,15 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchMachineDashboard(hoursBack));
     end;
 
-
+    procedure AdminChangeUserRole(
+            token: Text;
+            targetUserId: Text;
+            newRoleInt: Integer;
+            workCenterListJson: Text
+        ): Text
+    begin
+        exit(UnboundActions.AdminChangeUserRole(token, targetUserId, newRoleInt, workCenterListJson));
+    end;
 
 
 

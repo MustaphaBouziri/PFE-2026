@@ -149,10 +149,10 @@ codeunit 50125 "MES Unbound Actions"
         WCArr: JsonArray;
         OutJ: JsonObject;
         EmployeeRec: Record Employee;
-        errorMessage:Text;
+        errorMessage: Text;
     begin
         // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
-        if not AuthMgt.ValidateToken(token, U, T,errorMessage) then
+        if not AuthMgt.ValidateToken(token, U, T, errorMessage) then
             exit(BuildError('Unauthorized', errorMessage));
 
         // Write Last Seen At OUTSIDE the validation path.
@@ -540,28 +540,111 @@ codeunit 50125 "MES Unbound Actions"
         end;
     end;
 
-    procedure changeUserRole(userId: Code[50]; roleInt: Integer): Text
+
+
+
+
+    // =============================================================================
+    // PURPOSE
+    //   Allows an Admin to change the role of an existing MES User.
+    //   A role change also resets the user's work-center assignments, because
+    //   the valid cardinality differs per role:
+    //     Operator   → exactly 1 work center
+    //     Supervisor → 1 or more work centers
+    //     Admin      → work-center list is ignored (pass '[]' or '')
+    //
+    // PARAMETERS
+    //   token             — valid Admin session token
+    //   targetUserId      — User Id of the MES User whose role will change
+    //   newRoleInt        — 0 = Operator, 1 = Supervisor, 2 = Admin
+    //   workCenterListJson— JSON array of work-center strings, e.g. '["100","200"]'
+    //
+    // RETURNS
+    //   JSON string: { "success": true } on success
+    //                { "error": "...", "message": "..." } on failure
+    // =============================================================================
+    procedure AdminChangeUserRole(
+        token: Text;
+        targetUserId: Text;
+        newRoleInt: Integer;
+        workCenterListJson: Text
+    ): Text
     var
-        UserRec: Record "MES User";
-        Role: Enum "MES User Role";
+        CallerUser: Record "MES User";
+        TargetUser: Record "MES User";
+        AuthToken: Record "MES Auth Token";
+        UserWorkCenter: Record "MES User Work Center";
+        NewRole: Enum "MES User Role";
+        JsonHelper: Codeunit "MES Json Helper";
+        WorkCenterArray: JsonArray;
+        WorkCenterToken: JsonToken;
+        WorkCenterValue: Text;
+        NewUserWorkCenter: Record "MES User Work Center";
+        errorMessage: Text;
     begin
-        case roleInt of
+        // ── 1. Authenticate & authorise ────────────────────────────────────
+        if not AuthMgt.ValidateToken(token, CallerUser, AuthToken, errorMessage) then
+            exit(JsonHelper.BuildError('Unauthorized', errorMessage));
+
+        AuthMgt.TouchToken(AuthToken);
+
+        if CallerUser.Role <> CallerUser.Role::Admin then
+            exit(JsonHelper.BuildError('Forbidden', 'Only Admins can change user roles.'));
+
+        // ── 2. Load target user ────────────────────────────────────────────
+        if not TargetUser.Get(CopyStr(targetUserId, 1, 50)) then
+            exit(JsonHelper.BuildError('NotFound', StrSubstNo('User %1 not found.', targetUserId)));
+
+        // ── 3. Map integer to enum ─────────────────────────────────────────
+        case newRoleInt of
             0:
-                Role := Role::Operator;
+                NewRole := NewRole::Operator;
             1:
-                Role := Role::Supervisor;
+                NewRole := NewRole::Supervisor;
             2:
-                Role := Role::Admin;
+                NewRole := NewRole::Admin;
             else
-                exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+                exit(JsonHelper.BuildError('BadRequest',
+                    StrSubstNo('Invalid roleInt %1. Accepted values: 0 (Operator), 1 (Supervisor), 2 (Admin).', newRoleInt)));
         end;
 
-        if UserRec.Get(userId) then begin
-            UserRec.Role := Role;
-            UserRec.Modify();
-        end else
-            exit(BuildError('User not found', 'No user with the specified ID was found'));
+        // ── 4. Validate work-center cardinality ────────────────────────────
+        // Admin role: work-center list is irrelevant — skip validation.
+        if NewRole <> NewRole::Admin then begin
+            if not WorkCenterArray.ReadFrom(workCenterListJson) then
+                exit(JsonHelper.BuildError('BadRequest', 'workCenterListJson is not valid JSON.'));
+
+            if WorkCenterArray.Count() = 0 then
+                exit(JsonHelper.BuildError('BadRequest',
+                    'At least one work center is required for Operator and Supervisor roles.'));
+
+            if (NewRole = NewRole::Operator) and (WorkCenterArray.Count() > 1) then
+                exit(JsonHelper.BuildError('BadRequest',
+                    'An Operator can only be assigned to exactly one work center.'));
+        end;
+
+        // ── 5. Apply role change ───────────────────────────────────────────
+        TargetUser.Role := NewRole;
+        TargetUser.Modify(true);
+
+        // ── 6. Reset work-center assignments ──────────────────────────────
+        UserWorkCenter.SetRange("User Id", TargetUser."User Id");
+        UserWorkCenter.DeleteAll();
+
+        if NewRole <> NewRole::Admin then begin
+            WorkCenterArray.ReadFrom(workCenterListJson);
+            foreach WorkCenterToken in WorkCenterArray do begin
+                WorkCenterToken.WriteTo(WorkCenterValue);
+                // Strip surrounding quotes that WriteTo adds for string tokens.
+                WorkCenterValue := WorkCenterValue.TrimStart('"').TrimEnd('"');
+
+                Clear(NewUserWorkCenter);
+                NewUserWorkCenter."User Id" := TargetUser."User Id";
+                NewUserWorkCenter."Work Center No." := CopyStr(WorkCenterValue, 1, 20);
+                NewUserWorkCenter.Insert(true);
+            end;
+        end;
+
+        exit('{"success":true,"message":"User role updated successfully."}');
     end;
-
-
 }

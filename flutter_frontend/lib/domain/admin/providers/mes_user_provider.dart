@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 
 import '../../../data/admin/models/mes_user_model.dart';
 import '../../../data/admin/services/mes_user_service.dart';
+import '../../../data/auth/services/api_service.dart';
 
 class MesUserProvider with ChangeNotifier {
   final MesUserService _service = MesUserService();
+  final ApiService _apiService = ApiService();
   final StreamController<void> _refreshController =
       StreamController<void>.broadcast();
 
@@ -61,6 +63,37 @@ class MesUserProvider with ChangeNotifier {
         workCenterList: workCenterList,
       );
 
+      return success;
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Changes the role of [targetUserId] and resets their work-center assignments.
+  /// Triggers a refresh of the user list stream on success.
+  Future<bool> changeUserRole({
+    required String targetUserId,
+    required int newRoleInt,
+    required List<String> workCenterList,
+  }) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+      final token = await _apiService.getToken() ?? '';
+      final success = await _service.changeUserRole(
+        token: token,
+        targetUserId: targetUserId,
+        newRoleInt: newRoleInt,
+        workCenterList: workCenterList,
+      );
+
+      if (success) triggerRefresh();
       return success;
     } catch (e) {
       errorMessage = e.toString();

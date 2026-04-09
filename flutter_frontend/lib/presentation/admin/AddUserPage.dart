@@ -15,8 +15,8 @@ import '../../domain/admin/providers/erp_workCenter_provider.dart';
 import '../../domain/admin/providers/mes_user_provider.dart';
 import '../tutorials/admin_dashboard_tutorial.dart';
 import '../widgets/employee_avatar.dart';
-
 import 'generatePasswordDialog.dart';
+import 'widgets/changeRoleDialog.dart';
 
 class AddUserPage extends StatefulWidget {
   const AddUserPage({super.key});
@@ -435,18 +435,18 @@ class _AddUserPageState extends State<AddUserPage> {
                                                         .read<MesUserProvider>()
                                                         .triggerRefresh(),
                                                   );
+                                            } else if (val ==
+                                                'editRoleDepartement') {
+                                              _openEditRoleDepartement(
+                                                context,
+                                                user,
+                                              );
                                             }
                                           },
                                           itemBuilder: (context) => [
                                             PopupMenuItem(
-                                              value: 'changeRole',
+                                              value: 'editRoleDepartement',
                                               child: Text('changeRole'.tr()),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'changeDepartment',
-                                              child: Text(
-                                                'changeDepartment'.tr(),
-                                              ),
                                             ),
                                             user.isActive
                                                 ? PopupMenuItem(
@@ -533,5 +533,28 @@ class _AddUserPageState extends State<AddUserPage> {
     if (parts.isEmpty || fullName.isEmpty) return '?';
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  Future<void> _openEditRoleDepartement(
+    BuildContext context,
+    MesUser user,
+  ) async {
+    // Ensure work centers are loaded before opening the dialog.
+    await context.read<ErpWorkcenterProvider>().fetchWorkCenters();
+
+    if (!context.mounted) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => ChangeRoleDialog(user: user),
+    );
+
+    if (!context.mounted) return;
+    if (result == true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr())));
+    }
   }
 }
