@@ -266,6 +266,11 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchMachineDashboard(hoursBack));
     end;
 
+    procedure resolveBarcode(barcode: Text): Text
+    begin
+        exit(MachineFetch.resolveBarcode(barcode));
+    end;
+
 
 
 
