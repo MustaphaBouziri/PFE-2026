@@ -31,15 +31,16 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
 
   double get _remaining =>
       widget.operationData.orderQuantity -
-          widget.operationData.totalProducedQuantity;
+      widget.operationData.totalProducedQuantity;
 
   bool get _isSupervisor {
-    final role = context
-        .read<AuthProvider>()
-        .userData?['role']
-        ?.toString()
-        .trim()
-        .toLowerCase() ??
+    final role =
+        context
+            .read<AuthProvider>()
+            .userData?['role']
+            ?.toString()
+            .trim()
+            .toLowerCase() ??
         '';
     return role == 'supervisor';
   }
@@ -76,7 +77,8 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       if (mounted) Navigator.of(context).pop(double.parse(_qtyController.text));
     } catch (e) {
       setState(
-              () => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+        () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -91,7 +93,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       child: ConstrainedBox(
         // FIX: added maxHeight so the dialog never overflows the screen,
         // and the inner scrollable can expand to fill available space.
-        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 620),
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 360),
         child: Column(
           // FIX: mainAxisSize.min removed from the outer Column so the
           // Column fills the ConstrainedBox height, giving the Expanded
@@ -125,8 +127,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
               padding: const EdgeInsets.fromLTRB(24, 2, 24, 0),
               child: Text(
                 '${_remaining.toStringAsFixed(0)} ${'unitsRemaining'.tr()}',
-                style:
-                const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
               ),
             ),
 
@@ -175,7 +176,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                         controller: _qtyController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
+                          FilteringTextInputFormatter.digitsOnly,
                         ],
                         decoration: InputDecoration(
                           labelText: 'quantityCreated'.tr(),
@@ -183,11 +184,13 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                            const BorderSide(color: Color(0xFF2563EB)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF2563EB),
+                            ),
                           ),
                         ),
                         validator: (value) {
@@ -197,7 +200,8 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                           }
                           if (parsed > _remaining) {
                             return 'maxAllowedQuantity'.tr(
-                                args: [_remaining.toStringAsFixed(0)]);
+                              args: [_remaining.toStringAsFixed(0)],
+                            );
                           }
                           return null;
                         },
@@ -209,7 +213,9 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                       Text(
                         _errorMessage!,
                         style: const TextStyle(
-                            fontSize: 12, color: Color(0xFFDC2626)),
+                          fontSize: 12,
+                          color: Color(0xFFDC2626),
+                        ),
                       ),
                     ],
 
@@ -219,45 +225,28 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.qr_code),
-                            label: Text('generateQR'.tr()),
-                            style: OutlinedButton.styleFrom(
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _isLoading ? null : _submit,
                             icon: _isLoading
                                 ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white),
-                            )
-                                : const Icon(Icons.check,
-                                color: Colors.white),
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.check, color: Colors.white),
                             label: Text(
-                              _isLoading
-                                  ? 'submitting'.tr()
-                                  : 'submit'.tr(),
-                              style:
-                              const TextStyle(color: Colors.white),
+                              _isLoading ? 'submitting'.tr() : 'submit'.tr(),
+                              style: const TextStyle(color: Colors.white),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF2563EB),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ),

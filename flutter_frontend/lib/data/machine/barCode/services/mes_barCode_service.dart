@@ -54,4 +54,20 @@ class MesBarcodeService {
     }
     throw Exception('Failed to insert scans: ${response.statusCode}');
   }
+
+  Future<Map<String, dynamic>?> resolveBarcode(String barcode) async {
+  final body = jsonEncode({'barcode': barcode});
+  final response = await http.post(
+    Uri.parse(AppConstants.fetchResolveBarcode),
+    headers: AppConstants.jsonHeaders,
+    body: body,
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final inner = jsonDecode(data['value']);
+    return inner;
+  }
+  return null;
+}
 }

@@ -127,6 +127,8 @@ class _OperatorSelectorState extends State<OperatorSelector> {
         // dropdown widget when the list changes, preventing a stale item
         // reference that could crash or show ghost entries.
         DropdownButtonFormField<MesUser>(
+          
+          
           key: ValueKey(_operators.length),
           value: _selectedOperator,
           isExpanded: true,

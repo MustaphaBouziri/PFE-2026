@@ -72,6 +72,7 @@ class GlobalSearchBar extends StatelessWidget {
             // drop down for mobile
             if (isMobile && dropdownItems != null)
               PopupMenuButton<String>(
+                color: Colors.white,
                 icon: const Icon(Icons.tune),
                 onSelected: onDropdownChanged,
                 itemBuilder: (context) {
