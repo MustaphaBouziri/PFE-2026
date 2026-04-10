@@ -10,8 +10,21 @@ class LogProvider with ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  // default today
   int selectedHours = 24;
-  final List<int> hourOptions = [1, 8, 24, 48, 168];
+
+  final List<int> hourOptions = [1, 24, 48, 168, 720];
+
+  String labelFor(int h) {
+    switch (h) {
+      case 1:   return 'Last 1 Hour';
+      case 24:  return 'Today';
+      case 48:  return 'Yesterday';
+      case 168: return 'Last 7 Days';
+      case 720: return 'Last 30 Days';
+      default:  return 'Last ${h}h';
+    }
+  }
 
   Future<void> fetchActivityLog() async {
     isLoading = true;

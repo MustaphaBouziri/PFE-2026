@@ -214,7 +214,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
 
           // display the list in normal way
           SizedBox(
-            height: 400,
+            height: 750,
             child: ComponentListView(
               components: filteredComponents,
               totalProduced: widget.totalProduced,

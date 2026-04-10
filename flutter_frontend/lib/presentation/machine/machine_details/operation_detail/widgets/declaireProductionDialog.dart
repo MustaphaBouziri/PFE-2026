@@ -222,10 +222,10 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                     const SizedBox(height: 20),
 
                     // ── Action buttons ─────────────────────────────────────
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
                             onPressed: _isLoading ? null : _submit,
                             icon: _isLoading
                                 ? const SizedBox(
@@ -243,7 +243,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF2563EB),
-                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -251,8 +251,8 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    
+                  
                 ),
               ),
             ),

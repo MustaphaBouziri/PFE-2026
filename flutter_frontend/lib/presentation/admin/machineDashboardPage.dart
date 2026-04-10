@@ -16,7 +16,7 @@ class MachineDashboardPage extends StatefulWidget {
 
 class _MachineDashboardPageState extends State<MachineDashboardPage> {
   final TextEditingController searchController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
@@ -25,20 +25,21 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
     });
   }
 
-  String _label(int h) {
-    if (h < 24) return 'lastHours'.tr(args: [h.toString()]);
-    if (h == 24) return 'last24h'.tr();
-    if (h == 48) return 'last48h'.tr();
-    return 'last7d'.tr();
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LogProvider>();
     final machines = provider.machineDashboardList;
-    final filteredMachine = machines .where( (m) => m.machineName.toLowerCase().contains( searchController.text.toLowerCase(), ) || m.workCenterNo.toLowerCase().contains( searchController.text.toLowerCase(), ), ) .toList();
-
-    
+    final filteredMachine = machines
+        .where(
+          (m) =>
+              m.machineName.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              ) ||
+              m.workCenterNo.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              ),
+        )
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -51,7 +52,12 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
             value: provider.selectedHours,
             underline: const SizedBox(),
             items: provider.hourOptions
-                .map((h) => DropdownMenuItem(value: h, child: Text(_label(h))))
+                .map(
+                  (h) => DropdownMenuItem(
+                    value: h,
+                    child: Text(provider.labelFor(h)),
+                  ),
+                )
                 .toList(),
             onChanged: (val) {
               if (val != null) {
@@ -69,7 +75,6 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
           ? Center(child: Text(provider.errorMessage!))
           : LayoutBuilder(
               builder: (context, constraints) {
-                
                 final crossCount = constraints.maxWidth < 600
                     ? 1
                     : constraints.maxWidth < 1024
@@ -80,7 +85,10 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
                     // search bar
                     Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: GlobalSearchBar(controller: searchController, onSearchChanged: (_) => setState(() {}), ),
+                      child: GlobalSearchBar(
+                        controller: searchController,
+                        onSearchChanged: (_) => setState(() {}),
+                      ),
                     ),
                     // machine grid
                     Expanded(

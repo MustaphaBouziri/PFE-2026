@@ -6,7 +6,7 @@ import '../../../core/app_constants.dart';
 
 class LogService {
   Future<List<ActivityLogModel>> fetchActivityLog(int hoursBack) async {
-    final body = jsonEncode({'hoursBack': hoursBack});
+    final body = jsonEncode({'hoursBack': hoursBack.toDouble()});
     final response = await http.post(
       Uri.parse(AppConstants.fetchActivityLog),
       headers: AppConstants.jsonHeaders,
@@ -24,7 +24,7 @@ class LogService {
   }
 
   Future<List<MachineDashboardModel>> fetchMachineDashboard(int hoursBack) async {
-    final body = jsonEncode({'hoursBack': hoursBack});
+    final body = jsonEncode({'hoursBack': hoursBack.toDouble()});
     final response = await http.post(
       Uri.parse(AppConstants.fetchMachineDashboard),
       headers: AppConstants.jsonHeaders,

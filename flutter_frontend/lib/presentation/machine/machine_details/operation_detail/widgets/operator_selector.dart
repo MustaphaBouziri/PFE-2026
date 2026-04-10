@@ -25,7 +25,6 @@ class OperatorSelector extends StatefulWidget {
 
 class _OperatorSelectorState extends State<OperatorSelector> {
   List<MesUser> _operators = [];
-  MesUser? _selectedOperator;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -35,15 +34,8 @@ class _OperatorSelectorState extends State<OperatorSelector> {
     _loadOperators();
   }
 
-  /// Fetches operators for every work center the supervisor belongs to,
-  /// merges the results, and deduplicates by userId.
-  ///
-  /// FIX: The original code called setState twice — once to update _errorMessage
-  /// and once to set _operators + _isLoading = false.  The gap between the two
-  /// calls caused a single frame where _isLoading was still true but _operators
-  /// was already populated, which rendered both the loading indicator AND the
-  /// dropdown simultaneously, producing the text-superimposition bug.
-  /// Now all state mutations are batched into a single setState at the end.
+  // Fetches operators for every work center the supervisor belongs to,
+  // merges the results, and deduplicates by userId.
   Future<void> _loadOperators() async {
     final provider = context.read<MesUserProvider>();
     final Map<String, MesUser> seen = {};
@@ -53,7 +45,6 @@ class _OperatorSelectorState extends State<OperatorSelector> {
       for (final wcId in widget.workCenterIds) {
         await provider.fetchUsersByWc(wcId: wcId);
         for (final user in provider.users) {
-          // Only operators can be the target of a proxy declaration.
           if (user.role == 'Operator') {
             seen[user.userId] = user;
           }
@@ -63,7 +54,6 @@ class _OperatorSelectorState extends State<OperatorSelector> {
       error = e.toString();
     }
 
-    // FIX: single setState — no intermediate partial-state frame.
     if (mounted) {
       setState(() {
         _errorMessage = error;
@@ -74,9 +64,8 @@ class _OperatorSelectorState extends State<OperatorSelector> {
   }
 
   void _handleSelection(MesUser? user) {
-    setState(() => _selectedOperator = user);
-    widget.onOperatorSelected(user?.userId);
-  }
+  widget.onOperatorSelected(user?.userId);
+}
 
   @override
   Widget build(BuildContext context) {
@@ -123,67 +112,57 @@ class _OperatorSelectorState extends State<OperatorSelector> {
           ),
         ),
         const SizedBox(height: 6),
-        // FIX: ValueKey on the operator count so Flutter fully replaces the
-        // dropdown widget when the list changes, preventing a stale item
-        // reference that could crash or show ghost entries.
-        DropdownButtonFormField<MesUser>(
-          
-          
+
+        DropdownMenu<MesUser?>(
           key: ValueKey(_operators.length),
-          value: _selectedOperator,
-          isExpanded: true,
-          decoration: InputDecoration(
-            hintText: 'selectOperator'.tr(),
+          width: 300,
+
+          menuStyle: MenuStyle(
+            backgroundColor: WidgetStateProperty.all(Colors.white),
+          ),
+
+          // enable search
+          enableFilter: true,
+
+          //default value is null, meaning self-declaration
+          initialSelection: null,
+
+          // selection callback
+          onSelected: _handleSelection,
+
+          hintText: 'selectOperator'.tr(),
+
+          // styling
+          inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
+
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
             ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          dropdownColor: Colors.white,
-          // null item lets the supervisor clear the selection (= self-declaration)
-          items: [
-            DropdownMenuItem<MesUser>(
+
+          // menu items
+          dropdownMenuEntries: [
+            DropdownMenuEntry<MesUser?>(
               value: null,
-              child: Text(
-                'selfDeclaration'.tr(),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              label: 'selfDeclaration'.tr(),
             ),
             ..._operators.map(
-                  (operator) => DropdownMenuItem<MesUser>(
+              (operator) => DropdownMenuEntry<MesUser?>(
                 value: operator,
-                child: Row(
-                  children: [
-                    EmployeeAvatar(
-                      fallbackLabel: _initials(operator.fullName),
-                      radius: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        operator.fullName.isNotEmpty
-                            ? operator.fullName
-                            : operator.authId,
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                label: operator.fullName.isNotEmpty
+                    ? operator.fullName
+                    : operator.authId,
+                leadingIcon: EmployeeAvatar(
+                  fallbackLabel: _initials(operator.fullName),
+                  radius: 14,
                 ),
               ),
             ),
           ],
-          onChanged: _handleSelection,
         ),
       ],
     );
