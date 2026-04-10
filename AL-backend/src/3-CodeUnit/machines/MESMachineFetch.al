@@ -498,7 +498,9 @@ codeunit 50131 "MES Machine Fetch"
     end;
 
 
-    procedure fetchActivityLog(hoursBack: Integer): Text
+
+
+    procedure fetchActivityLog(hoursBack: Decimal): Text
     var
         MESExecution: Record "MES Operation Execution";
         MESState: Record "MES Operation State";
@@ -514,8 +516,8 @@ codeunit 50131 "MES Machine Fetch"
         OperatorName: Text;
     begin
         Clear(LogArr);
-        CutoffTime := CreateDateTime(Today - hoursBack / 24, 000000T);
-        CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
+        CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
+
         MESState.Reset();
         MESState.SetCurrentKey("Execution Id", "Declared At");
         MESState.SetFilter("Declared At", '>=%1', CutoffTime);
@@ -523,7 +525,7 @@ codeunit 50131 "MES Machine Fetch"
             repeat
                 Clear(LogObj);
 
-                // to get operator name 
+                // to get operator name
                 OperatorName := '';
                 if MESUser.Get(MESState."Operator Id") then
                     if Employee.Get(MESUser."Employee ID") then
@@ -624,7 +626,7 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(LogArr));
     end;
 
-    procedure fetchMachineDashboard(hoursBack: Integer): Text
+    procedure fetchMachineDashboard(hoursBack: Decimal): Text
     var
         Machine: Record "Machine Center";
         MESMachineStatus: Record "MES Machine Status";
@@ -633,8 +635,8 @@ codeunit 50131 "MES Machine Fetch"
         MachineObj: JsonObject;
         JsonHelper: Codeunit "MES Json Helper";
         CutoffTime: DateTime;
-        TotalMinutes: Integer;
-        RunningMinutes: Integer;
+        TotalMinutes: Decimal;
+        RunningMinutes: Decimal;
         OperationCount: Integer;
         TotalProduced: Decimal;
         TotalScrap: Decimal;
@@ -645,7 +647,7 @@ codeunit 50131 "MES Machine Fetch"
         MESScrap: Record "MES Operation Scrap";
     begin
         Clear(MachineArr);
-        CutoffTime := CurrentDateTime() - (hoursBack * 3600000);
+        CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
         TotalMinutes := hoursBack * 60;
 
         Machine.Reset();
@@ -676,7 +678,7 @@ codeunit 50131 "MES Machine Fetch"
 
                         MESScrap.Reset();
                         MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
-                        // here we do need to loop and sum all 
+                        // here we do need to loop and sum all
                         if MESScrap.FindSet() then
                             repeat
                                 TotalScrap += MESScrap."Scrap Quantity";
@@ -696,8 +698,7 @@ codeunit 50131 "MES Machine Fetch"
                         if MESMachineStatus."Updated At" >= CutoffTime then begin
                             if PrevTime <> 0DT then begin
                                 if PrevStatus = PrevStatus::Working then
-                                    RunningMinutes += Round(
-                                        (MESMachineStatus."Updated At" - PrevTime) / 60000, 1);
+                                    RunningMinutes += (MESMachineStatus."Updated At" - PrevTime) / 60000.0;
                             end;
                             PrevTime := MESMachineStatus."Updated At";
                             PrevStatus := MESMachineStatus.Status;
@@ -706,10 +707,10 @@ codeunit 50131 "MES Machine Fetch"
 
                 // if last known status is running add time until now
                 if PrevStatus = PrevStatus::Working then
-                    RunningMinutes += Round((CurrentDateTime() - PrevTime) / 60000, 1);
+                    RunningMinutes += (CurrentDateTime() - PrevTime) / 60000.0;
 
                 if TotalMinutes > 0 then
-                    UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 1)
+                    UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 0.1)
                 else
                     UptimePercent := 0;
 
@@ -727,43 +728,43 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
 
-// this is the function that will be called when we scan a barcode and want to know what is this item in case its not our format
+    // this is the function that will be called when we scan a barcode and want to know what is this item in case its not our format
     procedure resolveBarcode(barcode: Text): Text
-var
-    Item: Record Item;
-    ItemIdentifier: Record "Item Identifier";
-    ResultJson: JsonObject;
-    JsonHelper: Codeunit "MES Json Helper";
-    ItemNo: Code[20];
-begin
-    
-    ItemIdentifier.Reset();
-    ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
+    var
+        Item: Record Item;
+        ItemIdentifier: Record "Item Identifier";
+        ResultJson: JsonObject;
+        JsonHelper: Codeunit "MES Json Helper";
+        ItemNo: Code[20];
+    begin
 
-    if not ItemIdentifier.FindFirst() then begin
-        ResultJson.Add('resolved', false);
-        ResultJson.Add('message', 'Barcode not recognized');
+        ItemIdentifier.Reset();
+        ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
+
+        if not ItemIdentifier.FindFirst() then begin
+            ResultJson.Add('resolved', false);
+            ResultJson.Add('message', 'Barcode not recognized');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        ItemNo := ItemIdentifier."Item No.";
+
+        if not Item.Get(ItemNo) then begin
+            ResultJson.Add('resolved', false);
+            ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        ResultJson.Add('resolved', true);
+        ResultJson.Add('itemNo', Item."No.");
+        ResultJson.Add('itemDescription', Item.Description);
+        ResultJson.Add('baseUOM', Item."Base Unit of Measure");
+        ResultJson.Add('inventory', Item.Inventory);
+        ResultJson.Add('shelfNo', Item."Shelf No.");
+        ResultJson.Add('lotSize', Item."Lot Size");
+        ResultJson.Add('flushingMethod', Format(Item."Flushing Method"));
         exit(JsonHelper.JsonToText(ResultJson));
     end;
-
-    ItemNo := ItemIdentifier."Item No.";
-
-    if not Item.Get(ItemNo) then begin
-        ResultJson.Add('resolved', false);
-        ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
-        exit(JsonHelper.JsonToText(ResultJson));
-    end;
-
-    ResultJson.Add('resolved', true);
-    ResultJson.Add('itemNo', Item."No.");
-    ResultJson.Add('itemDescription', Item.Description);
-    ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-    ResultJson.Add('inventory', Item.Inventory);
-    ResultJson.Add('shelfNo', Item."Shelf No.");
-    ResultJson.Add('lotSize', Item."Lot Size");
-    ResultJson.Add('flushingMethod', Format(Item."Flushing Method"));
-    exit(JsonHelper.JsonToText(ResultJson));
-end;
 
 
 
