@@ -1,8 +1,6 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-
 import '../../../core/app_constants.dart';
+import '../../shared/http_client.dart';
+import '../../shared/http_response_parser.dart';
 import '../models/erp_order_model.dart';
 import '../models/mes_operation_model.dart';
 import '../models/mes_production_cycle.dart';
@@ -14,23 +12,15 @@ import '../models/mes_production_cycle.dart';
 class ErpMachineOrdersService {
   /// Fetches all pending production orders assigned to [machineNo].
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
-    final body = jsonEncode({'machineNo': machineNo});
+    final response = await HttpClient.post(AppConstants.getMachineOrdersUrl, {
+      'machineNo': machineNo,
+    });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.getMachineOrdersUrl),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    final list = HttpResponseParser.parseList(
+      response,
+      label: 'fetch machine orders',
     );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list.map((e) => MachineOrderModel.fromJson(e)).toList();
-    }
-    throw Exception(
-      'Failed to fetch machine orders: ${response.statusCode} ${response.body}',
-    );
+    return list.map((e) => MachineOrderModel.fromJson(e)).toList();
   }
 
   /// Starts [operationNo] on [machineNo] for [prodOrderNo].
@@ -41,27 +31,17 @@ class ErpMachineOrdersService {
     String operationNo,
     String machineNo,
   ) async {
-    final body = jsonEncode({
-      'token': token,
-      'prodOrderNo': prodOrderNo,
-      'operationNo': operationNo,
-      'machineNo': machineNo,
-    });
+    final response =
+        await HttpClient.post(AppConstants.getStartOrderValidation, {
+          'token': token,
+          'prodOrderNo': prodOrderNo,
+          'operationNo': operationNo,
+          'machineNo': machineNo,
+        });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.getStartOrderValidation),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      final outer = jsonDecode(response.body);
-      final inner = jsonDecode(outer['value']);
-      if (inner['value'] == true) return true;
-      throw Exception(inner['message'] ?? 'Unknown error');
-    }
-    throw Exception(
-      'Failed to start operation: ${response.statusCode} ${response.body}',
+    return HttpResponseParser.parseWriteResult(
+      response,
+      label: 'start operation',
     );
   }
 
@@ -129,27 +109,17 @@ class ErpMachineOrdersService {
     required String prodOrderNo,
     required String operationNo,
   }) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(url, {
       'token': token,
       'machineNo': machineNo,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
-    print(body);
-    print(Uri.parse(url));
-    final response = await http.post(
-      Uri.parse(url),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
 
-    if (response.statusCode == 200) {
-      final outer = jsonDecode(response.body);
-      final inner = jsonDecode(outer['value']);
-      if (inner['value'] == true) return true;
-      throw Exception(inner['message'] ?? 'Unknown error');
-    }
-    throw Exception('Request failed: ${response.statusCode} ${response.body}');
+    return HttpResponseParser.parseWriteResult(
+      response,
+      label: 'operation status update',
+    );
   }
 
   // ──────────────────────────────────────────────
@@ -161,26 +131,18 @@ class ErpMachineOrdersService {
     String machineNo,
     bool fetchFinished,
   ) async {
-    final body = jsonEncode({
-      'machineNo': machineNo,
-      'fetchFinished': fetchFinished,
-    });
-
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchMachineOperationStatusAndProgress),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    final response = await HttpClient.post(
+      AppConstants.fetchMachineOperationStatusAndProgress,
+      {'machineNo': machineNo, 'fetchFinished': fetchFinished},
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list
-          .map((e) => OperationStatusAndProgressModel.fromJson(e))
-          .toList();
-    }
-    throw Exception('Failed to fetch operations: ${response.statusCode}');
+    final list = HttpResponseParser.parseList(
+      response,
+      label: 'fetch operations',
+    );
+    return list
+        .map((e) => OperationStatusAndProgressModel.fromJson(e))
+        .toList();
   }
 
   Stream<List<OperationStatusAndProgressModel>>
@@ -212,27 +174,22 @@ class ErpMachineOrdersService {
     String prodOrderNo,
     String operationNo,
   ) async {
-    final body = jsonEncode({
-      'machineNo': machineNo,
-      'prodOrderNo': prodOrderNo,
-      'operationNo': operationNo,
-    });
-
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchOperationLiveData),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    final response = await HttpClient.post(
+      AppConstants.fetchOperationLiveData,
+      {
+        'machineNo': machineNo,
+        'prodOrderNo': prodOrderNo,
+        'operationNo': operationNo,
+      },
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list.isNotEmpty
-          ? OperationStatusAndProgressModel.fromJson(list.first)
-          : null;
-    }
-    throw Exception('Failed to fetch live data: ${response.statusCode}');
+    final list = HttpResponseParser.parseList(
+      response,
+      label: 'fetch live data',
+    );
+    return list.isNotEmpty
+        ? OperationStatusAndProgressModel.fromJson(list.first)
+        : null;
   }
 
   Stream<OperationStatusAndProgressModel?> streamFetchOperationLiveData(
@@ -257,7 +214,7 @@ class ErpMachineOrdersService {
     double input,
     String onBehalfOfUserId,
   ) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.declareProduction, {
       'token': token,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
@@ -266,20 +223,9 @@ class ErpMachineOrdersService {
       'onBehalfOfUserId': onBehalfOfUserId,
     });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.declareProduction),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      final outer = jsonDecode(response.body);
-      final inner = jsonDecode(outer['value']);
-      if (inner['value'] == true) return true;
-      throw Exception(inner['message'] ?? 'Unknown error');
-    }
-    throw Exception(
-      'Failed to declare production: ${response.statusCode} ${response.body}',
+    return HttpResponseParser.parseWriteResult(
+      response,
+      label: 'declare production',
     );
   }
 
@@ -288,25 +234,14 @@ class ErpMachineOrdersService {
     String prodOrderNo,
     String operationNo,
   ) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.fetchProductionCycles, {
       'machineNo': machineNo,
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchProductionCycles),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
-    }
-    throw Exception('Failed to fetch cycles: ${response.statusCode}');
+    final list = HttpResponseParser.parseList(response, label: 'fetch cycles');
+    return list.map((e) => ProductionCycleModel.fromJson(e)).toList();
   }
 
   Stream<List<ProductionCycleModel>> streamProductionCycles(

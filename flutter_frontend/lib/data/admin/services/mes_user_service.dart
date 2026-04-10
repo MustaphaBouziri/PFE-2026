@@ -1,48 +1,31 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
-
 import '../../../core/app_constants.dart';
+import '../../shared/http_client.dart';
+import '../../shared/http_response_parser.dart';
 import '../models/mes_user_model.dart';
 
 class MesUserService {
   Future<List<MesUser>> fetchAllMESUsers() async {
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchAllMESUsers),
-      headers: AppConstants.jsonHeaders,
-    );
+    final response = await HttpClient.post(AppConstants.fetchAllMESUsers, {});
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> usersList = jsonDecode(valueString);
-      return usersList.map((json) => MesUser.fromJson(json)).toList();
-    } else {
-      throw Exception(
-        'Failed to load MES users: ${response.statusCode} ${response.body}',
-      );
-    }
+    final usersList = HttpResponseParser.parseList(
+      response,
+      label: 'Fetch all users',
+    );
+    return usersList.map((json) => MesUser.fromJson(json)).toList();
   }
 
   Future<List<MesUser>> fetchMESUsersByWC({required String wcId}) async {
-    final body = jsonEncode({'wcId': wcId});
+    final response = await HttpClient.post(AppConstants.fetchMESUsersByWC, {
+      'wcId': wcId,
+    });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchMESUsersByWC),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    final usersList = HttpResponseParser.parseList(
+      response,
+      label: 'Fetch users by departement',
     );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> usersList = jsonDecode(valueString);
-      return usersList.map((json) => MesUser.fromJson(json)).toList();
-    } else {
-      throw Exception(
-        'Failed to load MES users: ${response.statusCode} ${response.body}',
-      );
-    }
+    return usersList.map((json) => MesUser.fromJson(json)).toList();
   }
 
   Stream<List<MesUser>> streamFetchAllMESUsers({
@@ -59,18 +42,12 @@ class MesUserService {
     required int roleInt,
     required List<String> workCenterList,
   }) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.AdminCreateUser, {
       'userId': employeeId,
       'employeeId': employeeId,
       'roleInt': roleInt,
       'workCenterListJson': jsonEncode(workCenterList),
     });
-
-    final response = await http.post(
-      Uri.parse(AppConstants.AdminCreateUser),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       return true;
@@ -91,18 +68,12 @@ class MesUserService {
     required int newRoleInt,
     required List<String> workCenterList,
   }) async {
-    final workCenterListJson = jsonEncode(workCenterList);
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.AdminChangeUserRole, {
       'token': token,
       'targetUserId': targetUserId,
       'newRoleInt': newRoleInt,
-      'workCenterListJson': workCenterListJson,
+      'workCenterListJson': jsonEncode(workCenterList),
     });
-    final response = await http.post(
-      Uri.parse(AppConstants.AdminChangeUserRole),
-      headers: AppConstants.jsonHeaders,
-      body: body,
-    );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       return true;

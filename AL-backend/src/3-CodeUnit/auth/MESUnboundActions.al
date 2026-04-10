@@ -48,6 +48,7 @@ codeunit 50125 "MES Unbound Actions"
     // -------------------------------------------------------------------------
     var
         AuthMgt: Codeunit "MES Auth Mgt";  // business logic layer
+        JsonHelper: Codeunit "MES Json Helper";
 
     // =========================================================================
     // SECTION 1 — AUTH ENDPOINTS
@@ -72,23 +73,23 @@ codeunit 50125 "MES Unbound Actions"
         EmployeeRec: Record Employee;
     begin
         if (userId = '') or (password = '') then
-            exit(BuildError('Invalid request', 'Username and password are required'));
+            exit(JsonHelper.BuildError('Invalid request', 'Username and password are required'));
 
         // Resolve Auth ID → internal User Id
         U.SetRange("Auth ID", userId);
         if not U.FindFirst() then
-            exit(BuildError('Authentication failed', 'Invalid credentials'));
+            exit(JsonHelper.BuildError('Authentication failed', 'Invalid credentials'));
 
         UserIdCode := U."User Id";
 
         if not TryValidateCredentials(UserIdCode, password) then
-            exit(BuildErrorFromLastError('Authentication failed'));
+            exit(JsonHelper.BuildErrorFromLastError('Authentication failed'));
 
         // INSERT happens OUTSIDE the TryFunction.
         TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId);
 
         if not U.Get(TokenRec."User Id") then
-            exit(BuildError('Internal error', 'User data not found after login'));
+            exit(JsonHelper.BuildError('Internal error', 'User data not found after login'));
 
         WCRec.SetRange("User Id", U."User Id");
         // get all work centers of this user and put them into a json list
@@ -115,7 +116,7 @@ codeunit 50125 "MES Unbound Actions"
             OutJ.Add('fullName', '');
         end;
 
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     /// <summary>
@@ -128,11 +129,11 @@ codeunit 50125 "MES Unbound Actions"
         OutJ: JsonObject;
     begin
         if not AuthMgt.Logout(token) then
-            exit(BuildError('Logout failed', 'Invalid or already-expired token'));
+            exit(JsonHelper.BuildError('Logout failed', 'Invalid or already-expired token'));
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'Logged out successfully');
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     /// <summary>
@@ -153,7 +154,7 @@ codeunit 50125 "MES Unbound Actions"
     begin
         // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
         if not AuthMgt.ValidateToken(token, U, T, errorMessage) then
-            exit(BuildError('Unauthorized', errorMessage));
+            exit(JsonHelper.BuildError('Unauthorized', errorMessage));
 
         // Write Last Seen At OUTSIDE the validation path.
         AuthMgt.TouchToken(T);
@@ -181,7 +182,7 @@ codeunit 50125 "MES Unbound Actions"
         end;
 
 
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     /// <summary>
@@ -198,17 +199,17 @@ codeunit 50125 "MES Unbound Actions"
         TargetUserId: Code[50];
     begin
         if (oldPassword = '') or (newPassword = '') then
-            exit(BuildError('Invalid request', 'Both old and new passwords are required'));
+            exit(JsonHelper.BuildError('Invalid request', 'Both old and new passwords are required'));
 
         if not TryValidateChangePassword(token, oldPassword, newPassword, TargetUserId) then
-            exit(BuildErrorFromLastError('Password change failed'));
+            exit(JsonHelper.BuildErrorFromLastError('Password change failed'));
 
         // forceChangeOnNextLogin = false: user is actively choosing their own new password.
         AuthMgt.SetPassword(TargetUserId, newPassword, false);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password changed successfully');
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     // =========================================================================
@@ -244,7 +245,7 @@ codeunit 50125 "MES Unbound Actions"
     begin
         // ── Validate required fields ──────────────────────────────────────────
         if userId = '' then
-            exit(BuildError('Invalid request', 'User ID is required'));
+            exit(JsonHelper.BuildError('Invalid request', 'User ID is required'));
 
         // ── Map integer → enum ────────────────────────────────────────────────
         case roleInt of
@@ -255,7 +256,7 @@ codeunit 50125 "MES Unbound Actions"
             2:
                 Role := Role::Admin;
             else
-                exit(BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
+                exit(JsonHelper.BuildError('Invalid request', 'Invalid role value. Use 0 (Operator), 1 (Supervisor), or 2 (Admin)'));
         end;
 
         // ── Type conversions ──────────────────────────────────────────────────
@@ -265,7 +266,7 @@ codeunit 50125 "MES Unbound Actions"
 
         // Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
-            exit(BuildErrorFromLastError('User creation failed'));
+            exit(JsonHelper.BuildErrorFromLastError('User creation failed'));
 
         // Step 2 — Insert happens OUTSIDE the TryFunction.
         AuthMgt.CreateUser(UserIdCode, EmployeeIdCode, AuthIdCode, Role);
@@ -281,7 +282,7 @@ codeunit 50125 "MES Unbound Actions"
         OutJ.Add('success', true);
         OutJ.Add('message', 'User created successfully');
         OutJ.Add('userId', UserIdCode);
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     /// <summary>
@@ -300,19 +301,19 @@ codeunit 50125 "MES Unbound Actions"
         AdminUserId: Code[50];
     begin
         if (userId = '') or (newPassword = '') then
-            exit(BuildError('Invalid request', 'User ID and new password are required'));
+            exit(JsonHelper.BuildError('Invalid request', 'User ID and new password are required'));
 
         UserIdCode := CopyStr(userId, 1, 50);
 
         //Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
-            exit(BuildErrorFromLastError('Password update failed'));
+            exit(JsonHelper.BuildErrorFromLastError('Password update failed'));
 
         // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
         AuthMgt.SetPassword(UserIdCode, newPassword, true);
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password updated successfully');
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     /// <summary>
@@ -328,20 +329,20 @@ codeunit 50125 "MES Unbound Actions"
         AdminUserId: Code[50];
     begin
         if userId = '' then
-            exit(BuildError('Invalid request', 'User ID is required'));
+            exit(JsonHelper.BuildError('Invalid request', 'User ID is required'));
 
         UserIdCode := CopyStr(userId, 1, 50);
 
         // Step 1 — read-only admin token validation inside a TryFunction.
-        //   if not TryValidateAdminToken(token, AdminUserId) then
-        //     exit(BuildErrorFromLastError('Status update failed'));
+        if not TryValidateAdminToken(token, AdminUserId) then
+            exit(JsonHelper.BuildErrorFromLastError('Status update failed'));
 
         // Step 2 — SetActive performs writes (Modify + RevokeAll)
-        AuthMgt.SetActive(token, UserIdCode, isActive);
+        AuthMgt.SetActive(UserIdCode, isActive);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'User status updated successfully');
-        exit(JsonToText(OutJ));
+        exit(JsonHelper.JsonToText(OutJ));
     end;
 
     // =========================================================================
@@ -387,48 +388,6 @@ codeunit 50125 "MES Unbound Actions"
     local procedure TryValidateAdminToken(token: Text; var OutAdminUserId: Code[50])
     begin
         AuthMgt.ValidateAdminToken(token, OutAdminUserId);
-    end;
-
-    // =========================================================================
-    // SECTION 4 — JSON UTILITIES (private)
-    // =========================================================================
-
-    /// <summary>
-    /// Serialises a JsonObject to its text representation.
-    /// </summary>
-    local procedure JsonToText(J: JsonObject): Text
-    var
-        JsonText: Text;
-    begin
-        J.WriteTo(JsonText);
-        exit(JsonText);
-    end;
-
-    /// <summary>
-    /// Builds a standard error JSON envelope from explicit strings.
-    ///   { "success": false, "error": "&lt;errorCode&gt;", "message": "&lt;message&gt;" }
-    /// </summary>
-    local procedure BuildError(ErrorCode: Text; Message: Text): Text
-    var
-        ErrJ: JsonObject;
-    begin
-        ErrJ.Add('success', false);
-        ErrJ.Add('error', ErrorCode);
-        ErrJ.Add('message', Message);
-        exit(JsonToText(ErrJ));
-    end;
-
-    /// <summary>
-    /// Builds a standard error JSON envelope from GetLastErrorText(), then
-    /// clears the last error so it does not pollute subsequent calls.
-    /// </summary>
-    local procedure BuildErrorFromLastError(ErrorCode: Text): Text
-    var
-        Msg: Text;
-    begin
-        Msg := GetLastErrorText();
-        ClearLastError();
-        exit(BuildError(ErrorCode, Msg));
     end;
 
     procedure fetchAllMESUsers(): Text
@@ -513,40 +472,10 @@ codeunit 50125 "MES Unbound Actions"
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
 
-
-    procedure changeUserWorkCenters(userId: Code[50]; workCenterListJson: Text): Text
-    var
-        UserWorkCenter: Record "MES User Work Center";
-        WorkCenter: Record "Work Center";
-        JsonHelper: Codeunit "MES Json Helper";
-        WCArr: JsonArray;
-        WCToken: JsonToken;
-    begin
-        WCArr.ReadFrom(workCenterListJson);
-
-        UserWorkCenter.Get(userId);
-        // delete existing records for this user
-        if UserWorkCenter.FindSet() then
-            repeat
-                UserWorkCenter.Delete();
-            until UserWorkCenter.Next() = 0;
-        // insert new info
-        foreach WCToken in WCArr do begin
-            // idk if u put json here or not
-            UserWorkCenter.Init();
-            UserWorkCenter."User Id" := userId;
-            UserWorkCenter."Work Center No." := WorkCenter."No.";
-            UserWorkCenter.Insert();
-        end;
-    end;
-
-
-
-
-
     // =============================================================================
     // PURPOSE
-    //   Allows an Admin to change the role of an existing MES User.
+    //   Allows an Admin to change the workcenter of an existing MES User and or the 
+    //   role.
     //   A role change also resets the user's work-center assignments, because
     //   the valid cardinality differs per role:
     //     Operator   → exactly 1 work center
