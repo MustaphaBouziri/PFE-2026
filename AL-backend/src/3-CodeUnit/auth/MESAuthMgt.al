@@ -261,13 +261,11 @@ codeunit 50111 "MES Auth Mgt"
     /// Admin cannot deactivate their own account.
     /// Deactivating immediately revokes ALL active tokens for the target user.
     /// </summary>
-    procedure SetActive(TokenText: Text; TargetUserId: Code[50]; Active: Boolean): Boolean
+    procedure SetActive(TargetUserId: Code[50]; Active: Boolean): Boolean
     var
         AdminUser: Record "MES User";
         U: Record "MES User";
     begin
-        // RequireAdmin(TokenText, AdminUser);
-
         if not U.Get(TargetUserId) then
             Error('User %1 not found.', TargetUserId);
         if AdminUser."User Id" = TargetUserId then

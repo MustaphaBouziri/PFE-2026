@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/app_constants.dart';
+import '../../shared/http_client.dart';
+import '../../shared/http_response_parser.dart';
 
 class ApiService {
   // ── Token access ─────────────────────────────────────────────────────────
@@ -27,32 +29,19 @@ class ApiService {
     String deviceId,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse(AppConstants.loginUrl),
-        headers: AppConstants.jsonHeaders,
-        body: jsonEncode({
-          'userId': authId,
-          'password': password,
-          'deviceId': deviceId,
-        }),
-      );
+      final response = await HttpClient.post(AppConstants.loginUrl, {
+        'userId': authId,
+        'password': password,
+        'deviceId': deviceId,
+      });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final result =
-            jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
+      final result = HttpResponseParser.parseObject(response, label: 'login');
 
-        if (result['success'] == true) {
-          await _saveToken(result['token'] as String);
-          await _saveUserData(result);
-        }
-        return result;
+      if (result['success'] == true) {
+        await _saveToken(result['token'] as String);
+        await _saveUserData(result);
       }
-
-      return {
-        'error': 'Request failed',
-        'message': 'HTTP ${response.statusCode}: ${response.body}',
-      };
+      return result;
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
@@ -60,18 +49,11 @@ class ApiService {
 
   Future<Map<String, dynamic>> getCurrentUser(String token) async {
     try {
-      final response = await http.post(
-        Uri.parse(AppConstants.meUrl),
-        headers: AppConstants.jsonHeaders,
-        body: jsonEncode({'token': token}),
-      );
+      final response = await HttpClient.post(AppConstants.meUrl, {
+        'token': token,
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
-      }
-
-      return {'error': 'Unauthorized', 'message': 'Failed to get user info'};
+      return HttpResponseParser.parseObject(response, label: 'getCurrentUser');
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
@@ -83,35 +65,13 @@ class ApiService {
     String newPassword,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse(AppConstants.changePasswordUrl),
-        headers: AppConstants.jsonHeaders,
-        body: jsonEncode({
-          'token': token,
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        }),
-      );
+      final response = await HttpClient.post(AppConstants.changePasswordUrl, {
+        'token': token,
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
-      }
-
-      try {
-        final data = jsonDecode(response.body);
-        return {
-          'success': false,
-          'error': 'Failed',
-          'message': data['error']?['message'] ?? 'HTTP ${response.statusCode}',
-        };
-      } catch (_) {
-        return {
-          'success': false,
-          'error': 'Failed',
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
-        };
-      }
+      return HttpResponseParser.parseObject(response, label: 'changePassword');
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
@@ -119,19 +79,13 @@ class ApiService {
 
   Future<Map<String, dynamic>> logout(String token) async {
     try {
-      final response = await http.post(
-        Uri.parse(AppConstants.logoutUrl),
-        headers: AppConstants.jsonHeaders,
-        body: jsonEncode({'token': token}),
-      );
+      final response = await HttpClient.post(AppConstants.logoutUrl, {
+        'token': token,
+      });
 
       await _clearStorage();
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return jsonDecode(data['value'] ?? '{}') as Map<String, dynamic>;
-      }
-      return {'success': true};
+      return HttpResponseParser.parseObject(response, label: 'logout');
     } catch (e) {
       await _clearStorage();
       return {'success': true};
@@ -143,15 +97,11 @@ class ApiService {
     required String userId,
     required String newPassword,
   }) async {
-    final response = await http.post(
-      Uri.parse(AppConstants.adminSetPasswordUrl),
-      headers: AppConstants.jsonHeaders,
-      body: jsonEncode({
-        'token': token,
-        'userId': userId,
-        'newPassword': newPassword,
-      }),
-    );
+    final response = await HttpClient.post(AppConstants.adminSetPasswordUrl, {
+      'token': token,
+      'userId': userId,
+      'newPassword': newPassword,
+    });
 
     if (response.statusCode == 200 || response.statusCode == 201) return true;
     throw Exception(
