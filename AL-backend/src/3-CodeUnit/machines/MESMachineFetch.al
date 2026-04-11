@@ -651,6 +651,7 @@ codeunit 50131 "MES Machine Fetch"
         TotalMinutes := hoursBack * 60;
 
         Machine.Reset();
+        // loop all machines and for each machine calculate uptime, count of operations, quantity produced and scrap in the last x hours
         if Machine.FindSet() then
             repeat
                 Clear(MachineObj);
@@ -658,21 +659,21 @@ codeunit 50131 "MES Machine Fetch"
                 OperationCount := 0;
                 TotalProduced := 0;
                 TotalScrap := 0;
-
+                // for each machine we look for all executions in the last x hours and sum the total produced and scrap quantity from the progression and scrap tables
                 MESExecution.Reset();
                 MESExecution.SetRange("Machine No", Machine."No.");
                 MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
                 OperationCount := 0;
                 if MESExecution.FindSet() then
                     repeat
-                        OperationCount += 1;
+                        OperationCount += 1;// count how many operations started
 
                         // sum qte produced for all progressions of this execution
                         MESProgression.Reset();
                         MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
                         MESProgression.SetCurrentKey("Execution Id", "Declared At");
                         MESProgression.Ascending(false);
-                        // no loop cuz the latest progression record will have the total produced quantity for this execution
+                        // no loop cuz the latest progression record will have the total produced quantity for this execution + ascending =false so the first is the latest
                         if MESProgression.FindFirst() then
                             TotalProduced += MESProgression."Total Produced Quantity";
 
