@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import '../../../data/admin/models/mes_user_model.dart';
 import '../../../data/admin/services/mes_user_service.dart';
 import '../../../data/auth/services/api_service.dart';
+import '../../shared/async_state_mixin.dart';
 
-class MesUserProvider with ChangeNotifier {
+class MesUserProvider with ChangeNotifier, AsyncStateMixin {
   final MesUserService _service = MesUserService();
   final ApiService _apiService = ApiService();
   final StreamController<void> _refreshController =
-      StreamController<void>.broadcast();
+  StreamController<void>.broadcast();
 
   void triggerRefresh() {
     _refreshController.add(());
@@ -23,55 +24,30 @@ class MesUserProvider with ChangeNotifier {
   }
 
   List<MesUser> users = [];
-  bool isLoading = false;
-  String? errorMessage;
 
   // Fetch users
-
-
   Future<void> fetchUsersByWc({required String wcId}) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
+    await runAsync(() async {
       users = await _service.fetchMESUsersByWC(wcId: wcId);
-    } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
   }
+
   Stream<List<MesUser>> fetchMesUsers() {
-  return _service.streamFetchAllMESUsers(trigger: _refreshController.stream);
-}
+    return _service.streamFetchAllMESUsers(trigger: _refreshController.stream);
+  }
 
   Future<bool> addUser({
     required String employeeId,
     required int roleInt,
     required List<String> workCenterList,
   }) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
+    final result = await runAsync(() => _service.createMesUser(
+      employeeId: employeeId,
+      roleInt: roleInt,
+      workCenterList: workCenterList,
+    ));
 
-      final success = await _service.createMesUser(
-        employeeId: employeeId,
-        roleInt: roleInt,
-        workCenterList: workCenterList,
-      );
-
-      return success;
-    } catch (e) {
-      errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    return result ?? false;
   }
 
   /// Changes the role of [targetUserId] and resets their work-center assignments.
@@ -81,10 +57,7 @@ class MesUserProvider with ChangeNotifier {
     required int newRoleInt,
     required List<String> workCenterList,
   }) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
+    final result = await runAsync(() async {
       final token = await _apiService.getToken() ?? '';
       final success = await _service.changeUserRole(
         token: token,
@@ -95,13 +68,8 @@ class MesUserProvider with ChangeNotifier {
 
       if (success) triggerRefresh();
       return success;
-    } catch (e) {
-      errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
+
+    return result ?? false;
   }
 }
