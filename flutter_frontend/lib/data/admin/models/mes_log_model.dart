@@ -23,51 +23,62 @@ class ActivityLogModel {
 
   factory ActivityLogModel.fromJson(Map<String, dynamic> json) {
     return ActivityLogModel(
-      type:        json['type']        ?? '',
-      operatorId:  json['operatorId']  ?? '',
+      type: json['type'] ?? '',
+      operatorId: json['operatorId'] ?? '',
       operatorName: json['operatorName'] ?? '',
-      machineNo:   json['machineNo']   ?? '',
+      machineNo: json['machineNo'] ?? '',
       prodOrderNo: json['prodOrderNo'] ?? '',
       operationNo: json['operationNo'] ?? '',
-      action:      json['action']      ?? '',
-      timestamp:   json['timestamp']   ?? '',
+      action: json['action'] ?? '',
+      timestamp: json['timestamp'] ?? '',
     );
   }
 
   IconData get icon {
     switch (type) {
-      case 'status_change': return Icons.play_circle_outline;
-      case 'production':    return Icons.add_circle_outline;
-      case 'scrap':         return Icons.warning_amber_outlined;
-      case 'scan':          return Icons.qr_code_scanner;
-      default:              return Icons.circle_outlined;
+      case 'status_change':
+        return Icons.play_circle_outline;
+      case 'production':
+        return Icons.add_circle_outline;
+      case 'scrap':
+        return Icons.warning_amber_outlined;
+      case 'scan':
+        return Icons.qr_code_scanner;
+      default:
+        return Icons.circle_outlined;
     }
   }
 
   Color get color {
     switch (type) {
-      case 'status_change': return const Color(0xFF2563EB);
-      case 'production':    return const Color(0xFF16A34A);
-      case 'scrap':         return const Color(0xFFDC2626);
-      case 'scan':          return const Color(0xFF7C3AED);
-      default:              return const Color(0xFF64748B);
+      case 'status_change':
+        return const Color(0xFF2563EB);
+      case 'production':
+        return const Color(0xFF16A34A);
+      case 'scrap':
+        return const Color(0xFFDC2626);
+      case 'scan':
+        return const Color(0xFF7C3AED);
+      default:
+        return const Color(0xFF64748B);
     }
   }
+
   // for ui dropdown to make it look better
   String mapType(String uiType) {
-  switch (uiType) {
-    case 'Status':
-      return 'status_change';
-    case 'Productions':
-      return 'production';
-    case 'Scraps':
-      return 'scrap';
-    case 'Scans':
-      return 'scan';
-    default:
-      return '';
+    switch (uiType) {
+      case 'Status':
+        return 'status_change';
+      case 'Productions':
+        return 'production';
+      case 'Scraps':
+        return 'scrap';
+      case 'Scans':
+        return 'scan';
+      default:
+        return '';
+    }
   }
-}
 }
 
 class MachineDashboardModel {
@@ -76,7 +87,7 @@ class MachineDashboardModel {
   final String workCenterNo;
   final int operationCount;
   final double uptimePercent;
-  final int runningMinutes;
+  final double runningMinutes;
   final double totalProduced;
   final double totalScrap;
 
@@ -93,14 +104,25 @@ class MachineDashboardModel {
 
   factory MachineDashboardModel.fromJson(Map<String, dynamic> json) {
     return MachineDashboardModel(
-      machineNo:      json['machineNo']      ?? '',
-      machineName:    json['machineName']    ?? '',
-      workCenterNo:   json['workCenterNo']   ?? '',
+      machineNo: json['machineNo'] ?? '',
+      machineName: json['machineName'] ?? '',
+      workCenterNo: json['workCenterNo'] ?? '',
       operationCount: (json['operationCount'] as num? ?? 0).toInt(),
-      uptimePercent:  (json['uptimePercent']  as num? ?? 0).toDouble(),
-      runningMinutes: (json['runningMinutes'] as num? ?? 0).toInt(),
-      totalProduced:  (json['totalProduced']  as num? ?? 0).toDouble(),
-      totalScrap:     (json['totalScrap']     as num? ?? 0).toDouble(),
+      uptimePercent: (json['uptimePercent'] as num? ?? 0).toDouble(),
+      runningMinutes: (json['runningMinutes'] as num? ?? 0).toDouble(),
+      totalProduced: (json['totalProduced'] as num? ?? 0).toDouble(),
+      totalScrap: (json['totalScrap'] as num? ?? 0).toDouble(),
     );
+  }
+
+  // Formats running minutes into 1h 30min, 45min etc
+  String get formattedUptime {
+    final mins = runningMinutes.toInt();
+    if (mins <= 0) return '0min';
+    if (mins < 60) return '${mins}min';
+    final h = mins ~/ 60;
+    final m = mins % 60;
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}min';
   }
 }

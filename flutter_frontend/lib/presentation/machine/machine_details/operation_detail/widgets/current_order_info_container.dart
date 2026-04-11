@@ -72,32 +72,6 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
             ),
 
             const SizedBox(height: 12),
-
-            //progress
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "overallProgress".tr(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ),
-                Text(
-                  '${(progress * 100).round()}%',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: style.progressColor,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 4),
-
             OperationProgressBar(progress: progress, style: style),
           ],
         ),

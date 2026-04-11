@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
 import 'package:pfe_mes/presentation/admin/widgets/MachineCard.dart';
-import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +28,7 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<LogProvider>();
     final machines = provider.machineDashboardList;
+
     final filteredMachine = machines
         .where(
           (m) =>
