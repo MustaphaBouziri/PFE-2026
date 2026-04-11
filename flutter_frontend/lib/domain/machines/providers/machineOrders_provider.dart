@@ -7,18 +7,17 @@ import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/models/mes_operation_model.dart';
 import '../../../data/machine/models/mes_production_cycle.dart';
 import '../../../data/machine/services/erp_order_service.dart';
+import '../../shared/async_state_mixin.dart';
 
 /// Provides machine-order state to the UI layer.
 /// All write operations retrieve the current session token via [ApiService]
 /// and forward it to the service layer, which includes it in the request body
 /// so the BC backend can resolve the MES user identity from the token.
-class MachineordersProvider with ChangeNotifier {
+class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   final ErpMachineOrdersService _service = ErpMachineOrdersService();
   final ApiService _apiService = ApiService();
 
   List<MachineOrderModel> machineOrders = [];
-  bool isLoading = false;
-  String? errorMessage;
 
   final StreamController<void> _refreshController =
       StreamController<void>.broadcast();
@@ -32,16 +31,9 @@ class MachineordersProvider with ChangeNotifier {
   }
 
   Future<void> getMachineOrders(String machineNo) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
+    await runAsync(() async {
       machineOrders = await _service.getMachineOrders(machineNo);
-    } catch (e) {
-      errorMessage = e.toString();
-    }
-    isLoading = false;
-    notifyListeners();
+    });
   }
 
   /// Resolves the current token; throws if the session has expired.

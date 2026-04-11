@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/data/admin/services/mes_log_service.dart';
 
-class LogProvider with ChangeNotifier {
+import '../../shared/async_state_mixin.dart';
+
+class LogProvider with ChangeNotifier, AsyncStateMixin {
   final LogService _service = LogService();
 
   List<ActivityLogModel> activityLogs = [];
   List<MachineDashboardModel> machineDashboardList = [];
-  bool isLoading = false;
-  String? errorMessage;
 
   // default = last 24h
   int selectedHours = 24;
@@ -28,31 +28,15 @@ class LogProvider with ChangeNotifier {
   }
 
   Future<void> fetchActivityLog() async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-    try {
+    await runAsync(() async {
       activityLogs = await _service.fetchActivityLog(selectedHours);
-    } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
   }
 
   Future<void> fetchMachineDashboard() async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-    try {
+    await runAsync(() async {
       machineDashboardList = await _service.fetchMachineDashboard(selectedHours);
-    } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
   }
 
   void setHours(int hours) {

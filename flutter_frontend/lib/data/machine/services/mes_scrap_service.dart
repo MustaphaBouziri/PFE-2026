@@ -1,8 +1,8 @@
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import '../../../core/app_constants.dart';
+import '../../shared/http_client.dart';
+import '../../shared/http_response_parser.dart';
 import '../models/mes_scrapCode_model.dart';
 
 /// Handles scrap-code lookups and scrap declaration.
@@ -16,12 +16,11 @@ class MesScrapService {
       headers: AppConstants.jsonHeaders,
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List list = data['value'] ?? [];
-      return list.map((e) => MesScrapCode.fromJson(e)).toList();
-    }
-    throw Exception('Failed to load scrap codes: ${response.statusCode}');
+    final List list = HttpResponseParser.parseList(
+      response,
+      label: 'load scrap codes',
+    );
+    return list.map((e) => MesScrapCode.fromJson(e)).toList();
   }
 
   /// Declares scrapped units for [executionId].
@@ -33,7 +32,7 @@ class MesScrapService {
     required double quantity,
     String description = '',
   }) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.declareScrapUrl, {
       'token': token,
       'executionId': executionId,
       'description': description,
@@ -41,18 +40,9 @@ class MesScrapService {
       'quantity': quantity,
     });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.declareScrapUrl),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    return HttpResponseParser.parseWriteResult(
+      response,
+      label: 'declare scrap',
     );
-
-    if (response.statusCode == 200) {
-      final outer = jsonDecode(response.body);
-      final inner = jsonDecode(outer['value']);
-      if (inner['value'] == true) return true;
-      throw Exception(inner['message'] ?? 'Unknown error');
-    }
-    throw Exception('Failed to declare scrap: ${response.statusCode}');
   }
 }

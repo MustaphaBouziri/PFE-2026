@@ -1,45 +1,38 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../../../core/app_constants.dart';
+import '../../shared/http_client.dart';
+import '../../shared/http_response_parser.dart';
 import '../models/mes_componentConsumption_model.dart';
 
 class MesComponentconsumptionService {
-   Future<List<ComponentConsumptionModel>> fetchBom(
+  Future<List<ComponentConsumptionModel>> fetchBom(
     String prodOrderNo,
     String operationNo,
   ) async {
-    final body = jsonEncode({
+    final response = await HttpClient.post(AppConstants.fetchBom, {
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
 
-    final response = await http.post(
-      Uri.parse(AppConstants.fetchBom),
-      headers: AppConstants.jsonHeaders,
-      body: body,
+    final list = HttpResponseParser.parseList(
+      response,
+      label: 'fetch Bill of materials',
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String valueString = data['value'] ?? '[]';
-      final List<dynamic> list = jsonDecode(valueString);
-      return list.map((e) => ComponentConsumptionModel.fromJson(e)).toList();
-    } else {
-      throw Exception(
-        'Failed to fetch Bill of materials : ${response.statusCode}',
-      );
-    }
+    return list.map((e) => ComponentConsumptionModel.fromJson(e)).toList();
   }
 
   Stream<List<ComponentConsumptionModel>> streamBom(
-    
     String prodOrderNo,
     String operationNo,
     Stream<void> trigger,
   ) async* {
-    yield await fetchBom( prodOrderNo, operationNo);
+    yield await fetchBom(prodOrderNo, operationNo);
     await for (final _ in trigger) {
-      yield await fetchBom( prodOrderNo, operationNo);
+      yield await fetchBom(prodOrderNo, operationNo);
     }
   }
 }
