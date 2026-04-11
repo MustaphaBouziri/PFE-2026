@@ -28,13 +28,6 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
     });
   }
 
-  String _label(int h) {
-    if (h < 24) return 'Last ${h}h';
-    if (h == 24) return 'Last 24h';
-    if (h == 48) return 'Last 48h';
-    return 'Last 7d';
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LogProvider>();
@@ -70,8 +63,14 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
           DropdownButton<int>(
             value: provider.selectedHours,
             underline: const SizedBox(),
+          
             items: provider.hourOptions
-                .map((h) => DropdownMenuItem(value: h, child: Text(_label(h))))
+                .map(
+                  (h) => DropdownMenuItem(
+                    value: h,
+                    child: Text(provider.labelFor(h)),
+                  ),
+                )
                 .toList(),
             onChanged: (val) {
               if (val != null) {
@@ -118,10 +117,10 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 32),
-                      Expanded(flex: 2, child: tabletTitle(title: 'operator')),
-                      Expanded(flex: 2, child: tabletTitle(title: 'machine')),
-                      Expanded(flex: 3, child: tabletTitle(title: 'action')),
-                      Expanded(flex: 2, child: tabletTitle(title: 'time')),
+                      Expanded(flex: 2, child: tableTitle(title: 'operator')),
+                      Expanded(flex: 2, child: tableTitle(title: 'machine')),
+                      Expanded(flex: 3, child: tableTitle(title: 'action')),
+                      Expanded(flex: 2, child: tableTitle(title: 'time')),
                     ],
                   ),
                 ),
@@ -213,16 +212,15 @@ class rowValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExpandableText(
-      text: 
-      value,
+      text: value,
       style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
     );
   }
 }
 
-class tabletTitle extends StatelessWidget {
+class tableTitle extends StatelessWidget {
   String title;
-  tabletTitle({required this.title, super.key});
+  tableTitle({required this.title, super.key});
 
   @override
   Widget build(BuildContext context) {

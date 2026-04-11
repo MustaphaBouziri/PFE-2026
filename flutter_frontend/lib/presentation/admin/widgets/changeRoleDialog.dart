@@ -39,9 +39,24 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
   // ── Role metadata ──────────────────────────────────────────────────────────
   static const _roles = [
-    _RoleMeta(index: 0, key: 'Operator', color: Color(0xFF2563EB), bg: Color(0xFFEFF6FF)),
-    _RoleMeta(index: 1, key: 'Supervisor', color: Color(0xFF16A34A), bg: Color(0xFFF0FDF4)),
-    _RoleMeta(index: 2, key: 'Admin', color: Color(0xFF7C3AED), bg: Color(0xFFF5F3FF)),
+    _RoleMeta(
+      index: 0,
+      key: 'Operator',
+      color: Color(0xFF2563EB),
+      bg: Color(0xFFEFF6FF),
+    ),
+    _RoleMeta(
+      index: 1,
+      key: 'Supervisor',
+      color: Color(0xFF16A34A),
+      bg: Color(0xFFF0FDF4),
+    ),
+    _RoleMeta(
+      index: 2,
+      key: 'Admin',
+      color: Color(0xFF7C3AED),
+      bg: Color(0xFFF5F3FF),
+    ),
   ];
 
   bool get _isMultiSelect => _selectedRole == 'Supervisor';
@@ -52,8 +67,9 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
     super.initState();
     // Derive current role index from the user's role string.
     _selectedRole = _capitalize(widget.user.role);
-    _selectedRoleIndex =
-        _roles.indexWhere((r) => r.key == _selectedRole).clamp(0, 2);
+    _selectedRoleIndex = _roles
+        .indexWhere((r) => r.key == _selectedRole)
+        .clamp(0, 2);
 
     // Pre-populate current work centers (if available on the model).
     // MesUser.workCenters is assumed to be List<String>; adjust if the field
@@ -94,8 +110,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
   Future<void> _submit() async {
     // Validate: non-Admin roles require at least one work center.
     if (_showWorkCenters && _selectedWcIds.isEmpty) {
-      setState(() =>
-          _errorMessage = 'pleaseSelectAtLeastOneWorkCenter'.tr());
+      setState(() => _errorMessage = 'pleaseSelectAtLeastOneWorkCenter'.tr());
       return;
     }
 
@@ -117,12 +132,15 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
       if (success) {
         Navigator.of(context).pop(true);
       } else {
-        setState(() =>
-            _errorMessage = provider.errorMessage ?? 'failedToUpdateRole'.tr());
+        setState(
+          () => _errorMessage =
+              provider.errorMessage ?? 'failedToUpdateRole'.tr(),
+        );
       }
     } catch (e) {
-      setState(() =>
-          _errorMessage = e.toString().replaceAll('Exception: ', ''));
+      setState(
+        () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -134,19 +152,16 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      insetPadding:
-          const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
+        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 500),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
             // ── Header ──────────────────────────────────────────────────────
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: const BorderRadius.only(
@@ -156,8 +171,10 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.manage_accounts_outlined,
-                      color: Color(0xFFEA580C)),
+                  const Icon(
+                    Icons.manage_accounts_outlined,
+                    color: Color(0xFFEA580C),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -176,7 +193,9 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                               ? widget.user.fullName
                               : widget.user.authId,
                           style: const TextStyle(
-                              fontSize: 13, color: Color(0xFF64748B)),
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
                       ],
                     ),
@@ -199,20 +218,27 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                     // Current role info banner
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline,
-                              size: 16, color: Color(0xFF64748B)),
+                          const Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Color(0xFF64748B),
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             '${'currentRole'.tr()}: ${_capitalize(widget.user.role)}',
                             style: const TextStyle(
-                                fontSize: 13, color: Color(0xFF475569)),
+                              fontSize: 13,
+                              color: Color(0xFF475569),
+                            ),
                           ),
                         ],
                       ),
@@ -234,7 +260,8 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                       children: _roles.map((role) {
                         return Padding(
                           padding: EdgeInsets.only(
-                              right: role.index < 2 ? 10 : 0),
+                            right: role.index < 2 ? 10 : 0,
+                          ),
                           child: _roleButton(role),
                         );
                       }).toList(),
@@ -257,18 +284,22 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                           if (_isMultiSelect)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0FDF4),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: const Color(0xFF16A34A)),
+                                  color: const Color(0xFF16A34A),
+                                ),
                               ),
                               child: Text(
                                 'multiSelect'.tr(),
                                 style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF16A34A)),
+                                  fontSize: 11,
+                                  color: Color(0xFF16A34A),
+                                ),
                               ),
                             ),
                         ],
@@ -277,29 +308,29 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                       SizedBox(
                         height: 200,
                         child: workCenters.isEmpty
-                            ? const Center(
-                                child: CircularProgressIndicator())
+                            ? const Center(child: CircularProgressIndicator())
                             : ListView.separated(
                                 itemCount: workCenters.length,
                                 separatorBuilder: (_, __) =>
                                     const SizedBox(height: 6),
                                 itemBuilder: (context, index) {
                                   final wc = workCenters[index];
-                                  final isSelected =
-                                      _selectedWcIndexes.contains(index);
+                                  final isSelected = _selectedWcIndexes
+                                      .contains(index);
 
                                   return GestureDetector(
                                     onTap: () =>
                                         _toggleWorkCenter(index, wc.id),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 12),
+                                        horizontal: 14,
+                                        vertical: 12,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? const Color(0xFFF0FDF4)
                                             : Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: isSelected
                                               ? const Color(0xFF16A34A)
@@ -317,8 +348,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                                               Text(
                                                 wc.workCenterName,
                                                 style: const TextStyle(
-                                                  fontWeight:
-                                                      FontWeight.w500,
+                                                  fontWeight: FontWeight.w500,
                                                   fontSize: 13,
                                                 ),
                                               ),
@@ -351,24 +381,29 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: const Color(0xFFFCA5A5)),
+                          border: Border.all(color: const Color(0xFFFCA5A5)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 16, color: Color(0xFFDC2626)),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: Color(0xFFDC2626),
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
                                 style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFDC2626)),
+                                  fontSize: 12,
+                                  color: Color(0xFFDC2626),
+                                ),
                               ),
                             ),
                           ],
@@ -381,7 +416,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                     // ── Submit ───────────────────────────────────────────────
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: ElevatedButton.icon(
                         onPressed: _isSubmitting ? null : _submit,
                         icon: _isSubmitting
@@ -389,23 +424,26 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
-                            : const Icon(Icons.save_outlined,
-                                color: Colors.white),
+                            : const Icon(
+                                Icons.save_outlined,
+                                color: Colors.white,
+                              ),
                         label: Text(
-                          _isSubmitting
-                              ? 'saving'.tr()
-                              : 'saveChanges'.tr(),
+                          _isSubmitting ? 'saving'.tr() : 'saveChanges'.tr(),
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFEA580C),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
@@ -421,25 +459,24 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
   Widget _roleButton(_RoleMeta role) {
     final isSelected = _selectedRoleIndex == role.index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _selectRole(role.index, role.key),
-        child: Container(
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? role.bg : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-                color: isSelected ? role.color : Colors.grey.shade300),
+    return GestureDetector(
+      onTap: () => _selectRole(role.index, role.key),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+
+        decoration: BoxDecoration(
+          color: isSelected ? role.bg : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? role.color : Colors.grey.shade300,
           ),
-          child: Text(
-            role.key.tr(),
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              color: isSelected ? role.color : const Color(0xFF64748B),
-            ),
+        ),
+        child: Text(
+          role.key.tr(),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: isSelected ? role.color : const Color(0xFF64748B),
           ),
         ),
       ),

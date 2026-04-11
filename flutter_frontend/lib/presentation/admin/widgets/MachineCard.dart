@@ -56,7 +56,16 @@ class AdminMachineCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          Text(
+                  'Machine Number: ${machine.machineNo}',
+                  style: const TextStyle(
+                    
+                    color: Color(0xFF64748B),
+                    
+                  ),
+                ),
+                const SizedBox(height: 30),
+
           Row(
             children: [
               // uptime circle
@@ -103,7 +112,7 @@ class AdminMachineCard extends StatelessWidget {
                       'scrapDeclared'.tr(),
                       machine.totalScrap.toStringAsFixed(0),
                     ),
-                    infoRow('uptime'.tr(), '${machine.runningMinutes} min'),
+                    infoRow('uptime'.tr(), machine.formattedUptime),
                   ],
                 ),
               ),

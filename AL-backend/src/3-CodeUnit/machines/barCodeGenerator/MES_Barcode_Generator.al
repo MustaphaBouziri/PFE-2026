@@ -35,4 +35,43 @@ codeunit 50100 "MES Barcode Generator"
         Item."MES Barcode Text" := CopyStr(BarcodeText, 1, 250);
         Item.Modify();
     end;
+
+    procedure GenerateAllBarcodesWithProgress()
+var
+    Item: Record Item;
+    TotalCount: Integer;
+    CurrentCount: Integer;
+    Dialog: Dialog;
+    Percent: Integer;
+begin
+   
+    Item.Reset();
+    TotalCount := Item.Count();
+
+    if TotalCount = 0 then
+        exit;
+
+    Dialog.Open('Generating Barcodes...\\Progress: #1####% (#2####/#3####)');
+
+    CurrentCount := 0;
+
+    if Item.FindSet() then begin
+        repeat
+            CurrentCount += 1;
+
+            GenerateAndSaveBarcodeText(Item."No.");
+
+            Percent := Round(CurrentCount * 100 / TotalCount, 1);
+
+            Dialog.Update(1, Percent);
+            Dialog.Update(2, CurrentCount);
+            Dialog.Update(3, TotalCount);
+
+        until Item.Next() = 0;
+    end;
+
+    Dialog.Close();
+
+    Message('All barcodes generated successfully!');
+end;
 }

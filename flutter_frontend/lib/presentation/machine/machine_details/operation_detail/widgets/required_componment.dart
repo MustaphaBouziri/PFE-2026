@@ -214,7 +214,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
 
           // display the list in normal way
           SizedBox(
-            height: 400,
+            height: 750,
             child: ComponentListView(
               components: filteredComponents,
               totalProduced: widget.totalProduced,
@@ -245,10 +245,56 @@ class ComponentListView extends StatelessWidget {
   static const statusLowStock = 'lowStock';
   static const statusAvailable = 'available';
 
-  String getStatus(double planned, double scanned) {
-    if (scanned == 0) return statusMissing;
-    if (scanned < planned) return statusLowStock;
+  String getStatus(double remaining, double scanned) {
+    if (scanned == 0 || remaining <= 0) return statusMissing;// if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
+    if (remaining < scanned * 0.2) return statusLowStock;
     return statusAvailable;
+  }
+
+  Color getBgColor(String status, bool isSpecific) {
+    if (status == statusAvailable) {
+      return isSpecific ? const Color(0xFFDCFCE7) : const Color(0xFFECFDF5);
+    } else if (status == statusLowStock) {
+      return isSpecific
+          ? const Color.fromARGB(255, 255, 251, 219)
+          : const Color.fromARGB(255, 255, 253, 222);
+    } else {
+      return isSpecific
+          ? const Color.fromARGB(255, 255, 236, 236)
+          : const Color.fromARGB(255, 255, 244, 244);
+    }
+  }
+
+  Color getBorderColor(String status, bool isSpecific) {
+    if (status == statusAvailable) {
+      return const Color(0xFF16A34A).withOpacity(isSpecific ? 1 : 0.2);
+    } else if (status == statusLowStock) {
+      return const Color(0xFFCA8A04).withOpacity(isSpecific ? 1 : 0.2);
+    } else {
+      return const Color(0xFFDC2626).withOpacity(isSpecific ? 1 : 0.2);
+    }
+  }
+
+  IconData getIcon(String status) {
+    if (status == statusAvailable) return Icons.check_circle_outline;
+    if (status == statusLowStock) return Icons.warning_amber_outlined;
+    return Icons.cancel_outlined;
+  }
+
+  Color getIconColor(String status, bool isSpecific) {
+    if (status == statusAvailable) {
+      return isSpecific
+          ? const Color(0xFF16A34A)
+          : const Color(0xFF16A34A).withOpacity(0.8);
+    } else if (status == statusLowStock) {
+      return isSpecific
+          ? const Color(0xFFCA8A04)
+          : const Color(0xFFCA8A04).withOpacity(0.8);
+    } else {
+      return isSpecific
+          ? const Color(0xFFDC2626)
+          : const Color(0xFFDC2626).withOpacity(0.8);
+    }
   }
 
   @override
@@ -262,57 +308,29 @@ class ComponentListView extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final component = components[index];
-
-        final planned = component.plannedQuantity;
+        // if the component belongs to this operation, we highlight it more and show full opacity else we show it with less opacity and lighter colors
         final isSpecific = component.belongsToThisOperation;
-
-        // how much u consumed of this material
+        // consumed is how many items have been used based on the total produced and the quantity per unit
         final consumed = totalProduced * component.quantityPerUnit;
-        // how qte u scanned of this item
+        // scanned is how many items have been scanned based on the quantity scanned and quantity per unit
         final scanned = component.quantityScanned * component.quantityPerUnit;
-        // remaining = the qte u scanned - what was consumed
+        // remaining is how many items are left to be scanned or used
         final remaining = scanned - consumed;
 
-        final status = isSpecific ? getStatus(planned, scanned) : '';
+        final status = getStatus(remaining, scanned);
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: !isSpecific
-                ? const Color(0xFFF1F5F9)
-                : status == statusAvailable
-                ? const Color(0xFFF0FDF4)
-                : status == statusLowStock
-                ? const Color(0xFFFEFCE8)
-                : const Color(0xFFFEF2F2),
+            color: getBgColor(status, isSpecific),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: !isSpecific
-                  ? const Color(0xFFCBD5F5).withOpacity(0.2)
-                  : status == statusAvailable
-                  ? const Color(0xFF1AA44D).withOpacity(0.2)
-                  : status == statusLowStock
-                  ? const Color(0xFFD39D2B).withOpacity(0.2)
-                  : const Color(0xFFE03B3B).withOpacity(0.2),
-            ),
+            border: Border.all(color: getBorderColor(status, isSpecific)),
           ),
           child: Row(
             children: [
               Icon(
-                !isSpecific
-                    ? Icons.remove_circle_outline
-                    : status == 'Available'
-                    ? Icons.check_circle_outline
-                    : status == 'Low Stock'
-                    ? Icons.warning_amber_outlined
-                    : Icons.cancel_outlined,
-                color: !isSpecific
-                    ? const Color(0xFF64748B)
-                    : status == 'Available'
-                    ? const Color(0xFF1AA44D)
-                    : status == 'Low Stock'
-                    ? const Color(0xFFD39D2B)
-                    : const Color(0xFFE03B3B),
+                getIcon(status),
+                color: getIconColor(status, isSpecific),
                 size: 22,
               ),
 
@@ -323,38 +341,39 @@ class ComponentListView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${component.itemDescription} ( ${component.quantityPerUnit} per unit)',
-                      style: const TextStyle(
+                      '${component.itemDescription} (${component.quantityPerUnit} per unit)',
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0F172A),
+                        color: isSpecific
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFF0F172A).withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${scanned.toString()} ${'quantity scanned'.tr()} | ${consumed.toString()} ${'used'.tr()} | ${remaining.toString()} ${' quantity left'.tr()}',
-                      style: const TextStyle(
+                      '${scanned.toString()} ${'quantity scanned'.tr()} | '
+                      '${consumed.toString()} ${'used'.tr()} | '
+                      '${remaining.toString()} ${'quantity left'.tr()}',
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: isSpecific
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF64748B).withOpacity(0.7),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              if (isSpecific)
-                Text(
-                  status.tr(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: status == statusAvailable
-                        ? const Color(0xFF1AA44D)
-                        : status == statusLowStock
-                        ? const Color(0xFFD39D2B)
-                        : const Color(0xFFE03B3B),
-                  ),
+              Text(
+                status.tr(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: getIconColor(status, isSpecific),
                 ),
+              ),
             ],
           ),
         );

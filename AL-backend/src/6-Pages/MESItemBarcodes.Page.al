@@ -32,7 +32,6 @@ page 50112 "MES Item Barcodes"
                 {
                     ApplicationArea = All;
                     Caption = 'Datamatrix Encoded';
-                    ToolTip = 'The encoded Data Matrix string stored for this item.';
                 }
             }
         }
@@ -42,40 +41,46 @@ page 50112 "MES Item Barcodes"
     {
         area(Processing)
         {
-            action(GenerateAll)
+            action(GenerateSelected)
             {
                 ApplicationArea = All;
-                Caption = 'Generate All Barcodes';
-                ToolTip = 'Generate and save Data Matrix encoded text for all items.';
+                Caption = 'Generate Selected';
                 Image = BarCode;
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
 
                 trigger OnAction()
                 var
                     BarcodeGen: Codeunit "MES Barcode Generator";
-
                 begin
-                    if not Confirm('Generate Data Matrix barcodes for ALL items. Continue?') then
-                        exit;
                     BarcodeGen.GenerateAndSaveBarcodeText(Rec."No.");
                     CurrPage.Update(false);
                 end;
             }
 
-            action(GenerateSelected)
+            action(GenerateAll)
             {
                 ApplicationArea = All;
-                Caption = 'Generate for Selected';
+                Caption = 'Generate All';
+                Image = BarCode;
 
                 trigger OnAction()
                 var
                     BarcodeGen: Codeunit "MES Barcode Generator";
                 begin
-                    BarcodeGen.GenerateAndSaveBarcodeText(Rec."No.");
+                    if not Confirm('Generate Data Matrix barcodes for ALL items. Continue?') then
+                        exit;
+
+                    BarcodeGen.GenerateAllBarcodesWithProgress();
                     CurrPage.Update(false);
                 end;
+            }
+        }
+
+        area(Promoted)
+        {
+            group(Generate)
+            {
+                actionref(GenerateSelectedRef; GenerateSelected) { }
+                actionref(GenerateAllRef; GenerateAll) { }
             }
         }
     }

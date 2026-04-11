@@ -8,7 +8,7 @@ class LogService {
   Future<List<ActivityLogModel>> fetchActivityLog(int hoursBack) async {
     final response = await HttpClient.post(
         AppConstants.fetchActivityLog,
-        {'hoursBack': hoursBack}
+        {'hoursBack': hoursBack.toDouble()}
     );
 
     final list = HttpResponseParser.parseList(response, label: 'activity log');
@@ -20,7 +20,7 @@ class LogService {
   ) async {
     final response = await HttpClient.post(
         AppConstants.fetchMachineDashboard,
-        {'hoursBack': hoursBack},
+        {'hoursBack':  hoursBack.toDouble()},
     );
 
     final list = HttpResponseParser.parseList(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 
 class AdminPage extends StatefulWidget {
@@ -75,9 +76,15 @@ class _AdminPageState extends State<AdminPage> {
                 ),
                 SidebarItem(
                   icon: Icons.settings_outlined,
-                  label: 'settings'.tr(),
+                  label: "Barcode List",
                   isSelected: _selectedIndex == 3,
                   onTap: () => setState(() => _selectedIndex = 3),
+                ),
+                SidebarItem(
+                  icon: Icons.settings_outlined,
+                  label: 'settings'.tr(),
+                  isSelected: _selectedIndex == 4,
+                  onTap: () => setState(() => _selectedIndex = 4),
                 ),
 
                 const Spacer(),
@@ -134,6 +141,7 @@ class _AdminPageState extends State<AdminPage> {
                 const AddUserPage(),
                 const MachineDashboardPage(),
                 const ActivityLogPage(),
+                const BarcodeListPage(),
                 Center(child: Text('Settings Page - Coming Soon!', style: TextStyle(fontSize: 18, color: Colors.grey.shade600))),
                 
               ],

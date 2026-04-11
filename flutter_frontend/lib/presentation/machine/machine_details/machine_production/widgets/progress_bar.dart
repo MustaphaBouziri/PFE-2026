@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 import '../models/status_style.dart';
 
 /// Horizontal progress bar with a percentage label.
@@ -26,6 +26,28 @@ class OperationProgressBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Track + fill ─────────────────────────────────────────────────
+        Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "overallProgress".tr(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(progress * 100).round()}%',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: style.progressColor,
+                    ),
+                  ),
+                ],
+              ),
+          const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(999),
           child: LinearProgressIndicator(
@@ -38,17 +60,6 @@ class OperationProgressBar extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 4),
-
-        // ── Percentage label ─────────────────────────────────────────────
-        Text(
-          '$percentage%',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: style.progressColor,
-          ),
-        ),
       ],
     );
   }
