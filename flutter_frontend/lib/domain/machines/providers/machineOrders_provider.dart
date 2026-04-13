@@ -49,7 +49,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     String machineNo,
   ) async {
     final token = await _requireToken();
-    return _service.getStartOperationValidation(
+    return _service.startOperation(
       token,
       prodOrderNo,
       operationNo,

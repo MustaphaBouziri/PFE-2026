@@ -25,14 +25,14 @@ class ErpMachineOrdersService {
 
   /// Starts [operationNo] on [machineNo] for [prodOrderNo].
   /// [token] — session token from the authenticated user.
-  Future<bool> getStartOperationValidation(
+  Future<bool> startOperation(
     String token,
     String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
     final response =
-        await HttpClient.post(AppConstants.getStartOrderValidation, {
+        await HttpClient.post(AppConstants.startOperation, {
           'token': token,
           'prodOrderNo': prodOrderNo,
           'operationNo': operationNo,
