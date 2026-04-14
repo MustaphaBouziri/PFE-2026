@@ -28,10 +28,15 @@ page 50112 "MES Item Barcodes"
                     ApplicationArea = All;
                     Caption = 'Base UOM';
                 }
+                field("MES Barcode Code"; Rec."MES Barcode Code")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Barcode Code';
+                }
                 field("MES Barcode Text"; Rec."MES Barcode Text")
                 {
                     ApplicationArea = All;
-                    Caption = 'Datamatrix Encoded';
+                    Caption = 'Datamatrix Encoded Text';
                 }
             }
         }
@@ -44,33 +49,29 @@ page 50112 "MES Item Barcodes"
             action(GenerateSelected)
             {
                 ApplicationArea = All;
-                Caption = 'Generate Selected';
+                Caption = 'Generate Barcode';
                 Image = BarCode;
 
                 trigger OnAction()
                 var
                     BarcodeGen: Codeunit "MES Barcode Generator";
+                    UOMDialog: Page "MES Select UOM Dialog";
+                    SelectedUOM: Code[10];
                 begin
-                    BarcodeGen.GenerateAndSaveBarcodeText(Rec."No.");
-                    CurrPage.Update(false);
-                end;
-            }
+                    UOMDialog.SetItemNo(Rec."No.");
 
-            action(GenerateAll)
-            {
-                ApplicationArea = All;
-                Caption = 'Generate All';
-                Image = BarCode;
+                    if UOMDialog.RunModal() = Action::OK then begin
+                        SelectedUOM := UOMDialog.GetSelectedUOM();
 
-                trigger OnAction()
-                var
-                    BarcodeGen: Codeunit "MES Barcode Generator";
-                begin
-                    if not Confirm('Generate Data Matrix barcodes for ALL items. Continue?') then
-                        exit;
+                        if SelectedUOM = '' then begin
+                            Message('Please select a unit of measure.');
+                            exit;
+                        end;
 
-                    BarcodeGen.GenerateAllBarcodesWithProgress();
-                    CurrPage.Update(false);
+                        BarcodeGen.GenerateAndSaveBarcodeText(Rec."No.", SelectedUOM);
+                        CurrPage.Update(false);
+                        Message('Barcode generated successfully for item %1 with UOM %2.', Rec."No.", SelectedUOM);
+                    end;
                 end;
             }
         }
@@ -80,8 +81,98 @@ page 50112 "MES Item Barcodes"
             group(Generate)
             {
                 actionref(GenerateSelectedRef; GenerateSelected) { }
-                actionref(GenerateAllRef; GenerateAll) { }
             }
         }
     }
+}
+
+page 50113 "MES Select UOM Dialog"
+{
+    PageType = StandardDialog;
+    Caption = 'Select Unit of Measure';
+    ApplicationArea = All;
+
+    layout
+    {
+        area(Content)
+        {
+            group(Selection)
+            {
+                field(SelectedUOMCode; SelectedUOMCode)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Unit of Measure';
+                    Editable = true;
+
+                    trigger OnLookup(var Text: Text): Boolean
+                    var
+                        ItemUOM: Record "Item Unit of Measure";
+                        ItemUOMPage: Page "Item Units of Measure";
+                    begin
+                        ItemUOM.SetRange("Item No.", ItemNoFilter);
+
+                        ItemUOMPage.SetTableView(ItemUOM);
+                        ItemUOMPage.LookupMode(true);
+
+                        if ItemUOMPage.RunModal() = Action::LookupOK then begin
+                            ItemUOMPage.GetRecord(ItemUOM);
+
+                            SelectedUOMCode := ItemUOM.Code;
+                            Text := ItemUOM.Code;
+
+                            UpdateQty();
+                            CurrPage.Update(true);
+
+                            exit(true);
+                        end;
+
+                        exit(false);
+                    end;
+
+                    trigger OnValidate()
+                    begin
+                        UpdateQty();
+                    end;
+                }
+
+                field(QtyPerUOM; QtyPerUOM)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Qty. per Unit of Measure';
+                    Editable = false;
+                }
+            }
+        }
+    }
+
+    var
+        ItemNoFilter: Code[20];
+        SelectedUOMCode: Code[10];
+        QtyPerUOM: Decimal;
+
+    procedure SetItemNo(itemNo: Code[20])
+    begin
+        ItemNoFilter := itemNo;
+    end;
+
+    procedure GetSelectedUOM(): Code[10]
+    begin
+        exit(SelectedUOMCode);
+    end;
+
+    local procedure UpdateQty()
+    var
+        ItemUOM: Record "Item Unit of Measure";
+    begin
+        QtyPerUOM := 0;
+
+        if SelectedUOMCode = '' then
+            exit;
+
+        ItemUOM.SetRange("Item No.", ItemNoFilter);
+        ItemUOM.SetRange(Code, SelectedUOMCode);
+
+        if ItemUOM.FindFirst() then
+            QtyPerUOM := ItemUOM."Qty. per Unit of Measure";
+    end;
 }

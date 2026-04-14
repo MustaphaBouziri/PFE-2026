@@ -71,6 +71,10 @@ codeunit 50125 "MES Unbound Actions"
         OutJ: JsonObject;
         WCArr: JsonArray;
         EmployeeRec: Record Employee;
+        MediaInStream: InStream;
+Base64Convert: Codeunit "Base64 Convert";
+TempBlob: Codeunit "Temp Blob";
+OutStream: OutStream;
     begin
         if (userId = '') or (password = '') then
             exit(JsonHelper.BuildError('Invalid request', 'Username and password are required'));
@@ -111,10 +115,21 @@ codeunit 50125 "MES Unbound Actions"
         OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
 
         if EmployeeRec.Get(U."Employee ID") then begin
-            OutJ.Add('fullName', EmployeeRec.FullName());
-        end else begin
-            OutJ.Add('fullName', '');
-        end;
+    OutJ.Add('fullName', EmployeeRec.FullName());
+    OutJ.Add('email', EmployeeRec."E-Mail");
+    
+    if EmployeeRec.Image.HasValue then begin
+        TempBlob.CreateOutStream(OutStream);
+        EmployeeRec.Image.ExportStream(OutStream);
+        TempBlob.CreateInStream(MediaInStream);
+        OutJ.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+    end else
+        OutJ.Add('imageBase64', '');
+end else begin
+    OutJ.Add('fullName', '');
+    OutJ.Add('email', '');
+    OutJ.Add('imageBase64', '');
+end;
 
         exit(JsonHelper.JsonToText(OutJ));
     end;
@@ -177,8 +192,12 @@ codeunit 50125 "MES Unbound Actions"
 
         if EmployeeRec.Get(U."Employee ID") then begin
             OutJ.Add('fullName', EmployeeRec.FullName());
+            OutJ.Add('email', EmployeeRec."E-Mail");
+            OutJ.Add('imageId', Format(EmployeeRec.Image));
         end else begin
             OutJ.Add('fullName', '');
+            OutJ.Add('email', '');
+            OutJ.Add('imageId', '');
         end;
 
 

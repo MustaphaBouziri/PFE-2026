@@ -313,7 +313,7 @@ codeunit 50131 "MES Machine Fetch"
         ExecutionId: Code[50];
         CurrentRoutingLinkCode: Code[10];
         HasAnyRoutingLink: Boolean;
-        TotalConsumed: Decimal;
+        TotalQuantityScanned: Decimal; // scanned qte * quantity per unit of measure
         TotalScanned: Decimal;
         QuantityPerUnit: Decimal;
         BelongsToThisOperation: Boolean;
@@ -372,8 +372,9 @@ codeunit 50131 "MES Machine Fetch"
                    (ProductOrderComponent."Routing Link Code" <> '') and
                    (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
 
-                    TotalConsumed := 0;
+
                     TotalScanned := 0;
+                    TotalQuantityScanned := 0;
 
 
                     BelongsToThisOperation := false;
@@ -389,8 +390,9 @@ codeunit 50131 "MES Machine Fetch"
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
-                            // TotalConsumed += MESComponentConsumption."Quantity Consumed";
+                                TotalQuantityScanned += MESComponentConsumption."Quantity Scanned" * MESComponentConsumption."Quantity per Unit of Measure";// qte scanned * quantity per unit of measure, so if i scanned 1 box of nail and each box has 5 piece the total quantity scanned will be 5 piece of nail
                             until MESComponentConsumption.Next() = 0;
+
 
                     end;
                     // get this item from the item unit table where same number and with this code 
@@ -399,32 +401,21 @@ codeunit 50131 "MES Machine Fetch"
                     ItemUnitOfMeasure.SetRange("Item No.", ProductOrderComponent."Item No.");
                     ItemUnitOfMeasure.SetRange(Code, ProductOrderComponent."Unit of Measure Code");
                     if ItemUnitOfMeasure.FindFirst() then
+                        //  5 piece in 1 box * 10 box = 50 piece of nail per bike
                         QuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure" * ProductOrderComponent."Quantity per";
 
                     Clear(BomObj);
 
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                     BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
-                    BomObj.Add('lineNUmber', ProductOrderComponent."Line No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
                     BomObj.Add('quantityScanned', TotalScanned); // how much i scanned this qr code
+                    BomObj.add('totalQuantityScanned', TotalQuantityScanned);
 
-
-                    //BomObj.Add('quantityConsumed', TotalConsumed);
-                    //BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
-                    BomObj.Add('QuantityPerUnit', QuantityPerUnit);
+                    BomObj.Add('QuantityPerUnit', QuantityPerUnit); // if the component is 1 box of nail and each box has 5 piece and i need to consume 10 box the quantity per unit will be 50 piece of nail per bike
                     BomArr.Add(BomObj);
-                    /**
-                     {
-                     "plannedQuantity": 10,
-                     "scannedQuantity": 5,
-                     "consumedQuantity": 3,
-                     "remainingQuantity": 2
-                     belongsToThisOperation', true / false )
-                     }
-                    */
 
                 end;
 
@@ -729,43 +720,71 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
 
-    // this is the function that will be called when we scan a barcode and want to know what is this item in case its not our format
     procedure resolveBarcode(barcode: Text): Text
-    var
-        Item: Record Item;
-        ItemIdentifier: Record "Item Identifier";
-        ResultJson: JsonObject;
-        JsonHelper: Codeunit "MES Json Helper";
-        ItemNo: Code[20];
-    begin
+var
+    Item: Record Item;
+    ItemIdentifier: Record "Item Identifier";
+    ItemUnitOfMeasure: Record "Item Unit of Measure";
+    quantityPerUnitOfMeasure: Decimal;
+    ResultJson: JsonObject;
+    JsonHelper: Codeunit "MES Json Helper";
+    ItemNo: Code[20];
+    startPos: Integer;
+    endPos: Integer;
+begin
 
-        ItemIdentifier.Reset();
-        ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
+    if StrPos(barcode, 'Item Number:') > 0 then begin
 
-        if not ItemIdentifier.FindFirst() then begin
+        startPos := StrPos(barcode, 'Item Number: ');
+        startPos := startPos + StrLen('Item Number: ');
+
+        endPos := StrPos(barcode, '|');
+        if endPos = 0 then
+            endPos := StrLen(barcode) + 1;
+
+        ItemNo := CopyStr(barcode, startPos, endPos - startPos);
+
+        if Item.Get(ItemNo) then
+            barcode := Item."MES Barcode Code"
+        else begin
             ResultJson.Add('resolved', false);
-            ResultJson.Add('message', 'Barcode not recognized');
+            ResultJson.Add('message', 'Item not found from DataMatrix');
             exit(JsonHelper.JsonToText(ResultJson));
         end;
+    end;
 
-        ItemNo := ItemIdentifier."Item No.";
+    ItemIdentifier.Reset();
+    ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
 
-        if not Item.Get(ItemNo) then begin
-            ResultJson.Add('resolved', false);
-            ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
-            exit(JsonHelper.JsonToText(ResultJson));
-        end;
-
-        ResultJson.Add('resolved', true);
-        ResultJson.Add('itemNo', Item."No.");
-        ResultJson.Add('itemDescription', Item.Description);
-        ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-        ResultJson.Add('inventory', Item.Inventory);
-        ResultJson.Add('shelfNo', Item."Shelf No.");
-        ResultJson.Add('lotSize', Item."Lot Size");
-        ResultJson.Add('flushingMethod', Format(Item."Flushing Method"));
+    if not ItemIdentifier.FindFirst() then begin
+        ResultJson.Add('resolved', false);
+        ResultJson.Add('message', 'Barcode not recognized');
         exit(JsonHelper.JsonToText(ResultJson));
     end;
+
+    ItemNo := ItemIdentifier."Item No.";
+
+    if not Item.Get(ItemNo) then begin
+        ResultJson.Add('resolved', false);
+        ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    ItemUnitOfMeasure.Reset();
+    ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+    ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
+    if ItemUnitOfMeasure.FindFirst() then
+        quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
+    ResultJson.Add('resolved', true);
+    ResultJson.Add('itemNo', Item."No.");
+    ResultJson.Add('itemDescription', Item.Description);
+    ResultJson.Add('baseUOM', Item."Base Unit of Measure");
+    ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
+    ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
+
+    exit(JsonHelper.JsonToText(ResultJson));
+end;
 
 
 
