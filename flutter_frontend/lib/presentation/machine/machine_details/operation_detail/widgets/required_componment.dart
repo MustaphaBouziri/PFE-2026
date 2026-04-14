@@ -312,8 +312,8 @@ class ComponentListView extends StatelessWidget {
         final isSpecific = component.belongsToThisOperation;
         // consumed is how many items have been used based on the total produced and the quantity per unit
         final consumed = totalProduced * component.quantityPerUnit;
-        // scanned is how many items have been scanned based on the quantity scanned and quantity per unit
-        final scanned = component.quantityScanned * component.quantityPerUnit;
+        // scanned is how many qte of this item u scanned  * qte per unit of measure 
+        final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
         final remaining = scanned - consumed;
 

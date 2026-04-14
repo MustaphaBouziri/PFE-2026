@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -54,12 +55,12 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
     if (success) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scrap declared successfully')),
+        SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())),
       );
     } else {
       setState(() {
         _errorMessage = context.read<MesScrapProvider>().errorMessage
-            ?? 'Failed to declare scrap';
+            ?? 'failedToDeclareScrap'.tr();
         _isSubmitting = false;
       });
     }
@@ -88,9 +89,9 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Declare Scrap',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
+                    Text(
+                      'scrapDialogTitle'.tr(),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
                           color: Color(0xFF0F172A)),
                     ),
                     IconButton(
@@ -108,7 +109,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     : DropdownButtonFormField<MesScrapCode>(
                   value: _selectedCode,
                   decoration: InputDecoration(
-                    labelText: 'Scrap Code',
+                    labelText: 'scrapCodeLabel'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
@@ -128,7 +129,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                       .toList(),
                   onChanged: (val) => setState(() => _selectedCode = val),
                   validator: (val) =>
-                  val == null ? 'Please select a scrap code' : null,
+                  val == null ? 'selectScrapCode'.tr() : null,
                 ),
 
                 const SizedBox(height: 12),
@@ -139,9 +140,9 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: 'Quantity',
+                    labelText: 'quantityLabel'.tr(),
                     labelStyle: const TextStyle(color: Color(0xFF0F172A)),
-                    hintText: 'e.g. 3',
+                    hintText: 'exampleQuantity'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
@@ -154,7 +155,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   validator: (val) {
                     final parsed = double.tryParse(val ?? '');
                     if (parsed == null || parsed <= 0) {
-                      return 'Enter a valid quantity';
+                      return 'enterValidQuantity'.tr();
                     }
                     return null;
                   },
@@ -167,9 +168,9 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   controller: _noteController,
                   maxLines: 2,
                   decoration: InputDecoration(
-                    labelText: 'Note (optional)',
+                    labelText: 'noteOptional'.tr(),
                     labelStyle: const TextStyle(color: Color(0xFF0F172A)),
-                    hintText: 'Describe the defect...',
+                    hintText: 'describeTheDefect'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
@@ -204,7 +205,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                             strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.check, color: Colors.white),
                     label: Text(
-                      _isSubmitting ? 'Submitting...' : 'Submit',
+                      _isSubmitting ? 'submitting'.tr() : 'submit'.tr(),
                       style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../models/status_style.dart';
@@ -50,7 +51,7 @@ class OperationWideLayout extends StatelessWidget {
                   Icon(Icons.touch_app_rounded, size: 12, color: Colors.grey.shade400),
                   const SizedBox(width: 4),
                   Text(
-                    'Tap card to view details',
+                    'tapCardToViewDetails'.tr(),
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
                   ),
                 ],

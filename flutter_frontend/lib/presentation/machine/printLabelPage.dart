@@ -1,5 +1,6 @@
 import 'package:barcode/barcode.dart';
 import 'package:barcode_widget/barcode_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -50,19 +51,19 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      'Production Label',
+                      'productionLabel'.tr(),
                       style: pw.TextStyle(
                         fontSize: 14,
                         fontWeight: pw.FontWeight.bold,
                       ),
                     ),
                     pw.SizedBox(height: 8),
-                    _pdfRow('Order', widget.operationData.prodOrderNo),
-                    _pdfRow('Machine', widget.operationData.machineNo),
-                    _pdfRow('Item Number', widget.operationData.itemNo),
-                    _pdfRow('Item', widget.operationData.itemDescription),
+                    _pdfRow('printOrder'.tr(), widget.operationData.prodOrderNo),
+                    _pdfRow('printMachine'.tr(), widget.operationData.machineNo),
+                    _pdfRow('printItemNumber'.tr(), widget.operationData.itemNo),
+                    _pdfRow('printItem'.tr(), widget.operationData.itemDescription),
                     _pdfRow(
-                      'Qty',
+                      'printQty'.tr(),
                       widget.operationData.orderQuantity.toStringAsFixed(0),
                     ),
                   ],
@@ -137,16 +138,16 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
                   height: 100,
                 ),
                 const SizedBox(width: 16),
-                _info(showTitle: true),
+                _info(context: context, showTitle: true),
               ],
             )
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Production Label',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  'productionLabel'.tr(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 BarcodeWidget(
@@ -156,27 +157,27 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
                   height: 120,
                 ),
                 const SizedBox(height: 16),
-                _info(showTitle: false),
+                _info(context: context, showTitle: false),
               ],
             ),
     ),
   );
 
-  Widget _info({required bool showTitle}) => Column(
+  Widget _info({required BuildContext context, required bool showTitle}) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       if (showTitle) ...[
-        const Text(
-          'Production Label',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        Text(
+          'productionLabel'.tr(),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
       ],
-      _infoRow('Order', widget.operationData.prodOrderNo),
-      _infoRow('Machine', widget.operationData.machineNo),
-      _infoRow('Item Number', widget.operationData.itemNo),
-      _infoRow('Item', widget.operationData.itemDescription),
-      _infoRow('Qty', widget.operationData.orderQuantity.toStringAsFixed(0)),
+      _infoRow('printOrder'.tr(), widget.operationData.prodOrderNo),
+      _infoRow('printMachine'.tr(), widget.operationData.machineNo),
+      _infoRow('printItemNumber'.tr(), widget.operationData.itemNo),
+      _infoRow('printItem'.tr(), widget.operationData.itemDescription),
+      _infoRow('printQty'.tr(), widget.operationData.orderQuantity.toStringAsFixed(0)),
     ],
   );
 
@@ -186,14 +187,14 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Print Label',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        title: Text(
+          'printLabelPageTitle'.tr(),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         actions: [
           Row(
             children: [
-              const Text('Landscape', style: TextStyle(fontSize: 13)),
+              Text('printLandscape'.tr(), style: const TextStyle(fontSize: 13)),
               Switch(
                 value: _isLandscape,
                 onChanged: (val) => setState(() => _isLandscape = val),
@@ -203,7 +204,7 @@ class _PrintLabelPageState extends State<PrintLabelPage> {
           TextButton.icon(
             onPressed: _print,
             icon: const Icon(Icons.print),
-            label: const Text('Print'),
+            label: Text('printButton'.tr()),
           ),
           const SizedBox(width: 8),
         ],

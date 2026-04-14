@@ -98,7 +98,6 @@ class _MachineMainPageState extends State<MachineMainPage> {
                   onSwitchToProgress: _handleStartOrderSuccess,
                 ),
                 OrdersProgressionPage(machineNo: widget.machineNo),
-                OrderConsumptionPage(),
                 MachineHistoryPage(machineNo: widget.machineNo),
               ],
             ),

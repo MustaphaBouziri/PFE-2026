@@ -16,61 +16,16 @@ class ScannerWidget extends StatefulWidget {
 }
 
 class _ScannerWidgetState extends State<ScannerWidget> {
-  String scannedValue = "scanSomething".tr();
   List<ItemBarcodeModel> items = [];
   final MobileScannerController controller = MobileScannerController();
   bool isScanning = true;
 
-  // this function takes row barcode string and make it into an itemBarcodeModel
-  ItemBarcodeModel parse(String raw) {
-    // split the string into an array List using the | as separator
-    /**
-        from : Item Number:123|Item Description:Apple|Base UOM:kg
-        to : ["Item Number:123", "Item Description:Apple", "Base UOM:kg"]
-     */
-    final barCodeTextList = raw.split('|');
-
-    // we create an empty map, store key and  value  pairs
-    Map<String, String> map = {};
-
-    for (var b in barCodeTextList) {
-      //for each element of the carCodeTextList we seperate each element like we did earlier " | "
-      // with a sperator ":"
-      /**
-          from: ["Item Number:123", "Item Description:Apple", "Base UOM:kg"]
-          to : keyvalue = ["Item Number", "123"]
-       */
-      var keyValue = b.split(':');
-      if (keyValue.length == 2) {
-        // two part item number + 123
-        //trim keyValue(0) "Item Number"
-        //we set the map its key to its value so it becomes :
-        //{"Item Number": "123", "Item Description": "Apple", "Base UOM": "kg"}
-        map[keyValue[0].trim()] = keyValue[1].trim();
-      }
-    }
-    //we use the map to build the model
-    //After the loop, we have a map where each key is a field name and each value is the corresponding value as a string
-    return ItemBarcodeModel(
-      itemNo: map['Item Number'] ?? '',
-      description: map['Item Description'] ?? '',
-      baseUOM: map['Base UOM'] ?? '',
-      inventory: double.tryParse(map['Inventory'] ?? '0') ?? 0,
-      shelfNo: map['Shelf No'] ?? '',
-      lotSize: double.tryParse(map['Lot Size'] ?? '0') ?? 0,
-      flushingMethod: map['Flushing Method'] ?? '',
-      barcodeText: raw,
-      quantity: 1,
-    );
-  }
-
-  //______________________add item
-
-  // we add new item or we increment qte
+  // we add new item or we increment qty
   void addItem(ItemBarcodeModel newItem) {
     int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
 
     if (index != -1) {
+      // same item already in list — increment quantity, keep all other fields
       items[index] = ItemBarcodeModel(
         itemNo: items[index].itemNo,
         description: items[index].description,
@@ -81,6 +36,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
         quantity: items[index].quantity + 1,
+        quantityPerUnit: items[index].quantityPerUnit,
+        unitOfMeasure: items[index].unitOfMeasure,
       );
     } else {
       items.add(newItem);
@@ -100,6 +57,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
         quantity: items[index].quantity + 1,
+        quantityPerUnit: items[index].quantityPerUnit,
+        unitOfMeasure: items[index].unitOfMeasure,
       );
     });
   }
@@ -118,6 +77,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
           flushingMethod: items[index].flushingMethod,
           barcodeText: items[index].barcodeText,
           quantity: items[index].quantity - 1,
+          quantityPerUnit: items[index].quantityPerUnit,
+          unitOfMeasure: items[index].unitOfMeasure,
         );
       }
     });
@@ -127,11 +88,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   void removeItem(int index) {
     setState(() => items.removeAt(index));
   }
-
-  // check if scanned value is our own datamatrix format
-  // our format rn always contains | and starts with "Item Number"
-  bool _isOurFormat(String value) =>
-      value.contains('|') && value.startsWith('Item Number');
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +116,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                     borderRadius: BorderRadius.circular(10),
                     child: MobileScanner(
                       controller: controller,
-                      // here we see if scanned value is our format or not
                       onDetect: (barcodeCapture) async {
                         if (!isScanning) return;
 
@@ -172,53 +127,47 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                         setState(() => isScanning = false);
                         controller.stop();
 
-                        if (_isOurFormat(value)) {
-                          // our own datamatrix — parse locally do not call bc
-                          final item = parse(
-                            value,
-                          ); // we use the parse function to convert the raw string into an ItemBarcodeModel
-                          setState(
-                            () => addItem(item),
-                          ); // then we add the item to the list
-                        } else {
-                          // external barcode
-                          final result = await context
-                              .read<MesBarcodeProvider>()
-                              .resolveBarcode(value);
+                        // all barcodes go through resolveBarcode now
+                        // our datamatrix: bc looks up the code MES-1100 in item identifier
+                        // external barcode: bc looks up the external code in identifier identifier
+                        final result = await context
+                            .read<MesBarcodeProvider>()
+                            .resolveBarcode(value);
 
-                          if (!mounted) return;
+                        if (!mounted) return;
 
-                          if (result == null || result['resolved'] != true) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  result?['message']?.toString() ??
-                                      'Barcode not recognized',
-                                ),
+                        if (result == null || result['resolved'] != true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                result?['message']?.toString() ??
+                                    'Barcode not recognized',
                               ),
-                            );
-                            return;
-                          }
-
-                          // build model from BC response
-                          final item = ItemBarcodeModel(
-                            itemNo: result['itemNo']?.toString() ?? '',
-                            description:
-                                result['itemDescription']?.toString() ?? '',
-                            baseUOM: result['baseUOM']?.toString() ?? '',
-                            inventory: (result['inventory'] as num? ?? 0)
-                                .toDouble(),
-                            shelfNo: result['shelfNo']?.toString() ?? '',
-                            lotSize: (result['lotSize'] as num? ?? 0)
-                                .toDouble(),
-                            flushingMethod:
-                                result['flushingMethod']?.toString() ?? '',
-                            barcodeText: value,
-                            quantity: 1,
+                            ),
                           );
-
-                          setState(() => addItem(item));
+                          return;
                         }
+
+                        // build model from BC response — same structure for both our and external barcodes
+                        final item = ItemBarcodeModel(
+                          itemNo: result['itemNo']?.toString() ?? '',
+                          description:
+                              result['itemDescription']?.toString() ?? '',
+                          baseUOM: result['baseUOM']?.toString() ?? '',
+                          inventory: 0,
+                          shelfNo: '',
+                          lotSize: 0,
+                          flushingMethod: '',
+                          barcodeText: value,
+                          quantity: 1,
+                          quantityPerUnit:
+                              (result['quantityPerUnitOfMeasure'] as num? ?? 1)
+                                  .toDouble(),
+                          unitOfMeasure:
+                              result['unitOfMeasure']?.toString() ?? '',
+                        );
+
+                        setState(() => addItem(item));
                       },
                     ),
                   ),
@@ -250,7 +199,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
               ),
             ),
 
-            // list
+            // list of items you scanned
             Expanded(
               flex: 4,
               child: ListView.builder(
@@ -276,7 +225,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                                 ),
                               ),
                               subtitle: Text(
-                                '${'qty'.tr()}${item.quantity}',
+                                // shows: "Qty: 2 × BOX (100 PCS each) = 200 PCS total"
+                                '${'qty'.tr()}${item.quantity} × ${item.unitOfMeasure} (${item.quantityPerUnit.toStringAsFixed(0)} PCS each) = ${(item.quantity * item.quantityPerUnit).toStringAsFixed(0)} PCS total',
                                 style: const TextStyle(
                                   color: Color(0xFF64748B),
                                 ),
@@ -307,37 +257,61 @@ class _ScannerWidgetState extends State<ScannerWidget> {
             ),
 
             // confirm scans button
-            ElevatedButton(
-              onPressed: () async {
-                final provider = context.read<MesBarcodeProvider>();
-                //call the toJson methode in the barcode mode
-                //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
-                //then convert toList = [{},{}]
-                final scans = items.map((e) => e.toJson()).toList();
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: items.isEmpty
+                      ? null
+                      : () async {
+                          final provider = context.read<MesBarcodeProvider>();
+                          //call the toJson method in the barcode model
+                          //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
+                          //then convert toList = [{},{}]
+                          final scans = items.map((e) => e.toJson()).toList();
 
-                final success = await provider.insertScans(
-                  widget.executionId,
-                  scans,
-                );
+                          final success = await provider.insertScans(
+                            widget.executionId,
+                            scans,
+                          );
 
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('insertedSuccessfully'.tr())),
-                  );
-                  // trigger bom stream refresh so quantities update immediately
-                  context
-                      .read<MesComponentconsumptionProvider>()
-                      .triggerRefresh();
-                  Navigator.pop(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(provider.errorMessage ?? 'error'.tr()),
+                          if (!mounted) return;
+
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('insertedSuccessfully'.tr()),
+                              ),
+                            );
+                            // trigger bom stream refresh so quantities update immediately
+                            context
+                                .read<MesComponentconsumptionProvider>()
+                                .triggerRefresh();
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  provider.errorMessage ?? 'error'.tr(),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                }
-              },
-              child: Text('confirmScans'.tr()),
+                  ),
+                  child: Text(
+                    'confirmScans'.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

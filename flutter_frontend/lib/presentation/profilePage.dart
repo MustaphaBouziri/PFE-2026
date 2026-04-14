@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
+import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
-  final String fullName;
-  final String email;
-  final String profilePictureUrl;
+
 
   const ProfilePage({
     super.key,
-    required this.fullName,
-    required this.email,
-    required this.profilePictureUrl,
+   
   });
 
   void _showLanguageMenu(BuildContext context, TapDownDetails details) async {
@@ -37,6 +36,10 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final fullName = auth.userData?['fullName']?.toString() ?? 'User';
+    final email = auth.userData?['email']?.toString() ?? 'email';
+    final imageBytes = auth.profileImageBytes;
     final isPhone = MediaQuery.of(context).size.width < 600;
     return Scaffold(
       appBar: AppBar(title: Text('account'.tr()), centerTitle: true),
@@ -44,16 +47,21 @@ class ProfilePage extends StatelessWidget {
         children: [
           const SizedBox(height: 30),
           CircleAvatar(
-            radius: 40,
-            backgroundImage: NetworkImage(profilePictureUrl),
-          ),
+  radius: 40,
+  backgroundImage: imageBytes != null
+      ? MemoryImage(imageBytes)
+      : const NetworkImage('https://picsum.photos/200/200') as ImageProvider,
+),
           const SizedBox(height: 8),
           Text(
             fullName,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(email, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          Text(
+            email,
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
@@ -75,7 +83,7 @@ class ProfilePage extends StatelessWidget {
                   ProfileTile(
                     title: 'changePassword',
                     icon: Icons.lock,
-                    onTap: () {},
+                    onTap :() => Navigator.push(context, MaterialPageRoute(builder:(context) => ChangePasswordPage(),)),
                   ),
                   ProfileTile(
                     title: 'logout',

@@ -93,7 +93,7 @@ class _AdminPageState extends State<AdminPage> {
 
                 // user info
                 GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage(fullName: "ali ben sala7", email: "www.foiidfo@gmail.com", profilePictureUrl: "https://picsum.photos/200/200"))),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                     child: Row(

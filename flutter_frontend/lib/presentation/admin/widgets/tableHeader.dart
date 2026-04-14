@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class TableHeader extends StatelessWidget {
@@ -16,12 +17,12 @@ class TableHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(flex: 3, child: Text('USER', style: style)),
-          Expanded(flex: 2, child: Text('ROLE', style: style)),
-          Expanded(flex: 2, child: Text('DEPARTMENT', style: style)),
-          Expanded(flex: 2, child: Text('STATUS', style: style)),
-          Expanded(flex: 2, child: Text('LAST ACTIVE', style: style)),
-          SizedBox(width: 60, child: Text('ACTIONS', style: style)),
+          Expanded(flex: 3, child: Text('tableHeaderUser'.tr(), style: style)),
+          Expanded(flex: 2, child: Text('tableHeaderRole'.tr(), style: style)),
+          Expanded(flex: 2, child: Text('tableHeaderDepartment'.tr(), style: style)),
+          Expanded(flex: 2, child: Text('tableHeaderStatus'.tr(), style: style)),
+          Expanded(flex: 2, child: Text('tableHeaderLastActive'.tr(), style: style)),
+          SizedBox(width: 60, child: Text('tableHeaderActions'.tr(), style: style)),
         ],
       ),
     );
