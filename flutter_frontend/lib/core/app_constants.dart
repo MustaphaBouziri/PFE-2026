@@ -37,8 +37,10 @@ class AppConstants {
       '${_webServiceBase}FetchMachines?$_company';
   static const String getMachineOrdersUrl =
       '${_webServiceBase}getMachineOrders?$_company';
-  static const String fetchMachineOperationStatusAndProgress =
-      '${_webServiceBase}fetchOperationsStatusAndProgress?$_company';
+  static const String fetchOngoingOperationsState =
+      '${_webServiceBase}fetchOngoingOperationsState?$_company';
+  static const String fetchOperationsHistory =
+      '${_webServiceBase}fetchOperationsHistory?$_company';
   static const String fetchOperationLiveData =
       '${_webServiceBase}fetchOperationLiveData?$_company';
   static const String fetchProductionCycles =

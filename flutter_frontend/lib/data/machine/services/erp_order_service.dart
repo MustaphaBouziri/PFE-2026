@@ -31,13 +31,12 @@ class ErpMachineOrdersService {
     String operationNo,
     String machineNo,
   ) async {
-    final response =
-        await HttpClient.post(AppConstants.startOperation, {
-          'token': token,
-          'prodOrderNo': prodOrderNo,
-          'operationNo': operationNo,
-          'machineNo': machineNo,
-        });
+    final response = await HttpClient.post(AppConstants.startOperation, {
+      'token': token,
+      'prodOrderNo': prodOrderNo,
+      'operationNo': operationNo,
+      'machineNo': machineNo,
+    });
 
     return HttpResponseParser.parseWriteResult(
       response,
@@ -126,14 +125,29 @@ class ErpMachineOrdersService {
   // Read-only endpoints (no token change needed)
   // ──────────────────────────────────────────────
 
-  Future<List<OperationStatusAndProgressModel>>
-  fetchMachineOperationStatusAndProgress(
+  Future<List<OperationStatusAndProgressModel>> fetchOngoingOperationsState(
     String machineNo,
-    bool fetchFinished,
   ) async {
     final response = await HttpClient.post(
-      AppConstants.fetchMachineOperationStatusAndProgress,
-      {'machineNo': machineNo, 'fetchFinished': fetchFinished},
+      AppConstants.fetchOngoingOperationsState,
+      {'machineNo': machineNo},
+    );
+
+    final list = HttpResponseParser.parseList(
+      response,
+      label: 'fetch operations',
+    );
+    return list
+        .map((e) => OperationStatusAndProgressModel.fromJson(e))
+        .toList();
+  }
+
+  Future<List<OperationStatusAndProgressModel>> fetchOperationsHistory(
+    String machineNo,
+  ) async {
+    final response = await HttpClient.post(
+      AppConstants.fetchOperationsHistory,
+      {'machineNo': machineNo},
     );
 
     final list = HttpResponseParser.parseList(
@@ -146,17 +160,13 @@ class ErpMachineOrdersService {
   }
 
   Stream<List<OperationStatusAndProgressModel>>
-  streamMachinesOperationStatusAndProgress(
-    String machineNo,
-    bool fetchFinished, {
+  streamMachinesOngoingOperationsState(
+    String machineNo, {
     Stream<void>? trigger,
   }) async* {
     while (true) {
       try {
-        yield await fetchMachineOperationStatusAndProgress(
-          machineNo,
-          fetchFinished,
-        );
+        yield await fetchOngoingOperationsState(machineNo);
       } catch (_) {
         yield [];
       }
