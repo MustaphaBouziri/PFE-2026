@@ -8,6 +8,9 @@ class ItemBarcodeModel {
   final String flushingMethod;
   final String barcodeText;
   final double quantity;
+  // how many base units 1 scan of this barcode gives
+  final double quantityPerUnit;
+  final String unitOfMeasure;
 
   ItemBarcodeModel({
     required this.itemNo,
@@ -19,27 +22,33 @@ class ItemBarcodeModel {
     required this.flushingMethod,
     required this.barcodeText,
     this.quantity = 1,
+    required this.quantityPerUnit,
+    required this.unitOfMeasure, 
   });
 
   factory ItemBarcodeModel.fromJson(Map<String, dynamic> json) =>
       ItemBarcodeModel(
-        itemNo: json['itemNo'] ?? '',
-        description: json['description'] ?? '',
-        baseUOM: json['baseUOM'] ?? '',
-        inventory: (json['inventory'] ?? 0).toDouble(),
-        shelfNo: json['shelfNo'] ?? '',
-        lotSize: (json['lotSize'] ?? 0).toDouble(),
-        flushingMethod: json['flushingMethod'] ?? '',
-        barcodeText: json['barcodeText'] ?? '',
+        itemNo:          json['itemNo']          ?? '',
+        description:     json['description']     ?? '',
+        baseUOM:         json['baseUOM']          ?? '',
+        inventory:       (json['inventory']       ?? 0).toDouble(),
+        shelfNo:         json['shelfNo']          ?? '',
+        lotSize:         (json['lotSize']         ?? 0).toDouble(),
+        flushingMethod:  json['flushingMethod']   ?? '',
+        barcodeText:     json['barcodeText']      ?? '',
+        quantityPerUnit: (json['quantityPerUnit'] ?? 0).toDouble(),
+        unitOfMeasure:   json['unitOfMeasure']    ?? '',
       );
-//convert list item "scans" to json
+
   Map<String, dynamic> toJson() {
     return {
-      'itemNo': itemNo,
-      'barcode': barcodeText,
-      'unitOfMeasure': baseUOM,
-      'quantityScanned': quantity,
-      'lineNo': 0,
+      'itemNo':                   itemNo,
+      'barcode':                  barcodeText,
+      // quantity = how many times operator scanned or manually set
+      'quantityScanned':          quantity,
+      'unitOfMeasure':            unitOfMeasure,
+      // quantityPerUnitOfMeasure = how many base units 1 scan gives
+      'quantityPerUnitOfMeasure': quantityPerUnit,
     };
   }
 }

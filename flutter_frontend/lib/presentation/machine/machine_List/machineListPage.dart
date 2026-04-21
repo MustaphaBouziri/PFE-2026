@@ -97,6 +97,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
   Widget build(BuildContext context) {
     // watch so the machine list rebuilds if the session changes
     final authProvider = context.watch<AuthProvider>();
+    final role = authProvider.userData?['role']?.toString() ?? '';
     final provider = Provider.of<MesMachinesProvider>(context, listen: false);
 
     final workCenterIds = _resolveWorkCenterIds();
@@ -110,13 +111,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfilePage(
-                      fullName: 'John Doe',
-                      email: 'john.doe@example.com',
-                      profilePictureUrl: 'https://picsum.photos/200/200',
-                    ),
-                  ),
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
                 );
               },
               child: CircleAvatar(
@@ -138,9 +133,10 @@ class _MachinelistpageState extends State<Machinelistpage> {
                   ),
                 ),
                 Text(
-                  'ID: ${authProvider.userData?['userId']?.toString() ?? ''} || AUTH: ${authProvider.userData?['authId']?.toString() ?? ''}',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  role,
+                  style: TextStyle(fontSize: 11,fontWeight: FontWeight.bold, color: role=='Supervisor'? Color(0xFF16A34A):Color(0xFF2563EB)),
                 ),
+                
               ],
             ),
             const Spacer(),
@@ -153,8 +149,8 @@ class _MachinelistpageState extends State<Machinelistpage> {
                   ),
                 );
               },
-              icon: const Icon(Icons.dashboard, size: 16),
-              label: Text('machineDashboard'.tr()),
+              icon: const Icon(Icons.dashboard, size: 16,color: Color(0xFF0F172A),),
+              label: Text('machineDashboard'.tr(),style: TextStyle(color: Color(0xFF0F172A),fontWeight: FontWeight.bold),),
             ),
           ],
         ),
@@ -300,10 +296,10 @@ class _MachinelistpageState extends State<Machinelistpage> {
                                     crossAxisSpacing: 16,
                                     mainAxisSpacing: 16,
                                     childAspectRatio: constraints.maxWidth < 900
-                                        ? 1.8
+                                        ? 2.5
                                         : constraints.maxWidth < 1400
                                         ? 1.5
-                                        : 1.8,
+                                        : 2.0,//pc
                                   ),
                               itemBuilder: (context, index) {
                                 final isFirstVisibleCard =

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +41,10 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _isSubmitting = true; _errorMessage = null; });
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
 
     final success = await context.read<MesScrapProvider>().declareScrap(
       executionId: widget.executionId,
@@ -53,13 +57,14 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
     if (success) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scrap declared successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())));
     } else {
       setState(() {
-        _errorMessage = context.read<MesScrapProvider>().errorMessage
-            ?? 'Failed to declare scrap';
+        _errorMessage =
+            context.read<MesScrapProvider>().errorMessage ??
+            'failedToDeclareScrap'.tr();
         _isSubmitting = false;
       });
     }
@@ -74,7 +79,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
       insetPadding: const EdgeInsets.all(30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 520),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Form(
@@ -83,15 +88,17 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 // ── Header ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Declare Scrap',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A)),
+                    Text(
+                      'scrapDialogTitle'.tr(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -105,31 +112,33 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 // ── Scrap Code Dropdown ──
                 provider.isLoading && provider.scrapCodes.isEmpty
                     ? const Center(child: CircularProgressIndicator())
-                    : DropdownButtonFormField<MesScrapCode>(
-                  value: _selectedCode,
-                  decoration: InputDecoration(
-                    labelText: 'Scrap Code',
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
-                    ),
-                  ),
-                  dropdownColor: Colors.white,
-                  items: provider.scrapCodes
-                      .map((sc) => DropdownMenuItem(
-                    value: sc,
-                    child: Text(sc.displayLabel,
-                        overflow: TextOverflow.ellipsis),
-                  ))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedCode = val),
-                  validator: (val) =>
-                  val == null ? 'Please select a scrap code' : null,
-                ),
+                    : DropdownMenu<MesScrapCode>(
+                      hintText: 'selectScrapCode'.tr(),
+                        initialSelection: _selectedCode,
+                        onSelected: (val) =>
+                            setState(() => _selectedCode = val),
+
+                        dropdownMenuEntries: provider.scrapCodes.map((sc) {
+                          return DropdownMenuEntry(
+                            value: sc,
+                            label: sc.displayLabel,
+                            
+                          );
+                        }).toList(),
+
+                        menuStyle: MenuStyle(
+                          backgroundColor: WidgetStatePropertyAll(Colors.white),
+                          maximumSize: WidgetStatePropertyAll(
+                            const Size(400, 250),
+                          ),
+                          
+                          shape: WidgetStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
 
                 const SizedBox(height: 12),
 
@@ -139,22 +148,26 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: 'Quantity',
+                    labelText: 'quantityLabel'.tr(),
                     labelStyle: const TextStyle(color: Color(0xFF0F172A)),
-                    hintText: 'e.g. 3',
+                    hintText: 'exampleQuantity'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0F172A),
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (val) {
                     final parsed = double.tryParse(val ?? '');
                     if (parsed == null || parsed <= 0) {
-                      return 'Enter a valid quantity';
+                      return 'enterValidQuantity'.tr();
                     }
                     return null;
                   },
@@ -167,16 +180,20 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   controller: _noteController,
                   maxLines: 2,
                   decoration: InputDecoration(
-                    labelText: 'Note (optional)',
+                    labelText: 'noteOptional'.tr(),
                     labelStyle: const TextStyle(color: Color(0xFF0F172A)),
-                    hintText: 'Describe the defect...',
+                    hintText: 'describeTheDefect'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0F172A),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -184,9 +201,13 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 // ── Inline error ──
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 8),
-                  Text(_errorMessage!,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFFDC2626))),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
                 ],
 
                 const SizedBox(height: 20),
@@ -199,19 +220,24 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     onPressed: _isSubmitting ? null : _submit,
                     icon: _isSubmitting
                         ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Icon(Icons.check, color: Colors.white),
                     label: Text(
-                      _isSubmitting ? 'Submitting...' : 'Submit',
+                      _isSubmitting ? 'submitting'.tr() : 'submit'.tr(),
                       style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFDC2626),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),

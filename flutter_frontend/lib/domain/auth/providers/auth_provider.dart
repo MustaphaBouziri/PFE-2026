@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-
+import 'dart:convert';
 import '../../../data/auth/services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -154,6 +154,16 @@ class AuthProvider with ChangeNotifier {
     // For production, install device_info_plus package and get actual device ID
     return 'flutter-device-${DateTime.now().millisecondsSinceEpoch}';
   }
+
+Uint8List? get profileImageBytes {
+  final base64Str = _userData?['imageBase64']?.toString() ?? '';
+  if (base64Str.isEmpty) return null;
+  try {
+    return base64Decode(base64Str);
+  } catch (_) {
+    return null;
+  }
+}
 
   //toggle use active status
 

@@ -39,18 +39,30 @@ table 50111 "MES Component Consumption"
             DataClassification = CustomerContent;
         }
 
-        field(7; "Operator Id"; Code[50])
+        field(7; "Quantity per Unit of Measure"; Decimal)
+        {
+            Caption = 'Quantity per Unit of Measure';
+            DataClassification = CustomerContent;
+        }
+
+        field(8; "Unit of Measure"; Code[10])
+        {
+            Caption = 'Unit of Measure';
+            DataClassification = CustomerContent;
+        }
+
+        field(9; "Operator Id"; Code[50])
         {
             TableRelation = "MES User Execution Interaction"."User Id";
             DataClassification = CustomerContent;
         }
 
-        field(8; "Scanned At"; DateTime)
+        field(10; "Scanned At"; DateTime)
         {
             Caption = 'Scanned At';
             DataClassification = SystemMetadata;
         }
-        field(9; "Declared By"; Code[50])
+        field(11; "Declared By"; Code[50])
         {
             Caption = 'Declared By';
             TableRelation = "MES User Execution Interaction"."User Id";

@@ -45,7 +45,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 1024;
+    final isWide = MediaQuery.of(context).size.width > 1210;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -176,24 +176,31 @@ class _RequiredComponentState extends State<RequiredComponent> {
                 ),
 
               // scan button in normal view
-              ElevatedButton(
-                onPressed: () => _openScanner(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+               SizedBox(
+                  
+                  child: ElevatedButton.icon(
+                     onPressed: () => _openScanner(context),
+                    
+                          
+                       
+                    label: Text(
+                      'scanItem'.tr(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'scanItem'.tr(),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+                                  ],
+            
           ),
 
           const SizedBox(height: 16),
@@ -312,8 +319,8 @@ class ComponentListView extends StatelessWidget {
         final isSpecific = component.belongsToThisOperation;
         // consumed is how many items have been used based on the total produced and the quantity per unit
         final consumed = totalProduced * component.quantityPerUnit;
-        // scanned is how many items have been scanned based on the quantity scanned and quantity per unit
-        final scanned = component.quantityScanned * component.quantityPerUnit;
+        // scanned is how many qte of this item u scanned  * qte per unit of measure 
+        final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
         final remaining = scanned - consumed;
 

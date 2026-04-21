@@ -117,10 +117,13 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 32),
-                      Expanded(flex: 2, child: tableTitle(title: 'operator')),
-                      Expanded(flex: 2, child: tableTitle(title: 'machine')),
-                      Expanded(flex: 3, child: tableTitle(title: 'action')),
-                      Expanded(flex: 2, child: tableTitle(title: 'time')),
+              Expanded(flex: 2, child: tableTitle(title: 'operator')),
+      Expanded(flex: 2, child: tableTitle(title: 'declaredBy')),
+      Expanded(flex: 2, child: tableTitle(title: 'machine')),
+      Expanded(flex: 2, child: tableTitle(title: 'Order')),
+      Expanded(flex: 2, child: tableTitle(title: 'Operation')),
+      Expanded(flex: 3, child: tableTitle(title: 'action')),
+      Expanded(flex: 2, child: tableTitle(title: 'time')),
                     ],
                   ),
                 ),
@@ -146,14 +149,26 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                             Expanded(
                               flex: 2,
                               child: rowValue(
-                                value: log.operatorName.isEmpty
-                                    ? log.operatorId
-                                    : log.operatorName,
+                                value: log.operatorName,
                               ),
+                              
+                            ),
+
+                            Expanded(
+                              flex: 2,
+                              child: rowValue(value: log.declaredByName),
                             ),
                             Expanded(
                               flex: 2,
                               child: rowValue(value: log.machineNo),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: rowValue(value: log.prodOrderNo),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: rowValue(value: log.operationNo),
                             ),
                             Expanded(
                               flex: 3,

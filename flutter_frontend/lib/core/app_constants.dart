@@ -22,7 +22,7 @@ class AppConstants {
   //  "adminToken":"DE000000-0000-0000-0000-000000000003"
   // }
   // Set back to null before committing.
-  static const String? devToken = 'DE000000-0000-0000-0000-000000000003';
+  static const String? devToken = 'DE000000-0000-0000-0000-000000000002';
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   static const String loginUrl = '${_webServiceBase}Login?$_company';

@@ -281,8 +281,6 @@ class _AddUserPageState extends State<AddUserPage> {
                             Divider(height: 1, color: Colors.grey.shade100),
                         itemBuilder: (context, index) {
                           final user = pageUsers[index];
-                          const String status = 'Online';
-                          final bool isOnline = status == 'Online';
                           final bool hovered = _hoveredIndex == index;
 
                           return MouseRegion(
@@ -379,19 +377,21 @@ class _AddUserPageState extends State<AddUserPage> {
 
                                       // status
                                       MesListRow(
-                                        label: status,
+                                        label: user.isOnline
+                                            ? 'Online'
+                                            : 'Offline',
                                         flex: 2,
-                                        color: isOnline
+                                        color: user.isOnline
                                             ? const Color(0xFF16A34A)
                                             : const Color(0xFF64748B),
-                                        bg: isOnline
+                                        bg: user.isOnline
                                             ? const Color(0xFFF0FDF4)
                                             : const Color(0xFFF1F5F9),
                                       ),
 
                                       // last active
                                       MesListRow(
-                                        label: 'Just now',
+                                        label: user.lastSeenAt,
                                         flex: 2,
                                         textStyle: const TextStyle(
                                           fontSize: 12,

@@ -69,7 +69,7 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth < 1024) {
+                    if (constraints.maxWidth < 1210) {
                       return MobileTabletLayout(operationData: merged, cycles: cycles, components: components);
                     } else {
                       return PcLayout(operationData: merged, cycles: cycles, components: components);

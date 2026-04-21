@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import '../../../core/app_constants.dart';
@@ -10,18 +12,20 @@ import '../models/mes_scrapCode_model.dart';
 /// attribute the declaration to the correct MES user.
 class MesScrapService {
   /// Fetches all available scrap codes from the ERP.
+  ///  changed 
   Future<List<MesScrapCode>> fetchScrapCodes() async {
-    final response = await http.get(
-      Uri.parse(AppConstants.scrapCodesUrl),
-      headers: AppConstants.jsonHeaders,
-    );
+  final response = await http.get(
+    Uri.parse(AppConstants.scrapCodesUrl),
+    headers: AppConstants.jsonHeaders,
+  );
 
-    final List list = HttpResponseParser.parseList(
-      response,
-      label: 'load scrap codes',
-    );
-    return list.map((e) => MesScrapCode.fromJson(e)).toList();
-  }
+  print(response.body);
+
+  final data = jsonDecode(response.body) as Map<String, dynamic>;
+  final List list = data['value'] as List;
+
+  return list.map((e) => MesScrapCode.fromJson(e)).toList();
+}
 
   /// Declares scrapped units for [executionId].
   /// [token] — session token from the authenticated user.

@@ -44,7 +44,7 @@ table 50107 "MES Machine Status"
         field(4; "Current Prod. Order No."; Code[20])
         {
             Caption = 'Current Prod. Order No.';
-            TableRelation = "Prod. Order Routing Line"."Prod. Order No.";
+            //TableRelation = "Prod. Order Routing Line"."Prod. Order No.";
             DataClassification = CustomerContent;
         }
 

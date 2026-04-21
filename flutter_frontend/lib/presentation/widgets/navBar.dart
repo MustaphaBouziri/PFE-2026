@@ -28,14 +28,9 @@ class TopNavigationBar extends StatelessWidget{
             onTap: () => onTabChanged(1),
           ),
           NavButton(
-            title: "consumable".tr(),
+            title: "history".tr(),
             selected: selectedIndex == 2,
             onTap: () => onTabChanged(2),
-          ),
-          NavButton(
-            title: "history".tr(),
-            selected: selectedIndex == 3,
-            onTap: () => onTabChanged(3),
           ),
         ],
       ),

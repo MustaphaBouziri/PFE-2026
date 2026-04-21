@@ -4,6 +4,8 @@ class ActivityLogModel {
   final String type;
   final String operatorId;
   final String operatorName;
+  final String declaredById;
+  final String declaredByName;
   final String machineNo;
   final String prodOrderNo;
   final String operationNo;
@@ -14,6 +16,8 @@ class ActivityLogModel {
     required this.type,
     required this.operatorId,
     required this.operatorName,
+    required this.declaredById,
+    required this.declaredByName,
     required this.machineNo,
     required this.prodOrderNo,
     required this.operationNo,
@@ -26,6 +30,8 @@ class ActivityLogModel {
       type: json['type'] ?? '',
       operatorId: json['operatorId'] ?? '',
       operatorName: json['operatorName'] ?? '',
+      declaredById:   json['declaredById']   ?? '',
+      declaredByName: json['declaredByName'] ?? '',
       machineNo: json['machineNo'] ?? '',
       prodOrderNo: json['prodOrderNo'] ?? '',
       operationNo: json['operationNo'] ?? '',

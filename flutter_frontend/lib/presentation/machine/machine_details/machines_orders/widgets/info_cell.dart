@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 class InfoCell extends StatelessWidget {
   final String label;
@@ -12,20 +13,19 @@ class InfoCell extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
+          ExpandableText(
+            text:label,
             style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 2),
-          Text(
-            value,
+         ExpandableText(
+            text:value,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: Color(0xFF0F172A),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+           
           ),
         ],
       ),

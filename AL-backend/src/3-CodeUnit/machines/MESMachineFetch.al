@@ -313,7 +313,7 @@ codeunit 50131 "MES Machine Fetch"
         ExecutionId: Code[50];
         CurrentRoutingLinkCode: Code[10];
         HasAnyRoutingLink: Boolean;
-        TotalConsumed: Decimal;
+        TotalQuantityScanned: Decimal; // scanned qte * quantity per unit of measure
         TotalScanned: Decimal;
         QuantityPerUnit: Decimal;
         BelongsToThisOperation: Boolean;
@@ -372,8 +372,9 @@ codeunit 50131 "MES Machine Fetch"
                    (ProductOrderComponent."Routing Link Code" <> '') and
                    (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
 
-                    TotalConsumed := 0;
+
                     TotalScanned := 0;
+                    TotalQuantityScanned := 0;
 
 
                     BelongsToThisOperation := false;
@@ -389,8 +390,9 @@ codeunit 50131 "MES Machine Fetch"
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
                                 TotalScanned += MESComponentConsumption."Quantity Scanned";
-                            // TotalConsumed += MESComponentConsumption."Quantity Consumed";
+                                TotalQuantityScanned += MESComponentConsumption."Quantity Scanned" * MESComponentConsumption."Quantity per Unit of Measure";// qte scanned * quantity per unit of measure, so if i scanned 1 box of nail and each box has 5 piece the total quantity scanned will be 5 piece of nail
                             until MESComponentConsumption.Next() = 0;
+
 
                     end;
                     // get this item from the item unit table where same number and with this code 
@@ -399,32 +401,21 @@ codeunit 50131 "MES Machine Fetch"
                     ItemUnitOfMeasure.SetRange("Item No.", ProductOrderComponent."Item No.");
                     ItemUnitOfMeasure.SetRange(Code, ProductOrderComponent."Unit of Measure Code");
                     if ItemUnitOfMeasure.FindFirst() then
+                        //  5 piece in 1 box * 10 box = 50 piece of nail per bike
                         QuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure" * ProductOrderComponent."Quantity per";
 
                     Clear(BomObj);
 
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                     BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
-                    BomObj.Add('lineNUmber', ProductOrderComponent."Line No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
                     BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
                     BomObj.Add('quantityScanned', TotalScanned); // how much i scanned this qr code
+                    BomObj.add('totalQuantityScanned', TotalQuantityScanned);
 
-
-                    //BomObj.Add('quantityConsumed', TotalConsumed);
-                    //BomObj.Add('remainingQuantity', TotalScanned - TotalConsumed);
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
-                    BomObj.Add('QuantityPerUnit', QuantityPerUnit);
+                    BomObj.Add('QuantityPerUnit', QuantityPerUnit); // if the component is 1 box of nail and each box has 5 piece and i need to consume 10 box the quantity per unit will be 50 piece of nail per bike
                     BomArr.Add(BomObj);
-                    /**
-                     {
-                     "plannedQuantity": 10,
-                     "scannedQuantity": 5,
-                     "consumedQuantity": 3,
-                     "remainingQuantity": 2
-                     belongsToThisOperation', true / false )
-                     }
-                    */
 
                 end;
 
@@ -514,19 +505,21 @@ codeunit 50131 "MES Machine Fetch"
         JsonHelper: Codeunit "MES Json Helper";
         CutoffTime: DateTime;
         OperatorName: Text;
+        DeclaredByName: Text;
     begin
         Clear(LogArr);
         CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
 
         MESState.Reset();
         MESState.SetCurrentKey("Execution Id", "Declared At");
+        MESState.Ascending(false);
         MESState.SetFilter("Declared At", '>=%1', CutoffTime);
         if MESState.FindSet() then
             repeat
                 Clear(LogObj);
 
                 // to get operator name
-                OperatorName := '';
+                OperatorName := '-';
                 if MESUser.Get(MESState."Operator Id") then
                     if Employee.Get(MESUser."Employee ID") then
                         OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
@@ -536,6 +529,8 @@ codeunit 50131 "MES Machine Fetch"
                     LogObj.Add('type', 'status_change');
                     LogObj.Add('operatorId', MESState."Operator Id");
                     LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('declaredById', '-');
+                    LogObj.Add('declaredByName', '-');
                     LogObj.Add('machineNo', MESExecution."Machine No");
                     LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
                     LogObj.Add('operationNo', MESExecution."Operation No");
@@ -548,6 +543,7 @@ codeunit 50131 "MES Machine Fetch"
         // operation(meaning production) log
         MESProgression.Reset();
         MESProgression.SetCurrentKey("Execution Id", "Declared At");
+        MESProgression.Ascending(false);
         MESProgression.SetFilter("Declared At", '>=%1', CutoffTime);
         if MESProgression.FindSet() then
             repeat
@@ -557,11 +553,19 @@ codeunit 50131 "MES Machine Fetch"
                 if MESUser.Get(MESProgression."Operator Id") then
                     if Employee.Get(MESUser."Employee ID") then
                         OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                DeclaredByName := '-';
+                if (MESProgression."Declared By" <> '') and
+                   (MESProgression."Declared By" <> MESProgression."Operator Id") then
+                    if MESUser.Get(MESProgression."Declared By") then
+                        if Employee.Get(MESUser."Employee ID") then
+                            DeclaredByName := Employee."First Name" + ' ' + Employee."Last Name";
 
                 if MESExecution.Get(MESProgression."Execution Id") then begin
                     LogObj.Add('type', 'production');
                     LogObj.Add('operatorId', MESProgression."Operator Id");
                     LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('declaredById', MESProgression."Declared By");
+                    LogObj.Add('declaredByName', DeclaredByName);
                     LogObj.Add('machineNo', MESExecution."Machine No");
                     LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
                     LogObj.Add('operationNo', MESExecution."Operation No");
@@ -574,6 +578,7 @@ codeunit 50131 "MES Machine Fetch"
         // scrap log
         MESScrap.Reset();
         MESScrap.SetCurrentKey("Execution Id", "Declared At");
+        MESScrap.Ascending(false);
         MESScrap.SetFilter("Declared At", '>=%1', CutoffTime);
         if MESScrap.FindSet() then
             repeat
@@ -584,10 +589,21 @@ codeunit 50131 "MES Machine Fetch"
                     if Employee.Get(MESUser."Employee ID") then
                         OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
 
+                DeclaredByName := '-';
+                if (MESScrap."Declared By" <> '') and
+                   (MESScrap."Declared By" <> MESScrap."Operator Id") then
+                    if MESUser.Get(MESScrap."Declared By") then
+                        if Employee.Get(MESUser."Employee ID") then
+                            DeclaredByName := Employee."First Name" + ' ' + Employee."Last Name";
+
+
+
                 if MESExecution.Get(MESScrap."Execution Id") then begin
                     LogObj.Add('type', 'scrap');
                     LogObj.Add('operatorId', MESScrap."Operator Id");
                     LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('declaredById', MESScrap."Declared By");
+                    LogObj.Add('declaredByName', DeclaredByName);
                     LogObj.Add('machineNo', MESExecution."Machine No");
                     LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
                     LogObj.Add('operationNo', MESExecution."Operation No");
@@ -600,6 +616,7 @@ codeunit 50131 "MES Machine Fetch"
         // scan log
         MESConsumption.Reset();
         MESConsumption.SetCurrentKey("Execution Id", "Scanned At");
+        MESConsumption.Ascending(false);
         MESConsumption.SetFilter("Scanned At", '>=%1', CutoffTime);
         if MESConsumption.FindSet() then
             repeat
@@ -609,11 +626,20 @@ codeunit 50131 "MES Machine Fetch"
                 if MESUser.Get(MESConsumption."Operator Id") then
                     if Employee.Get(MESUser."Employee ID") then
                         OperatorName := Employee."First Name" + ' ' + Employee."Last Name";
+                DeclaredByName := '-';
+                if (MESConsumption."Declared By" <> '') and
+                   (MESConsumption."Declared By" <> MESConsumption."Operator Id") then
+                    if MESUser.Get(MESConsumption."Declared By") then
+                        if Employee.Get(MESUser."Employee ID") then
+                            DeclaredByName := Employee."First Name" + ' ' + Employee."Last Name";
+
 
                 if MESExecution.Get(MESConsumption."Execution Id") then begin
                     LogObj.Add('type', 'scan');
                     LogObj.Add('operatorId', MESConsumption."Operator Id");
                     LogObj.Add('operatorName', OperatorName);
+                    LogObj.Add('declaredById', MESConsumption."Declared By");
+                    LogObj.Add('declaredByName', DeclaredByName);
                     LogObj.Add('machineNo', MESExecution."Machine No");
                     LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
                     LogObj.Add('operationNo', MESExecution."Operation No");
@@ -729,15 +755,38 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
 
-    // this is the function that will be called when we scan a barcode and want to know what is this item in case its not our format
     procedure resolveBarcode(barcode: Text): Text
     var
         Item: Record Item;
         ItemIdentifier: Record "Item Identifier";
+        ItemUnitOfMeasure: Record "Item Unit of Measure";
+        quantityPerUnitOfMeasure: Decimal;
         ResultJson: JsonObject;
         JsonHelper: Codeunit "MES Json Helper";
         ItemNo: Code[20];
+        startPos: Integer;
+        endPos: Integer;
     begin
+
+        if StrPos(barcode, 'Item Number:') > 0 then begin
+
+            startPos := StrPos(barcode, 'Item Number: ');
+            startPos := startPos + StrLen('Item Number: ');
+
+            endPos := StrPos(barcode, '|');
+            if endPos = 0 then
+                endPos := StrLen(barcode) + 1;
+
+            ItemNo := CopyStr(barcode, startPos, endPos - startPos);
+
+            if Item.Get(ItemNo) then
+                barcode := Item."MES Barcode Code"
+            else begin
+                ResultJson.Add('resolved', false);
+                ResultJson.Add('message', 'Item not found from DataMatrix');
+                exit(JsonHelper.JsonToText(ResultJson));
+            end;
+        end;
 
         ItemIdentifier.Reset();
         ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
@@ -756,14 +805,19 @@ codeunit 50131 "MES Machine Fetch"
             exit(JsonHelper.JsonToText(ResultJson));
         end;
 
+        ItemUnitOfMeasure.Reset();
+        ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+        ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
+        if ItemUnitOfMeasure.FindFirst() then
+            quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
         ResultJson.Add('resolved', true);
         ResultJson.Add('itemNo', Item."No.");
         ResultJson.Add('itemDescription', Item.Description);
         ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-        ResultJson.Add('inventory', Item.Inventory);
-        ResultJson.Add('shelfNo', Item."Shelf No.");
-        ResultJson.Add('lotSize', Item."Lot Size");
-        ResultJson.Add('flushingMethod', Format(Item."Flushing Method"));
+        ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
+        ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
+
         exit(JsonHelper.JsonToText(ResultJson));
     end;
 

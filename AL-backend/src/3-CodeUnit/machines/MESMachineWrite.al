@@ -197,8 +197,14 @@ codeunit 50132 "MES Machine Write"
         ItemNoToken: JsonToken;
         BarcodeToken: JsonToken;
         QtyScannedToken: JsonToken;
+        //NEW
+        UnitOfMeasureToken: JsonToken;
+        QuantityPerUnitOfMeasureToken: JsonToken;
+
         ItemNo: Code[20];
         QtyScanned: Decimal;
+        UnitOfMeasure: Code[10];
+        QuantityPerUnitOfMeasure: Decimal;
     begin
         if not MESExecution.Get(executionId) then begin
             ResultJson.Add('value', false);
@@ -215,9 +221,13 @@ codeunit 50132 "MES Machine Write"
             ScanObj.Get('itemNo', ItemNoToken);
             ScanObj.Get('barcode', BarcodeToken);
             ScanObj.Get('quantityScanned', QtyScannedToken);
+            ScanObj.Get('unitOfMeasure', UnitOfMeasureToken);
+            ScanObj.Get('quantityPerUnitOfMeasure', QuantityPerUnitOfMeasureToken);
 
             ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
             QtyScanned := QtyScannedToken.AsValue().AsDecimal();
+            UnitOfMeasure := CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10);
+            QuantityPerUnitOfMeasure := QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
 
             MESConsumption.Init();
             MESConsumption."Execution Id" := executionId;
@@ -225,6 +235,11 @@ codeunit 50132 "MES Machine Write"
             MESConsumption."Item No" := ItemNo;
             MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
             MESConsumption."Quantity Scanned" := QtyScanned;
+            //NEW
+            MESConsumption."Unit of Measure" := UnitOfMeasure;
+            MESConsumption."Quantity per Unit of Measure" := QuantityPerUnitOfMeasure;
+
+
             MESConsumption."Operator Id" := operatorId;
             MESConsumption."Declared By" := declaredById;
             MESConsumption.Insert(true);
