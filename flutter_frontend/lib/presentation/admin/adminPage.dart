@@ -1,10 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/addUserPage.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
+import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -18,6 +20,8 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
 
     return Scaffold(
       body: Row(
@@ -107,9 +111,9 @@ class _AdminPageState extends State<AdminPage> {
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children:  [
                             Text(
-                              'Ahmed Ben Hamed',
+                               authProvider.userData?['fullName']?.toString() ?? 'User',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -117,7 +121,7 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                             ),
                             Text(
-                              'ID: 00012036',
+                               authProvider.userData?['authId']?.toString() ?? '',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),

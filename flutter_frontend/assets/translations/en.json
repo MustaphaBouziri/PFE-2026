@@ -92,7 +92,7 @@
 
   "scrapDialogTitle": "Declare Scrap",
   "scrapCodeLabel": "Scrap Code",
-  "selectScrapCode": "Please select a scrap code",
+  "selectScrapCode": "select a scrap code",
   "quantityLabel": "Quantity",
   "exampleQuantity": "e.g. 3",
   "noteOptional": "Note (optional)",

@@ -45,7 +45,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 1024;
+    final isWide = MediaQuery.of(context).size.width > 1210;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -176,24 +176,31 @@ class _RequiredComponentState extends State<RequiredComponent> {
                 ),
 
               // scan button in normal view
-              ElevatedButton(
-                onPressed: () => _openScanner(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+               SizedBox(
+                  
+                  child: ElevatedButton.icon(
+                     onPressed: () => _openScanner(context),
+                    
+                          
+                       
+                    label: Text(
+                      'scanItem'.tr(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'scanItem'.tr(),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+                                  ],
+            
           ),
 
           const SizedBox(height: 16),

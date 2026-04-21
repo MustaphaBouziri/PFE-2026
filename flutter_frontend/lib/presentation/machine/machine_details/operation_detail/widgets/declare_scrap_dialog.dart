@@ -41,7 +41,10 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _isSubmitting = true; _errorMessage = null; });
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
 
     final success = await context.read<MesScrapProvider>().declareScrap(
       executionId: widget.executionId,
@@ -54,13 +57,14 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
     if (success) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())));
     } else {
       setState(() {
-        _errorMessage = context.read<MesScrapProvider>().errorMessage
-            ?? 'failedToDeclareScrap'.tr();
+        _errorMessage =
+            context.read<MesScrapProvider>().errorMessage ??
+            'failedToDeclareScrap'.tr();
         _isSubmitting = false;
       });
     }
@@ -75,7 +79,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
       insetPadding: const EdgeInsets.all(30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 520),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Form(
@@ -84,15 +88,17 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 // ── Header ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'scrapDialogTitle'.tr(),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A)),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -106,31 +112,33 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 // ── Scrap Code Dropdown ──
                 provider.isLoading && provider.scrapCodes.isEmpty
                     ? const Center(child: CircularProgressIndicator())
-                    : DropdownButtonFormField<MesScrapCode>(
-                  value: _selectedCode,
-                  decoration: InputDecoration(
-                    labelText: 'scrapCodeLabel'.tr(),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
-                    ),
-                  ),
-                  dropdownColor: Colors.white,
-                  items: provider.scrapCodes
-                      .map((sc) => DropdownMenuItem(
-                    value: sc,
-                    child: Text(sc.displayLabel,
-                        overflow: TextOverflow.ellipsis),
-                  ))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedCode = val),
-                  validator: (val) =>
-                  val == null ? 'selectScrapCode'.tr() : null,
-                ),
+                    : DropdownMenu<MesScrapCode>(
+                      hintText: 'selectScrapCode'.tr(),
+                        initialSelection: _selectedCode,
+                        onSelected: (val) =>
+                            setState(() => _selectedCode = val),
+
+                        dropdownMenuEntries: provider.scrapCodes.map((sc) {
+                          return DropdownMenuEntry(
+                            value: sc,
+                            label: sc.displayLabel,
+                            
+                          );
+                        }).toList(),
+
+                        menuStyle: MenuStyle(
+                          backgroundColor: WidgetStatePropertyAll(Colors.white),
+                          maximumSize: WidgetStatePropertyAll(
+                            const Size(400, 250),
+                          ),
+                          
+                          shape: WidgetStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
 
                 const SizedBox(height: 12),
 
@@ -146,10 +154,14 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0F172A),
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (val) {
@@ -174,10 +186,14 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF0F172A),width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0F172A),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -185,9 +201,13 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                 // ── Inline error ──
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 8),
-                  Text(_errorMessage!,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFFDC2626))),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
                 ],
 
                 const SizedBox(height: 20),
@@ -200,9 +220,13 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     onPressed: _isSubmitting ? null : _submit,
                     icon: _isSubmitting
                         ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Icon(Icons.check, color: Colors.white),
                     label: Text(
                       _isSubmitting ? 'submitting'.tr() : 'submit'.tr(),
@@ -212,7 +236,8 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                       backgroundColor: const Color(0xFFDC2626),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),

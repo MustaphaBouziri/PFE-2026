@@ -97,6 +97,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
   Widget build(BuildContext context) {
     // watch so the machine list rebuilds if the session changes
     final authProvider = context.watch<AuthProvider>();
+    final role = authProvider.userData?['role']?.toString() ?? '';
     final provider = Provider.of<MesMachinesProvider>(context, listen: false);
 
     final workCenterIds = _resolveWorkCenterIds();
@@ -132,9 +133,10 @@ class _MachinelistpageState extends State<Machinelistpage> {
                   ),
                 ),
                 Text(
-                  authProvider.userData?['authId']?.toString() ?? '',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  role,
+                  style: TextStyle(fontSize: 11,fontWeight: FontWeight.bold, color: role=='Supervisor'? Color(0xFF16A34A):Color(0xFF2563EB)),
                 ),
+                
               ],
             ),
             const Spacer(),

@@ -7,6 +7,8 @@ class MesUser {
   final List<String> workCenterNames;
   final String authId;
   final bool isActive;
+  final bool isOnline;
+  final String lastSeenAt;
 
   MesUser({
     required this.userId,
@@ -17,20 +19,26 @@ class MesUser {
     this.email = '',
     required this.workCenterNames,
     required this.isActive,
+    this.isOnline = false,
+    this.lastSeenAt = '',
   });
 
   factory MesUser.fromJson(Map<String, dynamic> json) {
     return MesUser(
-      userId:     json['userId']?.toString()     ?? '',
-      employeeId: json['employeeId']?.toString()  ?? '',
-      role:       json['role']?.toString()        ?? '',
-      fullName:   json['fullName']?.toString() ?? '',
-      email:      json['email']?.toString()       ?? '',
-      authId:     json['authId']?.toString()      ?? '',
-      workCenterNames: (json['workCenters'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ?? [],
-      isActive:   json['isActive'] == true // need to ask about this
+      userId: json['userId']?.toString() ?? '',
+      employeeId: json['employeeId']?.toString() ?? '',
+      role: json['role']?.toString() ?? '',
+      fullName: json['fullName']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      authId: json['authId']?.toString() ?? '',
+      workCenterNames:
+          (json['workCenters'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      isActive: json['isActive'] == true, // need to ask about this
+      isOnline: json['isOnline'] == true,
+      lastSeenAt: json['lastSeenAt']?.toString() ?? '',
     );
   }
 
@@ -41,6 +49,6 @@ class MesUser {
 
   @override
   String toString() {
-    return 'MesUser(userId: $userId, employeeId: $employeeId, role: $role, fullName: $fullName, email: $email)';
+    return 'MesUser(userId: $userId, role: $role, fullName: $fullName, isOnline: $isOnline)';
   }
 }
