@@ -12,7 +12,7 @@ table 50110 "MES Operation Execution"
 
         field(2; "Machine No"; Code[20])
         {
-            TableRelation = "Machine Center"."No.";
+           // TableRelation = "Machine Center"."No.";
         }
 
         field(3; "Prod Order No"; Code[20])

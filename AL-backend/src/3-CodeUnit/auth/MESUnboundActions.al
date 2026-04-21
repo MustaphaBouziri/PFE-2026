@@ -72,9 +72,9 @@ codeunit 50125 "MES Unbound Actions"
         WCArr: JsonArray;
         EmployeeRec: Record Employee;
         MediaInStream: InStream;
-Base64Convert: Codeunit "Base64 Convert";
-TempBlob: Codeunit "Temp Blob";
-OutStream: OutStream;
+        Base64Convert: Codeunit "Base64 Convert";
+        TempBlob: Codeunit "Temp Blob";
+        OutStream: OutStream;
     begin
         if (userId = '') or (password = '') then
             exit(JsonHelper.BuildError('Invalid request', 'Username and password are required'));
@@ -115,21 +115,21 @@ OutStream: OutStream;
         OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
 
         if EmployeeRec.Get(U."Employee ID") then begin
-    OutJ.Add('fullName', EmployeeRec.FullName());
-    OutJ.Add('email', EmployeeRec."E-Mail");
-    
-    if EmployeeRec.Image.HasValue then begin
-        TempBlob.CreateOutStream(OutStream);
-        EmployeeRec.Image.ExportStream(OutStream);
-        TempBlob.CreateInStream(MediaInStream);
-        OutJ.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
-    end else
-        OutJ.Add('imageBase64', '');
-end else begin
-    OutJ.Add('fullName', '');
-    OutJ.Add('email', '');
-    OutJ.Add('imageBase64', '');
-end;
+            OutJ.Add('fullName', EmployeeRec.FullName());
+            OutJ.Add('email', EmployeeRec."E-Mail");
+
+            if EmployeeRec.Image.HasValue then begin
+                TempBlob.CreateOutStream(OutStream);
+                EmployeeRec.Image.ExportStream(OutStream);
+                TempBlob.CreateInStream(MediaInStream);
+                OutJ.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+            end else
+                OutJ.Add('imageBase64', '');
+        end else begin
+            OutJ.Add('fullName', '');
+            OutJ.Add('email', '');
+            OutJ.Add('imageBase64', '');
+        end;
 
         exit(JsonHelper.JsonToText(OutJ));
     end;
@@ -415,10 +415,13 @@ end;
         UserRec: Record "MES User";
         UserWorkCenter: Record "MES User Work Center";
         WorkCenter: Record "Work Center";
+        AuthToken: Record "MES Auth Token";
         JsonHelper: Codeunit "MES Json Helper";
         UsersArray: JsonArray;
         UserJson: JsonObject;
         WorkCentersArray: JsonArray;
+        IsOnline: Boolean;
+        LastSeenAt: DateTime;
     begin
         if UserRec.FindSet() then
             repeat
@@ -430,12 +433,35 @@ end;
                 UserJson.Add('employeeId', UserRec."Employee ID");
                 UserJson.Add('role', Format(UserRec.Role));
                 UserJson.add('isActive', UserRec."Is Active");
+                
 
                 if EmployeeRec.Get(UserRec."Employee ID") then begin
                     UserJson.Add('fullName', EmployeeRec.FullName());
+                    UserJson.Add('email', EmployeeRec."E-Mail");
                 end else begin
                     UserJson.Add('fullName', '');
                 end;
+
+                // check is online last activity in mes user list 
+                IsOnline := false;
+                LastSeenAt := 0DT;//0dt means null/zero datetime
+
+                AuthToken.Reset();
+                AuthToken.SetRange("User Id", UserRec."User Id");
+                if AuthToken.FindSet() then
+                    repeat
+                        // comparing all tocken to find the most recent activity , at the end the lastseenat will hold the lastest 
+                        //9am>0 ---10am>9am....
+                        if AuthToken."Last Seen At" > LastSeenAt then
+                            LastSeenAt := AuthToken."Last Seen At";
+
+                        // online = at least one token is valid right now
+                        if (not AuthToken.Revoked) and (AuthToken."Expires At" > CurrentDateTime()) then
+                            IsOnline := true;
+                    until AuthToken.Next() = 0;
+
+                UserJson.Add('isOnline', IsOnline);
+                UserJson.Add('lastSeenAt', Format(LastSeenAt));
 
                 UserWorkCenter.Reset();
                 UserWorkCenter.SetRange("User Id", UserRec."User Id");
