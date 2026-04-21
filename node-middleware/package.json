@@ -1,0 +1,25 @@
+{
+  "name": "middleware",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node -e \"require('./src/config')\" && echo 'Config OK'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

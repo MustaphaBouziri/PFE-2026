@@ -76,3 +76,6 @@ digest.txt.no_slash_comments
 **/**.no_slash_comments
 
 summary.txt
+node-middleware/node_modules/
+node_modules/
+.env

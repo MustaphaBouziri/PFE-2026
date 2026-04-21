@@ -1,5 +1,6 @@
 class AppConstants {
-  static const String host = 'http://localhost:7048';
+  static const String host = 'http://localhost:3000/api';
+
   static const String instance = 'BC210';
   static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
 
@@ -49,8 +50,8 @@ class AppConstants {
   static const String fetchAllItemBarcodes =
       '${_webServiceBase}fetchAllItemBarcodes?$_company';
 
-      static const String fetchResolveBarcode = '${_webServiceBase}resolveBarcode?$_company';
-      
+  static const String fetchResolveBarcode =
+      '${_webServiceBase}resolveBarcode?$_company';
 
   // ── Write (all require token + onBehalfOfUserId in the request body) ───────
   static const String startOperation =
@@ -96,7 +97,7 @@ class AppConstants {
 
   static String get fetchMachineDashboard =>
       '${_webServiceBase}fetchMachineDashboard?$_company';
+
   static String get AdminChangeUserRole =>
       '${_webServiceBase}AdminChangeUserRole?$_company';
-
 }
