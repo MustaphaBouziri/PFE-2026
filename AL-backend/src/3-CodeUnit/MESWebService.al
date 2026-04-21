@@ -76,9 +76,14 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.getMachineOrders(machineNo));
     end;
 
-    procedure fetchOperationsStatusAndProgress(machineNo: Code[20]; fetchFinished: Boolean): Text
+    procedure fetchOngoingOperationsState(machineNo: Code[20]): Text
     begin
-        exit(MachineFetch.fetchOperationsStatusAndProgress(machineNo, fetchFinished));
+        exit(MachineFetch.fetchOperationsStatusAndProgress(machineNo, false));
+    end;
+
+    procedure fetchOperationsHistory(machineNo: Code[20]): Text
+    begin
+        exit(MachineFetch.fetchOperationsStatusAndProgress(machineNo, true));
     end;
 
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Text

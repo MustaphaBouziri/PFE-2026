@@ -53,9 +53,8 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<OperationStatusAndProgressModel>>(
-        stream: provider.getMachineOperationStatusAndProgressStream(
+        stream: provider.getMachineOngoingOperationsStateStream(
           widget.machineNo,
-          false,
         ),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {

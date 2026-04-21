@@ -49,7 +49,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     String machineNo,
   ) async {
     final token = await _requireToken();
-    return _service.getStartOperationValidation(
+    return _service.startOperation(
       token,
       prodOrderNo,
       operationNo,
@@ -144,13 +144,11 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   // ── Read-only streams (no token needed) ──────────────────────────────────
 
   Stream<List<OperationStatusAndProgressModel>>
-  getMachineOperationStatusAndProgressStream(
+  getMachineOngoingOperationsStateStream(
     String machineNo,
-    bool fetchFinished,
   ) {
-    return _service.streamMachinesOperationStatusAndProgress(
+    return _service.streamMachinesOngoingOperationsState(
       machineNo,
-      fetchFinished,
       trigger: _refreshController.stream,
     );
   }
@@ -158,7 +156,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   Future<List<OperationStatusAndProgressModel>> fetchMachineHistory(
     String machineNo,
   ) {
-    return _service.fetchMachineOperationStatusAndProgress(machineNo, true);
+    return _service.fetchOperationsHistory(machineNo);
   }
 
   Stream<OperationStatusAndProgressModel?> fetchOperationLiveDataStream(
