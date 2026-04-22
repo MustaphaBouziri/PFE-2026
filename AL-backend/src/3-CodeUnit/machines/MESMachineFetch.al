@@ -98,6 +98,7 @@ codeunit 50131 "MES Machine Fetch"
         MESExecution: Record "MES Operation Execution";
         MESOperationStatus: Record "MES Operation State";
         MESOperationProgress: Record "MES Operation Progression";
+        MESScrap: Record "MES Operation Scrap";
         MESOperationStatusObj: JsonObject;
         MESOperationStatusArr: JsonArray;
         ShouldInclude: Boolean;
@@ -106,6 +107,7 @@ codeunit 50131 "MES Machine Fetch"
         CurrentOperationStatus: Text;
         CurrentDeclaredAt: DateTime;
         JsonHelper: Codeunit "MES Json Helper";
+
     begin
         Clear(MESOperationStatusArr);
 
@@ -163,6 +165,7 @@ codeunit 50131 "MES Machine Fetch"
                         MESOperationStatusObj.Add('endDateTime', Format(EndDateTime));
                         MESOperationStatusObj.Add('declaredAt', Format(CurrentDeclaredAt));
 
+
                         MESOperationProgress.Reset();
                         MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                         MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
@@ -170,13 +173,15 @@ codeunit 50131 "MES Machine Fetch"
 
                         if MESOperationProgress.FindFirst() then begin
                             MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
-                            MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
+
                             MESOperationStatusObj.Add('orderQuantity', MESExecution."Order Quantity");
                             MESOperationStatusObj.Add('itemNo', MESExecution."Item No");
                             MESOperationStatusObj.Add('itemDescription', MESExecution."Item Description");
+
+
                             if MESExecution."Order Quantity" <> 0 then
                                 MESOperationStatusObj.Add('progressPercent',
-                                    (MESOperationProgress."Total Produced Quantity" / MESExecution."Order Quantity") * 100);
+                                    (MESOperationProgress."Total Produced Quantity") / MESExecution."Order Quantity" * 100);
                         end;
 
                         MESOperationStatusArr.Add(MESOperationStatusObj);
@@ -193,6 +198,8 @@ codeunit 50131 "MES Machine Fetch"
         MESExecution: Record "MES Operation Execution";
         MESOperationStatus: Record "MES Operation State";
         MESOperationProgress: Record "MES Operation Progression";
+        MESScrap: Record "MES Operation Scrap";
+        scrapQuantity: Decimal;
         MESOperationStatusObj: JsonObject;
         MESOperationStatusArr: JsonArray;
         JsonHelper: Codeunit "MES Json Helper";
@@ -216,7 +223,16 @@ codeunit 50131 "MES Machine Fetch"
 
                     Clear(MESOperationStatusObj);
                     MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
-
+                    // calculate scrap 
+                    scrapQuantity := 0;
+                    MESScrap.Reset();
+                    MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
+                    MESScrap.SetRange("Material Id", ''); // to exclude scrap records with material id which are not related to the current operation
+                    if MESScrap.FindSet() then begin
+                        repeat
+                            scrapQuantity += MESScrap."Scrap Quantity";
+                        until MESScrap.Next() = 0;
+                    end;
                     MESOperationProgress.Reset();
                     MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                     MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
@@ -226,7 +242,7 @@ codeunit 50131 "MES Machine Fetch"
                         MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
                         MESOperationStatusObj.Add('executionId', MESOperationStatus."Execution Id");
 
-                        MESOperationStatusObj.Add('scrapQuantity', MESOperationProgress."Scrap Quantity");
+                        MESOperationStatusObj.Add('scrapQuantity', scrapQuantity);
                         if MESExecution."Order Quantity" <> 0 then
                             MESOperationStatusObj.Add('progressPercent',
                                 (MESOperationProgress."Total Produced Quantity" / MESExecution."Order Quantity") * 100);
@@ -310,13 +326,15 @@ codeunit 50131 "MES Machine Fetch"
         MESComponentConsumption: Record "MES Component Consumption";
         MESExecution: Record "MES Operation Execution";
         ItemUnitOfMeasure: Record "Item Unit of Measure";
+        MESScrap: Record "MES Operation Scrap";
         ExecutionId: Code[50];
         CurrentRoutingLinkCode: Code[10];
         HasAnyRoutingLink: Boolean;
         TotalQuantityScanned: Decimal; // scanned qte * quantity per unit of measure
-        TotalScanned: Decimal;
+        numberScanned: Decimal;
         QuantityPerUnit: Decimal;
         BelongsToThisOperation: Boolean;
+        scrapQuantity: Decimal;
 
         BomObj: JsonObject;
         BomArr: JsonArray;
@@ -373,7 +391,7 @@ codeunit 50131 "MES Machine Fetch"
                    (ProductOrderComponent."Routing Link Code" <> CurrentRoutingLinkCode)) then begin
 
 
-                    TotalScanned := 0;
+                    numberScanned := 0;
                     TotalQuantityScanned := 0;
 
 
@@ -389,7 +407,7 @@ codeunit 50131 "MES Machine Fetch"
                         if MESComponentConsumption.FindSet() then
                             //if there is no record in mes Component json wil return consumed qte 0 
                             repeat
-                                TotalScanned += MESComponentConsumption."Quantity Scanned";
+                                numberScanned += MESComponentConsumption."Quantity Scanned";//
                                 TotalQuantityScanned += MESComponentConsumption."Quantity Scanned" * MESComponentConsumption."Quantity per Unit of Measure";// qte scanned * quantity per unit of measure, so if i scanned 1 box of nail and each box has 5 piece the total quantity scanned will be 5 piece of nail
                             until MESComponentConsumption.Next() = 0;
 
@@ -405,16 +423,26 @@ codeunit 50131 "MES Machine Fetch"
                         QuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure" * ProductOrderComponent."Quantity per";
 
                     Clear(BomObj);
+                    scrapQuantity := 0;
+                    MESScrap.Reset();
+                    MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
+                    MESScrap.SetRange("Material Id", ProductOrderComponent."Item No."); // to get scrap related to this component
+                    if MESScrap.FindSet() then begin
+                        repeat
+                            scrapQuantity += MESScrap."Scrap Quantity";
+                        until MESScrap.Next() = 0;
+                    end;
 
                     BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                     BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
                     BomObj.Add('itemDescription', ProductOrderComponent.Description);
-                    BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
-                    BomObj.Add('quantityScanned', TotalScanned); // how much i scanned this qr code
+                    BomObj.Add('scrapQuantity', scrapQuantity);
+                    //BomObj.Add('plannedQuantity', ProductOrderComponent.Quantity);
+                    BomObj.Add('numberScanned', numberScanned); // how much i scanned this qr code
                     BomObj.add('totalQuantityScanned', TotalQuantityScanned);
 
                     BomObj.Add('belongsToThisOperation', BelongsToThisOperation);
-                    BomObj.Add('QuantityPerUnit', QuantityPerUnit); // if the component is 1 box of nail and each box has 5 piece and i need to consume 10 box the quantity per unit will be 50 piece of nail per bike
+                    BomObj.Add('quantityPerUnit', QuantityPerUnit); // if the component is 1 box of nail and each box has 5 piece and i need to consume 10 box the quantity per unit will be 50 piece of nail per bike
                     BomArr.Add(BomObj);
 
                 end;
@@ -652,11 +680,14 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(LogArr));
     end;
 
-    procedure fetchMachineDashboard(hoursBack: Decimal): Text
+    procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Text
     var
         Machine: Record "Machine Center";
         MESMachineStatus: Record "MES Machine Status";
         MESExecution: Record "MES Operation Execution";
+        PrevStatus: Enum "MES Machine Status";
+        MESProgression: Record "MES Operation Progression";
+        MESScrap: Record "MES Operation Scrap";
         MachineArr: JsonArray;
         MachineObj: JsonObject;
         JsonHelper: Codeunit "MES Json Helper";
@@ -668,16 +699,32 @@ codeunit 50131 "MES Machine Fetch"
         TotalScrap: Decimal;
         UptimePercent: Decimal;
         PrevTime: DateTime;
-        PrevStatus: Enum "MES Machine Status";
-        MESProgression: Record "MES Operation Progression";
-        MESScrap: Record "MES Operation Scrap";
+        workCenterNoArr: JsonArray;
+        workCenterNoToken: JsonToken;
+        workCenterNo: Code[20];
+        // store the list of work center no to filter machine in format of a list
+        workCenterFilter: Text;
     begin
         Clear(MachineArr);
         CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
         TotalMinutes := hoursBack * 60;
 
+        // workCenterNoJson is a simple string array: ["100","200"]
+        workCenterFilter := '';
+        workCenterNoArr.ReadFrom(workCenterNoJson);
+        foreach workCenterNoToken in workCenterNoArr do begin
+            workCenterNo := CopyStr(workCenterNoToken.AsValue().AsText(), 1, 20);
+
+            if workCenterFilter = '' then
+                workCenterFilter := workCenterNo
+            else
+                workCenterFilter += '|' + workCenterNo; // | to make it add OR for set range  WC1|WC2|WC3
+        end;
+
+
         Machine.Reset();
-        // loop all machines and for each machine calculate uptime, count of operations, quantity produced and scrap in the last x hours
+        Machine.SetFilter("Work Center No.", workCenterFilter);//Machine.SetFilter("Work Center No.", 'WC1|WC2|WC3');
+
         if Machine.FindSet() then
             repeat
                 Clear(MachineObj);
@@ -685,21 +732,21 @@ codeunit 50131 "MES Machine Fetch"
                 OperationCount := 0;
                 TotalProduced := 0;
                 TotalScrap := 0;
-                // for each machine we look for all executions in the last x hours and sum the total produced and scrap quantity from the progression and scrap tables
+
                 MESExecution.Reset();
                 MESExecution.SetRange("Machine No", Machine."No.");
                 MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
                 OperationCount := 0;
                 if MESExecution.FindSet() then
                     repeat
-                        OperationCount += 1;// count how many operations started
+                        OperationCount += 1;
 
                         // sum qte produced for all progressions of this execution
                         MESProgression.Reset();
                         MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
                         MESProgression.SetCurrentKey("Execution Id", "Declared At");
                         MESProgression.Ascending(false);
-                        // no loop cuz the latest progression record will have the total produced quantity for this execution + ascending =false so the first is the latest
+                        // no loop cuz the latest progression record will have the total produced quantity for this execution
                         if MESProgression.FindFirst() then
                             TotalProduced += MESProgression."Total Produced Quantity";
 
@@ -751,6 +798,7 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('totalScrap', TotalScrap);
                 MachineArr.Add(MachineObj);
             until Machine.Next() = 0;
+
 
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;

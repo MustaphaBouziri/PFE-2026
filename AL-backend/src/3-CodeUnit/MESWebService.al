@@ -200,7 +200,9 @@ codeunit 50126 "MES Web Service"
         scrapCode: Code[10];
         quantity: Decimal;
         token: Text;
-        onBehalfOfUserId: Text
+        onBehalfOfUserId: Text;
+        materialId: Code[20]
+
     ): Text
     var
         DeclaredById: Code[50];
@@ -210,7 +212,7 @@ codeunit 50126 "MES Web Service"
         if not TryResolveIdentity(token, onBehalfOfUserId, DeclaredById, OperatorId, ErrorResult) then
             exit(ErrorResult);
 
-        exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity, OperatorId, DeclaredById));
+        exit(MachineWrite.declareScrap(executionId, description, scrapCode, quantity, OperatorId, DeclaredById, materialId));
     end;
 
     // ── Private identity helpers ──────────────────────────────────────────────
@@ -266,9 +268,9 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchActivityLog(hoursBack));
     end;
 
-    procedure fetchMachineDashboard(hoursBack: Integer): Text
+    procedure fetchMachineDashboard(hoursBack: Integer; workCenterNoJson: Text): Text
     begin
-        exit(MachineFetch.fetchMachineDashboard(hoursBack));
+        exit(MachineFetch.fetchMachineDashboard(hoursBack, workCenterNoJson));
     end;
 
     procedure AdminChangeUserRole(

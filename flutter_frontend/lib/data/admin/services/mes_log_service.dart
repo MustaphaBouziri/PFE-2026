@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 
 import '../../../core/app_constants.dart';
@@ -17,10 +19,14 @@ class LogService {
 
   Future<List<MachineDashboardModel>> fetchMachineDashboard(
     int hoursBack,
+    List<String> workCenterList,
+    
   ) async {
     final response = await HttpClient.post(
         AppConstants.fetchMachineDashboard,
-        {'hoursBack':  hoursBack.toDouble()},
+        {'hoursBack':  hoursBack.toDouble(),
+        // simple string array ["100","200"]
+      'workCenterNoJson': jsonEncode(workCenterList),},
     );
 
     final list = HttpResponseParser.parseList(

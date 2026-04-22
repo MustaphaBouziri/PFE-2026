@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/presentation/machine/DeclarationLabelPage.dart';
 import 'package:pfe_mes/presentation/machine/printLabelPage.dart';
 import 'package:provider/provider.dart';
@@ -13,8 +14,9 @@ import 'package:barcode/src/barcode.dart';
 
 class ActionButtonsContainer extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
+  final List<ComponentConsumptionModel> components;
 
-  const ActionButtonsContainer({super.key, required this.operationData});
+  const ActionButtonsContainer({super.key, required this.operationData, required this.components});
 
   @override
   State<ActionButtonsContainer> createState() => _ActionButtonsContainerState();
@@ -250,6 +252,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
                     context: context,
                     builder: (_) => DeclareScrapDialog(
                       executionId: widget.operationData.executionId,
+                      components: widget.components,
                     ),
                   )
                 : null,

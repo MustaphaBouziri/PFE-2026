@@ -35,6 +35,8 @@ class MesScrapService {
     required String scrapCode,
     required double quantity,
     String description = '',
+    String materialId='',
+    required onBehalfOfUserId,
   }) async {
     final response = await HttpClient.post(AppConstants.declareScrapUrl, {
       'token': token,
@@ -42,6 +44,8 @@ class MesScrapService {
       'description': description,
       'scrapCode': scrapCode,
       'quantity': quantity,
+      'materialId': materialId,
+      'onBehalfOfUserId': onBehalfOfUserId,
     });
 
     return HttpResponseParser.parseWriteResult(

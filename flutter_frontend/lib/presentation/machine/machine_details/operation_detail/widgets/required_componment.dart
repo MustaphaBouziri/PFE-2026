@@ -28,7 +28,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
     return widget.components.where((c) {
       final search = controller.text.toLowerCase();
       final matchesSearch = c.itemDescription.toLowerCase().contains(search);
-      final scanned = c.quantityScanned * c.quantityPerUnit;
+      final scanned = c.totalQuantityScanned;
 
       if (selectedFilter == 'missing') return matchesSearch && scanned == 0;
       if (selectedFilter == 'low') return matchesSearch && scanned > 0;
@@ -322,7 +322,9 @@ class ComponentListView extends StatelessWidget {
         // scanned is how many qte of this item u scanned  * qte per unit of measure 
         final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
-        final remaining = scanned - consumed;
+
+        final scrap = component.scrapQuantity;
+        final remaining = scanned - consumed - scrap;
 
         final status = getStatus(remaining, scanned);
 
