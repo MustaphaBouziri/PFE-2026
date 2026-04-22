@@ -28,6 +28,10 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
     required String scrapCode,
     required double quantity,
     String description = '',
+    String materialId='',
+    required onBehalfOfUserId,
+
+
   }) async {
     final result = await runAsync(() async {
       final token = await _apiService.getToken() ?? '';
@@ -37,6 +41,9 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
         scrapCode: scrapCode,
         quantity: quantity,
         description: description,
+        materialId:materialId,
+        onBehalfOfUserId: onBehalfOfUserId,
+
       );
     });
     return result ?? false;

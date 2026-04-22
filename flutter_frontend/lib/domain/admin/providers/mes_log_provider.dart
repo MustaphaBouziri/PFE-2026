@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/data/admin/services/mes_log_service.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 
 import '../../shared/async_state_mixin.dart';
 
@@ -28,16 +29,28 @@ class LogProvider with ChangeNotifier, AsyncStateMixin {
   }
 
   Future<void> fetchActivityLog() async {
+    
     await runAsync(() async {
       activityLogs = await _service.fetchActivityLog(selectedHours);
     });
   }
+AuthProvider? _authProvider;
 
+void setAuthProvider(AuthProvider auth) {
+  _authProvider = auth;
+}
   Future<void> fetchMachineDashboard() async {
-    await runAsync(() async {
-      machineDashboardList = await _service.fetchMachineDashboard(selectedHours);
-    });
-  }
+  final rawList = _authProvider?.userData?['workCenters'];//rawList = ["WC01", "WC02"];
+
+  final workCenterList = rawList != null
+      ? List<String>.from(rawList)//casting dynamic list to List<String> because jsonDecode returns List<dynamic> and our service expects List<String>
+      : <String>[];
+
+  await runAsync(() async {
+    machineDashboardList =
+        await _service.fetchMachineDashboard(selectedHours, workCenterList);
+  });
+}
 
   void setHours(int hours) {
     selectedHours = hours;

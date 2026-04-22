@@ -13,7 +13,8 @@ class CurrentOrderInfoContainer extends StatefulWidget {
       _CurrentOrderInfoContainerState();
 }
 
-class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
+class _CurrentOrderInfoContainerState
+    extends State<CurrentOrderInfoContainer> {
   @override
   Widget build(BuildContext context) {
     final style = operationStatusStyleFromStatus(
@@ -25,57 +26,70 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
         : 0.0;
 
     return Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // title
+          Text(
+            "currentProductionOrder".tr(),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // title
-            Text(
-              "currentProductionOrder".tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
+          ),
 
-            const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
-            // order number + product name
-            _InfoRow(
-              leftLabel: "orderNumber".tr(),
-              leftValue: widget.operationData.operationNo,
-              rightLabel: "productName".tr(),
-              rightValue: widget.operationData.itemDescription,
-            ),
+          // order number + product name
+          _InfoRow(
+            leftLabel: "orderNumber".tr(),
+            leftValue: widget.operationData.operationNo,
+            rightLabel: "productName".tr(),
+            rightValue: widget.operationData.itemDescription,
+          ),
 
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-            // required quantity + produced quantity
-            _InfoRow(
-              leftLabel: "requiredQuantity".tr(),
-              leftValue: "${widget.operationData.orderQuantity} ${"unit".tr()}",
-              rightLabel: "producedQuantity".tr(),
-              rightValue: "${widget.operationData.totalProducedQuantity} ${"unit".tr()}",
-            ),
+          // required quantity + produced quantity
+          _InfoRow(
+            leftLabel: "requiredQuantity".tr(),
+            leftValue:
+                "${widget.operationData.orderQuantity} ${"unit".tr()}",
+            rightLabel: "producedQuantity".tr(),
+            rightValue:
+                "${widget.operationData.totalProducedQuantity} ${"unit".tr()}",
+          ),
 
-            const SizedBox(height: 12),
-            OperationProgressBar(progress: progress, style: style),
-          ],
-        ),
-      
+          const SizedBox(height: 12),
+
+          // scraps (styled like others)
+          _InfoRow(
+            leftLabel: "scrapQuantity".tr(),
+            leftValue:
+                "${widget.operationData.scrapQuantity} ${"unit".tr()}",
+            rightLabel: "",
+            rightValue: "",
+          ),
+
+          const SizedBox(height: 12),
+
+          OperationProgressBar(progress: progress, style: style),
+        ],
+      ),
     );
   }
 }
@@ -104,13 +118,15 @@ class _InfoRow extends StatelessWidget {
             Expanded(
               child: Text(
                 leftLabel,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style:
+                    const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
             ),
             Expanded(
               child: Text(
                 rightLabel,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style:
+                    const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
             ),
           ],
