@@ -47,19 +47,24 @@ table 50112 "MES Operation Scrap"
             TableRelation = "MES User Execution Interaction"."User Id";
             DataClassification = CustomerContent;
         }
+// new field for the radio buttons 
+        field(8; "Material Id"; Code[20])
+        {
+            DataClassification = CustomerContent;
+        }
 
-        field(8; "Declared At"; DateTime)
+        field(9; "Declared At"; DateTime)
         {
             DataClassification = SystemMetadata;
         }
 
-        field(9; "Declared By"; Code[50])
+        field(10; "Declared By"; Code[50])
         {
             Caption = 'Declared By';
             TableRelation = "MES User Execution Interaction"."User Id";
             DataClassification = CustomerContent;
         }
-        
+
     }
 
     keys

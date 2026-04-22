@@ -170,7 +170,8 @@ codeunit 50133 "MES Machine Insert"
        description: Text;
        quantity: Decimal;
        operatorId: Code[50];
-       declaredById: Code[50]
+       declaredById: Code[50];
+       materialId: Code[20]
    )
     var
         MESExecution: Record "MES Operation Execution";
@@ -188,6 +189,7 @@ codeunit 50133 "MES Machine Insert"
         MESScrap."scrap notes" := CopyStr(description, 1, 256);
         MESScrap."Operator Id" := operatorId;
         MESScrap."Declared By" := declaredById;
+        MESScrap."Material Id" := materialId;
 
         if scrapCode <> '' then
             if ScrapRec.Get(scrapCode) then
@@ -195,19 +197,10 @@ codeunit 50133 "MES Machine Insert"
 
         MESScrap.Insert(true);
 
-        EnsureUserExecutionInteraction(executionId, operatorId);
-        EnsureUserExecutionInteraction(executionId, declaredById);
-        GetLatestProgression(executionId, MESOperationProgress);
+        // EnsureUserExecutionInteraction(executionId, operatorId);
+        // EnsureUserExecutionInteraction(executionId, declaredById);
+        // GetLatestProgression(executionId, MESOperationProgress);
 
-        // Progression row that carries the scrap delta without changing produced quantity
-        NewMESOperationProgress.Init();
-        NewMESOperationProgress."Execution Id" := executionId;
-        NewMESOperationProgress."Operator Id" := operatorId;
-        NewMESOperationProgress."Declared By" := declaredById;
-        NewMESOperationProgress."Cycle Quantity" := 0;
-        NewMESOperationProgress."Scrap Quantity" := quantity;
-        NewMESOperationProgress."Total Produced Quantity" := MESOperationProgress."Total Produced Quantity";
-        NewMESOperationProgress.Insert(true);
     end;
 
     // ──────────────────────────────────────────────

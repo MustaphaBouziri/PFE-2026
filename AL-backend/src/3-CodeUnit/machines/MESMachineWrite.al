@@ -258,7 +258,8 @@ codeunit 50132 "MES Machine Write"
        scrapCode: Code[10];
        quantity: Decimal;
        operatorId: Code[50];
-       declaredById: Code[50]
+       declaredById: Code[50];
+       materialId: Code[20]
    ): Text
     var
         ResultJson: JsonObject;
@@ -269,7 +270,7 @@ codeunit 50132 "MES Machine Write"
         ClearLastError();
 
         if MachineValidation.TryDeclareScrap(executionId, scrapCode, quantity) then begin
-            MachineInsert.InsertScrapRecord(executionId, scrapCode, description, quantity, operatorId, declaredById);
+            MachineInsert.InsertScrapRecord(executionId, scrapCode, description, quantity, operatorId, declaredById,materialId);
             ResultJson.Add('value', true);
         end else begin
             ResultJson.Add('value', false);
