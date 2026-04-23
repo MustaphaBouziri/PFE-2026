@@ -38,11 +38,13 @@ class MesUserService {
   }
 
   Future<bool> createMesUser({
+    required String token,
     required String employeeId,
     required int roleInt,
     required List<String> workCenterList,
   }) async {
-    final response = await HttpClient.post(AppConstants.AdminCreateUser, {
+    final response = await HttpClient.post(AppConstants.adminCreateUser, {
+      'token': token,
       'userId': employeeId,
       'employeeId': employeeId,
       'roleInt': roleInt,
@@ -68,7 +70,7 @@ class MesUserService {
     required int newRoleInt,
     required List<String> workCenterList,
   }) async {
-    final response = await HttpClient.post(AppConstants.AdminChangeUserRole, {
+    final response = await HttpClient.post(AppConstants.adminChangeUserRole, {
       'token': token,
       'targetUserId': targetUserId,
       'newRoleInt': newRoleInt,

@@ -1,18 +1,12 @@
 class AppConstants {
   static const String host = 'http://localhost:3000/api';
 
-  static const String instance = 'BC210';
-  static const String companyId = '9e31f41c-e73a-ed11-bbab-000d3a21ffa5';
-
   static const Map<String, String> jsonHeaders = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
 
-  static const String _odataBase = '$host/$instance/ODataV4';
-  static const String _apiBase = '$host/$instance/api/yourcompany/v1/v1.0';
-  static const String _company = 'company=$companyId';
-  static const String _webServiceBase = '$_odataBase/MESWebService_';
+  static const String _base = '$host/';
 
   // ── Dev token ──────────────────────────────────────────────────────────────
   // Set to one of the fixed GUIDs from the MES API Debug page to bypass login.
@@ -22,82 +16,48 @@ class AppConstants {
   //  "adminToken":"DE000000-0000-0000-0000-000000000003"
   // }
   // Set back to null before committing.
-  static const String? devToken = 'DE000000-0000-0000-0000-000000000002';
+  //static const String? devToken = 'DE000000-0000-0000-0000-000000000003';
+  static const String? devToken = null;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
-  static const String loginUrl = '${_webServiceBase}Login?$_company';
-  static const String meUrl = '${_webServiceBase}Me?$_company';
-  static const String changePasswordUrl =
-      '${_webServiceBase}ChangePassword?$_company';
-  static const String logoutUrl = '${_webServiceBase}Logout?$_company';
-  static const String adminSetPasswordUrl =
-      '${_webServiceBase}AdminSetPassword?$_company';
+  static const String loginUrl            = '${_base}Login';
+  static const String meUrl               = '${_base}Me';
+  static const String changePasswordUrl   = '${_base}ChangePassword';
+  static const String logoutUrl           = '${_base}Logout';
+  static const String adminSetPasswordUrl = '${_base}AdminSetPassword';
 
   // ── Read ───────────────────────────────────────────────────────────────────
-  static const String fetchMachinesUrl =
-      '${_webServiceBase}FetchMachines?$_company';
-  static const String getMachineOrdersUrl =
-      '${_webServiceBase}getMachineOrders?$_company';
-  static const String fetchOngoingOperationsState =
-      '${_webServiceBase}fetchOngoingOperationsState?$_company';
-  static const String fetchOperationsHistory =
-      '${_webServiceBase}fetchOperationsHistory?$_company';
-  static const String fetchOperationLiveData =
-      '${_webServiceBase}fetchOperationLiveData?$_company';
-  static const String fetchProductionCycles =
-      '${_webServiceBase}fetchProductionCycles?$_company';
-  static const String fetchBom = '${_webServiceBase}fetchBom?$_company';
-  static const String fetchAllItemBarcodes =
-      '${_webServiceBase}fetchAllItemBarcodes?$_company';
-
-  static const String fetchResolveBarcode =
-      '${_webServiceBase}resolveBarcode?$_company';
+  static const String fetchMachinesUrl            = '${_base}FetchMachines';
+  static const String getMachineOrdersUrl         = '${_base}getMachineOrders';
+  static const String fetchOngoingOperationsState = '${_base}fetchOngoingOperationsState';
+  static const String fetchOperationsHistory      = '${_base}fetchOperationsHistory';
+  static const String fetchOperationLiveData      = '${_base}fetchOperationLiveData';
+  static const String fetchProductionCycles       = '${_base}fetchProductionCycles';
+  static const String fetchBom                    = '${_base}fetchBom';
+  static const String fetchAllItemBarcodes        = '${_base}fetchAllItemBarcodes';
+  static const String fetchResolveBarcode         = '${_base}resolveBarcode';
 
   // ── Write (all require token + onBehalfOfUserId in the request body) ───────
-  static const String startOperation =
-      '${_webServiceBase}startOperation?$_company';
-  static const String declareProduction =
-      '${_webServiceBase}declareProduction?$_company';
-  static const String finishOperationUrl =
-      '${_webServiceBase}finishOperation?$_company';
-  static const String cancelOperationUrl =
-      '${_webServiceBase}cancelOperation?$_company';
-  static const String pauseOperationUrl =
-      '${_webServiceBase}pauseOperation?$_company';
-  static const String resumeOperationUrl =
-      '${_webServiceBase}resumeOperation?$_company';
-  static const String declareScrapUrl =
-      '${_webServiceBase}declareScrap?$_company';
-  static const String insertScans = '${_webServiceBase}insertScans?$_company';
+  static const String startOperation     = '${_base}startOperation';
+  static const String declareProduction  = '${_base}declareProduction';
+  static const String finishOperationUrl = '${_base}finishOperation';
+  static const String cancelOperationUrl = '${_base}cancelOperation';
+  static const String pauseOperationUrl  = '${_base}pauseOperation';
+  static const String resumeOperationUrl = '${_base}resumeOperation';
+  static const String declareScrapUrl    = '${_base}declareScrap';
+  static const String insertScans        = '${_base}insertScans';
 
   // ── Admin ──────────────────────────────────────────────────────────────────
-  static String get scrapCodesUrl =>
-      '$_apiBase/companies($companyId)/scrapCodes';
-
-  static String get employeesUrl => '$_apiBase/companies($companyId)/employees';
-
-  static String get workCentersUrl =>
-      '$_apiBase/companies($companyId)/workCenters';
-
-  static String get AdminCreateUser =>
-      '${_webServiceBase}AdminCreateUser?$_company';
-
-  static String get fetchAllMESUsers =>
-      '${_webServiceBase}fetchAllMESUsers?$_company';
-
-  static String get fetchMESUsersByWC =>
-      '${_webServiceBase}fetchMESUsersByWC?$_company';
+  static const String scrapCodesUrl     = '${_base}scrapCodes';
+  static const String employeesUrl      = '${_base}employees';
+  static const String workCentersUrl    = '${_base}workCenters';
+  static const String adminCreateUser   = '${_base}AdminCreateUser';
+  static const String fetchAllMESUsers  = '${_base}fetchAllMESUsers';
+  static const String fetchMESUsersByWC = '${_base}fetchMESUsersByWC';
 
   // toggle active status of a user
-  static String get toggleUserActiveStatus =>
-      '${_webServiceBase}AdminSetActive?$_company';
-
-  static String get fetchActivityLog =>
-      '${_webServiceBase}fetchActivityLog?$_company';
-
-  static String get fetchMachineDashboard =>
-      '${_webServiceBase}fetchMachineDashboard?$_company';
-
-  static String get AdminChangeUserRole =>
-      '${_webServiceBase}AdminChangeUserRole?$_company';
+  static const String toggleUserActiveStatus = '${_base}AdminSetActive';
+  static const String fetchActivityLog       = '${_base}fetchActivityLog';
+  static const String fetchMachineDashboard  = '${_base}fetchMachineDashboard';
+  static const String adminChangeUserRole    = '${_base}AdminChangeUserRole';
 }

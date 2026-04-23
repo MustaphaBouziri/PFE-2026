@@ -11,7 +11,26 @@
  */
 
 const { spawn } = require("child_process");
-const { BC_HOST, BC_TIMEOUT_MS } = require("./config");
+const { BC_HOST, BC_TIMEOUT_MS, odataBase, apiBase, webServiceBase, companyParam, companyId } = require("./config");
+
+// ─── Endpoint mappings ───────────────────────────────────────────────────────
+const webServiceEndpoints = new Set([
+  'Login', 'Me', 'ChangePassword', 'Logout', 'AdminSetPassword',
+  'FetchMachines', 'getMachineOrders', 'fetchOngoingOperationsState',
+  'fetchOperationsHistory', 'fetchOperationLiveData', 'fetchProductionCycles',
+  'fetchBom', 'fetchAllItemBarcodes', 'resolveBarcode',
+  'startOperation', 'declareProduction', 'finishOperation', 'cancelOperation',
+  'pauseOperation', 'resumeOperation', 'declareScrap', 'insertScans',
+  'AdminCreateUser', 'fetchAllMESUsers', 'fetchMESUsersByWC',
+  'AdminSetActive', 'fetchActivityLog', 'fetchMachineDashboard',
+  'AdminChangeUserRole'
+]);
+
+const apiBaseEndpoints = {
+  scrapCodes: 'scrapCodes',
+  employees: 'employees',
+  workCenters: 'workCenters',
+};
 
 // ─── Header filtering ─────────────────────────────────────────────────────────
 const HOP_BY_HOP = new Set([
@@ -39,6 +58,16 @@ const SKIP_RESPONSE = new Set([
 ]);
 
 function buildTargetUrl(req) {
+  const pathParts = req.path.split('/');
+  if (pathParts.length === 3 && pathParts[1] === 'api') {
+    const endpoint = pathParts[2];
+    if (webServiceEndpoints.has(endpoint)) {
+      return `${webServiceBase}${endpoint}?${companyParam}`;
+    } else if (apiBaseEndpoints[endpoint]) {
+      return `${apiBase}/companies(${companyId})/${apiBaseEndpoints[endpoint]}`;
+    }
+  }
+  // Fallback: strip /api and forward as before
   return `${BC_HOST}${req.originalUrl.replace(/^\/api/, "")}`;
 }
 
