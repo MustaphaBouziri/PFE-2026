@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../domain/machines/providers/machineOrders_provider.dart';
 import '../../tutorials/machine_detail_tabs_tutorial.dart';
 import '../../widgets/navBar.dart';
-import 'machine_consumption/machineConsumptionPage.dart';
 import 'machine_history/machineHistoryPage.dart';
 import 'machines_orders/machineOrderPage.dart';
 import 'machine_production/ordersProgressionPage.dart';

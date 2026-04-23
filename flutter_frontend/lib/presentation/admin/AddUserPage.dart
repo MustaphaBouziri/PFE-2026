@@ -108,6 +108,9 @@ class _AddUserPageState extends State<AddUserPage> {
     final provider = context.read<MesUserProvider>();
     final authProvider = context.watch<AuthProvider>();
 
+    // get currently loged in user id
+    final currentUserId = authProvider.userData?['userId'] as String? ?? '';
+
     return StreamBuilder<List<MesUser>>(
       stream: provider.fetchMesUsers(),
       builder: (context, snapshot) {
@@ -283,199 +286,218 @@ class _AddUserPageState extends State<AddUserPage> {
                           final user = pageUsers[index];
                           final bool hovered = _hoveredIndex == index;
 
+                          // Check if this is the logged-in user
+                          final isCurrentUser = user.userId == currentUserId;
+
                           return MouseRegion(
                             onEnter: (_) =>
                                 setState(() => _hoveredIndex = index),
                             onExit: (_) => setState(() => _hoveredIndex = null),
-                            child: GestureDetector(
-                              onTap: user.isActive
-                                  ? () => showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          GeneratePasswordDialog(
-                                            userId: user.userId,
-                                            authId: user.authId,
+
+                            child: Container(
+                              color: !user.isActive
+                                  ? const Color(0xFFF1F5F9)
+                                  : hovered
+                                  ? const Color(
+                                      0xFFF8FAFC,
+                                    ) // hover only if active
+                                  : Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Opacity(
+                                opacity: user.isActive ? 1.0 : 0.5,
+                                child: Row(
+                                  children: [
+                                    // user
+                                    Expanded(
+                                      flex: 3,
+                                      child: Row(
+                                        children: [
+                                          EmployeeAvatar(
+                                            fallbackLabel: _initials(
+                                              user.fullName,
+                                            ),
+                                            radius: 18,
                                           ),
-                                    )
-                                  : null,
-                              child: Container(
-                                color: !user.isActive
-                                    ? const Color(0xFFF1F5F9)
-                                    : hovered
-                                    ? const Color(
-                                        0xFFF8FAFC,
-                                      ) // hover only if active
-                                    : Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Opacity(
-                                  opacity: user.isActive ? 1.0 : 0.5,
-                                  child: Row(
-                                    children: [
-                                      // user
-                                      Expanded(
-                                        flex: 3,
-                                        child: Row(
-                                          children: [
-                                            EmployeeAvatar(
-                                              fallbackLabel: _initials(
-                                                user.fullName,
-                                              ),
-                                              radius: 18,
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    user.fullName,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 13,
-                                                    ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  user.fullName,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 13,
                                                   ),
-                                                  Text(
-                                                    user.email,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 11,
-                                                    ),
+                                                ),
+                                                Text(
+                                                  user.email,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 11,
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // role
-                                      MesListRow(
-                                        label: user.role,
-                                        flex: 2,
-                                        color: _roleColor(
-                                          user.role,
-                                          user.isActive,
-                                        ),
-                                        bg: _roleBg(user.role, user.isActive),
-                                      ),
-
-                                      // department
-                                      MesListRow(
-                                        label: user.workCenterNameTextFormat,
-                                        flex: 2,
-                                        isActive: user.isActive,
-                                      ),
-
-                                      // status
-                                      MesListRow(
-                                        label: user.isOnline
-                                            ? 'Online'
-                                            : 'Offline',
-                                        flex: 2,
-                                        color: user.isOnline
-                                            ? const Color(0xFF16A34A)
-                                            : const Color(0xFF64748B),
-                                        bg: user.isOnline
-                                            ? const Color(0xFFF0FDF4)
-                                            : const Color(0xFFF1F5F9),
-                                      ),
-
-                                      // last active
-                                      MesListRow(
-                                        label: user.lastSeenAt,
-                                        flex: 2,
-                                        textStyle: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF64748B),
-                                        ),
-                                        isActive: user.isActive,
-                                      ),
-
-                                      // actions
-                                      SizedBox(
-                                        width: 60,
-                                        child: PopupMenuButton<String>(
-                                          color: Colors.white,
-                                          icon: const Icon(
-                                            Icons.more_vert,
-                                            size: 20,
-                                            color: Color(0xFF64748B),
                                           ),
-                                          onSelected: (val) {
-                                            if (val == 'activate') {
-                                              context
-                                                  .read<AuthProvider>()
-                                                  .toggleUserActiveStatus(
-                                                    user.userId,
-                                                    true,
-                                                  )
-                                                  .then(
-                                                    (_) => context
-                                                        .read<MesUserProvider>()
-                                                        .triggerRefresh(),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // role
+                                    MesListRow(
+                                      label: user.role,
+                                      flex: 2,
+                                      color: _roleColor(
+                                        user.role,
+                                        user.isActive,
+                                      ),
+                                      bg: _roleBg(user.role, user.isActive),
+                                    ),
+
+                                    // department
+                                    MesListRow(
+                                      label: user.workCenterNameTextFormat,
+                                      flex: 2,
+                                      isActive: user.isActive,
+                                    ),
+
+                                    // status
+                                    MesListRow(
+                                      label: user.isOnline
+                                          ? 'Online'
+                                          : 'Offline',
+                                      flex: 2,
+                                      color: user.isOnline
+                                          ? const Color(0xFF16A34A)
+                                          : const Color(0xFF64748B),
+                                      bg: user.isOnline
+                                          ? const Color(0xFFF0FDF4)
+                                          : const Color(0xFFF1F5F9),
+                                    ),
+
+                                    // last active
+                                    MesListRow(
+                                      label: user.lastSeenAt,
+                                      flex: 2,
+                                      textStyle: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      isActive: user.isActive,
+                                    ),
+
+                                    // actions — hide for logged-in user
+                                    SizedBox(
+                                      width: 60,
+                                      child: isCurrentUser
+                                          ? const SizedBox.shrink() // Hide action icon for current user /if i dont do it there will be layout shift
+                                          : PopupMenuButton<String>(
+                                              color: Colors.white,
+                                              icon: const Icon(
+                                                Icons.more_vert,
+                                                size: 20,
+                                                color: Color(0xFF64748B),
+                                              ),
+                                              onSelected: (val) {
+                                                if (val == 'activate') {
+                                                  context
+                                                      .read<AuthProvider>()
+                                                      .toggleUserActiveStatus(
+                                                        user.userId,
+                                                        true,
+                                                      )
+                                                      .then(
+                                                        (_) => context
+                                                            .read<
+                                                              MesUserProvider
+                                                            >()
+                                                            .triggerRefresh(),
+                                                      );
+                                                } else if (val ==
+                                                    'deactivate') {
+                                                  context
+                                                      .read<AuthProvider>()
+                                                      .toggleUserActiveStatus(
+                                                        user.userId,
+                                                        false,
+                                                      )
+                                                      .then(
+                                                        (_) => context
+                                                            .read<
+                                                              MesUserProvider
+                                                            >()
+                                                            .triggerRefresh(),
+                                                      );
+                                                } else if (val ==
+                                                    'editRoleDepartement') {
+                                                  _openEditRoleDepartement(
+                                                    context,
+                                                    user,
                                                   );
-                                            } else if (val == 'deactivate') {
-                                              context
-                                                  .read<AuthProvider>()
-                                                  .toggleUserActiveStatus(
-                                                    user.userId,
-                                                    false,
-                                                  )
-                                                  .then(
-                                                    (_) => context
-                                                        .read<MesUserProvider>()
-                                                        .triggerRefresh(),
+                                                } else if (val ==
+                                                        'generatePassword' &&
+                                                    user.isActive) {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        GeneratePasswordDialog(
+                                                          userId: user.userId,
+                                                          authId: user.authId,
+                                                        ),
                                                   );
-                                            } else if (val ==
-                                                'editRoleDepartement') {
-                                              _openEditRoleDepartement(
-                                                context,
-                                                user,
-                                              );
-                                            }
-                                          },
-                                          itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'editRoleDepartement',
-                                              child: Text('changeRole'.tr()),
-                                            ),
-                                            user.isActive
-                                                ? PopupMenuItem(
-                                                    value: 'deactivate',
+                                                }
+                                              },
+                                              itemBuilder: (context) => [
+                                                PopupMenuItem(
+                                                  value: 'editRoleDepartement',
+                                                  child: Text(
+                                                    'changeRole'.tr(),
+                                                  ),
+                                                ),
+                                                if (user.isActive)
+                                                  PopupMenuItem(
+                                                    value: 'generatePassword',
                                                     child: Text(
-                                                      'deactivate'.tr(),
-                                                      style: TextStyle(
-                                                        color: Color(
-                                                          0xFFDC2626,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                : PopupMenuItem(
-                                                    value: 'activate',
-                                                    child: Text(
-                                                      'activate'.tr(),
-                                                      style: TextStyle(
-                                                        color: Color(
-                                                          0xFF16A34A,
-                                                        ),
-                                                      ),
+                                                      'generatePassword'.tr(),
                                                     ),
                                                   ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                                if (!isCurrentUser)
+                                                  user.isActive
+                                                      ? PopupMenuItem(
+                                                          value: 'deactivate',
+                                                          child: Text(
+                                                            'deactivate'.tr(),
+                                                            style: TextStyle(
+                                                              color: Color(
+                                                                0xFFDC2626,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : PopupMenuItem(
+                                                          value: 'activate',
+                                                          child: Text(
+                                                            'activate'.tr(),
+                                                            style: TextStyle(
+                                                              color: Color(
+                                                                0xFF16A34A,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                              ],
+                                            ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

@@ -29,6 +29,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
   // only supervisor can select multiple work centers
   // operator gets one, admin gets none
   bool get isMultiSelect => selectedRole == 'Supervisor';
+  bool get _showWorkCenters => selectedRole != 'Admin'; // return true if not an admin  is admin !=admin? false ? dont show it  
 
   final TextEditingController searchController = TextEditingController();
 
@@ -265,6 +266,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     ),
 
                     const SizedBox(height: 20),
+                    if (_showWorkCenters) ...[
 
                     // work center selection
                     Text(
@@ -340,6 +342,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                         },
                       ),
                     ),
+                    ],
 
                     const SizedBox(height: 20),
 
@@ -349,18 +352,36 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if (selectedEmployeeIndex == null ||
-                              selectedWorkCenterIds.isEmpty ||
-                              selectedRoleIndex == null) {
+                          if(selectedEmployeeId == null){
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
-                                  'pleaseSelectEmployeeRoleWorkCenter'.tr(),
-                                ),
+                                content: Text('pleaseSelectEmployee'.tr()),
                               ),
                             );
                             return;
+
                           }
+                          if(selectedRole == null){
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('pleaseSelectRole'.tr()),
+                              ),
+                            );
+                            return;
+
+                          }
+                          
+                          if (selectedRole != 'Admin' && selectedWorkCenterIds.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('pleaseSelectWorkCenter'.tr()),
+                              ),
+                            );
+                            return;
+                            
+                          }
+                          
+                          
                           final success = await mesUserProvider.addUser(
                             employeeId: selectedEmployeeId!,
                             roleInt: selectedRoleIndex!,

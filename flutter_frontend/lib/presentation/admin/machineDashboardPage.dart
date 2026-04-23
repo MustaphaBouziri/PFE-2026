@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/widgets/MachineCard.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
@@ -17,12 +17,16 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
   final TextEditingController searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LogProvider>().fetchMachineDashboard();
-    });
-  }
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final auth = context.read<AuthProvider>();
+    final workCenters = (auth.userData?['workCenters'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .toList() ?? <String>[];
+    context.read<LogProvider>().fetchMachineDashboard(workCenters);
+  });
+}
 
   @override
   Widget build(BuildContext context) {

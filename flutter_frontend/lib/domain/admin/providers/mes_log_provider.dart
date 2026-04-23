@@ -36,19 +36,15 @@ class LogProvider with ChangeNotifier, AsyncStateMixin {
   }
 AuthProvider? _authProvider;
 
+
 void setAuthProvider(AuthProvider auth) {
   _authProvider = auth;
 }
-  Future<void> fetchMachineDashboard() async {
-  final rawList = _authProvider?.userData?['workCenters'];//rawList = ["WC01", "WC02"];
-
-  final workCenterList = rawList != null
-      ? List<String>.from(rawList)//casting dynamic list to List<String> because jsonDecode returns List<dynamic> and our service expects List<String>
-      : <String>[];
-
+ Future<void> fetchMachineDashboard([List<String>? workCenterList]) async {
+  final list = workCenterList ?? <String>[];
   await runAsync(() async {
     machineDashboardList =
-        await _service.fetchMachineDashboard(selectedHours, workCenterList);
+        await _service.fetchMachineDashboard(selectedHours, list);
   });
 }
 
