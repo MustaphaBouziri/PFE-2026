@@ -41,7 +41,9 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
     required int roleInt,
     required List<String> workCenterList,
   }) async {
+    final token = await _apiService.getToken() ?? '';
     final result = await runAsync(() => _service.createMesUser(
+      token: token,
       employeeId: employeeId,
       roleInt: roleInt,
       workCenterList: workCenterList,

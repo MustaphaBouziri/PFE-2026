@@ -23,10 +23,10 @@ codeunit 50115 "MES Setup"
 
     trigger OnRun()
     begin
-        CreateDefaultAdmin();
+        CreateDefaultAccount();
     end;
 
-    local procedure CreateDefaultAdmin()
+    local procedure CreateDefaultAccount()
     var
         AuthMgt: Codeunit "MES Auth Mgt";
         U: Record "MES User";
@@ -47,6 +47,18 @@ codeunit 50115 "MES Setup"
 
         // Sets the temporary password and marks Need To Change Pw = true.
         AuthMgt.SetPassword(AdminId, TempPassword, true);
+
+        // Admin role requires Work Center No. to be blank.
+        AuthMgt.CreateUser(
+            'AI',                          // User Id      
+            'AC',                             // Employee ID 
+            'AUTH-ADMIN01',                   // Auth ID      — external identity ref
+            Enum::"MES User Role"::Admin     // Role         — full admin access
+            );                              // Work Center  — not assigned to one WC
+
+        // Sets the temporary password and marks Need To Change Pw = true.
+        AuthMgt.SetPassword(AdminId, TempPassword, true);
+
 
         Message('MES Setup complete. Login as "admin" and change the password immediately.');
     end;

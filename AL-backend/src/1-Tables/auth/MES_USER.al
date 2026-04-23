@@ -257,7 +257,8 @@ table 50101 "MES User"
 
         // Auth ID is assigned automatically — never set by the caller.
         // See GenerateUniqueAuthId() for format details and collision handling.
-        "Auth ID" := GenerateUniqueAuthId();
+        if "Auth ID" = '' then
+            "Auth ID" := GenerateUniqueAuthId();
 
         "Is Active" := true;
         "Need To Change Pw" := true;
