@@ -89,20 +89,27 @@ class _MachineMainPageState extends State<MachineMainPage> {
             },
           ),
           Expanded(
-            child: IndexedStack(
-              index: selectedIndex,
-              children: [
-                Machineorderpage(
-                  machineNo: widget.machineNo,
-                  onSwitchToProgress: _handleStartOrderSuccess,
-                ),
-                OrdersProgressionPage(machineNo: widget.machineNo),
-                MachineHistoryPage(machineNo: widget.machineNo),
-              ],
-            ),
+
+            child: _buildTabContent(selectedIndex),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent(int index) {
+    switch (index) {
+      case 0:
+        return Machineorderpage(
+          machineNo: widget.machineNo,
+          onSwitchToProgress: _handleStartOrderSuccess,
+        );
+      case 1:
+        return OrdersProgressionPage(machineNo: widget.machineNo);
+      case 2:
+        return MachineHistoryPage(machineNo: widget.machineNo);
+      default:
+        return const Center(child: Text('Unknown tab'));
+    }
   }
 }

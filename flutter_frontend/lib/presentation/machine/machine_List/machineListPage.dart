@@ -134,9 +134,14 @@ class _MachinelistpageState extends State<Machinelistpage> {
                 ),
                 Text(
                   role,
-                  style: TextStyle(fontSize: 11,fontWeight: FontWeight.bold, color: role=='Supervisor'? Color(0xFF16A34A):Color(0xFF2563EB)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: role == 'Supervisor'
+                        ? Color(0xFF16A34A)
+                        : Color(0xFF2563EB),
+                  ),
                 ),
-                
               ],
             ),
             const Spacer(),
@@ -149,8 +154,18 @@ class _MachinelistpageState extends State<Machinelistpage> {
                   ),
                 );
               },
-              icon: const Icon(Icons.dashboard, size: 16,color: Color(0xFF0F172A),),
-              label: Text('machineDashboard'.tr(),style: TextStyle(color: Color(0xFF0F172A),fontWeight: FontWeight.bold),),
+              icon: const Icon(
+                Icons.dashboard,
+                size: 16,
+                color: Color(0xFF0F172A),
+              ),
+              label: Text(
+                'machineDashboard'.tr(),
+                style: TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -165,7 +180,13 @@ class _MachinelistpageState extends State<Machinelistpage> {
     if (workCenterIds == null || workCenterIds.isEmpty) {
       return Center(child: Text('noWorkCenterAssigned'.tr()));
     }
+// the new fix : basicaly its like saying am i currently looking at this page ? if no dont build the stream builder and just return an empty container
+    final isVisible = ModalRoute.of(context)?.isCurrent ?? false;
 
+    
+    if (!isVisible) {
+      return const SizedBox(); // why ? its an empty widget takes no space does nothing basicly like saying render nothing,
+    }
     return StreamBuilder<Map<String, List<MachineModel>>>(
       // KEY: the stream is now driven by the resolved list, not a hardcoded
       // constant.  A new StreamBuilder key forces a fresh subscription when
@@ -299,7 +320,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
                                         ? 2.5
                                         : constraints.maxWidth < 1400
                                         ? 1.5
-                                        : 2.0,//pc
+                                        : 2.0, //pc
                                   ),
                               itemBuilder: (context, index) {
                                 final isFirstVisibleCard =
