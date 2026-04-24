@@ -145,6 +145,7 @@ class _MachinelistpageState extends State<Machinelistpage> {
               ],
             ),
             const Spacer(),
+            role.toLowerCase() =='operator' ? const SizedBox() :
             TextButton.icon(
               onPressed: () {
                 Navigator.push(

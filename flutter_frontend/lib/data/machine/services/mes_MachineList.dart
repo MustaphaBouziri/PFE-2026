@@ -55,7 +55,7 @@ class MESMachineListService {
       } catch (e) {
         yield {};
       }
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(const Duration(seconds: 20));
     }
   }
 }
