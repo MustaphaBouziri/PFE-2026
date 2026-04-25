@@ -79,9 +79,10 @@ void initState() {
           ? Center(child: Text(provider.errorMessage!))
           : LayoutBuilder(
               builder: (context, constraints) {
+              
                 final crossCount = constraints.maxWidth < 600
                     ? 1
-                    : constraints.maxWidth < 1024
+                    : constraints.maxWidth < 1366
                     ? 2
                     : 3;
                 return Column(
@@ -102,7 +103,11 @@ void initState() {
                           crossAxisCount: crossCount,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 1.6,
+                          childAspectRatio: constraints.maxWidth < 900
+                              ? 1.4
+                              : constraints.maxWidth < 1366
+                                  ? 2
+                                  : 1.7,
                         ),
                         itemCount: filteredMachine.length,
                         itemBuilder: (context, index) {

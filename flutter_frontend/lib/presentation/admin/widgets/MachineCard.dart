@@ -100,10 +100,9 @@ class AdminMachineCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    infoRow(
-                      'operationsPerformed'.tr(),
-                      machine.operationCount.toString(),
-                    ),
+                    infoRow('operation Finished', machine.operationFinished.toString()),
+                    infoRow('operation Cancelled', machine.operationCancelled.toString()),
+
                     infoRow(
                       'quantityProduced'.tr(),
                       machine.totalProduced.toStringAsFixed(0),

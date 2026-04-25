@@ -9,10 +9,9 @@ import '../../shared/http_response_parser.dart';
 
 class LogService {
   Future<List<ActivityLogModel>> fetchActivityLog(int hoursBack) async {
-    final response = await HttpClient.post(
-        AppConstants.fetchActivityLog,
-        {'hoursBack': hoursBack.toDouble()}
-    );
+    final response = await HttpClient.post(AppConstants.fetchActivityLog, {
+      'hoursBack': hoursBack.toDouble(),
+    });
 
     final list = HttpResponseParser.parseList(response, label: 'activity log');
     return list.map((e) => ActivityLogModel.fromJson(e)).toList();
@@ -21,20 +20,18 @@ class LogService {
   Future<List<MachineDashboardModel>> fetchMachineDashboard(
     int hoursBack,
     List<String> workCenterList,
-    
   ) async {
-    final response = await HttpClient.post(
-        AppConstants.fetchMachineDashboard,
-        {'hoursBack':  hoursBack.toDouble(),
-        // simple string array ["100","200"]
-      'workCenterNoJson': jsonEncode(workCenterList),},
-      
-    );
-print(response.body);
+    final response = await HttpClient.post(AppConstants.fetchMachineDashboard, {
+      'hoursBack': hoursBack.toDouble(),
+      // simple string array ["100","200"]
+      'workCenterNoJson': jsonEncode(workCenterList),
+    });
+    print(response.body);
     final list = HttpResponseParser.parseList(
       response,
       label: 'machine dashboard',
     );
+    print(response.body);
     return list.map((e) => MachineDashboardModel.fromJson(e)).toList();
   }
 }

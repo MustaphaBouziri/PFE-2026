@@ -91,7 +91,8 @@ class MachineDashboardModel {
   final String machineNo;
   final String machineName;
   final String workCenterNo;
-  final int operationCount;
+  final int operationFinished;
+  final int operationCancelled; 
   final double uptimePercent;
   final double runningMinutes;
   final double totalProduced;
@@ -101,7 +102,8 @@ class MachineDashboardModel {
     required this.machineNo,
     required this.machineName,
     required this.workCenterNo,
-    required this.operationCount,
+    required this.operationFinished,
+    required this.operationCancelled,
     required this.uptimePercent,
     required this.runningMinutes,
     required this.totalProduced,
@@ -113,7 +115,8 @@ class MachineDashboardModel {
       machineNo: json['machineNo'] ?? '',
       machineName: json['machineName'] ?? '',
       workCenterNo: json['workCenterNo'] ?? '',
-      operationCount: (json['operationCount'] as num? ?? 0).toInt(),
+      operationFinished: (json['operationFinished'] as num? ?? 0).toInt(),
+      operationCancelled: (json['operationCancelled'] as num? ?? 0).toInt(),
       uptimePercent: (json['uptimePercent'] as num? ?? 0).toDouble(),
       runningMinutes: (json['runningMinutes'] as num? ?? 0).toDouble(),
       totalProduced: (json['totalProduced'] as num? ?? 0).toDouble(),
