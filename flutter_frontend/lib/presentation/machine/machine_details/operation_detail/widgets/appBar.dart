@@ -28,7 +28,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'orderLabel'.tr() + '${operationData.prodOrderNo}',
+                '${'orderLabel'.tr()}${operationData.prodOrderNo}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -36,7 +36,7 @@ class OperationAppbar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               Text(
-                'operationLabel'.tr() + '${operationData.operationNo}',
+                '${'operationLabel'.tr()}${operationData.operationNo}',
                 style: TextStyle(
                   fontSize: isPhone ? 13 : 11,
                   color: const Color(0xFF64748B),

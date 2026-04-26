@@ -6,11 +6,9 @@ import 'package:pfe_mes/presentation/machine/printLabelPage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
-import '../../../../../domain/auth/providers/auth_provider.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'declaireProductionDialog.dart';
 import 'declare_scrap_dialog.dart';
-import 'package:barcode/src/barcode.dart';
 
 class ActionButtonsContainer extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
@@ -73,8 +71,9 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
 
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _isEndLoading = false);
     }

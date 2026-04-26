@@ -26,12 +26,10 @@ class LogService {
       // simple string array ["100","200"]
       'workCenterNoJson': jsonEncode(workCenterList),
     });
-    print(response.body);
     final list = HttpResponseParser.parseList(
       response,
       label: 'machine dashboard',
     );
-    print(response.body);
     return list.map((e) => MachineDashboardModel.fromJson(e)).toList();
   }
 }
