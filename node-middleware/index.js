@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
 const corsOptions = require("./src/cors");
 const { forwardRequest } = require("./src/proxy");
 const config = require("./src/config");
@@ -10,10 +9,16 @@ const app = express();
 // 1. Trust proxy headers if behind nginx/load balancer
 if (config.NODE_ENV === "production") app.set("trust proxy", 1);
 
-// 2. Request logging (combined = Apache-style, good for grep)
-app.use(morgan(config.NODE_ENV === "development" ? "dev" : "combined"));
+// 2. Minimal request logger — only for routes NOT handled by the proxy
+//    (the proxy emits its own structured log lines)
+app.use((req, _res, next) => {
+  if (!req.path.startsWith("/api/")) {
+    console.log(`[http]  ${req.method.padEnd(6)} ${req.originalUrl}`);
+  }
+  next();
+});
 
-// 3. Parse JSON bodies (BC always sends/receives JSON)
+// 3. Parse JSON bodies
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false }));
 
@@ -29,8 +34,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// 6. Preflight handler — express/cors handles OPTIONS automatically,
-//    but this ensures 200 with no body for all preflight routes
+// 6. Preflight handler
 app.options("/api/{*path}", cors(corsOptions));
 
 // 7. THE MAIN ROUTE — forward everything to BC
@@ -44,7 +48,7 @@ app.use((req, res) => {
   });
 });
 
-// 9. Global error handler (catches synchronous throws)
+// 9. Global error handler
 app.use((err, req, res, _next) => {
   console.error("[error]", err.message);
   if (err.message.startsWith("CORS:")) {

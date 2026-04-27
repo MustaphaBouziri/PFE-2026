@@ -123,7 +123,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
 
       final activeToken = await _apiService.getToken() ?? '';
-      return await _apiService.AdminSetPassword(
+      return await _apiService.adminSetPassword(
         token: activeToken,
         userId: userId,
         newPassword: newPassword,
@@ -172,10 +172,10 @@ Uint8List? get profileImageBytes {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
-      //final String? rawToken = await _apiService.getToken() ?? '';
+      final String token = await _apiService.getToken() ?? '';
 
       final success = await _apiService.toggleUserActiveStatus(
-        token: "",
+        token: token,
         userId: userId,
         isActive: isActive,
       );

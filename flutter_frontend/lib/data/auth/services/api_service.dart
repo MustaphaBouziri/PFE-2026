@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/app_constants.dart';
@@ -92,7 +91,7 @@ class ApiService {
     }
   }
 
-  Future<bool> AdminSetPassword({
+  Future<bool> adminSetPassword({
     required String token,
     required String userId,
     required String newPassword,
@@ -107,6 +106,26 @@ class ApiService {
     throw Exception(
       'Failed to generate password: ${response.statusCode} ${response.body}',
     );
+  }
+
+  //toggle active / deactivate user
+  Future<bool> toggleUserActiveStatus({
+    required String token,
+    required String userId,
+    required bool isActive,
+  }) async {
+    final response = await HttpClient.post(
+      AppConstants.toggleUserActiveStatus,
+      {'token': token, 'userId': userId, 'isActive': isActive},
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception(
+        'Failed to toggle user status: ${response.statusCode} ${response.body}',
+      );
+    }
   }
 
   // ── Persistence ───────────────────────────────────────────────────────────
@@ -132,25 +151,5 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
-  }
-
-  //toggle active /diactivate user
-  Future<bool> toggleUserActiveStatus({
-    required String token,
-    required String userId,
-    required bool isActive,
-  }) async {
-    final response = await http.post(
-      Uri.parse(AppConstants.toggleUserActiveStatus),
-      headers: AppConstants.jsonHeaders,
-      body: jsonEncode({'token': "", 'userId': userId, 'isActive': isActive}),
-    );
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      throw Exception(
-        'Failed to toggle user status: ${response.statusCode} ${response.body}',
-      );
-    }
   }
 }

@@ -16,8 +16,8 @@ class AppConstants {
   //  "adminToken":"DE000000-0000-0000-0000-000000000003"
   // }
   // Set back to null before committing.
-  //static const String? devToken = 'DE000000-0000-0000-0000-000000000003';
-  static const String? devToken = null;
+  static const String? devToken = 'DE000000-0000-0000-0000-000000000001';
+  //static const String? devToken = null;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   static const String loginUrl            = '${_base}Login';

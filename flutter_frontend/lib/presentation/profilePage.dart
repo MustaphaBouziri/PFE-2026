@@ -4,6 +4,8 @@ import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
 import 'package:provider/provider.dart';
 
+import 'auth/Login/login_page.dart';
+
 class ProfilePage extends StatelessWidget {
 
 
@@ -89,7 +91,16 @@ class ProfilePage extends StatelessWidget {
                     title: 'logout',
                     icon: Icons.logout,
                     color: Colors.red,
-                    onTap: () {},
+                    onTap: () async {
+                      await auth.logout();
+
+                      if (!context.mounted) return;
+
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                            (route) => false,
+                      );
+                    },
                   ),
                 ],
               ),
