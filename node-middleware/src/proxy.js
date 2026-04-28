@@ -11,28 +11,65 @@
  */
 
 const { spawn } = require("child_process");
-const { BC_HOST, BC_TIMEOUT_MS, odataBase, apiBase, webServiceBase, companyParam, companyId } = require("./config");
+const {
+  BC_HOST,
+  BC_TIMEOUT_MS,
+  odataBase,
+  apiBase,
+  webServiceBase,
+  companyParam,
+  companyId,
+  BC_INSTANCE,
+} = require("./config");
 
-// ─── Endpoint mappings ───────────────────────────────────────────────────────
+// ─── Endpoint mappings ──────────────────────────────────────────────────────
 const webServiceEndpoints = new Set([
-  'Login', 'Me', 'ChangePassword', 'Logout', 'AdminSetPassword',
-  'FetchMachines', 'getMachineOrders', 'fetchOngoingOperationsState',
-  'fetchOperationsHistory', 'fetchOperationLiveData', 'fetchProductionCycles',
-  'fetchBom', 'fetchAllItemBarcodes', 'resolveBarcode',
-  'startOperation', 'declareProduction', 'finishOperation', 'cancelOperation',
-  'pauseOperation', 'resumeOperation', 'declareScrap', 'insertScans',
-  'AdminCreateUser', 'fetchAllMESUsers', 'fetchMESUsersByWC',
-  'AdminSetActive', 'fetchActivityLog', 'fetchMachineDashboard',
-  'AdminChangeUserRole'
+  "Login",
+  "Me",
+  "ChangePassword",
+  "Logout",
+  "AdminSetPassword",
+  "FetchMachines",
+  "getMachineOrders",
+  "fetchOngoingOperationsState",
+  "fetchOperationsHistory",
+  "fetchOperationLiveData",
+  "fetchProductionCycles",
+  "fetchBom",
+  "fetchAllItemBarcodes",
+  "resolveBarcode",
+  "startOperation",
+  "declareProduction",
+  "finishOperation",
+  "cancelOperation",
+  "pauseOperation",
+  "resumeOperation",
+  "declareScrap",
+  "insertScans",
+  "AdminCreateUser",
+  "fetchAllMESUsers",
+  "fetchMESUsersByWC",
+  "AdminSetActive",
+  "fetchActivityLog",
+  "fetchMachineDashboard",
+  "AdminChangeUserRole",
+  "fetchProductionOrders",
+  "fetchWorkCenterSummary",
+  "fetchOperatorSummary",
+  "fetchMyData",
+  "fetchScrapSummary",
+  "fetchDelayReport",
+  "fetchConsumptionSummary",
+  "fetchSupervisorOverview",
 ]);
 
 const apiBaseEndpoints = {
-  scrapCodes: 'scrapCodes',
-  employees: 'employees',
-  workCenters: 'workCenters',
+  scrapCodes: "scrapCodes",
+  employees: "employees",
+  workCenters: "workCenters",
 };
 
-// ─── Header filtering ─────────────────────────────────────────────────────────
+// ─── Header filtering ────────────────────────────────────────────────────────
 const HOP_BY_HOP = new Set([
   "connection",
   "keep-alive",
@@ -58,8 +95,8 @@ const SKIP_RESPONSE = new Set([
 ]);
 
 function buildTargetUrl(req) {
-  const pathParts = req.path.split('/');
-  if (pathParts.length === 3 && pathParts[1] === 'api') {
+  const pathParts = req.path.split("/");
+  if (pathParts.length === 3 && pathParts[1] === "api") {
     const endpoint = pathParts[2];
     if (webServiceEndpoints.has(endpoint)) {
       return `${webServiceBase}${endpoint}?${companyParam}`;
@@ -79,18 +116,54 @@ function sanitizeRequestHeaders(headers) {
   return out;
 }
 
-// ─── PowerShell runner ────────────────────────────────────────────────────────
-/**
- * Builds and executes a PowerShell script that:
- *  1. Creates an HttpClientHandler with UseDefaultCredentials = true
- *  2. Sends the request with all forwarded headers + body
- *  3. Prints a JSON envelope: { status, headers, bodyBase64 }
- *
- * Returns that parsed envelope.
- */
+// ─── Logging helpers ─────────────────────────────────────────────────────────
+// Derive a short host label from BC_HOST, e.g. "localhost:7048"
+const bcHostLabel = (() => {
+  try {
+    return new URL(BC_HOST).host;
+  } catch {
+    return BC_HOST;
+  }
+})();
+// Short company ID — first segment before the first dash
+const companyShort = companyId.split("-")[0];
+
+const STATUS_LABEL = (code) => {
+  if (code >= 500) return `ERR ${code}`;
+  if (code >= 400) return `BAD ${code}`;
+  if (code >= 300) return `RDR ${code}`;
+  return `OK  ${code}`;
+};
+
+function logContext() {
+  console.log(
+    `[proxy] ┌ BC instance : ${BC_INSTANCE}  host: ${bcHostLabel}  company: ${companyShort}…`,
+  );
+}
+
+function logRequest(method, endpoint, clientIp, clientPort) {
+  console.log(
+    `[proxy] │ ▶  ${clientIp}:${clientPort} → BC   ${method.padEnd(6)} ${endpoint}`,
+  );
+}
+
+function logResponse(
+  method,
+  endpoint,
+  status,
+  elapsedMs,
+  clientIp,
+  clientPort,
+) {
+  const label = STATUS_LABEL(status);
+  console.log(
+    `[proxy] └ ◀  BC → ${clientIp}:${clientPort}   ${label}    ${endpoint}   (${elapsedMs} ms)`,
+  );
+}
+
+// ─── PowerShell runner ───────────────────────────────────────────────────────
 function runPowerShell(psScript) {
   return new Promise((resolve, reject) => {
-    // -NoProfile -NonInteractive keeps startup fast
     const ps = spawn("powershell.exe", [
       "-NoProfile",
       "-NonInteractive",
@@ -114,7 +187,7 @@ function runPowerShell(psScript) {
           code: "ECONNABORTED",
         }),
       );
-    }, BC_TIMEOUT_MS + 2000); // extra 2 s over the HTTP timeout
+    }, BC_TIMEOUT_MS + 2000);
 
     ps.on("close", (code) => {
       clearTimeout(timer);
@@ -122,7 +195,6 @@ function runPowerShell(psScript) {
       if (code !== 0)
         return reject(new Error(`PowerShell exited ${code}: ${stderr.trim()}`));
       try {
-        // The script prints exactly one JSON line to stdout
         const jsonLine = stdout
           .trim()
           .split("\n")
@@ -139,27 +211,18 @@ function runPowerShell(psScript) {
   });
 }
 
-/**
- * Builds the PowerShell script string for a given request.
- * We pass everything as JSON inside a here-string so we never
- * have to worry about shell-escaping individual header values.
- */
 function buildPsScript(method, url, headersObj, bodyBase64) {
-  // Serialise the headers map and body as a JSON literal embedded in the script.
-  // PowerShell will parse it back with ConvertFrom-Json.
-  const headersJson = JSON.stringify(headersObj).replace(/'/g, "''"); // escape PS single-quotes
+  const headersJson = JSON.stringify(headersObj).replace(/'/g, "''");
   const bodyArg = bodyBase64 ? `'${bodyBase64}'` : "$null";
 
   return `
 $ErrorActionPreference = 'Stop'
 
-# ── Deserialise inputs ──────────────────────────────────────────────────────
 $headersMap = '${headersJson}' | ConvertFrom-Json
 $method     = '${method}'
 $url        = '${url.replace(/'/g, "''")}'
 $bodyB64    = ${bodyArg}
 
-# ── Build HttpClient with SSPI (UseDefaultCredentials) ─────────────────────
 Add-Type -AssemblyName System.Net.Http
 $handler                      = [System.Net.Http.HttpClientHandler]::new()
 $handler.UseDefaultCredentials = $true
@@ -167,12 +230,10 @@ $handler.AllowAutoRedirect     = $true
 $client                        = [System.Net.Http.HttpClient]::new($handler)
 $client.Timeout                = [TimeSpan]::FromMilliseconds(${BC_TIMEOUT_MS})
 
-# ── Build request message ───────────────────────────────────────────────────
 $req = [System.Net.Http.HttpRequestMessage]::new(
   [System.Net.Http.HttpMethod]::new($method), $url
 )
 
-# Forward headers (skip Content-Type — goes on the content object)
 $contentType = $null
 foreach ($prop in $headersMap.PSObject.Properties) {
   $name  = $prop.Name
@@ -181,7 +242,6 @@ foreach ($prop in $headersMap.PSObject.Properties) {
   try { [void]$req.Headers.TryAddWithoutValidation($name, $value) } catch {}
 }
 
-# Attach body if present
 if ($bodyB64 -and $bodyB64 -ne '') {
   $bytes   = [Convert]::FromBase64String($bodyB64)
   $content = [System.Net.Http.ByteArrayContent]::new($bytes)
@@ -192,34 +252,32 @@ if ($bodyB64 -and $bodyB64 -ne '') {
   $req.Content = $content
 }
 
-# ── Send & collect response ─────────────────────────────────────────────────
 $resp    = $client.SendAsync($req).GetAwaiter().GetResult()
 $bytes   = $resp.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
 $b64Body = [Convert]::ToBase64String($bytes)
 
-# Collect response headers (flatten multi-value to first value for simplicity)
 $respHeaders = @{}
-foreach ($h in $resp.Headers)          { $respHeaders[$h.Key] = ($h.Value | Select-Object -First 1) }
-foreach ($h in $resp.Content.Headers)  { $respHeaders[$h.Key] = ($h.Value | Select-Object -First 1) }
+foreach ($h in $resp.Headers)         { $respHeaders[$h.Key] = ($h.Value | Select-Object -First 1) }
+foreach ($h in $resp.Content.Headers) { $respHeaders[$h.Key] = ($h.Value | Select-Object -First 1) }
 
 $result = @{
-  status      = [int]$resp.StatusCode
-  headers     = $respHeaders
-  bodyBase64  = $b64Body
+  status     = [int]$resp.StatusCode
+  headers    = $respHeaders
+  bodyBase64 = $b64Body
 }
 
-# Print ONE JSON line — this is what Node parses
 $result | ConvertTo-Json -Compress -Depth 5
 `;
 }
 
-// ─── Main handler ─────────────────────────────────────────────────────────────
+// ─── Main handler ────────────────────────────────────────────────────────────
 async function forwardRequest(req, res) {
   const url = buildTargetUrl(req);
   const headers = sanitizeRequestHeaders(req.headers);
   const method = req.method;
+  // Endpoint label: last path segment without query string
+  const endpoint = req.path.split("/").filter(Boolean).pop() || req.path;
 
-  // Serialise body to base64 so it survives the PS boundary cleanly
   let bodyBase64 = "";
   if (!["GET", "HEAD"].includes(method)) {
     const raw = req.is("application/json")
@@ -230,27 +288,43 @@ async function forwardRequest(req, res) {
     if (raw) bodyBase64 = Buffer.from(raw).toString("base64");
   }
 
-  console.log(`[proxy] ▶  ${method} ${url}`);
+  logContext();
+  const clientIp = req.socket.remoteAddress || req.ip || "unknown";
+  const clientPort = req.socket.remotePort || "?";
+  logRequest(method, endpoint, clientIp, clientPort);
+
+  const t0 = Date.now();
 
   let result;
   try {
     const psScript = buildPsScript(method, url, headers, bodyBase64);
     result = await runPowerShell(psScript);
   } catch (err) {
+    const elapsed = Date.now() - t0;
     if (err.code === "ECONNABORTED") {
+      logResponse(method, endpoint, 504, elapsed, clientIp, clientPort);
       return res
         .status(504)
         .json({ error: "Gateway timeout", message: err.message });
     }
-    console.error("[proxy] PowerShell error:", err.message);
+    console.error(
+      `[proxy] └ ✖  PowerShell error after ${elapsed} ms:`,
+      err.message,
+    );
     return res.status(502).json({ error: "Bad gateway", message: err.message });
   }
 
-  console.log(`[proxy] ◀  ${result.status} ${url}`);
+  logResponse(
+    method,
+    endpoint,
+    result.status,
+    Date.now() - t0,
+    clientIp,
+    clientPort,
+  );
 
   res.status(result.status);
 
-  // Forward BC response headers
   if (result.headers && typeof result.headers === "object") {
     for (const [k, v] of Object.entries(result.headers)) {
       if (!SKIP_RESPONSE.has(k.toLowerCase())) {

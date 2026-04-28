@@ -15,6 +15,7 @@ import 'package:pfe_mes/domain/machines/providers/mes_machines_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_scrap_provider.dart';
 import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
+import 'domain/ai/providers/ai_chat_provider.dart';
 
 // Pages
 import 'package:pfe_mes/presentation/admin/adminPage.dart';
@@ -51,6 +52,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
             ChangeNotifierProvider(create: (_) => MesScrapProvider()),
             ChangeNotifierProvider(create: (_) => LogProvider()),
+            ChangeNotifierProvider(create: (_) => AiChatProvider()),
             Provider(create: (_) => MesMachinesProvider()),
             Provider(create: (_) => MesComponentconsumptionProvider()),
           ],

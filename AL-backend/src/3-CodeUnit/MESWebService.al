@@ -4,6 +4,7 @@ codeunit 50126 "MES Web Service"
         UnboundActions: Codeunit "MES Unbound Actions";
         MachineFetch: Codeunit "MES Machine Fetch";
         MachineWrite: Codeunit "MES Machine Write";
+        Tools: Codeunit "MES Tool Functions";
         AuthMgt: Codeunit "MES Auth Mgt";
 
     // ── Auth endpoints (no token write logic) ─────────────────────────────────
@@ -273,6 +274,109 @@ codeunit 50126 "MES Web Service"
         exit(MachineFetch.fetchMachineDashboard(hoursBack, workCenterNoJson));
     end;
 
+    // Returns production orders, optionally filtered by status, work center, or machine.
+    // statusFilter  : '' = all, or comma-separated list of: 'Planned','Firm Planned','Released','Finished'
+    // workCenterNo  : '' = all work centers
+    // machineNo     : '' = all machines
+    procedure fetchProductionOrders(statusFilter: Text; workCenterNo: Text; machineNo: Text): Text
+    begin
+        exit(Tools.fetchProductionOrders(statusFilter, workCenterNo, machineNo));
+    end;
+
+    // Returns a per-work-center summary: machine counts, operation queue,
+    // active operators, produced quantity, and scrap for the window.
+    // workCenterNoJson : JSON array of work center numbers, e.g. '["100","200"]'.
+    //                    Pass '[]' to get all work centers.
+    // hoursBack        : lookback window for produced/scrap aggregation.
+    procedure fetchWorkCenterSummary(workCenterNoJson: Text; hoursBack: Decimal): Text
+    begin
+        exit(Tools.fetchWorkCenterSummary(workCenterNoJson, hoursBack));
+    end;
+
+    // Returns one row per MES user with their current activity status,
+    // machine assignment, operation counts, and scrap for the time window.
+    // workCenterNoJson : JSON array of WC numbers to scope the result.
+    //                    Pass '[]' to return all users.
+    // hoursBack        : lookback window for produced/scrap aggregation.
+    procedure fetchOperatorSummary(workCenterNoJson: Text; hoursBack: Decimal): Text
+    begin
+        exit(Tools.fetchOperatorSummary(workCenterNoJson, hoursBack));
+    end;
+
+    // Returns data scoped to the authenticated user:
+    //   - Operations started/paused/finished during the window
+    //   - Machines interacted with
+    //   - Produced and scrap quantities
+    // token     : session token — identifies the calling user.
+    // hoursBack : lookback window (pass shift length for shift-scoped queries).
+    procedure fetchMyData(token: Text; hoursBack: Decimal): Text
+    begin
+        exit(Tools.fetchMyData(token, hoursBack));
+    end;
+
+    // Returns scrap aggregated by order, operation, machine, work center, and reason.
+    // Any filter that is empty string means "all".
+    //
+    // hoursBack      : lookback window in hours.
+    // prodOrderNo    : filter to a specific production order.
+    // operationNo    : filter to a specific operation (requires prodOrderNo).
+    // machineNo      : filter to a specific machine.
+    // workCenterNo   : filter to a specific work center (matches machine's WC).
+    // operatorId     : filter to a specific operator's declared scrap.
+    procedure fetchScrapSummary(
+        hoursBack: Decimal;
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        machineNo: Code[20];
+        workCenterNo: Code[20];
+        operatorId: Code[50]
+    ): Text
+    begin
+        exit(Tools.fetchScrapSummary(hoursBack, prodOrderNo, operationNo, machineNo, workCenterNo, operatorId));
+    end;
+
+    // Returns delayed / blocked operations ranked by wait time.
+    // An operation is "delayed" when its planned end date-time is past and it
+    // is not yet finished, or when it is in Paused state longer than
+    // pauseThresholdMinutes.
+    // workCenterNoJson      : JSON array of WC numbers, or '[]' for all.
+    // pauseThresholdMinutes : operations paused longer than this are flagged.
+    procedure fetchDelayReport(workCenterNoJson: Text; pauseThresholdMinutes: Decimal): Text
+    begin
+        exit(Tools.fetchDelayReport(workCenterNoJson, pauseThresholdMinutes));
+    end;
+
+    // Returns component consumption vs. planned BOM quantity per execution,
+    // flagging over- and under-consumption.
+    // Any filter that is empty string means "all".
+    //
+    // prodOrderNo  : limit to a specific production order.
+    // operationNo  : limit to a specific operation (use with prodOrderNo).
+    // machineNo    : limit to a specific machine.
+    // hoursBack    : only include executions that started within this window.
+    //               Pass 0 to include all time.
+    procedure fetchConsumptionSummary(prodOrderNo: Code[20]; operationNo: Code[10]; machineNo: Code[20]; hoursBack: Decimal): Text
+    begin
+        exit(Tools.fetchConsumptionSummary(prodOrderNo, operationNo, machineNo, hoursBack));
+    end;
+
+
+    // Returns a comprehensive supervisor overview for a shift or time window:
+    //   - Stopped machines under supervision
+    //   - Delayed / paused operations
+    //   - Idle operators (logged in, no running op)
+    //   - Scrap totals and high-scrap operations
+    //   - Produced vs. order quantity (progress)
+    // Suitable for: shift start briefing, handover, "what should I check first?"
+    //
+    // workCenterNoJson      : JSON array of WC numbers the supervisor covers.
+    // hoursBack             : lookback window (use shift length).
+    // pauseThresholdMinutes : paused ops exceeding this are flagged as abnormal.
+    procedure fetchSupervisorOverview(workCenterNoJson: Text; hoursBack: Decimal; pauseThresholdMinutes: Decimal): Text
+    begin
+        exit(Tools.fetchSupervisorOverview(workCenterNoJson, hoursBack, pauseThresholdMinutes));
+    end;
+
     procedure AdminChangeUserRole(
             token: Text;
             targetUserId: Text;
@@ -282,6 +386,8 @@ codeunit 50126 "MES Web Service"
     begin
         exit(UnboundActions.AdminChangeUserRole(token, targetUserId, newRoleInt, workCenterListJson));
     end;
+
+    
     procedure resolveBarcode(barcode: Text): Text
     begin
         exit(MachineFetch.resolveBarcode(barcode));

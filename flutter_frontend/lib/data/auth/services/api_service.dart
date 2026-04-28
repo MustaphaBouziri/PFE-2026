@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/app_constants.dart';
@@ -8,18 +7,6 @@ import '../../shared/http_client.dart';
 import '../../shared/http_response_parser.dart';
 
 class ApiService {
-  // ── Token access ─────────────────────────────────────────────────────────
-
-  /// Returns the active auth token.
-  /// If [AppConstants.devToken] is set it takes precedence over SharedPreferences,
-  /// allowing developers to skip the login flow entirely.
-  Future<String?> getToken() async {
-    if (AppConstants.devToken != null && AppConstants.devToken!.isNotEmpty) {
-      return AppConstants.devToken;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
-  }
 
   // ── Auth endpoints ────────────────────────────────────────────────────────
 
@@ -53,7 +40,12 @@ class ApiService {
         'token': token,
       });
 
-      return HttpResponseParser.parseObject(response, label: 'getCurrentUser');
+      final result = HttpResponseParser.parseObject(response, label: 'getCurrentUser');
+      if (result['success'] == true) {
+        await _saveUserData(result);
+      }
+
+      return result;
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }
@@ -92,7 +84,7 @@ class ApiService {
     }
   }
 
-  Future<bool> AdminSetPassword({
+  Future<bool> adminSetPassword({
     required String token,
     required String userId,
     required String newPassword,
@@ -107,6 +99,26 @@ class ApiService {
     throw Exception(
       'Failed to generate password: ${response.statusCode} ${response.body}',
     );
+  }
+
+  //toggle active / deactivate user
+  Future<bool> toggleUserActiveStatus({
+    required String token,
+    required String userId,
+    required bool isActive,
+  }) async {
+    final response = await HttpClient.post(
+      AppConstants.toggleUserActiveStatus,
+      {'token': token, 'userId': userId, 'isActive': isActive},
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception(
+        'Failed to toggle user status: ${response.statusCode} ${response.body}',
+      );
+    }
   }
 
   // ── Persistence ───────────────────────────────────────────────────────────
@@ -132,25 +144,5 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
-  }
-
-  //toggle active /diactivate user
-  Future<bool> toggleUserActiveStatus({
-    required String token,
-    required String userId,
-    required bool isActive,
-  }) async {
-    final response = await http.post(
-      Uri.parse(AppConstants.toggleUserActiveStatus),
-      headers: AppConstants.jsonHeaders,
-      body: jsonEncode({'token': "", 'userId': userId, 'isActive': isActive}),
-    );
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      throw Exception(
-        'Failed to toggle user status: ${response.statusCode} ${response.body}',
-      );
-    }
   }
 }
