@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
+import 'package:pfe_mes/main.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -18,19 +21,110 @@ class Machinelistpage extends StatefulWidget {
   State<Machinelistpage> createState() => _MachinelistpageState();
 }
 
-class _MachinelistpageState extends State<Machinelistpage> {
+// we now make the page aware(RouteAware) of navigation changes using the RouteObserver defined in main.dart
+// this will unlock these methodes : didPushNext and didPopNext
+class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final TextEditingController searchController = TextEditingController();
-  String selectedStatus = 'All';
-  final List<String> statusOptions = ['All', 'Working', 'Idle'];
 
-  // Keys for tutorial
+  final ValueNotifier<String> searchQuery = ValueNotifier('');
+  final ValueNotifier<String> statusFilter = ValueNotifier('All');
+  final ValueNotifier<Map<String, List<MachineModel>>> dataNotifier =
+      ValueNotifier({});
+  final ValueNotifier<bool> loadingNotifier = ValueNotifier(true);
+
+  final List<String> statusOptions = ['All', 'Working', 'Idle'];
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _machineCardKey = GlobalKey();
   final GlobalKey _profileKey = GlobalKey();
 
   bool _tutorialShown = false;
+  late List<String> _workCenterIds;
+  StreamSubscription? _subscription;
 
-  /// Returns the normalised role string ('operator', 'supervisor', 'admin').
+  @override
+  void initState() {
+    super.initState();
+    _workCenterIds = _resolveWorkCenterIds();
+
+    if (_workCenterIds.isNotEmpty) {
+      _startStream();
+    }
+  }
+
+  // register this page to be the global observer
+  // its like saying : hey flutter notify me when navigation heppens
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  // this will be triggered when u navigate back to this page  or first time this page is created  a new subscription will be made
+  void _startStream() {
+    // this to prevent duplicate streams without it  on every resume = new stream = multiple api calls
+    // im already listening to the stream dont start a new one
+    // without it every time i come back to the page it will start a new subscription and i will have multiple streams listening and making api calls at the same time (3 subs = 3 api call evry 20 sec )
+    if (_subscription != null) {
+      return; // already streaming
+    }
+
+    final provider = context.read<MesMachinesProvider>();
+    //subscribe to the stream and update notifiers on new data
+    _subscription = provider
+        .streamOrderedMachinePerDepartments(_workCenterIds)
+        .listen((event) {
+          // event is the data eitted evry 20 sec
+          if (!mounted) return;
+
+          dataNotifier.value = event;
+          loadingNotifier.value = false;
+        });
+  }
+
+  // cancels the active stream subscription: stop api calls free memmory
+  //stream exist but subscription is cancel it only makes the page stop listening to the strezm
+  void _stopStream() {
+    _subscription?.cancel();
+    _subscription = null;
+  }
+
+  // route aware methode : this will be triggered when we open another page on top like nav.push
+  @override
+  void didPushNext() {
+    _stopStream();
+    super.didPushNext();
+  }
+
+  // route aware methode : this will be triggered when we come back to this page after closing the top page like nav.pop we restart the page
+  @override
+  void didPopNext() {
+    if (_workCenterIds.isNotEmpty) {
+      _startStream();
+    }
+    super.didPopNext();
+  }
+
+  // when the page is closed permanently we want to stop the stream and free memmory and also unsubscribe from the global observer to stop listening to navigation changes
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+
+    // Stop listening to stream
+    _stopStream();
+
+    /// Dispose controllers and notifiers
+    searchController.dispose();
+    searchQuery.dispose();
+    statusFilter.dispose();
+    dataNotifier.dispose();
+    loadingNotifier.dispose();
+
+    super.dispose();
+  }
+
   String _resolveRole() {
     return context
             .read<AuthProvider>()
@@ -41,46 +135,36 @@ class _MachinelistpageState extends State<Machinelistpage> {
         '';
   }
 
-  /// Returns the list of work-center IDs the current user should see.
-  ///
-  /// • Supervisor→ their assigned work centers (possibly multiple)
-  /// • Operator  → their single assigned work center
-  ///
-  /// Returns null while the admin list is still loading.
-  List<String>? _resolveWorkCenterIds() {
-    final role = _resolveRole();
-
-    // Supervisor and Operator both store their WC list in AuthProvider.
+  List<String> _resolveWorkCenterIds() {
     final wcs = context.read<AuthProvider>().userData?['workCenters'];
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
-
-    // Fallback: single workCenter field (legacy shape).
     final single = context
         .read<AuthProvider>()
         .userData?['workCenter']
         ?.toString();
     if (single != null && single.isNotEmpty) return [single];
-
     return [];
   }
 
-  // filter the grouped map — loop each department list and filter machines inside it
+  //filter without modifying original data and without triggering unnecessary rebuilds
   Map<String, List<MachineModel>> _applyFilters(
     Map<String, List<MachineModel>> grouped,
+    String query,
+    String status,
   ) {
     final result = <String, List<MachineModel>>{};
-    final query = searchController.text.toLowerCase();
+    final q = query.toLowerCase();
 
     for (final entry in grouped.entries) {
       final filtered = entry.value.where((machine) {
         final matchesSearch =
-            query.isEmpty ||
-            machine.machineName.toLowerCase().contains(query) ||
-            machine.workCenterName.toLowerCase().contains(query);
+            q.isEmpty ||
+            machine.machineName.toLowerCase().contains(q) ||
+            machine.workCenterName.toLowerCase().contains(q);
 
         final matchesStatus =
-            selectedStatus == 'All' ||
-            machine.status.toLowerCase() == selectedStatus.toLowerCase();
+            status == 'All' ||
+            machine.status.toLowerCase() == status.toLowerCase();
 
         return matchesSearch && matchesStatus;
       }).toList();
@@ -95,12 +179,8 @@ class _MachinelistpageState extends State<Machinelistpage> {
 
   @override
   Widget build(BuildContext context) {
-    // watch so the machine list rebuilds if the session changes
-    final authProvider = context.watch<AuthProvider>();
+    final authProvider = context.read<AuthProvider>();
     final role = authProvider.userData?['role']?.toString() ?? '';
-    final provider = Provider.of<MesMachinesProvider>(context, listen: false);
-
-    final workCenterIds = _resolveWorkCenterIds();
 
     return Scaffold(
       appBar: AppBar(
@@ -111,14 +191,19 @@ class _MachinelistpageState extends State<Machinelistpage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                  MaterialPageRoute(builder: (_) => ProfilePage()),
                 );
               },
-              child: CircleAvatar(
-                radius: 18,
-                backgroundImage: const NetworkImage(
-                  'https://picsum.photos/200/200',
-                ),
+              child: Selector<AuthProvider, Uint8List?>(
+                selector: (_, p) => p.profileImageBytes,
+                builder: (_, imageBytes, __) {
+                  return CircleAvatar(
+                    radius: 18,
+                    backgroundImage: imageBytes != null
+                        ? MemoryImage(imageBytes)
+                        : const NetworkImage('https://picsum.photos/200/200'),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 10),
@@ -138,217 +223,204 @@ class _MachinelistpageState extends State<Machinelistpage> {
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: role == 'Supervisor'
-                        ? Color(0xFF16A34A)
-                        : Color(0xFF2563EB),
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFF2563EB),
                   ),
                 ),
               ],
             ),
             const Spacer(),
-            role.toLowerCase() =='operator' ? const SizedBox() :
-            TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MachineDashboardPage(),
+            role.toLowerCase() == 'operator'
+                ? const SizedBox()
+                : TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MachineDashboardPage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.dashboard, size: 16),
+                    label: Text('machineDashboard'.tr()),
                   ),
-                );
-              },
-              icon: const Icon(
-                Icons.dashboard,
-                size: 16,
-                color: Color(0xFF0F172A),
-              ),
-              label: Text(
-                'machineDashboard'.tr(),
-                style: TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
           ],
         ),
       ),
-
-      body: _buildBody(provider, workCenterIds),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildBody(MesMachinesProvider provider, List<String>? workCenterIds) {
-    // The user has no assigned work centers at all.
-    if (workCenterIds == null || workCenterIds.isEmpty) {
+  Widget _buildBody() {
+    if (_workCenterIds.isEmpty) {
       return Center(child: Text('noWorkCenterAssigned'.tr()));
     }
-// the new fix : basicaly its like saying am i currently looking at this page ? if no dont build the stream builder and just return an empty container
-    final isVisible = ModalRoute.of(context)?.isCurrent ?? false;
-
-    
-    if (!isVisible) {
-      return const SizedBox(); // why ? its an empty widget takes no space does nothing basicly like saying render nothing,
-    }
-    return StreamBuilder<Map<String, List<MachineModel>>>(
-      // KEY: the stream is now driven by the resolved list, not a hardcoded
-      // constant.  A new StreamBuilder key forces a fresh subscription when
-      // the list changes (e.g. after an admin reassigns a supervisor).
-      key: ValueKey(workCenterIds.join(',')),
-      stream: provider.streamOrderedMachinePerDepartments(workCenterIds),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+    // we use ValueListenableBuilder to listen to loading state and show a loader until data is ready
+    // we do this because we want to show the tutorial only after data is loaded and the UI is ready
+    return ValueListenableBuilder<bool>(
+      valueListenable: loadingNotifier,
+      builder: (_, loading, __) {
+        if (loading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // apply search and status filter on top of the raw stream data
-        final groupedMachines = _applyFilters(snapshot.data!);
+        return _buildMachineList();
+      },
+    );
+  }
 
-        // Show tutorial if data loaded and not shown yet
-        if (!_tutorialShown && groupedMachines.isNotEmpty) {
-          _tutorialShown = true;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) async => await MachineListTutorial.show(context, [
-              _profileKey,
-              _searchKey,
-              GlobalKey(),
-              GlobalKey(),
-              _machineCardKey,
-            ]),
-          );
-        }
-
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Text(
-                    'machinesList'.tr(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  _statusLegendBadge(
-                    color: const Color.fromARGB(255, 40, 197, 92),
-                    label: 'Working',
-                  ),
-                  const SizedBox(width: 8),
-                  _statusLegendBadge(
-                    color: const Color.fromARGB(255, 134, 134, 134),
-                    label: 'Idle',
-                  ),
-                ],
-              ),
-            ),
-
-            // Search + status filter
-            Padding(
-              key: _searchKey,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GlobalSearchBar(
-                controller: searchController,
-                onSearchChanged: (_) => setState(() {}),
-                dropdownItems: statusOptions,
-                selectedValue: selectedStatus,
-                onDropdownChanged: (val) =>
-                    setState(() => selectedStatus = val ?? 'All'),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // empty state after filtering
-            if (groupedMachines.isEmpty)
-              Expanded(child: Center(child: Text('noMachinesFound'.tr())))
-            else
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth < 600
-                        ? 1
-                        : constraints.maxWidth < 1024
-                        ? 2
-                        : 4;
-
-                    return ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: groupedMachines.entries.map((entry) {
-                        final workCenterNo = entry.key;
-                        final machinesList = entry.value;
-                        final workCenterName = machinesList.isNotEmpty
-                            ? machinesList.first.workCenterName
-                            : '';
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Department title
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    workCenterNo,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    workCenterName,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Grid for this department
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: machinesList.length,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                    childAspectRatio: constraints.maxWidth < 900
-                                        ? 2.5
-                                        : constraints.maxWidth < 1400
-                                        ? 1.5
-                                        : 2.0, //pc
-                                  ),
-                              itemBuilder: (context, index) {
-                                final isFirstVisibleCard =
-                                    groupedMachines.entries.first.value ==
-                                        machinesList &&
-                                    index == 0;
-                                return isFirstVisibleCard
-                                    ? Container(
-                                        key: _machineCardKey,
-                                        child: MachineCard(
-                                          machine: machinesList[index],
-                                        ),
-                                      )
-                                    : MachineCard(machine: machinesList[index]);
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                          ],
-                        );
-                      }).toList(),
-                    );
-                  },
+  // the entire body ui meaning the search + the list machine
+  Widget _buildMachineList() {
+    return Column(
+      children: [
+        /// header
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Text(
+                'machinesList'.tr(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-          ],
-        );
-      },
+              const Spacer(),
+              _statusLegendBadge(
+                color: const Color.fromARGB(255, 40, 197, 92),
+                label: 'Working',
+              ),
+              const SizedBox(width: 8),
+              _statusLegendBadge(
+                color: const Color.fromARGB(255, 134, 134, 134),
+                label: 'Idle',
+              ),
+            ],
+          ),
+        ),
+
+        /// SEARCH
+        Padding(
+          key: _searchKey,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: GlobalSearchBar(
+            controller: searchController,
+            onSearchChanged: (val) => searchQuery.value = val,
+            dropdownItems: statusOptions,
+            selectedValue: statusFilter.value,
+            onDropdownChanged: (val) => statusFilter.value = val ?? 'All',
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // machine list
+        // only this part will be rebuilt when search query or status filter changes because we used ValueListenableBuilder on the notifiers that are only updated when search or filter changes
+        Expanded(
+          child: ValueListenableBuilder<Map<String, List<MachineModel>>>(
+            valueListenable: dataNotifier,
+            builder: (_, data, __) {
+              return ValueListenableBuilder<String>(
+                valueListenable: searchQuery,
+                builder: (_, query, __) {
+                  return ValueListenableBuilder<String>(
+                    valueListenable: statusFilter,
+                    builder: (_, status, __) {
+                      final groupedMachines = _applyFilters(
+                        data,
+                        query,
+                        status,
+                      );
+                      if (!_tutorialShown && groupedMachines.isNotEmpty) {
+                        _tutorialShown = true;
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) async => await MachineListTutorial.show(context, [
+                            _profileKey,
+                            _searchKey,
+                            GlobalKey(),
+                            GlobalKey(),
+                            _machineCardKey,
+                          ]),
+                        );
+                      }
+
+                      // in case nothing
+                      if (groupedMachines.isEmpty) {
+                        return Center(child: Text('noMachinesFound'.tr()));
+                      }
+
+                      // Layout
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final crossAxisCount = constraints.maxWidth < 600
+                              ? 1
+                              : constraints.maxWidth < 1024
+                              ? 2
+                              : 4;
+
+                          return ListView(
+                            padding: const EdgeInsets.all(16),
+                            children: groupedMachines.entries.map((entry) {
+                              final machinesList = entry.value;
+                              final workCenterName = machinesList.isNotEmpty
+                                  ? machinesList.first.workCenterName
+                                  : '';
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(entry.key),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          workCenterName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: machinesList.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 16,
+                                          mainAxisSpacing: 16,
+                                          childAspectRatio:
+                                              constraints.maxWidth < 900
+                                              ? 2.5
+                                              : constraints.maxWidth < 1400
+                                              ? 1.5
+                                              : 2.0,
+                                        ),
+                                    itemBuilder: (_, index) => MachineCard(
+                                      machine: machinesList[index],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                ],
+                              );
+                            }).toList(),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -361,18 +433,12 @@ class _MachinelistpageState extends State<Machinelistpage> {
         color: Colors.white,
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(backgroundColor: color, radius: 5),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+      child: Row(
+        children: [
+          CircleAvatar(backgroundColor: color, radius: 5),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
       ),
     );
   }

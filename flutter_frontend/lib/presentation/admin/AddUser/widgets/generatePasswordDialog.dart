@@ -3,9 +3,8 @@ import 'dart:math';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-
-import '../../domain/auth/providers/auth_provider.dart';
 
 class GeneratePasswordDialog extends StatelessWidget {
   final String userId;
@@ -243,7 +242,7 @@ class _GeneratePasswordDialogContentState
             const SizedBox(height: 4),
 
             Text(
-              'forUser'.tr() + '${widget.authId}',
+              '${'forUser'.tr()}${widget.authId}',
               style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
 

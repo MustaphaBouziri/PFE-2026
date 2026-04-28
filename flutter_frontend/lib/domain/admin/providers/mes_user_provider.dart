@@ -11,7 +11,7 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
   final MesUserService _service = MesUserService();
   final ApiService _apiService = ApiService();
   final StreamController<void> _refreshController =
-  StreamController<void>.broadcast();
+      StreamController<void>.broadcast();
 
   void triggerRefresh() {
     _refreshController.add(());
@@ -25,7 +25,6 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
 
   List<MesUser> users = [];
 
-  // Fetch users
   Future<void> fetchUsersByWc({required String wcId}) async {
     await runAsync(() async {
       users = await _service.fetchMESUsersByWC(wcId: wcId);
@@ -49,11 +48,13 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
       workCenterList: workCenterList,
     ));
 
+    if (result == true) {
+      triggerRefresh();
+    }
+
     return result ?? false;
   }
 
-  /// Changes the role of [targetUserId] and resets their work-center assignments.
-  /// Triggers a refresh of the user list stream on success.
   Future<bool> changeUserRole({
     required String targetUserId,
     required int newRoleInt,

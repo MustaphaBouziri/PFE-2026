@@ -1,12 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/domain/admin/providers/erp_employee_provider.dart';
+import 'package:pfe_mes/domain/admin/providers/erp_workCenter_provider.dart';
+import 'package:pfe_mes/domain/admin/providers/mes_user_provider.dart';
+import 'package:pfe_mes/presentation/widgets/employee_avatar.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/admin/providers/erp_employee_provider.dart';
-import '../../../domain/admin/providers/erp_workCenter_provider.dart';
-import '../../../domain/admin/providers/mes_user_provider.dart';
-import '../../widgets/employee_avatar.dart';
 
 class AddUserDialog extends StatefulWidget {
   const AddUserDialog({super.key});
@@ -29,7 +29,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
   // only supervisor can select multiple work centers
   // operator gets one, admin gets none
   bool get isMultiSelect => selectedRole == 'Supervisor';
-  bool get _showWorkCenters => selectedRole != 'Admin'; // return true if not an admin  is admin !=admin? false ? dont show it  
+  bool get _showWorkCenters => selectedRole != 'Admin';
 
   final TextEditingController searchController = TextEditingController();
 
@@ -159,7 +159,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       height: 250,
                       child: ListView.separated(
                         itemCount: filteredEmployees.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 6),
+                        separatorBuilder: (_, _) => const SizedBox(height: 6),
                         itemBuilder: (context, index) {
                           final employee = filteredEmployees[index];
                           final isSelected = selectedEmployeeIndex == index;
@@ -181,14 +181,15 @@ class _AddUserDialogState extends State<AddUserDialog> {
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.blue
+                                      ? const Color.fromARGB(255, 73, 111, 143)
                                       : Colors.grey.shade300,
                                 ),
                               ),
                               child: Row(
                                 children: [
+                                  // Simple avatar - just image
                                   EmployeeAvatar(
-                                    employee: employee,
+                                    imageBase64: employee.imageBase64,
                                     radius: 20,
                                   ),
                                   const SizedBox(width: 12),
@@ -267,81 +268,81 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
                     const SizedBox(height: 20),
                     if (_showWorkCenters) ...[
-
-                    // work center selection
-                    Text(
-                      'selectWorkCenter'.tr(),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    // hint shown only for supervisor
-                    if (isMultiSelect)
-                      const Text(
-                        'You can select multiple departments',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
+                      // work center selection
+                      Text(
+                        'selectWorkCenter'.tr(),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
-                    const SizedBox(height: 10),
+                      // hint shown only for supervisor
+                      if (isMultiSelect)
+                        const Text(
+                          'You can select multiple departments',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
 
-                    // work center list
-                    SizedBox(
-                      height: 200,
-                      child: ListView.separated(
-                        itemCount: workCenters.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 6),
-                        itemBuilder: (context, index) {
-                          final wc = workCenters[index];
-                          final isSelected = selectedWorkCenterIndexes.contains(
-                            index,
-                          );
+                      // work center list
+                      SizedBox(
+                        height: 200,
+                        child: ListView.separated(
+                          itemCount: workCenters.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 6),
+                          itemBuilder: (context, index) {
+                            final wc = workCenters[index];
+                            final isSelected =
+                                selectedWorkCenterIndexes.contains(index);
 
-                          return GestureDetector(
-                            onTap: () => workCenterSelection(index, wc.id),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? const Color(0xFFF0FDF4)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
+                            return GestureDetector(
+                              onTap: () =>
+                                  workCenterSelection(index, wc.id),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
                                   color: isSelected
-                                      ? const Color(0xFF16A34A)
-                                      : Colors.grey.shade300,
+                                      ? const Color(0xFFF0FDF4)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF16A34A)
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      wc.workCenterName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFF16A34A),
+                                        size: 18,
+                                      ),
+                                  ],
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    wc.workCenterName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: Color(0xFF16A34A),
-                                      size: 18,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
                     ],
 
                     const SizedBox(height: 20),
@@ -352,46 +353,44 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if(selectedEmployeeId == null){
+                          if (selectedEmployeeId == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('pleaseSelectEmployee'.tr()),
+                                content:
+                                    Text('pleaseSelectEmployee'.tr()),
                               ),
                             );
                             return;
-
                           }
-                          if(selectedRole == null){
+                          if (selectedRole == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('pleaseSelectRole'.tr()),
                               ),
                             );
                             return;
-
                           }
-                          
-                          if (selectedRole != 'Admin' && selectedWorkCenterIds.isEmpty) {
+
+                          if (selectedRole != 'Admin' &&
+                              selectedWorkCenterIds.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('pleaseSelectWorkCenter'.tr()),
+                                content:
+                                    Text('pleaseSelectWorkCenter'.tr()),
                               ),
                             );
                             return;
-                            
                           }
-                          
-                          
                           final success = await mesUserProvider.addUser(
                             employeeId: selectedEmployeeId!,
                             roleInt: selectedRoleIndex!,
-                            // pass the full list — provider handles sending it to BC
                             workCenterList: selectedWorkCenterIds,
                           );
                           if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('userAddedSuccessfully'.tr()),
+                                content:
+                                    Text('userAddedSuccessfully'.tr()),
                               ),
                             );
                             Navigator.of(context).pop();

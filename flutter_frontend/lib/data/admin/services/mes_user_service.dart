@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import '../../../core/app_constants.dart';
@@ -32,7 +33,8 @@ class MesUserService {
     required Stream<void> trigger,
   }) async* {
     yield await fetchAllMESUsers();
-    await for (final _ in trigger) {
+    
+    await for (final _ in Stream.periodic(const Duration(minutes: 5))) {
       yield await fetchAllMESUsers();
     }
   }
@@ -81,7 +83,7 @@ class MesUserService {
       return true;
     } else {
       throw Exception(
-        'Failed to create MES user: ${response.statusCode} ${response.body}',
+        'Failed to change user role: ${response.statusCode} ${response.body}',
       );
     }
   }

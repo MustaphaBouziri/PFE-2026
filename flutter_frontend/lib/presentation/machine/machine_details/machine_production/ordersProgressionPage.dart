@@ -41,7 +41,7 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('failed'.tr() + ': $e')));
+        ).showSnackBar(SnackBar(content: Text('${'failed'.tr()}: $e')));
       }
     }
   }

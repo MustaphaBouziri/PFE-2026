@@ -7,7 +7,7 @@ import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 class AdminMachineCard extends StatelessWidget {
   final MachineDashboardModel machine;
-  const AdminMachineCard({required this.machine});
+  const AdminMachineCard({super.key, required this.machine});
 
   @override
   Widget build(BuildContext context) {

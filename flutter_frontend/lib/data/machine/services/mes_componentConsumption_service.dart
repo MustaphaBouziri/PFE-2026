@@ -1,6 +1,4 @@
-import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 
 import '../../../core/app_constants.dart';
 import '../../shared/http_client.dart';

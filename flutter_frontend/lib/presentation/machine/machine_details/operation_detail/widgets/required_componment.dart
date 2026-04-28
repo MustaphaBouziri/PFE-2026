@@ -39,7 +39,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
   void _openScanner(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => ScannerWidget(executionId: widget.executionId),
+      builder: (context) => ScannerWidget(executionId: widget.executionId,components:widget.components),
     );
   }
 
@@ -312,7 +312,7 @@ class ComponentListView extends StatelessWidget {
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       itemCount: components.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final component = components[index];
         // if the component belongs to this operation, we highlight it more and show full opacity else we show it with less opacity and lighter colors

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../core/app_constants.dart';
 import '../../shared/http_client.dart';
 import '../../shared/http_response_parser.dart';
@@ -46,16 +48,14 @@ class MESMachineListService {
     return orderedMachinePerDepartment;
   }
 
-  Stream<Map<String, List<MachineModel>>>
-  streamFetchOrderedMachinePerDepartments(List<String> workCenterList) async* {
-    while (true) {
-      try {
-        final data = await fetchOrderedMachinePerDepartments(workCenterList);
-        yield data;
-      } catch (e) {
-        yield {};
-      }
-      await Future.delayed(const Duration(seconds: 20));
-    }
+ Stream<Map<String, List<MachineModel>>>
+streamFetchOrderedMachinePerDepartments(List<String> workCenterList) async* {
+  while (true) {
+    yield await fetchOrderedMachinePerDepartments(workCenterList);
+    await Future.delayed(const Duration(seconds: 20));
   }
 }
+}
+
+
+

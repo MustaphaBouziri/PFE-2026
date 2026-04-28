@@ -39,7 +39,7 @@ class ProductionCycleModel {
       final m = dt.minute.toString().padLeft(2, '0');
       final d = dt.day.toString().padLeft(2, '0');
       final mo = dt.month.toString().padLeft(2, '0');
-      return '$d/$mo ${h}:${m}';
+      return '$d/$mo $h:$m';
     } catch (_) {
       return declaredAt;
     }

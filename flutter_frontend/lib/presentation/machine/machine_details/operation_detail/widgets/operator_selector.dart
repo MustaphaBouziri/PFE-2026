@@ -64,8 +64,8 @@ class _OperatorSelectorState extends State<OperatorSelector> {
   }
 
   void _handleSelection(MesUser? user) {
-  widget.onOperatorSelected(user?.userId);
-}
+    widget.onOperatorSelected(user?.userId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +157,7 @@ class _OperatorSelectorState extends State<OperatorSelector> {
                     ? operator.fullName
                     : operator.authId,
                 leadingIcon: EmployeeAvatar(
-                  fallbackLabel: _initials(operator.fullName),
+                  imageBase64: operator.imageBase64,
                   radius: 14,
                 ),
               ),
@@ -166,12 +166,5 @@ class _OperatorSelectorState extends State<OperatorSelector> {
         ),
       ],
     );
-  }
-
-  String _initials(String fullName) {
-    final parts = fullName.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || fullName.isEmpty) return '?';
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }

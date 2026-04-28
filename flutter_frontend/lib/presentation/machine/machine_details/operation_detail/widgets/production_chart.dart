@@ -174,18 +174,18 @@ class _ProductionChartState extends State<ProductionChart> {
 
                           return SideTitleWidget(
                             meta: meta,
+                            fitInside: SideTitleFitInsideData(
+                              enabled: true,
+                              axisPosition: meta.axisPosition,
+                              parentAxisSize: meta.parentAxisSize,
+                              distanceFromEdge: 0,
+                            ),
                             child: Text(
                               orderedCycles[index].timeLabel,
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: Color(0xFF94A3B8),
                               ),
-                            ),
-                            fitInside: SideTitleFitInsideData(
-                              enabled: true,
-                              axisPosition: meta.axisPosition,
-                              parentAxisSize: meta.parentAxisSize,
-                              distanceFromEdge: 0,
                             ),
                           );
                         },
@@ -199,18 +199,18 @@ class _ProductionChartState extends State<ProductionChart> {
                         getTitlesWidget: (value, meta) {
                           return SideTitleWidget(
                             meta: meta,
+                            fitInside: SideTitleFitInsideData(
+                              enabled: true,
+                              axisPosition: meta.axisPosition,
+                              parentAxisSize: meta.parentAxisSize,
+                              distanceFromEdge: 5,
+                            ),
                             child: Text(
                               value.toInt().toString(),
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: Color(0xFF94A3B8),
                               ),
-                            ),
-                            fitInside: SideTitleFitInsideData(
-                              enabled: true,
-                              axisPosition: meta.axisPosition,
-                              parentAxisSize: meta.parentAxisSize,
-                              distanceFromEdge: 5,
                             ),
                           );
                         },

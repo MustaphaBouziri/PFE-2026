@@ -8,7 +8,7 @@ class NarrowLayout extends StatelessWidget {
   final OperationStatusAndProgressModel order;
   final BadgeStyle badgeStyle;
 
-  const NarrowLayout({
+  const NarrowLayout({super.key, 
     required this.order,
     required this.badgeStyle,
   });
