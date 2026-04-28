@@ -7,18 +7,6 @@ import '../../shared/http_client.dart';
 import '../../shared/http_response_parser.dart';
 
 class ApiService {
-  // ── Token access ─────────────────────────────────────────────────────────
-
-  /// Returns the active auth token.
-  /// If [AppConstants.devToken] is set it takes precedence over SharedPreferences,
-  /// allowing developers to skip the login flow entirely.
-  Future<String?> getToken() async {
-    if (AppConstants.devToken != null && AppConstants.devToken!.isNotEmpty) {
-      return AppConstants.devToken;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
-  }
 
   // ── Auth endpoints ────────────────────────────────────────────────────────
 
@@ -52,7 +40,12 @@ class ApiService {
         'token': token,
       });
 
-      return HttpResponseParser.parseObject(response, label: 'getCurrentUser');
+      final result = HttpResponseParser.parseObject(response, label: 'getCurrentUser');
+      if (result['success'] == true) {
+        await _saveUserData(result);
+      }
+
+      return result;
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
     }

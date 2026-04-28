@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import '../../../core/storage/session_storage.dart';
 import '../../../data/auth/services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   bool _isAuthenticated = false;
   bool _isLoading = false;
@@ -28,7 +30,7 @@ class AuthProvider with ChangeNotifier {
   String get token => _cachedToken ?? '';
 
   Future<void> checkAuthStatus() async {
-    final storedToken = await _apiService.getToken();
+    final storedToken = await _sessionStorage.getToken();
     if (storedToken != null) {
       final result = await _apiService.getCurrentUser(storedToken);
       if (result['success'] == true) {
@@ -79,7 +81,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final activeToken = await _apiService.getToken();
+      final activeToken = await _sessionStorage.getToken();
       if (activeToken == null) {
         _errorMessage = 'Not authenticated';
         _isLoading = false;
@@ -122,7 +124,7 @@ class AuthProvider with ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      final activeToken = await _apiService.getToken() ?? '';
+      final activeToken = await _sessionStorage.getToken() ?? '';
       return await _apiService.adminSetPassword(
         token: activeToken,
         userId: userId,
@@ -139,7 +141,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    final activeToken = await _apiService.getToken();
+    final activeToken = await _sessionStorage.getToken();
     if (activeToken != null) await _apiService.logout(activeToken);
 
     _isAuthenticated = false;
@@ -172,7 +174,7 @@ Uint8List? get profileImageBytes {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
-      final String token = await _apiService.getToken() ?? '';
+      final String token = await _sessionStorage.getToken() ?? '';
 
       final success = await _apiService.toggleUserActiveStatus(
         token: token,

@@ -342,6 +342,7 @@ class GetMyDataTool:
         hours_back: float,
         token: str = "",
     ) -> ToolResult:
+        print(f"Executing {self.name} with hours_back={hours_back} and token={token[:4]}***")
         """
         Return data scoped to the authenticated user (identified by token):
         operations, produced qty, scrap, and machine interactions for the window.
@@ -360,8 +361,7 @@ class GetMyDataTool:
         try:
             raw = await _post(
                 "fetchMyData",
-                {"hoursBack": hours_back},
-                token,
+                {"token":token,"hoursBack": hours_back}
             )
             data = _extract_value(raw)
             return ToolResult(tool_name=self.name, success=True, data=data)
@@ -476,6 +476,7 @@ class GetDelayReportTool:
                 token,
             )
             items = _extract_value(raw)
+            print(items)
             if not isinstance(items, list):
                 items = []
             return ToolResult(tool_name=self.name, success=True, data=items)

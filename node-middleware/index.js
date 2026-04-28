@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const corsOptions = require("./src/cors");
 const { forwardRequest } = require("./src/proxy");
+const { aiRouter } = require("./src/aiProxy");
 const config = require("./src/config");
 
 const app = express();
@@ -37,10 +38,13 @@ app.get("/health", (req, res) => {
 // 6. Preflight handler
 app.options("/api/{*path}", cors(corsOptions));
 
-// 7. THE MAIN ROUTE — forward everything to BC
+// 7. AI agent proxy
+app.use("/api/ai", aiRouter);
+
+// 8. THE MAIN ROUTE — forward everything else to BC
 app.all("/api/{*path}", forwardRequest);
 
-// 8. 404 for anything that isn't /api/* or /health
+// 9. 404 for anything that isn't /api/* or /health
 app.use((req, res) => {
   res.status(404).json({
     error: "Not found",
@@ -48,7 +52,7 @@ app.use((req, res) => {
   });
 });
 
-// 9. Global error handler
+// 10. Global error handler
 app.use((err, req, res, _next) => {
   console.error("[error]", err.message);
   if (err.message.startsWith("CORS:")) {
