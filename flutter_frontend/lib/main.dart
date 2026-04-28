@@ -22,6 +22,8 @@ import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
 import 'package:pfe_mes/presentation/auth/Login/login_page.dart';
 import 'package:pfe_mes/presentation/machine/machine_List/machineListPage.dart';
 
+import 'domain/ai/providers/ai_chat_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
@@ -47,6 +49,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
             ChangeNotifierProvider(create: (_) => MesScrapProvider()),
             ChangeNotifierProvider(create: (_) => LogProvider()),
+            ChangeNotifierProvider(create: (_) => AiChatProvider()),
             Provider(create: (_) => MesMachinesProvider()),
             Provider(create: (_) => MesComponentconsumptionProvider()),
           ],

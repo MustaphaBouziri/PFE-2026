@@ -28,6 +28,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   bool _isCancelLoading = false;
 
   bool get _canStart => widget.order.status == 'Released';
+  bool get _canClose => widget.order.status == 'Released';
 
   Future<void> _reloadOrders() async {
     await context.read<MachineordersProvider>().getMachineOrders(widget.machineNo);
@@ -61,7 +62,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _handleClose() async {
-    if (_isCancelLoading) return;
+    if (_isCancelLoading || _canClose) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -208,7 +209,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       ),
     );
   }
-
+// TODO: account for the can close being false and remove the button
   Widget _buildCloseButton() {
     return OutlinedButton.icon(
       onPressed: _isCancelLoading ? null : _handleClose,

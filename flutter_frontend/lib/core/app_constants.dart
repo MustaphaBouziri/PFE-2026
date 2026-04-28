@@ -1,12 +1,13 @@
 class AppConstants {
-  static const String host = 'http://localhost:3000/api';
+  static const String host = 'http://localhost:3000/api/';
 
   static const Map<String, String> jsonHeaders = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
 
-  static const String _base = '$host/';
+  // AI agent endpoint (routed through Node middleware)
+  static const String aiChatUrl = '${host}ai/chat';
 
   // ── Dev token ──────────────────────────────────────────────────────────────
   // Set to one of the fixed GUIDs from the MES API Debug page to bypass login.
@@ -16,48 +17,48 @@ class AppConstants {
   //  "adminToken":"DE000000-0000-0000-0000-000000000003"
   // }
   // Set back to null before committing.
-  //static const String? devToken = 'DE000000-0000-0000-0000-000000000003';
-  static const String? devToken = null;
+  static const String? devToken = 'DE000000-0000-0000-0000-000000000002';
+  //static const String? devToken = null;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
-  static const String loginUrl            = '${_base}Login';
-  static const String meUrl               = '${_base}Me';
-  static const String changePasswordUrl   = '${_base}ChangePassword';
-  static const String logoutUrl           = '${_base}Logout';
-  static const String adminSetPasswordUrl = '${_base}AdminSetPassword';
+  static const String loginUrl            = '${host}Login';
+  static const String meUrl               = '${host}Me';
+  static const String changePasswordUrl   = '${host}ChangePassword';
+  static const String logoutUrl           = '${host}Logout';
+  static const String adminSetPasswordUrl = '${host}AdminSetPassword';
 
   // ── Read ───────────────────────────────────────────────────────────────────
-  static const String fetchMachinesUrl            = '${_base}FetchMachines';
-  static const String getMachineOrdersUrl         = '${_base}getMachineOrders';
-  static const String fetchOngoingOperationsState = '${_base}fetchOngoingOperationsState';
-  static const String fetchOperationsHistory      = '${_base}fetchOperationsHistory';
-  static const String fetchOperationLiveData      = '${_base}fetchOperationLiveData';
-  static const String fetchProductionCycles       = '${_base}fetchProductionCycles';
-  static const String fetchBom                    = '${_base}fetchBom';
-  static const String fetchAllItemBarcodes        = '${_base}fetchAllItemBarcodes';
-  static const String fetchResolveBarcode         = '${_base}resolveBarcode';
+  static const String fetchMachinesUrl            = '${host}FetchMachines';
+  static const String getMachineOrdersUrl         = '${host}getMachineOrders';
+  static const String fetchOngoingOperationsState = '${host}fetchOngoingOperationsState';
+  static const String fetchOperationsHistory      = '${host}fetchOperationsHistory';
+  static const String fetchOperationLiveData      = '${host}fetchOperationLiveData';
+  static const String fetchProductionCycles       = '${host}fetchProductionCycles';
+  static const String fetchBom                    = '${host}fetchBom';
+  static const String fetchAllItemBarcodes        = '${host}fetchAllItemBarcodes';
+  static const String fetchResolveBarcode         = '${host}resolveBarcode';
 
   // ── Write (all require token + onBehalfOfUserId in the request body) ───────
-  static const String startOperation     = '${_base}startOperation';
-  static const String declareProduction  = '${_base}declareProduction';
-  static const String finishOperationUrl = '${_base}finishOperation';
-  static const String cancelOperationUrl = '${_base}cancelOperation';
-  static const String pauseOperationUrl  = '${_base}pauseOperation';
-  static const String resumeOperationUrl = '${_base}resumeOperation';
-  static const String declareScrapUrl    = '${_base}declareScrap';
-  static const String insertScans        = '${_base}insertScans';
+  static const String startOperation     = '${host}startOperation';
+  static const String declareProduction  = '${host}declareProduction';
+  static const String finishOperationUrl = '${host}finishOperation';
+  static const String cancelOperationUrl = '${host}cancelOperation';
+  static const String pauseOperationUrl  = '${host}pauseOperation';
+  static const String resumeOperationUrl = '${host}resumeOperation';
+  static const String declareScrapUrl    = '${host}declareScrap';
+  static const String insertScans        = '${host}insertScans';
 
   // ── Admin ──────────────────────────────────────────────────────────────────
-  static const String scrapCodesUrl     = '${_base}scrapCodes';
-  static const String employeesUrl      = '${_base}employees';
-  static const String workCentersUrl    = '${_base}workCenters';
-  static const String adminCreateUser   = '${_base}AdminCreateUser';
-  static const String fetchAllMESUsers  = '${_base}fetchAllMESUsers';
-  static const String fetchMESUsersByWC = '${_base}fetchMESUsersByWC';
+  static const String scrapCodesUrl     = '${host}scrapCodes';
+  static const String employeesUrl      = '${host}employees';
+  static const String workCentersUrl    = '${host}workCenters';
+  static const String adminCreateUser   = '${host}AdminCreateUser';
+  static const String fetchAllMESUsers  = '${host}fetchAllMESUsers';
+  static const String fetchMESUsersByWC = '${host}fetchMESUsersByWC';
 
   // toggle active status of a user
-  static const String toggleUserActiveStatus = '${_base}AdminSetActive';
-  static const String fetchActivityLog       = '${_base}fetchActivityLog';
-  static const String fetchMachineDashboard  = '${_base}fetchMachineDashboard';
-  static const String adminChangeUserRole    = '${_base}AdminChangeUserRole';
+  static const String toggleUserActiveStatus = '${host}AdminSetActive';
+  static const String fetchActivityLog       = '${host}fetchActivityLog';
+  static const String fetchMachineDashboard  = '${host}fetchMachineDashboard';
+  static const String adminChangeUserRole    = '${host}AdminChangeUserRole';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/storage/session_storage.dart';
 import '../../../data/auth/services/api_service.dart';
 import '../../../data/machine/models/mes_scrapCode_model.dart';
 import '../../../data/machine/services/mes_scrap_service.dart';
@@ -10,7 +11,7 @@ import '../../shared/async_state_mixin.dart';
 /// service so the backend knows which MES user performed the action.
 class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
   final MesScrapService _service = MesScrapService();
-  final ApiService _apiService = ApiService();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   List<MesScrapCode> scrapCodes = [];
 
@@ -34,7 +35,7 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
 
   }) async {
     final result = await runAsync(() async {
-      final token = await _apiService.getToken() ?? '';
+      final token = await _sessionStorage.getToken() ?? '';
       return await _service.declareScrap(
         token: token,
         executionId: executionId,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/storage/session_storage.dart';
 import '../../../data/auth/services/api_service.dart';
 import '../../../data/machine/models/erp_order_model.dart';
 import '../../../data/machine/models/mes_operation_model.dart';
@@ -15,7 +16,7 @@ import '../../shared/async_state_mixin.dart';
 /// so the BC backend can resolve the MES user identity from the token.
 class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   final ErpMachineOrdersService _service = ErpMachineOrdersService();
-  final ApiService _apiService = ApiService();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   List<MachineOrderModel> machineOrders = [];
 
@@ -38,7 +39,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
 
   /// Resolves the current token; throws if the session has expired.
   Future<String> _requireToken() async {
-    final token = await _apiService.getToken();
+    final token = await _sessionStorage.getToken();
     if (token == null || token.isEmpty) throw Exception('Not authenticated');
     return token;
   }
