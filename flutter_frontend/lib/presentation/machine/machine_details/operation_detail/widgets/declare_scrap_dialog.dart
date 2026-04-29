@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/machineOrders_provider.dart';
@@ -8,6 +9,7 @@ import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provi
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/widgets/operator_selector.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../../data/machine/models/mes_scrapCode_model.dart';
 import '../../../../../domain/machines/providers/mes_scrap_provider.dart';
 
@@ -30,6 +32,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
   final _qtyController = TextEditingController();
   final _noteController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+  final SessionStorage _sessionStorage = SessionStorage();
   ComponentConsumptionModel? selectedComponent;
   String _onBehalfOfUserId = '';
 
@@ -39,20 +42,15 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
   List<String> scrapTypes = ['Material', 'FinishedProduct'];
   String currentOption = 'Material';
+
   bool get _isSupervisor {
     final role =
-        context
-            .read<AuthProvider>()
-            .userData?['role']
-            ?.toString()
-            .trim()
-            .toLowerCase() ??
-        '';
+        _sessionStorage.getRole().toString().trim().toLowerCase() ?? '';
     return role == 'supervisor';
   }
 
   List<String> get _supervisorWorkCenters {
-    final wcs = context.read<AuthProvider>().userData?['workCenters'];
+    final wcs = _sessionStorage.getWorkCenters() as List<String>;
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
     return [];
   }

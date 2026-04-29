@@ -1,17 +1,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import '../../../core/app_constants.dart';
 import '../models/ai_chat_model.dart';
 
 class AiChatService {
+  final SessionStorage _sessionStorage = SessionStorage();
   Future<AiChatResponse> sendMessage({
     required String message,
-    required String userId,
-    required String role,
-    required List<String> workCenters,
-    required String token,
     List<ConversationTurn> history = const [],
   }) async {
+    final token = _sessionStorage.getToken();
+    final userId = _sessionStorage.getUserId();
+    final role = _sessionStorage.getRole();
+    final workCenters = _sessionStorage.getWorkCenters();
+
     final body = jsonEncode({
       'message': message,
       'user_context': {

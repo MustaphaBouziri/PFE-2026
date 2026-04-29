@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
@@ -24,6 +26,7 @@ class Machinelistpage extends StatefulWidget {
 
 class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final TextEditingController searchController = TextEditingController();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   final ValueNotifier<String> searchQuery = ValueNotifier('');
   final ValueNotifier<String> statusFilter = ValueNotifier('All');
@@ -109,24 +112,12 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   }
 
   String _resolveRole() {
-    return context
-            .read<AuthProvider>()
-            .userData?['role']
-            ?.toString()
-            .trim()
-            .toLowerCase() ??
-        '';
+    return _sessionStorage.getRole().toString().trim().toLowerCase() ?? '';
   }
 
   List<String> _resolveWorkCenterIds() {
-    final wcs = context.read<AuthProvider>().userData?['workCenters'];
+    final wcs = _sessionStorage.getWorkCenters() as List<String>;
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
-    final single = context
-        .read<AuthProvider>()
-        .userData?['workCenter']
-        ?.toString();
-    if (single != null && single.isNotEmpty) return [single];
-    return [];
   }
 
   Map<String, List<MachineModel>> _applyFilters(
@@ -175,11 +166,15 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
+<<<<<<< HEAD
     final role = authProvider.userData?['role']?.toString() ?? '';
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
     final isTablet = width >= 820 && width <= 1032;
+=======
+    final role = _resolveRole();
+>>>>>>> 72147224f2f5d53f3c1af8a9a4eb5f96a6a460c3
 
     return Scaffold(
       floatingActionButton: ValueListenableBuilder<bool>(
@@ -227,7 +222,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  authProvider.userData?['fullName']?.toString() ?? 'User',
+                  _sessionStorage.getFullName().toString(),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

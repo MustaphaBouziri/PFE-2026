@@ -35,9 +35,7 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
 
   }) async {
     final result = await runAsync(() async {
-      final token = await _sessionStorage.getToken() ?? '';
       return await _service.declareScrap(
-        token: token,
         executionId: executionId,
         scrapCode: scrapCode,
         quantity: quantity,

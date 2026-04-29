@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/auth/providers/auth_provider.dart';
@@ -9,8 +10,9 @@ class UserDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final SessionStorage _sessionStorage = SessionStorage();
     final auth = context.watch<AuthProvider>();
-    final userData = auth.userData;
+    final userData = _sessionStorage.getUserData() as Map<String, dynamic>;
 
     final String name = userData?['name']?.toString() ?? 'User';
     final String role = userData?['role']?.toString() ?? '';

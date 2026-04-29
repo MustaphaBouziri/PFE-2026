@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
@@ -21,6 +22,7 @@ class DeclareProductionDialog extends StatefulWidget {
 class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
   final _formKey = GlobalKey<FormState>();
   final _qtyController = TextEditingController();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -35,18 +37,12 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
 
   bool get _isSupervisor {
     final role =
-        context
-            .read<AuthProvider>()
-            .userData?['role']
-            ?.toString()
-            .trim()
-            .toLowerCase() ??
-        '';
+        _sessionStorage.getRole().toString().trim().toLowerCase() ?? '';
     return role == 'supervisor';
   }
 
   List<String> get _supervisorWorkCenters {
-    final wcs = context.read<AuthProvider>().userData?['workCenters'];
+    final wcs = _sessionStorage.getWorkCenters() as List<String>;
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
     return [];
   }
@@ -226,33 +222,31 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _submit,
-                            icon: _isLoading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.check, color: Colors.white),
-                            label: Text(
-                              _isLoading ? 'submitting'.tr() : 'submit'.tr(),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2563EB),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+                        onPressed: _isLoading ? null : _submit,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.check, color: Colors.white),
+                        label: Text(
+                          _isLoading ? 'submitting'.tr() : 'submit'.tr(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      ],
-                    
-                  
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
