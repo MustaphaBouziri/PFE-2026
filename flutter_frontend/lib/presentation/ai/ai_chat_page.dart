@@ -39,9 +39,7 @@ class _AiChatPageState extends State<AiChatPage> {
     final userId = userData['authId']?.toString() ?? '';
     final role = userData['role']?.toString() ?? 'Operator';
     final rawWc = userData['workCenters'];
-    final workCenters = rawWc is List
-        ? List<String>.from(rawWc)
-        : <String>[];
+    final workCenters = rawWc is List ? List<String>.from(rawWc) : <String>[];
     final token = auth.token;
 
     await ai.sendMessage(
@@ -55,23 +53,21 @@ class _AiChatPageState extends State<AiChatPage> {
     _scrollToBottom();
   }
 
-  void _handleAction(BuildContext ctx, AiRedirectAction action) {
-    // Navigation based on action_type
-    // Callers can extend this switch for deeper navigation
+  void _handleAction(BuildContext context, AiRedirectAction action) {
     switch (action.actionType) {
       case 'redirect_machine':
-        final mno = action.payload['machineNo'] as String? ?? '';
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('Navigate to machine $mno')),
+        final machineNo = action.payload['machineNo'] as String? ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Navigate to machine $machineNo')),
         );
         break;
       case 'redirect_operation':
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text(action.label)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(action.label)));
         break;
       case 'redirect_machine_list':
-        Navigator.of(ctx).popUntil((r) => r.isFirst);
+        Navigator.of(context).popUntil((route) => route.isFirst);
         break;
       default:
         break;
@@ -99,42 +95,53 @@ class _AiChatPageState extends State<AiChatPage> {
         ],
       ),
       body: Consumer<AiChatProvider>(
-        builder: (context, ai, _) {
+        builder: (context, aiProvider, _) {
           _scrollToBottom();
           return Column(
             children: [
               Expanded(
-                child: ai.history.isEmpty
+                child: aiProvider.history.isEmpty
                     ? const _EmptyState()
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(16),
-                        itemCount: ai.history.length +
-                            (ai.lastResponse?.actions.isNotEmpty == true ? 1 : 0),
-                        itemBuilder: (ctx, i) {
-                          if (i < ai.history.length) {
-                            final turn = ai.history[i];
-                            return _MessageBubble(turn: turn);
-                          }
-                          // Action buttons row after last assistant message
-                          return _ActionButtons(
-                            actions: ai.lastResponse!.actions,
-                            onTap: (a) => _handleAction(ctx, a),
+                        itemCount: aiProvider.history.length,
+                        itemBuilder: (context, index) {
+                          final turn = aiProvider.history[index];
+                          final hasActions =
+                              turn.role == 'assistant' &&
+                              aiProvider.lastResponse?.actions.isNotEmpty ==
+                                  true &&
+                              index == aiProvider.history.length - 1;
+
+                          return Column(
+                            children: [
+                              _MessageBubble(turn: turn),
+                              if (hasActions)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: _ActionButtons(
+                                    actions: aiProvider.lastResponse!.actions,
+                                    onTap: (action) =>
+                                        _handleAction(context, action),
+                                  ),
+                                ),
+                            ],
                           );
                         },
                       ),
               ),
-              if (ai.errorMessage != null)
+              if (aiProvider.errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    ai.errorMessage!,
+                    aiProvider.errorMessage!,
                     style: const TextStyle(color: Colors.red, fontSize: 12),
                   ),
                 ),
               _InputBar(
                 controller: _controller,
-                isLoading: ai.isLoading,
+                isLoading: aiProvider.isLoading,
                 onSend: _send,
               ),
             ],
@@ -147,23 +154,27 @@ class _AiChatPageState extends State<AiChatPage> {
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
+
   @override
   Widget build(BuildContext context) => const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
-            Text('Ask me anything about your machines,\norders, or production.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey)),
-          ],
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
+        SizedBox(height: 12),
+        Text(
+          'Ask me anything about your machines,\norders, or production.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _MessageBubble extends StatelessWidget {
   final ConversationTurn turn;
+
   const _MessageBubble({required this.turn});
 
   @override
@@ -172,18 +183,21 @@ class _MessageBubble extends StatelessWidget {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(14),
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78),
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
         decoration: BoxDecoration(
           color: isUser ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(turn.content,
-            style: TextStyle(
-                color: isUser ? Colors.white : const Color(0xFF0F172A),
-                fontSize: 14)),
+        child: Text(
+          turn.content,
+          style: TextStyle(
+            color: isUser ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
       ),
     );
   }
@@ -192,67 +206,86 @@ class _MessageBubble extends StatelessWidget {
 class _ActionButtons extends StatelessWidget {
   final List<AiRedirectAction> actions;
   final void Function(AiRedirectAction) onTap;
+
   const _ActionButtons({required this.actions, required this.onTap});
 
   @override
   Widget build(BuildContext context) => Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        children: actions
-            .map((a) => OutlinedButton(
-                  onPressed: () => onTap(a),
-                  child: Text(a.label, style: const TextStyle(fontSize: 12)),
-                ))
-            .toList(),
-      );
+    spacing: 8,
+    runSpacing: 4,
+    children: actions
+        .map(
+          (action) => ElevatedButton(
+            onPressed: () => onTap(action),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFe2e8f0),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: Text(
+              action.label,
+              style: const TextStyle(color: Color(0xFF0F172A)),
+            ),
+          ),
+        )
+        .toList(),
+  );
 }
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final VoidCallback onSend;
-  const _InputBar(
-      {required this.controller,
-      required this.isLoading,
-      required this.onSend});
+
+  const _InputBar({
+    required this.controller,
+    required this.isLoading,
+    required this.onSend,
+  });
 
   @override
   Widget build(BuildContext context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onSubmitted: (_) => onSend(),
-                  decoration: InputDecoration(
-                    hintText: 'Ask the MES assistant…',
-                    filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onSubmitted: (_) => onSend(),
+              decoration: InputDecoration(
+                hintText: 'Ask the MES assistant…',
+                filled: true,
+                fillColor: const Color(0xFFe5e7eb),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
-              const SizedBox(width: 8),
-              isLoading
-                  ? const SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : IconButton.filled(
-                      onPressed: onSend,
-                      icon: const Icon(Icons.send),
-                      style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A)),
-                    ),
-            ],
+            ),
           ),
-        ),
-      );
+          const SizedBox(width: 8),
+          isLoading
+              ? const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : IconButton.filled(
+                  onPressed: onSend,
+                  icon: const Icon(Icons.send),
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                  ),
+                ),
+        ],
+      ),
+    ),
+  );
 }
