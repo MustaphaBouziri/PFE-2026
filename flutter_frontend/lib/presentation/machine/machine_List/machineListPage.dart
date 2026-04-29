@@ -116,8 +116,8 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   }
 
   List<String> _resolveWorkCenterIds() {
-    final wcs = _sessionStorage.getWorkCenters() as List<String>;
-    if (wcs is List) return wcs.map((e) => e.toString()).toList();
+    final wcs = _sessionStorage.getWorkCenters();
+    return wcs.map((e) => e.toString()).toList();
   }
 
   Map<String, List<MachineModel>> _applyFilters(
@@ -165,16 +165,10 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
-<<<<<<< HEAD
-    final role = authProvider.userData?['role']?.toString() ?? '';
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-
     final isTablet = width >= 820 && width <= 1032;
-=======
     final role = _resolveRole();
->>>>>>> 72147224f2f5d53f3c1af8a9a4eb5f96a6a460c3
 
     return Scaffold(
       floatingActionButton: ValueListenableBuilder<bool>(
