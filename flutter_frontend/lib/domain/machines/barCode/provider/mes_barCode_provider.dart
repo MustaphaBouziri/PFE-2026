@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/storage/session_storage.dart';
 import '../../../../data/auth/services/api_service.dart';
 import '../../../../data/machine/barCode/models/mes_barCode_model.dart';
 import '../../../../data/machine/barCode/services/mes_barCode_service.dart';
@@ -9,7 +10,7 @@ import '../../../../data/machine/barCode/services/mes_barCode_service.dart';
 /// service so the backend can attribute each scan to the correct MES user.
 class MesBarcodeProvider with ChangeNotifier {
   final MesBarcodeService _service = MesBarcodeService();
-  final ApiService _apiService = ApiService();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   List<ItemBarcodeModel> barcodes = [];
   bool isLoading = false;
@@ -38,7 +39,7 @@ class MesBarcodeProvider with ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      final token = await _apiService.getToken() ?? '';
+      final token = await _sessionStorage.getToken() ?? '';
       return await _service.insertScans(
         token,
         executionId,

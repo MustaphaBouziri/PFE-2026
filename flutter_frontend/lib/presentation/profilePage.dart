@@ -4,6 +4,9 @@ import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
 import 'package:provider/provider.dart';
 
+import 'ai/ai_chat_page.dart';
+import 'auth/Login/login_page.dart';
+
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -84,10 +87,24 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   ProfileTile(
+                    title: 'ai chat',
+                    icon: Icons.chat_outlined,
+                    onTap :() => Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatPage())),
+                  ),
+                  ProfileTile(
                     title: 'logout',
                     icon: Icons.logout,
                     color: Colors.red,
-                    onTap: () {},
+                    onTap: () async {
+                      await auth.logout();
+
+                      if (!context.mounted) return;
+
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                            (route) => false,
+                      );
+                    },
                   ),
                 ],
               ),
