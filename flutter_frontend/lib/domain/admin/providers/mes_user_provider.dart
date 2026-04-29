@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../core/storage/session_storage.dart';
 import '../../../data/admin/models/mes_user_model.dart';
 import '../../../data/admin/services/mes_user_service.dart';
-import '../../../data/auth/services/api_service.dart';
 import '../../shared/async_state_mixin.dart';
 
 class MesUserProvider with ChangeNotifier, AsyncStateMixin {
@@ -41,13 +40,13 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
     required int roleInt,
     required List<String> workCenterList,
   }) async {
-    final token = await _sessionStorage.getToken() ?? '';
-    final result = await runAsync(() => _service.createMesUser(
-      token: token,
-      employeeId: employeeId,
-      roleInt: roleInt,
-      workCenterList: workCenterList,
-    ));
+    final result = await runAsync(
+      () => _service.createMesUser(
+        employeeId: employeeId,
+        roleInt: roleInt,
+        workCenterList: workCenterList,
+      ),
+    );
 
     if (result == true) {
       triggerRefresh();
@@ -64,7 +63,6 @@ class MesUserProvider with ChangeNotifier, AsyncStateMixin {
     final result = await runAsync(() async {
       final token = await _sessionStorage.getToken() ?? '';
       final success = await _service.changeUserRole(
-        token: token,
         targetUserId: targetUserId,
         newRoleInt: newRoleInt,
         workCenterList: workCenterList,

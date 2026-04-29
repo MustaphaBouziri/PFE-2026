@@ -37,20 +37,13 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     });
   }
 
-  /// Resolves the current token; throws if the session has expired.
-  Future<String> _requireToken() async {
-    final token = await _sessionStorage.getToken();
-    if (token == null || token.isEmpty) throw Exception('Not authenticated');
-    return token;
-  }
 
   Future<bool> startOrder(
     String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
-    final token = await _requireToken();
-    return _service.startOperation(token, prodOrderNo, operationNo, machineNo);
+    return _service.startOperation( prodOrderNo, operationNo, machineNo);
   }
 
   Future<bool> finishOperation({
@@ -58,9 +51,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     required String prodOrderNo,
     required String operationNo,
   }) async {
-    final token = await _requireToken();
     final result = await _service.finishOperation(
-      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -74,9 +65,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     required String prodOrderNo,
     required String operationNo,
   }) async {
-    final token = await _requireToken();
     final result = await _service.cancelOperation(
-      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -90,9 +79,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     required String prodOrderNo,
     required String operationNo,
   }) async {
-    final token = await _requireToken();
     final result = await _service.pauseOperation(
-      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -106,9 +93,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     required String prodOrderNo,
     required String operationNo,
   }) async {
-    final token = await _requireToken();
     final result = await _service.resumeOperation(
-      token: token,
       machineNo: machineNo,
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
@@ -124,9 +109,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     double input,
     String onBehalfOfUserId,
   ) async {
-    final token = await _requireToken();
     final result = await _service.declareProduction(
-      token,
       prodOrderNo,
       operationNo,
       machineNo,

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
@@ -25,6 +27,7 @@ class Machinelistpage extends StatefulWidget {
 // this will unlock these methodes : didPushNext and didPopNext
 class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final TextEditingController searchController = TextEditingController();
+  final SessionStorage _sessionStorage = SessionStorage();
 
   final ValueNotifier<String> searchQuery = ValueNotifier('');
   final ValueNotifier<String> statusFilter = ValueNotifier('All');
@@ -126,24 +129,12 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   }
 
   String _resolveRole() {
-    return context
-            .read<AuthProvider>()
-            .userData?['role']
-            ?.toString()
-            .trim()
-            .toLowerCase() ??
-        '';
+    return _sessionStorage.getRole().toString().trim().toLowerCase() ?? '';
   }
 
   List<String> _resolveWorkCenterIds() {
-    final wcs = context.read<AuthProvider>().userData?['workCenters'];
+    final wcs = _sessionStorage.getWorkCenters() as List<String>;
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
-    final single = context
-        .read<AuthProvider>()
-        .userData?['workCenter']
-        ?.toString();
-    if (single != null && single.isNotEmpty) return [single];
-    return [];
   }
 
   //filter without modifying original data and without triggering unnecessary rebuilds
@@ -180,7 +171,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
-    final role = authProvider.userData?['role']?.toString() ?? '';
+    final role = _resolveRole();
 
     return Scaffold(
       appBar: AppBar(
@@ -211,7 +202,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  authProvider.userData?['fullName']?.toString() ?? 'User',
+                  _sessionStorage.getFullName().toString(),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

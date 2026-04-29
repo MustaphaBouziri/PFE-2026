@@ -35,21 +35,9 @@ class _AiChatPageState extends State<AiChatPage> {
     final auth = context.read<AuthProvider>();
     final ai = context.read<AiChatProvider>();
 
-    final userData = auth.userData ?? {};
-    final userId = userData['authId']?.toString() ?? '';
-    final role = userData['role']?.toString() ?? 'Operator';
-    final rawWc = userData['workCenters'];
-    final workCenters = rawWc is List
-        ? List<String>.from(rawWc)
-        : <String>[];
-    final token = auth.token;
 
     await ai.sendMessage(
       message: text,
-      userId: userId,
-      role: role,
-      workCenters: workCenters,
-      token: token,
     );
 
     _scrollToBottom();

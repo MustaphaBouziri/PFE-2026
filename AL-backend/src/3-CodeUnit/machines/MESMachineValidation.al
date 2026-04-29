@@ -25,6 +25,25 @@ codeunit 50134 "MES Machine Validation"
         EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
     end;
 
+
+    [TryFunction]
+    procedure TryCancelOperationBeforeStart(
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        machineNo: Code[20]
+    )
+    var
+        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    begin
+        ProdOrderRoutingLine.Reset();
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+
+        if not ProdOrderRoutingLine.FindFirst() then
+            Error('Routing line not found or order is not in Released status.');
+
+    end;
+
     [TryFunction]
     procedure TryDeclareProduction(
         machineNo: Code[20];

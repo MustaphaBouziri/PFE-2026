@@ -1,5 +1,6 @@
-import 'dart:async';
 import 'dart:convert';
+
+import 'package:pfe_mes/core/storage/session_storage.dart';
 
 import '../../../core/app_constants.dart';
 import '../../shared/http_client.dart';
@@ -7,44 +8,44 @@ import '../../shared/http_response_parser.dart';
 import '../models/mes_user_model.dart';
 
 class MesUserService {
-  Future<List<MesUser>> fetchAllMESUsers() async {
-    final response = await HttpClient.post(AppConstants.fetchAllMESUsers, {});
+  final SessionStorage _sessionStorage = SessionStorage();
 
-    final usersList = HttpResponseParser.parseList(
-      response,
-      label: 'Fetch all users',
-    );
-    return usersList.map((json) => MesUser.fromJson(json)).toList();
+  Future<List<MesUser>> fetchAllMESUsers() async {
+    final response =
+    await HttpClient.post(AppConstants.fetchAllMESUsers, {});
+    return HttpResponseParser.parseList(response, label: 'Fetch all users')
+        .map((json) => MesUser.fromJson(json))
+        .toList();
   }
 
   Future<List<MesUser>> fetchMESUsersByWC({required String wcId}) async {
-    final response = await HttpClient.post(AppConstants.fetchMESUsersByWC, {
-      'wcId': wcId,
-    });
-
-    final usersList = HttpResponseParser.parseList(
-      response,
-      label: 'Fetch users by departement',
+    final response = await HttpClient.post(
+      AppConstants.fetchMESUsersByWC,
+      {'wcId': wcId},
     );
-    return usersList.map((json) => MesUser.fromJson(json)).toList();
+    return HttpResponseParser.parseList(
+      response,
+      label: 'Fetch users by department',
+    )
+        .map((json) => MesUser.fromJson(json))
+        .toList();
   }
 
   Stream<List<MesUser>> streamFetchAllMESUsers({
     required Stream<void> trigger,
   }) async* {
     yield await fetchAllMESUsers();
-    
-    await for (final _ in Stream.periodic(const Duration(minutes: 5))) {
+    await for (final _ in trigger) {
       yield await fetchAllMESUsers();
     }
   }
 
   Future<bool> createMesUser({
-    required String token,
     required String employeeId,
     required int roleInt,
     required List<String> workCenterList,
   }) async {
+    final token = _sessionStorage.getToken();
     final response = await HttpClient.post(AppConstants.adminCreateUser, {
       'token': token,
       'userId': employeeId,
@@ -52,39 +53,27 @@ class MesUserService {
       'roleInt': roleInt,
       'workCenterListJson': jsonEncode(workCenterList),
     });
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return true;
-    } else {
-      throw Exception(
-        'Failed to create MES user: ${response.statusCode} ${response.body}',
-      );
-    }
+    return HttpResponseParser.parseSuccess(
+      response,
+      label: 'createMesUser',
+    );
   }
 
-  /// Changes the role of [targetUserId] to [newRoleInt] and replaces their
-  /// work-center assignments with [workCenterList].
-  ///
-  /// newRoleInt: 0 = Operator, 1 = Supervisor, 2 = Admin
   Future<bool> changeUserRole({
-    required String token,
     required String targetUserId,
     required int newRoleInt,
     required List<String> workCenterList,
   }) async {
+    final token = _sessionStorage.getToken();
     final response = await HttpClient.post(AppConstants.adminChangeUserRole, {
       'token': token,
       'targetUserId': targetUserId,
       'newRoleInt': newRoleInt,
       'workCenterListJson': jsonEncode(workCenterList),
     });
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return true;
-    } else {
-      throw Exception(
-        'Failed to change user role: ${response.statusCode} ${response.body}',
-      );
-    }
+    return HttpResponseParser.parseSuccess(
+      response,
+      label: 'changeUserRole',
+    );
   }
 }
