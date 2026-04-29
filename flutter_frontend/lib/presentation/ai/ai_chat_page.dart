@@ -5,7 +5,14 @@ import '../../domain/auth/providers/auth_provider.dart';
 import '../../data/ai/models/ai_chat_model.dart';
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  final VoidCallback? onClose;
+  final bool isModal;
+
+  const AiChatPage({
+    super.key,
+    this.onClose,
+    this.isModal = true,
+  });
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -43,26 +50,32 @@ class _AiChatPageState extends State<AiChatPage> {
     _scrollToBottom();
   }
 
-  void _handleAction(BuildContext ctx, AiRedirectAction action) {
-    // Navigation based on action_type
-    // Callers can extend this switch for deeper navigation
+  void _handleAction(BuildContext context, AiRedirectAction action) {
     switch (action.actionType) {
       case 'redirect_machine':
-        final mno = action.payload['machineNo'] as String? ?? '';
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('Navigate to machine $mno')),
+        final machineNo = action.payload['machineNo'] as String? ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Navigate to machine $machineNo')),
         );
         break;
       case 'redirect_operation':
-        ScaffoldMessenger.of(ctx).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(action.label)),
         );
         break;
       case 'redirect_machine_list':
-        Navigator.of(ctx).popUntil((r) => r.isFirst);
+        Navigator.of(context).popUntil((route) => route.isFirst);
         break;
       default:
         break;
+    }
+  }
+
+  void _handleClose() {
+    if (widget.isModal) {
+      Navigator.pop(context);
+    } else {
+      widget.onClose?.call();
     }
   }
 
@@ -75,66 +88,150 @@ class _AiChatPageState extends State<AiChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MES Assistant'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: 'Clear chat',
-            onPressed: () => context.read<AiChatProvider>().clearHistory(),
+    if (widget.isModal) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 800, maxHeight: 800),
+          child: _buildChatContent(),
+        ),
+      );
+    }
+
+    // Embedded panel version
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          bottomLeft: Radius.circular(12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(-4, 0),
           ),
         ],
       ),
-      body: Consumer<AiChatProvider>(
-        builder: (context, ai, _) {
-          _scrollToBottom();
-          return Column(
-            children: [
-              Expanded(
-                child: ai.history.isEmpty
-                    ? const _EmptyState()
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: ai.history.length +
-                            (ai.lastResponse?.actions.isNotEmpty == true ? 1 : 0),
-                        itemBuilder: (ctx, i) {
-                          if (i < ai.history.length) {
-                            final turn = ai.history[i];
-                            return _MessageBubble(turn: turn);
-                          }
-                          // Action buttons row after last assistant message
-                          return _ActionButtons(
-                            actions: ai.lastResponse!.actions,
-                            onTap: (a) => _handleAction(ctx, a),
-                          );
-                        },
-                      ),
+      child: _buildChatContent(),
+    );
+  }
+
+  Widget _buildChatContent() {
+    return Column(
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1,
               ),
-              if (ai.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    ai.errorMessage!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Text(
+                'MES Assistant',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
-              _InputBar(
-                controller: _controller,
-                isLoading: ai.isLoading,
-                onSend: _send,
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Clear chat',
+                onPressed: () => context.read<AiChatProvider>().clearHistory(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: _handleClose,
               ),
             ],
-          );
-        },
-      ),
+          ),
+        ),
+        // Chat Content
+        Expanded(
+          child: Consumer<AiChatProvider>(
+            builder: (context, aiProvider, _) {
+              _scrollToBottom();
+              return Column(
+                children: [
+                  Expanded(
+                    child: aiProvider.history.isEmpty
+                        ? const _EmptyState()
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: aiProvider.history.length,
+                            itemBuilder: (context, index) {
+                              final turn = aiProvider.history[index];
+                              final hasActions =
+                                  turn.role == 'assistant' &&
+                                  aiProvider.lastResponse?.actions.isNotEmpty ==
+                                      true &&
+                                  index == aiProvider.history.length - 1;
+
+                              return Column(
+                                children: [
+                                  _MessageBubble(turn: turn),
+                                  if (hasActions)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: _ActionButtons(
+                                        actions:
+                                            aiProvider.lastResponse!.actions,
+                                        onTap: (action) =>
+                                            _handleAction(context, action),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                  ),
+                  if (aiProvider.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        aiProvider.errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+        // Input Bar
+        Consumer<AiChatProvider>(
+          builder: (context, aiProvider, _) {
+            return _InputBar(
+              controller: _controller,
+              isLoading: aiProvider.isLoading,
+              onSend: _send,
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
+
   @override
   Widget build(BuildContext context) => const Center(
         child: Column(
@@ -142,9 +239,11 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
             SizedBox(height: 12),
-            Text('Ask me anything about your machines,\norders, or production.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey)),
+            Text(
+              'Ask me anything about your machines,\norders, or production.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -152,6 +251,7 @@ class _EmptyState extends StatelessWidget {
 
 class _MessageBubble extends StatelessWidget {
   final ConversationTurn turn;
+
   const _MessageBubble({required this.turn});
 
   @override
@@ -160,18 +260,21 @@ class _MessageBubble extends StatelessWidget {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(14),
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78),
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
         decoration: BoxDecoration(
           color: isUser ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(turn.content,
-            style: TextStyle(
-                color: isUser ? Colors.white : const Color(0xFF0F172A),
-                fontSize: 14)),
+        child: Text(
+          turn.content,
+          style: TextStyle(
+            color: isUser ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
       ),
     );
   }
@@ -180,6 +283,7 @@ class _MessageBubble extends StatelessWidget {
 class _ActionButtons extends StatelessWidget {
   final List<AiRedirectAction> actions;
   final void Function(AiRedirectAction) onTap;
+
   const _ActionButtons({required this.actions, required this.onTap});
 
   @override
@@ -187,10 +291,23 @@ class _ActionButtons extends StatelessWidget {
         spacing: 8,
         runSpacing: 4,
         children: actions
-            .map((a) => OutlinedButton(
-                  onPressed: () => onTap(a),
-                  child: Text(a.label, style: const TextStyle(fontSize: 12)),
-                ))
+            .map(
+              (action) => ElevatedButton(
+                onPressed: () => onTap(action),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFe2e8f0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  action.label,
+                  style: const TextStyle(color: Color(0xFF0F172A)),
+                ),
+              ),
+            )
             .toList(),
       );
 }
@@ -199,10 +316,12 @@ class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final VoidCallback onSend;
-  const _InputBar(
-      {required this.controller,
-      required this.isLoading,
-      required this.onSend});
+
+  const _InputBar({
+    required this.controller,
+    required this.isLoading,
+    required this.onSend,
+  });
 
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -217,13 +336,15 @@ class _InputBar extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: 'Ask the MES assistant…',
                     filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
+                    fillColor: const Color(0xFFe5e7eb),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
@@ -232,12 +353,14 @@ class _InputBar extends StatelessWidget {
                   ? const SizedBox(
                       width: 40,
                       height: 40,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : IconButton.filled(
                       onPressed: onSend,
                       icon: const Icon(Icons.send),
                       style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A)),
+                        backgroundColor: const Color(0xFF0F172A),
+                      ),
                     ),
             ],
           ),

@@ -7,6 +7,7 @@ import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/ai/ai_chat_page.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
@@ -23,8 +24,6 @@ class Machinelistpage extends StatefulWidget {
   State<Machinelistpage> createState() => _MachinelistpageState();
 }
 
-// we now make the page aware(RouteAware) of navigation changes using the RouteObserver defined in main.dart
-// this will unlock these methodes : didPushNext and didPopNext
 class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final TextEditingController searchController = TextEditingController();
   final SessionStorage _sessionStorage = SessionStorage();
@@ -34,6 +33,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final ValueNotifier<Map<String, List<MachineModel>>> dataNotifier =
       ValueNotifier({});
   final ValueNotifier<bool> loadingNotifier = ValueNotifier(true);
+  final ValueNotifier<bool> chatOpen = ValueNotifier(false);
 
   final List<String> statusOptions = ['All', 'Working', 'Idle'];
   final GlobalKey _searchKey = GlobalKey();
@@ -54,8 +54,6 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     }
   }
 
-  // register this page to be the global observer
-  // its like saying : hey flutter notify me when navigation heppens
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -65,21 +63,15 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     }
   }
 
-  // this will be triggered when u navigate back to this page  or first time this page is created  a new subscription will be made
   void _startStream() {
-    // this to prevent duplicate streams without it  on every resume = new stream = multiple api calls
-    // im already listening to the stream dont start a new one
-    // without it every time i come back to the page it will start a new subscription and i will have multiple streams listening and making api calls at the same time (3 subs = 3 api call evry 20 sec )
     if (_subscription != null) {
-      return; // already streaming
+      return;
     }
 
     final provider = context.read<MesMachinesProvider>();
-    //subscribe to the stream and update notifiers on new data
     _subscription = provider
         .streamOrderedMachinePerDepartments(_workCenterIds)
         .listen((event) {
-          // event is the data eitted evry 20 sec
           if (!mounted) return;
 
           dataNotifier.value = event;
@@ -87,21 +79,17 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
         });
   }
 
-  // cancels the active stream subscription: stop api calls free memmory
-  //stream exist but subscription is cancel it only makes the page stop listening to the strezm
   void _stopStream() {
     _subscription?.cancel();
     _subscription = null;
   }
 
-  // route aware methode : this will be triggered when we open another page on top like nav.push
   @override
   void didPushNext() {
     _stopStream();
     super.didPushNext();
   }
 
-  // route aware methode : this will be triggered when we come back to this page after closing the top page like nav.pop we restart the page
   @override
   void didPopNext() {
     if (_workCenterIds.isNotEmpty) {
@@ -110,21 +98,16 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     super.didPopNext();
   }
 
-  // when the page is closed permanently we want to stop the stream and free memmory and also unsubscribe from the global observer to stop listening to navigation changes
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
-
-    // Stop listening to stream
     _stopStream();
-
-    /// Dispose controllers and notifiers
     searchController.dispose();
     searchQuery.dispose();
     statusFilter.dispose();
     dataNotifier.dispose();
     loadingNotifier.dispose();
-
+    chatOpen.dispose();
     super.dispose();
   }
 
@@ -137,7 +120,6 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     if (wcs is List) return wcs.map((e) => e.toString()).toList();
   }
 
-  //filter without modifying original data and without triggering unnecessary rebuilds
   Map<String, List<MachineModel>> _applyFilters(
     Map<String, List<MachineModel>> grouped,
     String query,
@@ -168,12 +150,44 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     return result;
   }
 
+  void _openChat(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth > 1032) {
+      // Open as side panel
+      chatOpen.value = true;
+    } else {
+      // Open as full-page modal
+      showDialog(
+        context: context,
+        builder: (context) => const AiChatPage(isModal: true),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
     final role = _resolveRole();
 
     return Scaffold(
+      floatingActionButton: ValueListenableBuilder<bool>(
+  valueListenable: chatOpen,
+  builder: (_, isChatOpen, __) {
+    final isDesktop = MediaQuery.of(context).size.width >= 1032;
+// this to stop making the button on top of the chat pannel if pc 
+    if (isChatOpen && isDesktop) return const SizedBox();
+
+    return IconButton(
+      onPressed: () => _openChat(context),
+      icon: const Icon(Icons.smart_toy_outlined, size: 30),
+      style: IconButton.styleFrom(
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFFE2E8F0),
+      ),
+    );
+  },
+),
       appBar: AppBar(
         title: Row(
           children: [
@@ -232,13 +246,58 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.dashboard, size: 16),
-                    label: Text('machineDashboard'.tr()),
+                    icon: const Icon(
+                      Icons.dashboard,
+                      size: 16,
+                      color: Color(0xFF0F172A),
+                    ),
+                    label: Text(
+                      'machineDashboard'.tr(),
+                      style: const TextStyle(color: Color(0xFF0F172A)),
+                    ),
                   ),
           ],
         ),
       ),
-      body: _buildBody(),
+      body: ValueListenableBuilder<bool>(
+        valueListenable: chatOpen,
+        builder: (_, isChatOpen, __) {
+          return Stack(
+            children: [
+              // body
+              _buildBody(),
+
+              //// chat panel for larger screens
+              if (isChatOpen && MediaQuery.of(context).size.width >= 1032)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 400,
+                  child: AiChatPage(
+                    isModal: false,
+                    onClose: () => chatOpen.value = false,
+                  ),
+                ),
+
+       
+              if (isChatOpen && MediaQuery.of(context).size.width >=1032)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  right: 400,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () => chatOpen.value = false,
+                    child: Container(
+                      color: Colors.black.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -246,8 +305,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     if (_workCenterIds.isEmpty) {
       return Center(child: Text('noWorkCenterAssigned'.tr()));
     }
-    // we use ValueListenableBuilder to listen to loading state and show a loader until data is ready
-    // we do this because we want to show the tutorial only after data is loaded and the UI is ready
+
     return ValueListenableBuilder<bool>(
       valueListenable: loadingNotifier,
       builder: (_, loading, __) {
@@ -260,7 +318,6 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     );
   }
 
-  // the entire body ui meaning the search + the list machine
   Widget _buildMachineList() {
     return Column(
       children: [
@@ -305,7 +362,6 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
         const SizedBox(height: 8),
 
         // machine list
-        // only this part will be rebuilt when search query or status filter changes because we used ValueListenableBuilder on the notifiers that are only updated when search or filter changes
         Expanded(
           child: ValueListenableBuilder<Map<String, List<MachineModel>>>(
             valueListenable: dataNotifier,
@@ -324,22 +380,23 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                       if (!_tutorialShown && groupedMachines.isNotEmpty) {
                         _tutorialShown = true;
                         WidgetsBinding.instance.addPostFrameCallback(
-                          (_) async => await MachineListTutorial.show(context, [
-                            _profileKey,
-                            _searchKey,
-                            GlobalKey(),
-                            GlobalKey(),
-                            _machineCardKey,
-                          ]),
+                          (_) async => await MachineListTutorial.show(
+                            context,
+                            [
+                              _profileKey,
+                              _searchKey,
+                              GlobalKey(),
+                              GlobalKey(),
+                              _machineCardKey,
+                            ],
+                          ),
                         );
                       }
 
-                      // in case nothing
                       if (groupedMachines.isEmpty) {
                         return Center(child: Text('noMachinesFound'.tr()));
                       }
 
-                      // Layout
                       return LayoutBuilder(
                         builder: (context, constraints) {
                           final crossAxisCount = constraints.maxWidth < 600
@@ -389,7 +446,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                                           childAspectRatio:
                                               constraints.maxWidth < 900
                                               ? 2.5
-                                              : constraints.maxWidth < 1400
+                                              : constraints.maxWidth < 1440
                                               ? 1.5
                                               : 2.0,
                                         ),

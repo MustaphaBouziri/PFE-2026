@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 import '../../../data/machine/models/mes_machine_model.dart';
 import '../machine_details/tabsMain.dart';
@@ -28,7 +29,10 @@ class _MachineCardState extends State<MachineCard> {
         final statusHeight = isLarge ? 36.0 : 30.0;
         final statusWidth = isLarge ? 120.0 : 100.0;
 
-        final status = (widget.machine.status ?? '').toString().trim().toLowerCase();
+        final status = (widget.machine.status ?? '')
+            .toString()
+            .trim()
+            .toLowerCase();
 
         Color statusBg;
         Color statusText;
@@ -88,7 +92,9 @@ class _MachineCardState extends State<MachineCard> {
                     color: Colors.black.withOpacity(_isHovered ? 0.18 : 0.08),
                     blurRadius: _isHovered ? 14 : 10,
                     spreadRadius: _isHovered ? -2 : 0,
-                    offset: _isHovered ? const Offset(0, 10) : const Offset(0, 4),
+                    offset: _isHovered
+                        ? const Offset(0, 10)
+                        : const Offset(0, 4),
                   ),
                 ],
               ),
@@ -118,8 +124,8 @@ class _MachineCardState extends State<MachineCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: Text(
-                                  widget.machine.machineName,
+                                child: ExpandableText(
+                                  text: widget.machine.machineName,
                                   style: TextStyle(
                                     fontSize: titleSize,
                                     fontWeight: FontWeight.bold,
