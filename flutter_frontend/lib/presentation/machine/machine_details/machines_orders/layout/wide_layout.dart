@@ -13,7 +13,8 @@ class WideLayout extends StatelessWidget {
   final bool showActions;
   final VoidCallback? onSwitchToProgress;
 
-  const WideLayout({super.key, 
+  const WideLayout({
+    super.key,
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
@@ -36,14 +37,18 @@ class WideLayout extends StatelessWidget {
             ],
           ),
         ),
-        if (showActions) ...[
-          const SizedBox(width: 16),
-          ActionButtons(
-            order: order,
-            machineNo: machineNo,
-            onSwitchToProgress: onSwitchToProgress,
+        const SizedBox(width: 16),
+        Opacity(
+          opacity: showActions && order.status == 'Released' ? 1.0 : 0.0,
+          child: IgnorePointer(
+            ignoring: !(showActions && order.status == 'Released'),
+            child: ActionButtons(
+              order: order,
+              machineNo: machineNo,
+              onSwitchToProgress: onSwitchToProgress,
+            ),
           ),
-        ],
+        ),
       ],
     );
   }

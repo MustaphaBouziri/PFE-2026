@@ -61,8 +61,12 @@ class _MachineorderpageState extends State<Machineorderpage> {
     }).toList();
 
     filteredOrders.sort((a, b) {
-      final comparison = a.plannedStart!.compareTo(b.plannedStart!);
-      return sortAscending ? comparison : -comparison;
+      final aIsReleased = a.status == 'Released' ? 0 : 1;
+      final bIsReleased = b.status == 'Released' ? 0 : 1;
+      final statusComparison = aIsReleased.compareTo(bIsReleased);
+      if (statusComparison != 0) return statusComparison;
+      final dateComparison = a.plannedStart!.compareTo(b.plannedStart!);
+      return sortAscending ? dateComparison : -dateComparison;
     });
 
     return Scaffold(

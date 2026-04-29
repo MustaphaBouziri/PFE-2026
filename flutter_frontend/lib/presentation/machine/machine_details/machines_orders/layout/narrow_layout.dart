@@ -29,7 +29,7 @@ class NarrowLayout extends StatelessWidget {
         BadgeAndId(order: order, badgeStyle: badgeStyle),
         const SizedBox(height: 12),
         InfoGrid(order: order),
-        if (showActions) ...[
+        if (showActions && order.status == 'Released') ...[
           const SizedBox(height: 14),
           ActionButtons(
             fullWidth: true,

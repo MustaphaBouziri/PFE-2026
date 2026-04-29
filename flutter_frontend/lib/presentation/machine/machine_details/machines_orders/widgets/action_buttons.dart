@@ -27,15 +27,14 @@ class _ActionButtonsState extends State<ActionButtons> {
   bool _isStartLoading = false;
   bool _isCancelLoading = false;
 
-  bool get _canStart => widget.order.status == 'Released';
-  bool get _canClose => widget.order.status == 'Released';
-
   Future<void> _reloadOrders() async {
-    await context.read<MachineordersProvider>().getMachineOrders(widget.machineNo);
+    await context.read<MachineordersProvider>().getMachineOrders(
+      widget.machineNo,
+    );
   }
 
   Future<void> _handleStart() async {
-    if (_isStartLoading || !_canStart) return;
+    if (_isStartLoading) return;
     setState(() => _isStartLoading = true);
 
     try {
@@ -62,7 +61,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _handleClose() async {
-    if (_isCancelLoading || _canClose) return;
+    if (_isCancelLoading) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -70,9 +69,7 @@ class _ActionButtonsState extends State<ActionButtons> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text('cancelOrder'.tr()),
-        content: Text(
-          'cancelOrderConfirm'.tr(args: [widget.order.orderNo]),
-        ),
+        content: Text('cancelOrderConfirm'.tr(args: [widget.order.orderNo])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -141,87 +138,52 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Widget _buildStartButton() {
-    if (_canStart) {
-      return ElevatedButton.icon(
-        onPressed: _isStartLoading ? null : _handleStart,
-        icon: _isStartLoading
-            ? const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white,
-          ),
-        )
-            : const Icon(
-          Icons.play_arrow_rounded,
-          size: 16,
-          color: Colors.white,
-        ),
-        label: Text(
-          'startOrder'.tr(),
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0F172A),
-          disabledBackgroundColor: const Color(0xFF0F172A),
-          disabledForegroundColor: Colors.white,
-          foregroundColor: Colors.white,
-          overlayColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        ),
-      );
-    }
-
     return ElevatedButton.icon(
-      onPressed: null,
-      icon: const Icon(
-        Icons.play_arrow_rounded,
-        size: 16,
-        color: Color(0xFFB0B7C3),
-      ),
+      onPressed: _isStartLoading ? null : _handleStart,
+      icon: _isStartLoading
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
       label: Text(
         'startOrder'.tr(),
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Color(0xFFB0B7C3),
+          color: Colors.white,
         ),
       ),
       style: ElevatedButton.styleFrom(
-        disabledBackgroundColor: const Color(0xFFF1F5F9),
-        disabledForegroundColor: const Color(0xFFB0B7C3),
+        backgroundColor: const Color(0xFF0F172A),
+        disabledBackgroundColor: const Color(0xFF0F172A),
+        disabledForegroundColor: Colors.white,
+        foregroundColor: Colors.white,
+        overlayColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }
-// TODO: account for the can close being false and remove the button
+
   Widget _buildCloseButton() {
     return OutlinedButton.icon(
       onPressed: _isCancelLoading ? null : _handleClose,
       icon: _isCancelLoading
           ? const SizedBox(
-        width: 14,
-        height: 14,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Color(0xFF334155),
-        ),
-      )
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF334155),
+              ),
+            )
           : const Icon(Icons.close_rounded, size: 16),
       label: Text(
         'close'.tr(),
@@ -230,9 +192,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       style: OutlinedButton.styleFrom(
         foregroundColor: const Color(0xFF334155),
         side: const BorderSide(color: Color(0xFFCBD5E1)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
@@ -255,11 +215,7 @@ class _ActionButtonsState extends State<ActionButtons> {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        closeBtn,
-        const SizedBox(width: 10),
-        startBtn,
-      ],
+      children: [closeBtn, const SizedBox(width: 10), startBtn],
     );
   }
 }
