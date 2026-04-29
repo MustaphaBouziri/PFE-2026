@@ -1,3 +1,5 @@
+import 'package:pfe_mes/core/storage/session_storage.dart';
+
 import '../../../core/app_constants.dart';
 import '../../shared/http_client.dart';
 import '../../shared/http_response_parser.dart';
@@ -10,6 +12,7 @@ import '../models/mes_production_cycle.dart';
 /// require the session token so the BC backend can resolve the MES user
 /// from the token instead of the BC Windows session.
 class ErpMachineOrdersService {
+  final SessionStorage _sessionStorage =SessionStorage();
   /// Fetches all pending production orders assigned to [machineNo].
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
     final response = await HttpClient.post(AppConstants.getMachineOrdersUrl, {
@@ -26,11 +29,11 @@ class ErpMachineOrdersService {
   /// Starts [operationNo] on [machineNo] for [prodOrderNo].
   /// [token] — session token from the authenticated user.
   Future<bool> startOperation(
-    String token,
     String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
+    final token = _sessionStorage.getToken();
     final response = await HttpClient.post(AppConstants.startOperation, {
       'token': token,
       'prodOrderNo': prodOrderNo,
@@ -46,13 +49,11 @@ class ErpMachineOrdersService {
 
   /// Marks the operation as Finished.
   Future<bool> finishOperation({
-    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
     url: AppConstants.finishOperationUrl,
-    token: token,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -60,13 +61,11 @@ class ErpMachineOrdersService {
 
   /// Marks the operation as Cancelled.
   Future<bool> cancelOperation({
-    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
     url: AppConstants.cancelOperationUrl,
-    token: token,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -74,13 +73,11 @@ class ErpMachineOrdersService {
 
   /// Pauses a running operation.
   Future<bool> pauseOperation({
-    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
     url: AppConstants.pauseOperationUrl,
-    token: token,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -88,13 +85,11 @@ class ErpMachineOrdersService {
 
   /// Resumes a paused operation.
   Future<bool> resumeOperation({
-    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
     url: AppConstants.resumeOperationUrl,
-    token: token,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -103,11 +98,11 @@ class ErpMachineOrdersService {
   /// Shared POST helper for status-transition endpoints.
   Future<bool> _setOperationStatus({
     required String url,
-    required String token,
     required String machineNo,
     required String prodOrderNo,
     required String operationNo,
   }) async {
+    final token = _sessionStorage.getToken();
     final response = await HttpClient.post(url, {
       'token': token,
       'machineNo': machineNo,
@@ -217,13 +212,13 @@ class ErpMachineOrdersService {
   /// Declares [input] produced units for the given operation.
   /// [token] — session token from the authenticated user.
   Future<bool> declareProduction(
-    String token,
     String prodOrderNo,
     String operationNo,
     String machineNo,
     double input,
     String onBehalfOfUserId,
   ) async {
+    final token = _sessionStorage.getToken();
     final response = await HttpClient.post(AppConstants.declareProduction, {
       'token': token,
       'prodOrderNo': prodOrderNo,

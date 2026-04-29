@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
 import 'package:provider/provider.dart';
@@ -35,8 +36,10 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final fullName = auth.userData?['fullName']?.toString() ?? 'User';
-    final email = auth.userData?['email']?.toString() ?? 'email';
+    final SessionStorage _sessionStorage = SessionStorage();
+    final fullName = _sessionStorage.getFullName().toString();
+    final userData = _sessionStorage.getUserData() as Map<String, dynamic>;
+    final email = userData?['email']?.toString() ?? 'email';
     final imageBytes = auth.profileImageBytes;
     final isPhone = MediaQuery.of(context).size.width < 600;
     return Scaffold(

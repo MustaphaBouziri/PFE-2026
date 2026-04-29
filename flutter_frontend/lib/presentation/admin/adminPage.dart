@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/AddUserPage.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
@@ -18,6 +19,7 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
+  final SessionStorage _sessionStorage = SessionStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +122,7 @@ class _AdminPageState extends State<AdminPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              authProvider.userData?['fullName']?.toString() ??
-                                  'User',
+                              _sessionStorage.getFullName().toString(),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -129,8 +130,7 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                             ),
                             Text(
-                              authProvider.userData?['authId']?.toString() ??
-                                  '',
+                              _sessionStorage.getUserId().toString(),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),

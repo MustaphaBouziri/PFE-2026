@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/widgets/MachineCard.dart';
@@ -20,10 +21,8 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
 void initState() {
   super.initState();
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    final auth = context.read<AuthProvider>();
-    final workCenters = (auth.userData?['workCenters'] as List<dynamic>?)
-        ?.map((e) => e.toString())
-        .toList() ?? <String>[];
+    final SessionStorage sessionStorage = SessionStorage();
+    final workCenters = sessionStorage.getWorkCenters() as List<String>;
     context.read<LogProvider>().fetchMachineDashboard(workCenters);
   });
 }
