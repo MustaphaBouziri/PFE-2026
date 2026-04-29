@@ -5,7 +5,6 @@ import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
-import '../../../../../domain/auth/providers/auth_provider.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'operator_selector.dart';
 
@@ -42,9 +41,8 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
   }
 
   List<String> get _supervisorWorkCenters {
-    final wcs = _sessionStorage.getWorkCenters() as List<String>;
-    if (wcs is List) return wcs.map((e) => e.toString()).toList();
-    return [];
+    final wcs = _sessionStorage.getWorkCenters();
+    return wcs.map((e) => e.toString()).toList();
   }
 
   @override

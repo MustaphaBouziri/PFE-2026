@@ -47,22 +47,26 @@ class _MachineorderpageState extends State<Machineorderpage> {
           order.orderNo.toLowerCase().contains(
             searchController.text.toLowerCase(),
           ) ||
-              order.itemDescription.toLowerCase().contains(
-                searchController.text.toLowerCase(),
-              ) ||
-              order.plannedStart.toString().contains(
-                searchController.text.toLowerCase(),
-              ) ||
-              order.plannedEnd.toString().toLowerCase().contains(
-                searchController.text.toLowerCase(),
-              );
+          order.itemDescription.toLowerCase().contains(
+            searchController.text.toLowerCase(),
+          ) ||
+          order.plannedStart.toString().contains(
+            searchController.text.toLowerCase(),
+          ) ||
+          order.plannedEnd.toString().toLowerCase().contains(
+            searchController.text.toLowerCase(),
+          );
 
       return statusMatch && searchMatch;
     }).toList();
 
     filteredOrders.sort((a, b) {
-      final comparison = a.plannedStart!.compareTo(b.plannedStart!);
-      return sortAscending ? comparison : -comparison;
+      final aIsReleased = a.status == 'Released' ? 0 : 1;
+      final bIsReleased = b.status == 'Released' ? 0 : 1;
+      final statusComparison = aIsReleased.compareTo(bIsReleased);
+      if (statusComparison != 0) return statusComparison;
+      final dateComparison = a.plannedStart!.compareTo(b.plannedStart!);
+      return sortAscending ? dateComparison : -dateComparison;
     });
 
     return Scaffold(
@@ -72,50 +76,50 @@ class _MachineorderpageState extends State<Machineorderpage> {
           : provider.errorMessage != null
           ? Center(child: Text(provider.errorMessage!))
           : machineOrdersList.isEmpty
-          ?  Center(child: Text('noOrdersFound'.tr()))
+          ? Center(child: Text('noOrdersFound'.tr()))
           : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: GlobalSearchBar(
-              controller: searchController,
-              onSearchChanged: (_) => setState(() {}),
-              dropdownItems: status,
-              selectedValue: selectedStatus,
-              onDropdownChanged: (value) {
-                setState(() => selectedStatus = value!);
-              },
-              sortAscending: sortAscending,
-              onSortPressed: () {
-                setState(() {
-                  sortAscending = !sortAscending;
-                });
-              },
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredOrders.length,
-              itemBuilder: (context, index) {
-                final order = filteredOrders[index];
-                final style = badgeStyleFromStatus(order.status);
-
-                return Opacity(
-                  opacity: order.status == 'Released' ? 1.0 : 0.75,
-                  child: OrderCard(
-                    order: order,
-                    badgeStyle: style,
-                    machineNo: widget.machineNo,
-                    onSwitchToProgress: widget.onSwitchToProgress,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GlobalSearchBar(
+                    controller: searchController,
+                    onSearchChanged: (_) => setState(() {}),
+                    dropdownItems: status,
+                    selectedValue: selectedStatus,
+                    onDropdownChanged: (value) {
+                      setState(() => selectedStatus = value!);
+                    },
+                    sortAscending: sortAscending,
+                    onSortPressed: () {
+                      setState(() {
+                        sortAscending = !sortAscending;
+                      });
+                    },
                   ),
-                );
-              },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredOrders.length,
+                    itemBuilder: (context, index) {
+                      final order = filteredOrders[index];
+                      final style = badgeStyleFromStatus(order.status);
+
+                      return Opacity(
+                        opacity: order.status == 'Released' ? 1.0 : 0.75,
+                        child: OrderCard(
+                          order: order,
+                          badgeStyle: style,
+                          machineNo: widget.machineNo,
+                          onSwitchToProgress: widget.onSwitchToProgress,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

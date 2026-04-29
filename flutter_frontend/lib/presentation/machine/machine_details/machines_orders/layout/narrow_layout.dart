@@ -13,7 +13,8 @@ class NarrowLayout extends StatelessWidget {
   final bool showActions;
   final VoidCallback? onSwitchToProgress;
 
-  const NarrowLayout({super.key, 
+  const NarrowLayout({
+    super.key,
     required this.order,
     required this.badgeStyle,
     required this.machineNo,
@@ -29,7 +30,7 @@ class NarrowLayout extends StatelessWidget {
         BadgeAndId(order: order, badgeStyle: badgeStyle),
         const SizedBox(height: 12),
         InfoGrid(order: order),
-        if (showActions) ...[
+        if (showActions && order.status == 'Released') ...[
           const SizedBox(height: 14),
           ActionButtons(
             fullWidth: true,
