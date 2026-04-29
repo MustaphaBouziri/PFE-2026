@@ -314,8 +314,7 @@ codeunit 50132 "MES Machine Write"
 
         MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo, mesUserId);
         MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled, mesUserId);
-        MachineInsert.InsertIdleMachineStatus(machineNo);
-
+        
         exit(BuildSuccessResponse());
     end;
 }
