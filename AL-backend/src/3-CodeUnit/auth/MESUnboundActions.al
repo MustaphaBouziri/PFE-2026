@@ -166,6 +166,10 @@ codeunit 50125 "MES Unbound Actions"
         OutJ: JsonObject;
         EmployeeRec: Record Employee;
         errorMessage: Text;
+        TempBlob: Codeunit "Temp Blob";
+        Base64Convert: Codeunit "Base64 Convert";
+        MediaInStream: InStream;
+        OutStream: OutStream;
     begin
         // ValidateToken is now read-only — safe to call directly (not in a TryFunction).
         if not AuthMgt.ValidateToken(token, U, T, errorMessage) then
@@ -193,11 +197,18 @@ codeunit 50125 "MES Unbound Actions"
         if EmployeeRec.Get(U."Employee ID") then begin
             OutJ.Add('fullName', EmployeeRec.FullName());
             OutJ.Add('email', EmployeeRec."E-Mail");
-            OutJ.Add('imageId', Format(EmployeeRec.Image));
+
+            if EmployeeRec.Image.HasValue then begin
+                TempBlob.CreateOutStream(OutStream);
+                EmployeeRec.Image.ExportStream(OutStream);
+                TempBlob.CreateInStream(MediaInStream);
+                OutJ.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+            end else
+                OutJ.Add('imageBase64', '');
         end else begin
             OutJ.Add('fullName', '');
             OutJ.Add('email', '');
-            OutJ.Add('imageId', '');
+            OutJ.Add('imageBase64', '');
         end;
 
 
@@ -422,6 +433,10 @@ codeunit 50125 "MES Unbound Actions"
         WorkCentersArray: JsonArray;
         IsOnline: Boolean;
         LastSeenAt: DateTime;
+        TempBlob: Codeunit "Temp Blob";
+        Base64Convert: Codeunit "Base64 Convert";
+        MediaInStream: InStream;
+        OutStream: OutStream;
     begin
         if UserRec.FindSet() then
             repeat
@@ -433,13 +448,24 @@ codeunit 50125 "MES Unbound Actions"
                 UserJson.Add('employeeId', UserRec."Employee ID");
                 UserJson.Add('role', Format(UserRec.Role));
                 UserJson.add('isActive', UserRec."Is Active");
-                
+
 
                 if EmployeeRec.Get(UserRec."Employee ID") then begin
                     UserJson.Add('fullName', EmployeeRec.FullName());
                     UserJson.Add('email', EmployeeRec."E-Mail");
+
+
+                    if EmployeeRec.Image.HasValue then begin
+                        TempBlob.CreateOutStream(OutStream);
+                        EmployeeRec.Image.ExportStream(OutStream);
+                        TempBlob.CreateInStream(MediaInStream);
+                        UserJson.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+                    end else
+                        UserJson.Add('imageBase64', '');
                 end else begin
                     UserJson.Add('fullName', '');
+                    UserJson.Add('email', '');
+                    UserJson.Add('imageBase64', '');
                 end;
 
                 // check is online last activity in mes user list 
@@ -479,7 +505,7 @@ codeunit 50125 "MES Unbound Actions"
         exit(JsonHelper.JsonToTextArr(UsersArray));
     end;
 
-
+    // for the declaired by 
     procedure fetchMESUsersByWC(wcID: Code[20]): Text
     var
         EmployeeRec: Record Employee;
@@ -489,6 +515,10 @@ codeunit 50125 "MES Unbound Actions"
         JsonHelper: Codeunit "MES Json Helper";
         UsersArray: JsonArray;
         UserJson: JsonObject;
+        TempBlob: Codeunit "Temp Blob";
+        Base64Convert: Codeunit "Base64 Convert";
+        MediaInStream: InStream;
+        OutStream: OutStream;
     begin
         UserWorkCenter.Reset();
         UserWorkCenter.SetRange("Work Center No.", wcID);
@@ -505,9 +535,19 @@ codeunit 50125 "MES Unbound Actions"
                     UserJson.Add('role', Format(UserRec.Role));
 
                     if EmployeeRec.Get(UserRec."Employee ID") then begin
+
                         UserJson.Add('fullName', EmployeeRec.FullName());
+                        // if there is an image and there is a record in employee table then convert the image to base64 and add to json
+                        if EmployeeRec.Image.HasValue then begin
+                            TempBlob.CreateOutStream(OutStream);
+                            EmployeeRec.Image.ExportStream(OutStream);
+                            TempBlob.CreateInStream(MediaInStream);
+                            UserJson.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+                        end else
+                            UserJson.Add('imageBase64', '');
                     end else begin
                         UserJson.Add('fullName', '');
+                        UserJson.Add('imageBase64', '');
                     end;
 
                     UsersArray.Add(UserJson);

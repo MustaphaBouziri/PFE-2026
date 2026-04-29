@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/data/machine/services/mes_componentConsumption_service.dart';
 

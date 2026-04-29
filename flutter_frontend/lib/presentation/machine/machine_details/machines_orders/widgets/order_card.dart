@@ -13,7 +13,7 @@ class OrderCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onSwitchToProgress;
 
-  const OrderCard({
+  const OrderCard({super.key, 
     required this.order,
     required this.badgeStyle,
     required this.machineNo,

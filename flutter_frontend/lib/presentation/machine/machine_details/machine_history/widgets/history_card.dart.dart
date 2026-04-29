@@ -10,7 +10,7 @@ class HistoryCard extends StatelessWidget {
   final BadgeStyle badgeStyle;
   final VoidCallback? onTap;
 
-  const HistoryCard({
+  const HistoryCard({super.key, 
     required this.order,
     required this.badgeStyle,
     this.onTap,

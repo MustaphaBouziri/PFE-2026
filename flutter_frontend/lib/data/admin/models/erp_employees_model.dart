@@ -1,3 +1,4 @@
+
 class ErpEmployee {
   final String employeeId;
   final String firstName;
@@ -16,31 +17,28 @@ class ErpEmployee {
   });
 
   factory ErpEmployee.fromJson(Map<String, dynamic> json) {
-    String? imageBase64;
+   
 
-    final rawImage = json['image'];
-    if (rawImage != null) {
-      if (rawImage is Map) {
-        // BC structured media object: { "value": "...", "mediaType": "..." }
-        imageBase64 = rawImage['value']?.toString();
-      } else if (rawImage is String && rawImage.isNotEmpty) {
-        imageBase64 = rawImage;
-      }
-    }
     return ErpEmployee(
       employeeId: json['id']?.toString() ?? '',
       firstName: json['firstName']?.toString() ?? '',
       middleName: json['middleName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
-      imageBase64: imageBase64,
+      imageBase64: json['image']?.toString(),
+      
     );
   }
 
-  bool get hasImage => imageBase64 != null && imageBase64!.isNotEmpty;
 
   String get fullName {
-    final name = '$firstName $middleName $lastName '.trim();
-    return name.isEmpty ? 'No Name' : name;
+    final parts = [firstName, middleName, lastName]
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'No Name';
+    return parts.join(' ').trim();
   }
+
+  @override
+  String toString() => 'ErpEmployee($employeeId, $fullName)';
 }

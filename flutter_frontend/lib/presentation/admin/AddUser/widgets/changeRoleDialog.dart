@@ -2,9 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/admin/models/mes_user_model.dart';
-import '../../../domain/admin/providers/erp_workCenter_provider.dart';
-import '../../../domain/admin/providers/mes_user_provider.dart';
+import '../../../../data/admin/models/mes_user_model.dart';
+import '../../../../domain/admin/providers/erp_workCenter_provider.dart';
+import '../../../../domain/admin/providers/mes_user_provider.dart';
 
 /// Dialog that lets an Admin change the role of an existing [MesUser].
 ///
@@ -74,11 +74,9 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
     // Pre-populate current work centers (if available on the model).
     // MesUser.workCenters is assumed to be List<String>; adjust if the field
     // name differs in your model.
-    if (widget.user.workCenterNames != null) {
-      // We don't have index-based pre-selection here because the ErpWorkcenter
-      // list isn't loaded yet.  Indexes are resolved after the provider loads.
+    // We don't have index-based pre-selection here because the ErpWorkcenter
+    // list isn't loaded yet.  Indexes are resolved after the provider loads.
     }
-  }
 
   void _selectRole(int index, String role) {
     setState(() {
@@ -311,7 +309,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                             ? const Center(child: CircularProgressIndicator())
                             : ListView.separated(
                                 itemCount: workCenters.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(height: 6),
                                 itemBuilder: (context, index) {
                                   final wc = workCenters[index];
@@ -487,7 +485,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1).toLowerCase();
 }
 
-/// Immutable metadata for a role button.
+// Immutable metadata for a role button.
 class _RoleMeta {
   final int index;
   final String key;

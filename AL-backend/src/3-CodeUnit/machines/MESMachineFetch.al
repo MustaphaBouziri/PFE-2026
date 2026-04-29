@@ -684,6 +684,7 @@ codeunit 50131 "MES Machine Fetch"
     var
         Machine: Record "Machine Center";
         MESMachineStatus: Record "MES Machine Status";
+        MESOperationState: Record "MES Operation State";
         MESExecution: Record "MES Operation Execution";
         PrevStatus: Enum "MES Machine Status";
         MESProgression: Record "MES Operation Progression";
@@ -694,7 +695,8 @@ codeunit 50131 "MES Machine Fetch"
         CutoffTime: DateTime;
         TotalMinutes: Decimal;
         RunningMinutes: Decimal;
-        OperationCount: Integer;
+        OperationFinished: Integer;
+        OperationCancelled: Integer;
         TotalProduced: Decimal;
         TotalScrap: Decimal;
         UptimePercent: Decimal;
@@ -729,18 +731,29 @@ codeunit 50131 "MES Machine Fetch"
             repeat
                 Clear(MachineObj);
                 RunningMinutes := 0;
-                OperationCount := 0;
+                OperationFinished := 0;
+                OperationCancelled := 0;
                 TotalProduced := 0;
                 TotalScrap := 0;
 
                 MESExecution.Reset();
                 MESExecution.SetRange("Machine No", Machine."No.");
                 MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
-                OperationCount := 0;
+                OperationFinished := 0;
+                OperationCancelled := 0;
                 if MESExecution.FindSet() then
                     repeat
-                        OperationCount += 1;
-
+                        MESOperationState.Reset();
+                        MESOperationState.SetRange("Execution Id", MESExecution."Execution Id");
+                        MESOperationState.SetCurrentKey("Execution Id", "Declared At");
+                        MESOperationState.Ascending(false);
+                        // count canceled and finished operations
+                        if MESOperationState.FindFirst() then begin
+                            if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Finished then
+                                OperationFinished += 1
+                            else if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Cancelled then
+                                OperationCancelled += 1;
+                        end;
                         // sum qte produced for all progressions of this execution
                         MESProgression.Reset();
                         MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
@@ -791,7 +804,8 @@ codeunit 50131 "MES Machine Fetch"
                 MachineObj.Add('machineNo', Machine."No.");
                 MachineObj.Add('machineName', Machine."Name");
                 MachineObj.Add('workCenterNo', Machine."Work Center No.");
-                MachineObj.Add('operationCount', OperationCount);
+                MachineObj.Add('operationFinished', OperationFinished);
+                MachineObj.Add('operationCancelled', OperationCancelled);
                 MachineObj.Add('uptimePercent', UptimePercent);
                 MachineObj.Add('runningMinutes', RunningMinutes);
                 MachineObj.Add('totalProduced', TotalProduced);
@@ -815,7 +829,7 @@ codeunit 50131 "MES Machine Fetch"
         startPos: Integer;
         endPos: Integer;
     begin
-
+        // we check if the barcode contain item number in the string if yes we will extact the item number from the string
         if StrPos(barcode, 'Item Number:') > 0 then begin
 
             startPos := StrPos(barcode, 'Item Number: ');
@@ -826,10 +840,12 @@ codeunit 50131 "MES Machine Fetch"
                 endPos := StrLen(barcode) + 1;
 
             ItemNo := CopyStr(barcode, startPos, endPos - startPos);
-
+            // we search the item table and  get from the "item table new column extension mes barcode code" value  "mes-1100" using the item number that we extracted from the barcode
             if Item.Get(ItemNo) then
+                // we override the barcode with the MES Barcode Code from the item table to be used in the next step : check if this barcode exist in the identifier table
                 barcode := Item."MES Barcode Code"
             else begin
+                //if not found it means the item number we extracted does not exist in the item table or its fake or its correpted 
                 ResultJson.Add('resolved', false);
                 ResultJson.Add('message', 'Item not found from DataMatrix');
                 exit(JsonHelper.JsonToText(ResultJson));
@@ -838,7 +854,7 @@ codeunit 50131 "MES Machine Fetch"
 
         ItemIdentifier.Reset();
         ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
-
+        // we check if the barcode code  exist in the item identifier table if not found it means this is a random barcode /not yet to be registered 
         if not ItemIdentifier.FindFirst() then begin
             ResultJson.Add('resolved', false);
             ResultJson.Add('message', 'Barcode not recognized');
@@ -846,7 +862,8 @@ codeunit 50131 "MES Machine Fetch"
         end;
 
         ItemNo := ItemIdentifier."Item No.";
-
+        //looks like we have the same validation  the diferent is the sourse one from item id extracted from barcode string one item no from table identifier
+        // this just to ensure the item linked to this barcdoe is still valid in the system and not deleted or soemthing 
         if not Item.Get(ItemNo) then begin
             ResultJson.Add('resolved', false);
             ResultJson.Add('message', 'Item ' + ItemNo + ' not found');

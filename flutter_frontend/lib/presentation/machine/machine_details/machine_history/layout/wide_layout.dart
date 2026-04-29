@@ -9,7 +9,7 @@ class WideLayout extends StatelessWidget {
   final OperationStatusAndProgressModel order;
   final BadgeStyle badgeStyle;
 
-  const WideLayout({
+  const WideLayout({super.key, 
     required this.order,
     required this.badgeStyle,
   });

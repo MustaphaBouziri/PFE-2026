@@ -13,7 +13,7 @@ class NarrowLayout extends StatelessWidget {
   final bool showActions;
   final VoidCallback? onSwitchToProgress;
 
-  const NarrowLayout({
+  const NarrowLayout({super.key, 
     required this.order,
     required this.badgeStyle,
     required this.machineNo,

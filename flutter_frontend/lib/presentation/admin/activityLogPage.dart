@@ -133,7 +133,7 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                 Expanded(
                   child: ListView.separated(
                     itemCount: pageLogs.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         Divider(height: 1, color: Colors.grey.shade100),
                     itemBuilder: (context, index) {
                       final log = pageLogs[index];

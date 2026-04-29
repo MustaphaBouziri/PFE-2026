@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
+import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
@@ -9,7 +10,8 @@ import 'package:provider/provider.dart';
 
 class ScannerWidget extends StatefulWidget {
   final String executionId;
-  const ScannerWidget({super.key, required this.executionId});
+    final List<ComponentConsumptionModel> components;
+  const ScannerWidget({super.key, required this.executionId, required this.components});
 
   @override
   State<ScannerWidget> createState() => _ScannerWidgetState();
@@ -19,10 +21,15 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   List<ItemBarcodeModel> items = [];
   final MobileScannerController controller = MobileScannerController();
   bool isScanning = true;
+  //check if item is in components list
+  bool isItemInComponents(String itemNo) {
+  return widget.components.any((c) => c.itemNo == itemNo);
+}
 
   // we add new item or we increment qty
   void addItem(ItemBarcodeModel newItem) {
     int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
+
 
     if (index != -1) {
       // same item already in list — increment quantity, keep all other fields
@@ -206,6 +213,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final item = items[index];
+                  // check if item is in components list
+                  final exists =isItemInComponents(item.itemNo);
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -217,11 +226,13 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                         children: [
                           Expanded(
                             child: ListTile(
+                              
                               title: ExpandableText(
                                 text: '${item.itemNo} - ${item.description}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  color: exists? const Color(0xFF0F172A) : Colors.red, // red if item not in components list
                                 ),
                               ),
                               subtitle: Text(

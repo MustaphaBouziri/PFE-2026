@@ -50,12 +50,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     String machineNo,
   ) async {
     final token = await _requireToken();
-    return _service.startOperation(
-      token,
-      prodOrderNo,
-      operationNo,
-      machineNo,
-    );
+    return _service.startOperation(token, prodOrderNo, operationNo, machineNo);
   }
 
   Future<bool> finishOperation({
@@ -145,9 +140,7 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   // ── Read-only streams (no token needed) ──────────────────────────────────
 
   Stream<List<OperationStatusAndProgressModel>>
-  getMachineOngoingOperationsStateStream(
-    String machineNo,
-  ) {
+  getMachineOngoingOperationsStateStream(String machineNo) {
     return _service.streamMachinesOngoingOperationsState(
       machineNo,
       trigger: _refreshController.stream,

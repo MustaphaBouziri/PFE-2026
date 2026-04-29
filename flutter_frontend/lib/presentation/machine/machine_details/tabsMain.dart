@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../domain/machines/providers/machineOrders_provider.dart';
 import '../../tutorials/machine_detail_tabs_tutorial.dart';
 import '../../widgets/navBar.dart';
-import 'machine_consumption/machineConsumptionPage.dart';
 import 'machine_history/machineHistoryPage.dart';
 import 'machines_orders/machineOrderPage.dart';
 import 'machine_production/ordersProgressionPage.dart';
@@ -90,20 +89,27 @@ class _MachineMainPageState extends State<MachineMainPage> {
             },
           ),
           Expanded(
-            child: IndexedStack(
-              index: selectedIndex,
-              children: [
-                Machineorderpage(
-                  machineNo: widget.machineNo,
-                  onSwitchToProgress: _handleStartOrderSuccess,
-                ),
-                OrdersProgressionPage(machineNo: widget.machineNo),
-                MachineHistoryPage(machineNo: widget.machineNo),
-              ],
-            ),
+
+            child: _buildTabContent(selectedIndex),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent(int index) {
+    switch (index) {
+      case 0:
+        return Machineorderpage(
+          machineNo: widget.machineNo,
+          onSwitchToProgress: _handleStartOrderSuccess,
+        );
+      case 1:
+        return OrdersProgressionPage(machineNo: widget.machineNo);
+      case 2:
+        return MachineHistoryPage(machineNo: widget.machineNo);
+      default:
+        return const Center(child: Text('Unknown tab'));
+    }
   }
 }

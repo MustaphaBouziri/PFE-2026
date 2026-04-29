@@ -77,7 +77,7 @@ void main() {
       // simulate clicking "generate password" 5 times
       for (int i = 0; i < 5; i++) {
 
-        final password = "MesTest${run}${i}A1!";
+        final password = "MesTest$run${i}A1!";
 
         print("Generated password: $password");
 

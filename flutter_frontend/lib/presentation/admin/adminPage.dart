@@ -1,8 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/AddUserPage.dart';
 import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
-import 'package:pfe_mes/presentation/admin/addUserPage.dart';
+
 import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
@@ -21,7 +22,7 @@ class _AdminPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-
+    final imageBytes = authProvider.profileImageBytes;
 
     return Scaffold(
       body: Row(
@@ -59,7 +60,7 @@ class _AdminPageState extends State<AdminPage> {
 
                 const SizedBox(height: 8),
 
-                      // menu items
+                // menu items
                 SidebarItem(
                   icon: Icons.people_outline,
                   label: 'usersRoles'.tr(),
@@ -97,23 +98,30 @@ class _AdminPageState extends State<AdminPage> {
 
                 // user info
                 GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                     child: Row(
                       children: [
-                        const CircleAvatar(
-                          radius: 18,
-                          backgroundImage: NetworkImage(
-                            'https://picsum.photos/200/200',
-                          ),
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: imageBytes != null
+                              ? MemoryImage(imageBytes)
+                              : const NetworkImage(
+                                      'https://picsum.photos/200/200',
+                                    )
+                                    as ImageProvider,
                         ),
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children:  [
+                          children: [
                             Text(
-                               authProvider.userData?['fullName']?.toString() ?? 'User',
+                              authProvider.userData?['fullName']?.toString() ??
+                                  'User',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -121,7 +129,8 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                             ),
                             Text(
-                               authProvider.userData?['authId']?.toString() ?? '',
+                              authProvider.userData?['authId']?.toString() ??
+                                  '',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),
@@ -146,8 +155,12 @@ class _AdminPageState extends State<AdminPage> {
                 const MachineDashboardPage(),
                 const ActivityLogPage(),
                 const BarcodeListPage(),
-                Center(child: Text('Settings Page - Coming Soon!', style: TextStyle(fontSize: 18, color: Colors.grey.shade600))),
-                
+                Center(
+                  child: Text(
+                    'Settings Page - Coming Soon!',
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                  ),
+                ),
               ],
             ),
           ),

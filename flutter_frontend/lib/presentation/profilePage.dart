@@ -8,12 +8,7 @@ import 'ai/ai_chat_page.dart';
 import 'auth/Login/login_page.dart';
 
 class ProfilePage extends StatelessWidget {
-
-
-  const ProfilePage({
-    super.key,
-   
-  });
+  const ProfilePage({super.key});
 
   void _showLanguageMenu(BuildContext context, TapDownDetails details) async {
     final selected = await showMenu<String>(
@@ -50,21 +45,19 @@ class ProfilePage extends StatelessWidget {
         children: [
           const SizedBox(height: 30),
           CircleAvatar(
-  radius: 40,
-  backgroundImage: imageBytes != null
-      ? MemoryImage(imageBytes)
-      : const NetworkImage('https://picsum.photos/200/200') as ImageProvider,
-),
+            radius: 40,
+            backgroundImage: imageBytes != null
+                ? MemoryImage(imageBytes)
+                : const NetworkImage('https://picsum.photos/200/200')
+                      as ImageProvider,
+          ),
           const SizedBox(height: 8),
           Text(
             fullName,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            email,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
-          ),
+          Text(email, style: const TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
@@ -86,7 +79,12 @@ class ProfilePage extends StatelessWidget {
                   ProfileTile(
                     title: 'changePassword',
                     icon: Icons.lock,
-                    onTap :() => Navigator.push(context, MaterialPageRoute(builder:(context) => ChangePasswordPage(),)),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChangePasswordPage(),
+                      ),
+                    ),
                   ),
                   ProfileTile(
                     title: 'ai chat',

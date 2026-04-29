@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 
 class BarcodeListPage extends StatefulWidget {
-  const BarcodeListPage({Key? key}) : super(key: key);
+  const BarcodeListPage({super.key});
 
   @override
   State<BarcodeListPage> createState() => _BarcodeListScreenState();
@@ -37,7 +37,7 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('error'.tr() + ': ${provider.errorMessage}'),
+                  Text('${'error'.tr()}: ${provider.errorMessage}'),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.fetchAllBarcodes(),

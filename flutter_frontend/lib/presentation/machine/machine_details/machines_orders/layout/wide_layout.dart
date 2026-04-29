@@ -13,7 +13,7 @@ class WideLayout extends StatelessWidget {
   final bool showActions;
   final VoidCallback? onSwitchToProgress;
 
-  const WideLayout({
+  const WideLayout({super.key, 
     required this.order,
     required this.badgeStyle,
     required this.machineNo,

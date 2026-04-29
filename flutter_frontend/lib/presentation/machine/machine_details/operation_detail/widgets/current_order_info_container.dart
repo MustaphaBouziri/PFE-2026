@@ -13,8 +13,7 @@ class CurrentOrderInfoContainer extends StatefulWidget {
       _CurrentOrderInfoContainerState();
 }
 
-class _CurrentOrderInfoContainerState
-    extends State<CurrentOrderInfoContainer> {
+class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
   @override
   Widget build(BuildContext context) {
     final style = operationStatusStyleFromStatus(
@@ -67,8 +66,7 @@ class _CurrentOrderInfoContainerState
           // required quantity + produced quantity
           _InfoRow(
             leftLabel: "requiredQuantity".tr(),
-            leftValue:
-                "${widget.operationData.orderQuantity} ${"unit".tr()}",
+            leftValue: "${widget.operationData.orderQuantity} ${"unit".tr()}",
             rightLabel: "producedQuantity".tr(),
             rightValue:
                 "${widget.operationData.totalProducedQuantity} ${"unit".tr()}",
@@ -79,8 +77,7 @@ class _CurrentOrderInfoContainerState
           // scraps (styled like others)
           _InfoRow(
             leftLabel: "scrapQuantity".tr(),
-            leftValue:
-                "${widget.operationData.scrapQuantity} ${"unit".tr()}",
+            leftValue: "${widget.operationData.scrapQuantity} ${"unit".tr()}",
             rightLabel: "",
             rightValue: "",
           ),
@@ -118,15 +115,13 @@ class _InfoRow extends StatelessWidget {
             Expanded(
               child: Text(
                 leftLabel,
-                style:
-                    const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
             ),
             Expanded(
               child: Text(
                 rightLabel,
-                style:
-                    const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
             ),
           ],

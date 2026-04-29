@@ -44,7 +44,7 @@ class NavButton extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const NavButton({
+  const NavButton({super.key, 
     required this.title,
     required this.selected,
     required this.onTap,
