@@ -151,13 +151,11 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   }
 
   void _openChat(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
 
-    if (screenWidth > 1032) {
-      // Open as side panel
+    if (width >= 600) {
       chatOpen.value = true;
     } else {
-      // Open as full-page modal
       showDialog(
         context: context,
         builder: (context) => const AiChatPage(isModal: true),
@@ -168,26 +166,34 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
+<<<<<<< HEAD
+    final role = authProvider.userData?['role']?.toString() ?? '';
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    final isTablet = width >= 820 && width <= 1032;
+=======
     final role = _resolveRole();
+>>>>>>> 72147224f2f5d53f3c1af8a9a4eb5f96a6a460c3
 
     return Scaffold(
       floatingActionButton: ValueListenableBuilder<bool>(
-  valueListenable: chatOpen,
-  builder: (_, isChatOpen, __) {
-    final isDesktop = MediaQuery.of(context).size.width >= 1032;
-// this to stop making the button on top of the chat pannel if pc 
-    if (isChatOpen && isDesktop) return const SizedBox();
+        valueListenable: chatOpen,
+        builder: (_, isChatOpen, _) {
+          final isDesktop = MediaQuery.of(context).size.width >= 600;
+          // this to stop making the button on top of the chat pannel if pc
+          if (isChatOpen && isDesktop) return const SizedBox();
 
-    return IconButton(
-      onPressed: () => _openChat(context),
-      icon: const Icon(Icons.smart_toy_outlined, size: 30),
-      style: IconButton.styleFrom(
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: const Color(0xFFE2E8F0),
+          return IconButton(
+            onPressed: () => _openChat(context),
+            icon: const Icon(Icons.smart_toy_outlined, size: 30),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: const Color(0xFFE2E8F0),
+            ),
+          );
+        },
       ),
-    );
-  },
-),
       appBar: AppBar(
         title: Row(
           children: [
@@ -201,7 +207,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
               },
               child: Selector<AuthProvider, Uint8List?>(
                 selector: (_, p) => p.profileImageBytes,
-                builder: (_, imageBytes, __) {
+                builder: (_, imageBytes, _) {
                   return CircleAvatar(
                     radius: 18,
                     backgroundImage: imageBytes != null
@@ -261,37 +267,23 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
       ),
       body: ValueListenableBuilder<bool>(
         valueListenable: chatOpen,
-        builder: (_, isChatOpen, __) {
+        builder: (_, isChatOpen, _) {
           return Stack(
             children: [
               // body
               _buildBody(),
 
-              //// chat panel for larger screens
-              if (isChatOpen && MediaQuery.of(context).size.width >= 1032)
+              // chat panel for larger screens
+              if (isChatOpen && MediaQuery.of(context).size.width >= 600)
                 Positioned(
                   right: 0,
-                  top: 0,
                   bottom: 0,
+                  top: isTablet ? null : 0,
+                  height: isTablet ? height * 0.8 : null,
                   width: 400,
                   child: AiChatPage(
                     isModal: false,
                     onClose: () => chatOpen.value = false,
-                  ),
-                ),
-
-       
-              if (isChatOpen && MediaQuery.of(context).size.width >=1032)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  right: 400,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () => chatOpen.value = false,
-                    child: Container(
-                      color: Colors.black.withOpacity(0.1),
-                    ),
                   ),
                 ),
             ],
@@ -308,7 +300,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
 
     return ValueListenableBuilder<bool>(
       valueListenable: loadingNotifier,
-      builder: (_, loading, __) {
+      builder: (_, loading, _) {
         if (loading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -365,13 +357,13 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
         Expanded(
           child: ValueListenableBuilder<Map<String, List<MachineModel>>>(
             valueListenable: dataNotifier,
-            builder: (_, data, __) {
+            builder: (_, data, _) {
               return ValueListenableBuilder<String>(
                 valueListenable: searchQuery,
-                builder: (_, query, __) {
+                builder: (_, query, _) {
                   return ValueListenableBuilder<String>(
                     valueListenable: statusFilter,
-                    builder: (_, status, __) {
+                    builder: (_, status, _) {
                       final groupedMachines = _applyFilters(
                         data,
                         query,
@@ -380,16 +372,13 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                       if (!_tutorialShown && groupedMachines.isNotEmpty) {
                         _tutorialShown = true;
                         WidgetsBinding.instance.addPostFrameCallback(
-                          (_) async => await MachineListTutorial.show(
-                            context,
-                            [
-                              _profileKey,
-                              _searchKey,
-                              GlobalKey(),
-                              GlobalKey(),
-                              _machineCardKey,
-                            ],
-                          ),
+                          (_) async => await MachineListTutorial.show(context, [
+                            _profileKey,
+                            _searchKey,
+                            GlobalKey(),
+                            GlobalKey(),
+                            _machineCardKey,
+                          ]),
                         );
                       }
 
