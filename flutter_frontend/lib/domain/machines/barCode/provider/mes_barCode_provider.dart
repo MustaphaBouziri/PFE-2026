@@ -41,7 +41,6 @@ class MesBarcodeProvider with ChangeNotifier {
     try {
       final token = await _sessionStorage.getToken() ?? '';
       return await _service.insertScans(
-        token,
         executionId,
         scans,
       );

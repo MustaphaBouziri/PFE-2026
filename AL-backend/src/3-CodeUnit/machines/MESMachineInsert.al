@@ -111,10 +111,7 @@ codeunit 50133 "MES Machine Insert"
     // ──────────────────────────────────────────────
 
     /// Creates the initial zero-quantity progression row when an operation starts.
-    procedure InsertMESOperationProgression(
-        executionId: Code[50];
-        mesUserId: Code[50]
-    )
+    procedure InsertMESOperationProgression(executionId: Code[50]; mesUserId: Code[50])
     var
         MESOperationProgress: Record "MES Operation Progression";
     begin
@@ -131,13 +128,13 @@ codeunit 50133 "MES Machine Insert"
 
     /// Appends a new production cycle declaration to the execution history.
     procedure InsertNewProgressionCycle(
-       machineNo: Code[20];
-       prodOrderNo: Code[20];
-       operationNo: Code[10];
-       input: Decimal;
-       operatorId: Code[50];
-       declaredById: Code[50]
-   )
+        machineNo: Code[20];
+        prodOrderNo: Code[20];
+        operationNo: Code[10];
+        input: Decimal;
+        operatorId: Code[50];
+        declaredById: Code[50]
+    )
     var
         MESExecution: Record "MES Operation Execution";
         MESOperationProgress: Record "MES Operation Progression";
@@ -163,25 +160,20 @@ codeunit 50133 "MES Machine Insert"
     // Scrap records
     // ──────────────────────────────────────────────
 
-    /// Records a scrap declaration and updates the running progression totals.
+    /// Records a scrap declaration against the execution.
     procedure InsertScrapRecord(
-       executionId: Code[50];
-       scrapCode: Code[10];
-       description: Text;
-       quantity: Decimal;
-       operatorId: Code[50];
-       declaredById: Code[50];
-       materialId: Code[20]
-   )
+        executionId: Code[50];
+        scrapCode: Code[10];
+        description: Text;
+        quantity: Decimal;
+        operatorId: Code[50];
+        declaredById: Code[50];
+        materialId: Code[20]
+    )
     var
-        MESExecution: Record "MES Operation Execution";
         MESScrap: Record "MES Operation Scrap";
         ScrapRec: Record Scrap;
-        MESOperationProgress: Record "MES Operation Progression";
-        NewMESOperationProgress: Record "MES Operation Progression";
     begin
-        MESExecution.Get(executionId);
-
         MESScrap.Init();
         MESScrap."Execution Id" := executionId;
         MESScrap."Scrap Quantity" := quantity;
@@ -191,16 +183,10 @@ codeunit 50133 "MES Machine Insert"
         MESScrap."Declared By" := declaredById;
         MESScrap."Material Id" := materialId;
 
-        if scrapCode <> '' then
-            if ScrapRec.Get(scrapCode) then
-                MESScrap."scrap Description" := CopyStr(ScrapRec.Description, 1, 100);
+        if (scrapCode <> '') and ScrapRec.Get(scrapCode) then
+            MESScrap."scrap Description" := CopyStr(ScrapRec.Description, 1, 100);
 
         MESScrap.Insert(true);
-
-        // EnsureUserExecutionInteraction(executionId, operatorId);
-        // EnsureUserExecutionInteraction(executionId, declaredById);
-        // GetLatestProgression(executionId, MESOperationProgress);
-
     end;
 
     // ──────────────────────────────────────────────
@@ -240,6 +226,17 @@ codeunit 50133 "MES Machine Insert"
         MESExecution.SetRange("Prod Order No", prodOrderNo);
         MESExecution.SetRange("Operation No", operationNo);
         MESExecution.FindFirst();
+    end;
+
+    procedure ExecutionExists(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
+    var
+        MESExecution: Record "MES Operation Execution";
+    begin
+        MESExecution.Reset();
+        MESExecution.SetRange("Machine No", machineNo);
+        MESExecution.SetRange("Prod Order No", prodOrderNo);
+        MESExecution.SetRange("Operation No", operationNo);
+        exit(not MESExecution.IsEmpty());
     end;
 
     procedure GetLatestProgression(

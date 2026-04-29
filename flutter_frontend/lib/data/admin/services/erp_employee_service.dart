@@ -9,17 +9,16 @@ class ErpEmployeeService {
   Future<List<ErpEmployee>> fetchEmployees() async {
     final response = await http.get(
       Uri.parse(AppConstants.employeesUrl),
-      headers:AppConstants.jsonHeaders,
+      headers: AppConstants.jsonHeaders,
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List usersJson = data['value'] ?? [];
-      return usersJson.map((json) => ErpEmployee.fromJson(json)).toList();
-    } else {
-      throw Exception(
-        'Failed to load Employees: ${response.statusCode} ${response.body}',
-      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = data['value'] as List? ?? [];
+      return list.map((e) => ErpEmployee.fromJson(e)).toList();
     }
+    throw Exception(
+      'Failed to load Employees: ${response.statusCode} ${response.body}',
+    );
   }
 }

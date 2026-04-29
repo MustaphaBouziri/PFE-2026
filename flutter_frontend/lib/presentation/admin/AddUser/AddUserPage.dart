@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/statCard.dart';
@@ -23,6 +24,7 @@ class AddUserPage extends StatefulWidget {
 }
 
 class _AddUserPageState extends State<AddUserPage> {
+  final SessionStorage _sessionStorage = SessionStorage();
   String selectedRole = 'All';
   final List<String> roles = const ['All', 'Admin', 'Supervisor', 'Operator'];
 
@@ -112,8 +114,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId =
-        context.watch<AuthProvider>().userData?['userId'] as String? ?? '';
+    final currentUserId = _sessionStorage.getUserId() as String;
 
     return StreamBuilder<List<MesUser>>(
       stream: _usersStream,

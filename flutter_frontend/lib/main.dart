@@ -2,6 +2,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 // Providers
@@ -29,6 +30,7 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 void main() async {
+  await SessionStorage.init();
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
@@ -128,6 +130,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   @override
   Widget build(BuildContext context) {
+    final SessionStorage _sessionStorage = SessionStorage();
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.isAuthenticated) {
@@ -135,7 +138,7 @@ class _AuthGateState extends State<_AuthGate> {
             return const ChangePasswordPage();
           }
 
-          final role = auth.userData?['role']?.toString() ?? '';
+          final role = _sessionStorage.getRole().toString();
 
           if (role == 'Admin') {
             return const AdminPage();

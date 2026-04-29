@@ -14,10 +14,6 @@ class AiChatProvider with ChangeNotifier {
 
   Future<AiChatResponse?> sendMessage({
     required String message,
-    required String userId,
-    required String role,
-    required List<String> workCenters,
-    required String token,
   }) async {
     isLoading = true;
     errorMessage = null;
@@ -28,10 +24,6 @@ class AiChatProvider with ChangeNotifier {
     try {
       final response = await _service.sendMessage(
         message: message,
-        userId: userId,
-        role: role,
-        workCenters: workCenters,
-        token: token,
         history: _history.length > 1
             ? _history.sublist(0, _history.length - 1)
             : [],
