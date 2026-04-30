@@ -2,46 +2,80 @@ codeunit 50131 "MES Machine Fetch"
 {
     Access = Internal;
 
-    procedure FetchMachines(workCenterNo: Text): Text
-    var
-        Machine: Record "Machine Center";
-        MESMachineStatus: Record "MES Machine Status";
-        MachineArr: JsonArray;
-        MachineObj: JsonObject;
-        JsonHelper: Codeunit "MES Json Helper";
-        WorkCenter: Record "Work Center";
-    begin
-        if workCenterNo = '' then Error('Work Center Number is required');
-        Machine.SetRange("Work Center No.", workCenterNo);
+    procedure FetchMachines(workCenterNoJson: Text): Text
+var
+    Machine: Record "Machine Center";
+    MESMachineStatus: Record "MES Machine Status";
+    MachineArr: JsonArray;
+    MachineObj: JsonObject;
+    JsonHelper: Codeunit "MES Json Helper";
+    WorkCenter: Record "Work Center";
 
-        if Machine.FindSet() then
-            repeat
-                clear(MachineObj);
-                MachineObj.Add('machineNo', Machine."No.");
-                MachineObj.Add('machineName', Machine."Name");
-                MachineObj.Add('status', 'Idle');
-                MachineObj.Add('currentOrder', 'No operator yet');
-                MachineObj.Add('workCenterNo', Machine."Work Center No.");
-                // get :goes to the work center table and looks for the row where pk = 100 for exemple
-                if WorkCenter.Get(Machine."Work Center No.") then
-                    MachineObj.Add('workCenterName', WorkCenter.Name)
-                else
-                    MachineObj.Add('workCenterName', '');
+    workCenterNoArr: JsonArray;
+    workCenterNoObj: JsonObject;
+    workCenterNoToken: JsonToken;
 
-                MESMachineStatus.Reset();
-                MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
-                MESMachineStatus.SetRange("Machine No.", Machine."No.");
-                MESMachineStatus.Ascending(false);  // most recent first
+    workCenterNo: Code[20];
+    workCenterFilter: Text;
+begin
+  Message(workCenterNoJson);
 
-                if MESMachineStatus.FindFirst() then begin
-                    MachineObj.Replace('status', Format(MESMachineStatus.Status));
-                    MachineObj.Replace('currentOrder', MESMachineStatus."Current Prod. Order No.");
-                end;
+    if workCenterNoJson = '' then
+        Error('Request body is required');
+    
+    // our data rn : {"workCenterNos": ["100", "200"]}
+   // convert text into json object
+    workCenterNoObj.ReadFrom(workCenterNoJson);
+    // we extract the field workCenterNos
+    // get honi first variable is key and 2nd paramiter is the variable that will have the result 
+    // go inside the jsonObjuect find the value of the key and store it in this variable
+    if not workCenterNoObj.Get('workCenterNos', workCenterNoToken) then
+        Error('workCenterNos is required');
+    // converted to asArray cuz its token type meaning is white it need a label type
+    workCenterNoArr := workCenterNoToken.AsArray();
 
-                MachineArr.Add(MachineObj);
-            until Machine.Next() = 0;
-        exit(JsonHelper.JsonToTextArr(MachineArr));
+    workCenterFilter := '';
+    foreach workCenterNoToken in workCenterNoArr do begin
+        workCenterNo := CopyStr(workCenterNoToken.AsValue().AsText(), 1, 20);
+
+        if workCenterFilter = '' then
+            workCenterFilter := workCenterNo
+        else
+            workCenterFilter += '|' + workCenterNo;
     end;
+
+    Machine.SetFilter("Work Center No.", workCenterFilter);
+
+    if Machine.FindSet() then
+        repeat
+            Clear(MachineObj);
+
+            MachineObj.Add('machineNo', Machine."No.");
+            MachineObj.Add('machineName', Machine."Name");
+            MachineObj.Add('status', 'Idle');
+            MachineObj.Add('currentOrder', '-');
+            MachineObj.Add('workCenterNo', Machine."Work Center No.");
+
+            if WorkCenter.Get(Machine."Work Center No.") then
+                MachineObj.Add('workCenterName', WorkCenter.Name)
+            else
+                MachineObj.Add('workCenterName', '');
+
+            MESMachineStatus.Reset();
+            MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
+            MESMachineStatus.SetRange("Machine No.", Machine."No.");
+            MESMachineStatus.Ascending(false);
+
+            if MESMachineStatus.FindFirst() then begin
+                MachineObj.Replace('status', Format(MESMachineStatus.Status));
+                MachineObj.Replace('currentOrder', MESMachineStatus."Current Prod. Order No.");
+            end;
+
+            MachineArr.Add(MachineObj);
+        until Machine.Next() = 0;
+
+    exit(JsonHelper.JsonToTextArr(MachineArr));
+end;
 
     procedure getMachineOrders(machineNo: Text): Text
     var

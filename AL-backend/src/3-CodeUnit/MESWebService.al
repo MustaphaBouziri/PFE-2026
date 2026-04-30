@@ -67,9 +67,9 @@ codeunit 50126 "MES Web Service"
 
     // ── Read endpoints (no identity needed) ───────────────────────────────────
 
-    procedure FetchMachines(workCenterNo: Text): Text
+    procedure FetchMachines(workCenterNoJson: Text): Text
     begin
-        exit(MachineFetch.FetchMachines(workCenterNo));
+        exit(MachineFetch.FetchMachines(workCenterNoJson));
     end;
 
     procedure getMachineOrders(machineNo: Text): Text
