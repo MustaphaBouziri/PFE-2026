@@ -3,15 +3,16 @@ import 'package:provider/provider.dart';
 import '../../domain/ai/providers/ai_chat_provider.dart';
 import '../../domain/auth/providers/auth_provider.dart';
 import '../../data/ai/models/ai_chat_model.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AiChatPage extends StatefulWidget {
   final VoidCallback? onClose;
-  final bool isModal;
+  final bool isDialog;
 
   const AiChatPage({
     super.key,
     this.onClose,
-    this.isModal = true,
+    this.isDialog = true,
   });
 
   @override
@@ -72,7 +73,7 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   void _handleClose() {
-    if (widget.isModal) {
+    if (widget.isDialog) {
       Navigator.pop(context);
     } else {
       widget.onClose?.call();
@@ -88,7 +89,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isModal) {
+    if (widget.isDialog) {
       return Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.all(16),
@@ -102,7 +103,7 @@ class _AiChatPageState extends State<AiChatPage> {
       );
     }
 
-    // Embedded panel version
+    //  panel version
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -138,8 +139,8 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
           child: Row(
             children: [
-              const Text(
-                'MES Assistant',
+               Text(
+                'aiAssistant'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -148,7 +149,7 @@ class _AiChatPageState extends State<AiChatPage> {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                tooltip: 'Clear chat',
+                tooltip: 'clearChat'.tr(),
                 onPressed: () => context.read<AiChatProvider>().clearHistory(),
               ),
               IconButton(
@@ -233,14 +234,14 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) =>  Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
+           const Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
+            const SizedBox(height: 12),
             Text(
-              'Ask me anything about your machines,\norders, or production.',
+              'askMessage'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
@@ -334,7 +335,7 @@ class _InputBar extends StatelessWidget {
                   controller: controller,
                   onSubmitted: (_) => onSend(),
                   decoration: InputDecoration(
-                    hintText: 'Ask the MES assistant…',
+                    hintText: 'askAssistant'.tr(),
                     filled: true,
                     fillColor: const Color(0xFFe5e7eb),
                     border: OutlineInputBorder(

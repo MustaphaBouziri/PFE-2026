@@ -74,7 +74,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
           const SizedBox(height: 12),
 
-          // scraps (styled like others)
+          // scraps
           _InfoRow(
             leftLabel: "scrapQuantity".tr(),
             leftValue: "${widget.operationData.scrapQuantity} ${"unit".tr()}",

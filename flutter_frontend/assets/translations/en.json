@@ -80,6 +80,8 @@
   "declareOnBehalfOf": "Declare on behalf of",
   "noOperatorsFound": "No operators found",
 
+
+
   "printLabelPageTitle": "Print Label",
   "printButton": "Print",
   "printLandscape": "Landscape",
@@ -221,7 +223,7 @@
   "cancelled": "CANCELLED",
   "paused": "PAUSED",
   "finished": "FINISHED",
-  "idle": "IDLE",
+  "idle": "Idle",
   "scanned": "Scanned",
   "used": "Used",
   "left": "Left",
@@ -240,6 +242,33 @@
   "last48h": "Last 48h",
   "last7d": "Last 7d",
   "action": "ACTION",
+
+  "operationFinished": "Operation Finished",
+  "operationCancelled": "Operation Cancelled",
+  "machineNumber": "Machine Number",
+  "scrapQuantity": "Scrap Quantity",
+  
+  "declaredBy": "Declared By",
+ 
+  "order": "Order",
+  "operation": "Operation",
+
+  "offline": "Offline",
+  
+ "":"________________chatbot________________",
+  "aiAssistant": "AI Assistant",
+  "clearChat": "Clear Chat",
+  "askMessage": "Ask me anything about your machines,\norders, or production.",
+"askAssistant": "Ask the assistant…",
+
+
+    "working": "Working",
+      "pause": "Pause",
+  "resume": "Resume",
+ 
+
+
+  
   "tutorialProfilePicture": "Click on your profile picture to access your profile settings and account information.",
   "tutorialSearchFilter": "Use this search bar to find machines by name or work center, and filter them by their status (All, Working, Idle).",
   "tutorialMachineCard": "Tap any machine card to view its details, current order, and operations.",

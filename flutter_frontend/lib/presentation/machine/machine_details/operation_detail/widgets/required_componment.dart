@@ -361,9 +361,9 @@ class ComponentListView extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${scanned.toString()} ${'quantity scanned'.tr()} | '
+                      '${scanned.toString()} ${'quantityScanned'.tr()} | '
                       '${consumed.toString()} ${'used'.tr()} | '
-                      '${remaining.toString()} ${'quantity left'.tr()}',
+                      '${remaining.toString()} ${'quantityLeft'.tr()}',
                       style: TextStyle(
                         fontSize: 12,
                         color: isSpecific

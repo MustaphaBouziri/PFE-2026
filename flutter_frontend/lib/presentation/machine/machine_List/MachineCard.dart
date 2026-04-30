@@ -29,7 +29,7 @@ class _MachineCardState extends State<MachineCard> {
         final statusHeight = isLarge ? 36.0 : 30.0;
         final statusWidth = isLarge ? 120.0 : 100.0;
 
-        final status = (widget.machine.status ?? '')
+        final status = (widget.machine.status)
             .toString()
             .trim()
             .toLowerCase();
@@ -37,19 +37,20 @@ class _MachineCardState extends State<MachineCard> {
         Color statusBg;
         Color statusText;
         Color leftBorder;
+        String label;
 
         if (status == 'idle') {
           statusBg = const Color.fromARGB(76, 158, 158, 158);
           statusText = const Color.fromARGB(255, 85, 85, 85);
           leftBorder = const Color.fromARGB(255, 158, 158, 158);
-        } else if (status == 'running') {
-          statusBg = const Color.fromARGB(40, 40, 197, 92);
-          statusText = Colors.green;
-          leftBorder = Colors.green;
+          label= 'idle'.tr();
+          
+        
         } else {
           statusBg = const Color.fromARGB(40, 40, 197, 92);
           statusText = Colors.green;
           leftBorder = Colors.green;
+           label='working'.tr();
         }
 
         return MouseRegion(
@@ -141,7 +142,7 @@ class _MachineCardState extends State<MachineCard> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    widget.machine.status ?? 'running'.tr(),
+                                    label,
                                     style: TextStyle(
                                       fontSize: textSize,
                                       fontWeight: FontWeight.bold,

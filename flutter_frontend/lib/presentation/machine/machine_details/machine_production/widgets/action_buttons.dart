@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/machine_production/models/status_style.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 class OperationActionButtons extends StatefulWidget {
   final bool fullWidth;
   final String operationStatus;
@@ -69,7 +69,7 @@ class _OperationActionButtonsState extends State<OperationActionButtons> {
               color: toggleStyle.badgeText,
             ),
       label: Text(
-        _isRunning ? 'Pause' : 'Resume',
+        _isRunning ? 'pause'.tr() : 'resume'.tr(),
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
