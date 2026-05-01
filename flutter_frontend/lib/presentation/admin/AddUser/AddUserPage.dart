@@ -25,8 +25,8 @@ class AddUserPage extends StatefulWidget {
 
 class _AddUserPageState extends State<AddUserPage> {
   final SessionStorage _sessionStorage = SessionStorage();
-  String selectedRole = 'All';
-  final List<String> roles = const ['All', 'Admin', 'Supervisor', 'Operator'];
+  String selectedRole = 'all';
+  final List<String> roles = const ['all', 'Admin', 'Supervisor', 'Operator'];
 
   final TextEditingController searchController = TextEditingController();
 
@@ -96,12 +96,12 @@ class _AddUserPageState extends State<AddUserPage> {
   }
 
   List<MesUser> _filter(List<MesUser> users) {
-    if (selectedRole == 'All' && _searchQuery.isEmpty) return users;
+    if (selectedRole == 'all' && _searchQuery.isEmpty) return users;
 
     final q = _searchQuery.toLowerCase();
 
     return users.where((u) {
-      final roleMatch = selectedRole == 'All' || u.role == selectedRole;
+      final roleMatch = selectedRole == 'all' || u.role == selectedRole;
 
       final searchMatch =
           q.isEmpty ||
@@ -173,7 +173,7 @@ class _AddUserPageState extends State<AddUserPage> {
                       selectedRole: selectedRole,
                       onRoleChanged: (val) {
                         setState(() {
-                          selectedRole = val ?? 'All';
+                          selectedRole = val ?? 'all';
                           _currentPage = 0;
                         });
                       },
@@ -201,7 +201,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text("userManagement".tr()),
+      title: Text("manageUsers".tr()),
       actions: [
         Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
         const SizedBox(width: 8),
@@ -271,10 +271,10 @@ List<MesUser> filterUsersIsolate(Map<String, dynamic> params) {
   final role = params['role'] as String;
   final query = (params['query'] as String).toLowerCase();
 
-  if (role == 'All' && query.isEmpty) return users;
+  if (role == 'all' && query.isEmpty) return users;
 
   return users.where((user) {
-    final matchesRole = role == 'All' || user.role == role;
+    final matchesRole = role == 'all' || user.role == role;
 
     final matchesSearch =
         query.isEmpty ||

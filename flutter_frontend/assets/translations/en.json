@@ -159,16 +159,16 @@
   "noBarcodesFound": "No barcodes found.",
   "authenticating": "Authenticating...",
   "generateQR": "Generate QR",
-  "finishProductionOrder": "Finish Production Order",
+  "finishProductionOrder": "Finish Order",
   "cancel": "Cancel",
-  "cancelProductionOrder": "Cancel Production Order",
+  "cancelProductionOrder": "Cancel Order",
   "noKeepGoing": "No, Keep Going",
   "machines": "Machines",
   "reports": "Reports",
   "settings": "Settings",
   "edit": "Edit",
   "finish": "Finish",
-  "yesCancelOrder": "Yes, Cancel Order",
+  "yesCancelOrder": "Yes, Cancel",
   "resetPassword": "Reset Password",
   "changingPassword": "Changing password...",
   "cancelOrder": "Cancel Order",
@@ -215,6 +215,11 @@
   "planned": "Planned",
   "firmPlanned": "Firm Planned",
   "released": "Released",
+
+    "Planned": "Planned",
+  "Firm Planned": "Firm Planned",
+  "Released": "Released", 
+
   "plannedQty": "Planned Qty",
   "start": "Start",
   "end": "End",
@@ -265,7 +270,19 @@
     "working": "Working",
       "pause": "Pause",
   "resume": "Resume",
- 
+
+  "low": "Low",
+
+  
+  "selfDeclaration": "Self Declaration",
+  "material": "Material",
+  "finishedProduct": "Finished Product",
+  "selectComponent": "Select Component",
+
+  "Admin": "Admin",
+  "Supervisor": "Supervisor",
+  "Operator": "Operator",
+
 
 
   

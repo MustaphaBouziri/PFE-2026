@@ -78,7 +78,7 @@ class GlobalSearchBar extends StatelessWidget {
                 itemBuilder: (context) {
                   return dropdownItems!
                       .map(
-                        (e) => PopupMenuItem<String>(value: e, child: Text(e)),
+                        (e) => PopupMenuItem<String>(value: e, child: Text(e.tr())),
                       )
                       .toList();
                 },
@@ -103,7 +103,7 @@ class GlobalSearchBar extends StatelessWidget {
                         .map(
                           (e) => DropdownMenuItem<String>(
                             value: e,
-                            child: Text(e),
+                            child: Text(e.tr()),
                           ),
                         )
                         .toList(),

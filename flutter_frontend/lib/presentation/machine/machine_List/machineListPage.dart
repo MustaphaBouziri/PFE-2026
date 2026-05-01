@@ -28,14 +28,14 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   final TextEditingController searchController = TextEditingController();
 
   final ValueNotifier<String> searchQuery = ValueNotifier('');
-  final ValueNotifier<String> statusFilter = ValueNotifier('All');
+  final ValueNotifier<String> statusFilter = ValueNotifier('all');
   final ValueNotifier<Map<String, List<MachineModel>>> dataNotifier =
       ValueNotifier({});
   final ValueNotifier<bool> loadingNotifier = ValueNotifier(true);
   // chat false = chat close true = chat open
   final ValueNotifier<bool> chatOpen = ValueNotifier(false);
 
-  final List<String> statusOptions = ['All', 'Working', 'Idle'];
+  final List<String> statusOptions = ['all', 'working', 'idle'];
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _machineCardKey = GlobalKey();
   final GlobalKey _profileKey = GlobalKey();
@@ -139,7 +139,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
             machine.workCenterName.toLowerCase().contains(q);
 
         final matchesStatus =
-            status == 'All' ||
+            status == 'all' ||
             machine.status.toLowerCase() == status.toLowerCase();
 
         return matchesSearch && matchesStatus;
@@ -351,7 +351,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
             onSearchChanged: (val) => searchQuery.value = val,
             dropdownItems: statusOptions,
             selectedValue: statusFilter.value,
-            onDropdownChanged: (val) => statusFilter.value = val ?? 'All',
+            onDropdownChanged: (val) => statusFilter.value = val ?? 'all',
           ),
         ),
         const SizedBox(height: 8),

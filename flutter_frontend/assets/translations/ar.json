@@ -214,6 +214,13 @@
   "planned": "مخطط",
   "firmPlanned": "مخطط مؤكد",
   "released": "تم الإصدار",
+
+  
+  "Planned": "مخطط",
+  "Firm Planned": "مخطط مؤكد",
+  "Released": "تم الإصدار",
+
+  
   "plannedQty": "الكمية المخططة",
   "start": "بداية",
   "end": "نهاية",
@@ -269,6 +276,16 @@
   "working": "يعمل",
   "pause": "إيقاف مؤقت",
   "resume": "استئناف",
+  "low": "منخفض",
+
+   "selfDeclaration": "تصريح ذاتي",
+  "material": "مادة",
+  "finishedProduct": "منتج نهائي",
+  "selectComponent": "اختر المكون",
+
+  "Admin": "مدير",
+  "Supervisor": "مشرف",
+  "Operator": "مشغل",
 
 
   "tutorialAdminSearch": "هذا هو بحث لوحة تحكم المدير. ابحث عن المستخدمين بالاسم أو البريد الإلكتروني.",

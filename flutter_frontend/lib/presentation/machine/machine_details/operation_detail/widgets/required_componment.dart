@@ -8,12 +8,14 @@ class RequiredComponent extends StatefulWidget {
   final List<ComponentConsumptionModel> components;
   final double totalProduced;
   final String executionId;
+  final String operationStatus;
 
   const RequiredComponent({
     super.key,
     required this.components,
     required this.totalProduced,
     required this.executionId,
+    required this.operationStatus,
   });
 
   @override
@@ -39,13 +41,17 @@ class _RequiredComponentState extends State<RequiredComponent> {
   void _openScanner(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => ScannerWidget(executionId: widget.executionId,components:widget.components),
+      builder: (context) => ScannerWidget(
+        executionId: widget.executionId,
+        components: widget.components,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 1210;
+    final canScan = widget.operationStatus == "Running";
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -119,13 +125,15 @@ class _RequiredComponentState extends State<RequiredComponent> {
                                       '${widget.components.length} ${'componentsFound'.tr()}',
                                     ),
                                     const Spacer(),
+
                                     // scan button inside dialog
                                     ElevatedButton(
-                                      onPressed: () => _openScanner(context),
+                                      onPressed: () =>
+                                          canScan ? _openScanner(context) : {},
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF0F172A,
-                                        ),
+                                        backgroundColor: canScan
+                                            ? const Color(0xFF0F172A)
+                                            : Color(0xFFCBD5E1),
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 14,
                                           horizontal: 14,
@@ -138,8 +146,10 @@ class _RequiredComponentState extends State<RequiredComponent> {
                                       ),
                                       child: Text(
                                         'scanItem'.tr(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                        style: TextStyle(
+                                          color: canScan
+                                              ? Colors.white
+                                              : const Color(0xff64748B),
                                         ),
                                       ),
                                     ),
@@ -176,31 +186,31 @@ class _RequiredComponentState extends State<RequiredComponent> {
                 ),
 
               // scan button in normal view
-               SizedBox(
-                  
-                  child: ElevatedButton.icon(
-                     onPressed: () => _openScanner(context),
-                    
-                          
-                       
-                    label: Text(
-                      'scanItem'.tr(),
-                      style: const TextStyle(color: Colors.white),
+              SizedBox(
+                child: ElevatedButton.icon(
+                  onPressed: () => canScan ? _openScanner(context) : {},
+
+                  label: Text(
+                    'scanItem'.tr(),
+                    style: TextStyle(
+                      color: canScan ? Colors.white : const Color(0xff64748B),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 14,
-                        horizontal: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canScan
+                        ? const Color(0xFF0F172A)
+                        : Color(0xFFCBD5E1),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
-                                  ],
-            
+              ),
+            ],
           ),
 
           const SizedBox(height: 16),
@@ -253,7 +263,8 @@ class ComponentListView extends StatelessWidget {
   static const statusAvailable = 'available';
 
   String getStatus(double remaining, double scanned) {
-    if (scanned == 0 || remaining <= 0) return statusMissing;// if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
+    if (scanned == 0 || remaining <= 0)
+      return statusMissing; // if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
     if (remaining < scanned * 0.2) return statusLowStock;
     return statusAvailable;
   }
@@ -319,7 +330,7 @@ class ComponentListView extends StatelessWidget {
         final isSpecific = component.belongsToThisOperation;
         // consumed is how many items have been used based on the total produced and the quantity per unit
         final consumed = totalProduced * component.quantityPerUnit;
-        // scanned is how many qte of this item u scanned  * qte per unit of measure 
+        // scanned is how many qte of this item u scanned  * qte per unit of measure
         final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
 

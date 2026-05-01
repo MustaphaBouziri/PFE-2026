@@ -22,7 +22,7 @@ class MobileTabletLayout extends StatefulWidget {
     super.key,
     required this.operationData,
     required this.cycles,
-    required this.components
+    required this.components,
   });
 
   @override
@@ -40,14 +40,16 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
 
   bool _tutorialShown = false;
 
-
   @override
   Widget build(BuildContext context) {
     // Show tutorial if data loaded and not shown yet
     if (!_tutorialShown) {
       _tutorialShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async => 
-        await OperationDetailTutorial.show(context, [_currentOrderKey, _actionButtonsKey])
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) async => await OperationDetailTutorial.show(context, [
+          _currentOrderKey,
+          _actionButtonsKey,
+        ]),
       );
     }
 
@@ -62,12 +64,17 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
           children: [
             Container(
               key: _currentOrderKey,
-              child: CurrentOrderInfoContainer(operationData: widget.operationData),
+              child: CurrentOrderInfoContainer(
+                operationData: widget.operationData,
+              ),
             ),
             const SizedBox(height: 16),
             Container(
               key: _actionButtonsKey,
-              child: ActionButtonsContainer(operationData: widget.operationData,components: widget.components,),
+              child: ActionButtonsContainer(
+                operationData: widget.operationData,
+                components: widget.components,
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -91,8 +98,8 @@ class _MobileTabletLayoutState extends State<MobileTabletLayout> {
               components: widget.components,
               totalProduced: widget.operationData.totalProducedQuantity,
               executionId: widget.operationData.executionId,
-              
-            )
+              operationStatus: widget.operationData.operationStatus,
+            ),
           ],
         ),
       ),
