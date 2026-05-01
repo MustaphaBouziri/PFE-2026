@@ -715,141 +715,152 @@ end;
     end;
 
     procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Text
-    var
-        Machine: Record "Machine Center";
-        MESMachineStatus: Record "MES Machine Status";
-        MESOperationState: Record "MES Operation State";
-        MESExecution: Record "MES Operation Execution";
-        PrevStatus: Enum "MES Machine Status";
-        MESProgression: Record "MES Operation Progression";
-        MESScrap: Record "MES Operation Scrap";
-        MachineArr: JsonArray;
-        MachineObj: JsonObject;
-        JsonHelper: Codeunit "MES Json Helper";
-        CutoffTime: DateTime;
-        TotalMinutes: Decimal;
-        RunningMinutes: Decimal;
-        OperationFinished: Integer;
-        OperationCancelled: Integer;
-        TotalProduced: Decimal;
-        TotalScrap: Decimal;
-        UptimePercent: Decimal;
-        PrevTime: DateTime;
-        workCenterNoArr: JsonArray;
-        workCenterNoToken: JsonToken;
-        workCenterNo: Code[20];
-        // store the list of work center no to filter machine in format of a list
-        workCenterFilter: Text;
-    begin
-        Clear(MachineArr);
-        CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
-        TotalMinutes := hoursBack * 60;
+var
+    Machine: Record "Machine Center";
+    MESMachineStatus: Record "MES Machine Status";
+    MESOperationState: Record "MES Operation State";
+    MESExecution: Record "MES Operation Execution";
+    PrevStatus: Enum "MES Machine Status";
+    MESProgression: Record "MES Operation Progression";
+    MESScrap: Record "MES Operation Scrap";
+    MachineArr: JsonArray;
+    MachineObj: JsonObject;
+    JsonHelper: Codeunit "MES Json Helper";
+    CutoffTime: DateTime;
+    TotalMinutes: Decimal;
+    RunningMinutes: Decimal;
+    OperationFinished: Integer;
+    OperationCancelled: Integer;
+    TotalProduced: Decimal;
+    TotalScrap: Decimal;
+    UptimePercent: Decimal;
+    PrevTime: DateTime;
+    workCenterNoArr: JsonArray;
+    workCenterNoToken: JsonToken;
+    workCenterNo: Code[20];
+    // store the list of work center no to filter machine in format of a list
+    workCenterFilter: Text;
+begin
+    Clear(MachineArr);
+    CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
+    TotalMinutes := hoursBack * 60;
 
-        // workCenterNoJson is a simple string array: ["100","200"]
-        workCenterFilter := '';
-        workCenterNoArr.ReadFrom(workCenterNoJson);
-        foreach workCenterNoToken in workCenterNoArr do begin
-            workCenterNo := CopyStr(workCenterNoToken.AsValue().AsText(), 1, 20);
+    // workCenterNoJson is a simple string array: ["100","200"]
+    workCenterFilter := '';
+    workCenterNoArr.ReadFrom(workCenterNoJson);
+    foreach workCenterNoToken in workCenterNoArr do begin
+        workCenterNo := CopyStr(workCenterNoToken.AsValue().AsText(), 1, 20);
 
-            if workCenterFilter = '' then
-                workCenterFilter := workCenterNo
-            else
-                workCenterFilter += '|' + workCenterNo; // | to make it add OR for set range  WC1|WC2|WC3
-        end;
+        if workCenterFilter = '' then
+            workCenterFilter := workCenterNo
+        else
+            workCenterFilter += '|' + workCenterNo; // | to make it add OR for set range  WC1|WC2|WC3
+    end;
 
+    Machine.Reset();
+    Machine.SetFilter("Work Center No.", workCenterFilter);//Machine.SetFilter("Work Center No.", 'WC1|WC2|WC3');
 
-        Machine.Reset();
-        Machine.SetFilter("Work Center No.", workCenterFilter);//Machine.SetFilter("Work Center No.", 'WC1|WC2|WC3');
+    if Machine.FindSet() then
+        repeat
+            Clear(MachineObj);
+            RunningMinutes := 0;
+            OperationFinished := 0;
+            OperationCancelled := 0;
+            TotalProduced := 0;
+            TotalScrap := 0;
+            UptimePercent := 0;
 
-        if Machine.FindSet() then
-            repeat
-                Clear(MachineObj);
-                RunningMinutes := 0;
-                OperationFinished := 0;
-                OperationCancelled := 0;
-                TotalProduced := 0;
-                TotalScrap := 0;
+            MESExecution.Reset();
+            MESExecution.SetRange("Machine No", Machine."No.");
+            MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
+            OperationFinished := 0;
+            OperationCancelled := 0;
+            if MESExecution.FindSet() then
+                repeat
+                    MESOperationState.Reset();
+                    MESOperationState.SetRange("Execution Id", MESExecution."Execution Id");
+                    MESOperationState.SetCurrentKey("Execution Id", "Declared At");
+                    MESOperationState.Ascending(false);
+                    // count canceled and finished operations
+                    if MESOperationState.FindFirst() then begin
+                        if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Finished then
+                            OperationFinished += 1
+                        else if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Cancelled then
+                            OperationCancelled += 1;
+                    end;
 
-                MESExecution.Reset();
-                MESExecution.SetRange("Machine No", Machine."No.");
-                MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
-                OperationFinished := 0;
-                OperationCancelled := 0;
-                if MESExecution.FindSet() then
-                    repeat
-                        MESOperationState.Reset();
-                        MESOperationState.SetRange("Execution Id", MESExecution."Execution Id");
-                        MESOperationState.SetCurrentKey("Execution Id", "Declared At");
-                        MESOperationState.Ascending(false);
-                        // count canceled and finished operations
-                        if MESOperationState.FindFirst() then begin
-                            if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Finished then
-                                OperationFinished += 1
-                            else if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Cancelled then
-                                OperationCancelled += 1;
-                        end;
-                        // sum qte produced for all progressions of this execution
-                        MESProgression.Reset();
-                        MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
-                        MESProgression.SetCurrentKey("Execution Id", "Declared At");
-                        MESProgression.Ascending(false);
-                        // no loop cuz the latest progression record will have the total produced quantity for this execution
-                        if MESProgression.FindFirst() then
-                            TotalProduced += MESProgression."Total Produced Quantity";
+                    // sum qte produced for all progressions of this execution
+                    MESProgression.Reset();
+                    MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
+                    MESProgression.SetCurrentKey("Execution Id", "Declared At");
+                    MESProgression.Ascending(false);
+                    // no loop cuz the latest progression record will have the total produced quantity for this execution
+                    if MESProgression.FindFirst() then
+                        TotalProduced += MESProgression."Total Produced Quantity";
 
-                        MESScrap.Reset();
-                        MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
-                        // here we do need to loop and sum all
-                        if MESScrap.FindSet() then
-                            repeat
-                                TotalScrap += MESScrap."Scrap Quantity";
-                            until MESScrap.Next() = 0;
+                    MESScrap.Reset();
+                    MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
+                    // here we do need to loop and sum all
+                    if MESScrap.FindSet() then
+                        repeat
+                            TotalScrap += MESScrap."Scrap Quantity";
+                        until MESScrap.Next() = 0;
 
-                    until MESExecution.Next() = 0;
+                until MESExecution.Next() = 0;
 
-                // calculate uptime from machine status log
-                MESMachineStatus.Reset();
-                MESMachineStatus.SetRange("Machine No.", Machine."No.");
-                MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
-                MESMachineStatus.Ascending(true);
-                Clear(PrevTime);
+            // calculate uptime from machine status log
+            MESMachineStatus.Reset();
+            MESMachineStatus.SetRange("Machine No.", Machine."No.");
+            MESMachineStatus.SetCurrentKey("Machine No.", "Updated At");
+            MESMachineStatus.Ascending(true);
+            Clear(PrevTime);
 
-                if MESMachineStatus.FindSet() then
-                    repeat
-                        if MESMachineStatus."Updated At" >= CutoffTime then begin
-                            if PrevTime <> 0DT then begin
-                                if PrevStatus = PrevStatus::Working then
+            if MESMachineStatus.FindSet() then
+                repeat
+                    if MESMachineStatus."Updated At" >= CutoffTime then begin
+
+                        if PrevTime <> 0DT then begin
+                            if PrevStatus = PrevStatus::Working then begin
+
+                                if PrevTime < CutoffTime then
+                                    RunningMinutes += (MESMachineStatus."Updated At" - CutoffTime) / 60000.0
+                                else
                                     RunningMinutes += (MESMachineStatus."Updated At" - PrevTime) / 60000.0;
-                            end;
-                            PrevTime := MESMachineStatus."Updated At";
-                            PrevStatus := MESMachineStatus.Status;
-                        end;
-                    until MESMachineStatus.Next() = 0;
 
-                // if last known status is running add time until now
-                if PrevStatus = PrevStatus::Working then
+                            end;
+                        end;
+                        PrevTime := MESMachineStatus."Updated At";
+                        PrevStatus := MESMachineStatus.Status;
+                    end;
+                until MESMachineStatus.Next() = 0;
+            if (PrevStatus = PrevStatus::Working) and (PrevTime <> 0DT) then begin
+
+                if PrevTime < CutoffTime then
+                    RunningMinutes += (CurrentDateTime() - CutoffTime) / 60000.0
+                else
                     RunningMinutes += (CurrentDateTime() - PrevTime) / 60000.0;
 
-                if TotalMinutes > 0 then
-                    UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 0.1)
-                else
-                    UptimePercent := 0;
+            end;
+            if TotalMinutes > 0 then
+                UptimePercent := Round((RunningMinutes / TotalMinutes) * 100, 0.1)
+            else
+                UptimePercent := 0;
 
-                MachineObj.Add('machineNo', Machine."No.");
-                MachineObj.Add('machineName', Machine."Name");
-                MachineObj.Add('workCenterNo', Machine."Work Center No.");
-                MachineObj.Add('operationFinished', OperationFinished);
-                MachineObj.Add('operationCancelled', OperationCancelled);
-                MachineObj.Add('uptimePercent', UptimePercent);
-                MachineObj.Add('runningMinutes', RunningMinutes);
-                MachineObj.Add('totalProduced', TotalProduced);
-                MachineObj.Add('totalScrap', TotalScrap);
-                MachineArr.Add(MachineObj);
-            until Machine.Next() = 0;
+            MachineObj.Add('machineNo', Machine."No.");
+            MachineObj.Add('machineName', Machine."Name");
+            MachineObj.Add('workCenterNo', Machine."Work Center No.");
+            MachineObj.Add('operationFinished', OperationFinished);
+            MachineObj.Add('operationCancelled', OperationCancelled);
+            MachineObj.Add('uptimePercent', UptimePercent);
+            MachineObj.Add('runningMinutes', RunningMinutes);
+            MachineObj.Add('totalProduced', TotalProduced);
+            MachineObj.Add('totalScrap', TotalScrap);
+            MachineArr.Add(MachineObj);
 
+        until Machine.Next() = 0;
 
-        exit(JsonHelper.JsonToTextArr(MachineArr));
-    end;
+    exit(JsonHelper.JsonToTextArr(MachineArr));
+end;
 
     procedure resolveBarcode(barcode: Text): Text
     var
