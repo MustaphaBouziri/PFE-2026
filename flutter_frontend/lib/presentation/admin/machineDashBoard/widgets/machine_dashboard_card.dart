@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
-class AdminMachineCard extends StatelessWidget {
+class MachineDashBoardCard extends StatelessWidget {
   final MachineDashboardModel machine;
-  const AdminMachineCard({super.key, required this.machine});
+  const MachineDashBoardCard({super.key, required this.machine});
 
   @override
   Widget build(BuildContext context) {

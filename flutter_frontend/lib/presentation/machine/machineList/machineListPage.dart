@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
-import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/ai/ai_chat_page.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 import '../../../domain/auth/providers/auth_provider.dart';
 import '../../../domain/machines/providers/mes_machines_provider.dart';
 import '../../tutorials/machine_list_tutorial.dart';
-import 'MachineCard.dart';
+import 'widgets/machine_card.dart';
 
 class Machinelistpage extends StatefulWidget {
   const Machinelistpage({super.key});

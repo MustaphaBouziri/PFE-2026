@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/operationDetailPage.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
-import '../../operation_detail/operationDetailPage.dart';
 import '../layout/narrow_layout.dart';
 import '../layout/wide_layout.dart';
 import '../models/status_style.dart';

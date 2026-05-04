@@ -5,7 +5,7 @@ import '../../../../../data/machine/models/mes_componentConsumption_model.dart';
 import '../../../../../data/machine/models/mes_operation_model.dart';
 import '../../../../../data/machine/models/mes_production_cycle.dart';
 
-import '../widgets/Current_order_info_container.dart';
+import '../../../machine_details/operation_detail/widgets/Current_order_info_container.dart';
 import '../widgets/action_Buttons_Container.dart';
 import '../widgets/appBar.dart';
 import '../widgets/no_info_available.dart';

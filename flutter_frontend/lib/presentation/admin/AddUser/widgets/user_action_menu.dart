@@ -3,8 +3,8 @@ import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
 import 'package:pfe_mes/domain/admin/providers/erp_workCenter_provider.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_user_provider.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/changeRoleDialog.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/generatePasswordDialog.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/change_role_dialog.dart';
+import 'package:pfe_mes/presentation/admin/addUser/widgets/generate_password_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 

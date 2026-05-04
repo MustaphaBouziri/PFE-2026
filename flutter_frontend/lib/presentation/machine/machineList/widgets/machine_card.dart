@@ -1,9 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/tabsMain.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
-import '../../../data/machine/models/mes_machine_model.dart';
-import '../machine_details/tabsMain.dart';
+import '../../../../data/machine/models/mes_machine_model.dart';
 
 class MachineCard extends StatefulWidget {
   final MachineModel machine;

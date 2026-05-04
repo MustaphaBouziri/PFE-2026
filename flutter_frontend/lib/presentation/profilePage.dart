@@ -3,10 +3,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
+
 import 'package:provider/provider.dart';
 
 import 'ai/ai_chat_page.dart';
-import 'auth/Login/login_page.dart';
+import 'auth/Login/loginPage.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

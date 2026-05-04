@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'changePassForm.dart';
+import '../widgets/change_password_form.dart';
 
 
 class ChangePassMobileLayout extends StatelessWidget {

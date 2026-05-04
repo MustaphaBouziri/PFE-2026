@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
+import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
+import 'package:pfe_mes/presentation/machine/machineList/machineListPage.dart';
 import 'package:provider/provider.dart';
 
 // Providers
@@ -20,9 +22,9 @@ import 'domain/ai/providers/ai_chat_provider.dart';
 
 // Pages
 import 'package:pfe_mes/presentation/admin/adminPage.dart';
-import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
-import 'package:pfe_mes/presentation/auth/Login/login_page.dart';
-import 'package:pfe_mes/presentation/machine/machine_List/machineListPage.dart';
+
+import 'package:pfe_mes/presentation/auth/Login/loginPage.dart';
+
 
 
 //this is a global navigation listener it watched pages push,pop or pages that r covered by other pages (stacked)

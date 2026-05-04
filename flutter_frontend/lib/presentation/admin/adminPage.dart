@@ -2,10 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/AddUserPage.dart';
-import 'package:pfe_mes/presentation/admin/activityLogPage.dart';
-
-import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/admin/addUser/AddUserPage.dart';
+import 'package:pfe_mes/presentation/admin/activity_log/activityLogPage.dart';
+import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:provider/provider.dart';

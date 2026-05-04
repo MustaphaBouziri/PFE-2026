@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'login_shared_form.dart';
+import '../widgets/login_shared_form.dart';
 
 class LoginMobileLayout extends StatelessWidget {
   final TextEditingController authIdController;
