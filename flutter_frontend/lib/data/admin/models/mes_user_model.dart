@@ -8,9 +8,9 @@ class MesUser {
   final String authId;
   final bool isActive;
   final bool isOnline;
+  final bool isPendingSetup;
   final String lastSeenAt;
   final String? imageBase64;
-
 
   MesUser({
     required this.userId,
@@ -24,6 +24,7 @@ class MesUser {
     this.isOnline = false,
     this.lastSeenAt = '',
     this.imageBase64,
+    this.isPendingSetup = true,
   });
 
   factory MesUser.fromJson(Map<String, dynamic> json) {
@@ -39,10 +40,12 @@ class MesUser {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      isActive: json['isActive'] == true, // need to ask about this
+      isActive: json['isActive'] == true,
+      // need to ask about this
       isOnline: json['isOnline'] == true,
       lastSeenAt: json['lastSeenAt']?.toString() ?? '',
       imageBase64: json['imageBase64']?.toString(),
+      isPendingSetup: json['isPendingSetup'] == true,
     );
   }
 

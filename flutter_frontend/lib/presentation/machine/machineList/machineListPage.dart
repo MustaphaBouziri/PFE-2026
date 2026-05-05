@@ -167,18 +167,10 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD:flutter_frontend/lib/presentation/machine/machine_List/machineListPage.dart
-=======
-    // final authProvider = context.read<AuthProvider>();
-    final role = _sessionStorage.getRole().toString();
->>>>>>> temp2:flutter_frontend/lib/presentation/machine/machineList/machineListPage.dart
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     final isTablet = width >= 820 && width <= 1032;
-<<<<<<< HEAD:flutter_frontend/lib/presentation/machine/machine_List/machineListPage.dart
     final role = _resolveRole();
-=======
->>>>>>> temp2:flutter_frontend/lib/presentation/machine/machineList/machineListPage.dart
 
     return Scaffold(
       // chat button : listen to chatOpen (true or false )

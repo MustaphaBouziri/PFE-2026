@@ -4,15 +4,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
-import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/stat_card.dart';
-
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/button.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/add_user_dialog.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/button.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/stat_card.dart';
 import 'package:pfe_mes/presentation/admin/addUser/widgets/user_list_table.dart';
-
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
+
 import '../../../domain/admin/providers/erp_employee_provider.dart';
 import '../../../domain/admin/providers/erp_workCenter_provider.dart';
 import '../../../domain/admin/providers/mes_user_provider.dart';
@@ -28,7 +26,13 @@ class AddUserPage extends StatefulWidget {
 class _AddUserPageState extends State<AddUserPage> {
   final SessionStorage _sessionStorage = SessionStorage();
   String selectedRole = 'all';
-  final List<String> roles = const ['all', 'Admin', 'Supervisor', 'Operator'];
+  final List<String> filters = const [
+    'all',
+    'Admin',
+    'Supervisor',
+    'Operator',
+    'Pending',
+  ];
 
   final TextEditingController searchController = TextEditingController();
 
@@ -103,7 +107,12 @@ class _AddUserPageState extends State<AddUserPage> {
     final q = _searchQuery.toLowerCase();
 
     return users.where((u) {
-      final roleMatch = selectedRole == 'all' || u.role == selectedRole;
+      final roleMatch = selectedRole == 'all'
+          ? true
+          : selectedRole == 'Pending'
+          ? u
+                .isPendingSetup // ← filter by pending flag
+          : u.role == selectedRole;
 
       final searchMatch =
           q.isEmpty ||
@@ -166,12 +175,12 @@ class _AddUserPageState extends State<AddUserPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Stats(users: users, roles: roles),
+                    Stats(users: users, roles: filters),
                     const SizedBox(height: 16),
                     _SearchSection(
                       searchKey: _searchKey,
                       searchController: searchController,
-                      roles: roles,
+                      roles: filters,
                       selectedRole: selectedRole,
                       onRoleChanged: (val) {
                         setState(() {

@@ -64,7 +64,7 @@
   "insertedSuccessfully": "تم الإدراج بنجاح",
   "confirmScans": "تأكيد المسح",
   "usersRolesManagement": "إدارة المستخدمين والصلاحيات",
-  "manageUsers": "إدارة حسابات المستخدمين والأدوار والصلاحيات في المؤسسة",
+  "manageUsers": "إدارة حسابات المستخدمين",
   "exportUsers": "تصدير المستخدمين",
   "tableHeaderUser": "المستخدم",
   "tableHeaderRole": "الدور",

@@ -13,10 +13,6 @@
  *   2. Forwards the full payload to the Python agent
  *   3. Returns the structured ChatResponse to Flutter
  *
- * BUG FIX: original used `require('node-fetch')` which is not listed in
- * package.json and would crash at startup.  Node 18+ ships native fetch —
- * no import needed.  If you must support Node < 18, add node-fetch@3 to
- * package.json and uncomment the dynamic import below.
  */
 
 const express = require("express");
