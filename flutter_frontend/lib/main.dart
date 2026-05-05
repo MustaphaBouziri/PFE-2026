@@ -2,8 +2,10 @@ import 'package:device_preview/device_preview.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pfe_mes/core/app_constants.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
+import 'package:pfe_mes/presentation/auth/paring/paringPage.dart';
 import 'package:pfe_mes/presentation/machine/machineList/machineListPage.dart';
 import 'package:provider/provider.dart';
 
@@ -33,6 +35,7 @@ final RouteObserver<ModalRoute<void>> routeObserver =
 
 void main() async {
   await SessionStorage.init();
+  await AppConstants.loadHost();
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
@@ -135,6 +138,9 @@ class _AuthGateState extends State<_AuthGate> {
     final SessionStorage _sessionStorage = SessionStorage();
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
+         if (!AppConstants.hasHost()) {
+        return const ParingPage();
+      } 
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) {
             return const ChangePasswordPage();

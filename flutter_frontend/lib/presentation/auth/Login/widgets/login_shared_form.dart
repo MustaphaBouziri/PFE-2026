@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/auth/paring/paringPage.dart';
 import '../../../widgets/language_selector.dart';
 
 class LoginSharedForm extends StatefulWidget {
@@ -155,7 +156,19 @@ class _LoginSharedFormState extends State<LoginSharedForm> {
                 return null;
               },
             ),
-
+const SizedBox(height: 8),
+          TextButton(
+                onPressed:() => Navigator.pushReplacement(context, MaterialPageRoute(builder:(context) => ParingPage(),)),
+                child: Text(
+                  "changeHostId".tr(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color.fromARGB(255, 31, 89, 215),
+                  ),
+                ),
+              ),
+            
             const SizedBox(height: 22),
 
             //___________________ LOGIN BUTTON ___________________

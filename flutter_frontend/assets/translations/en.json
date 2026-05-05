@@ -282,7 +282,21 @@
   "Admin": "Admin",
   "Supervisor": "Supervisor",
   "Operator": "Operator",
+"paring": "Pairing",
+  "pleaseEnterCompanyHostId": "Please enter company host ID",
+  "enterCompanyHostUrl": "Enter company host URL",
+  "companyHostUrl": "Company Host URL",
+  "backslashNotAllowed": "Backslash not allowed",
+  "invalidCharacters": "Invalid characters",
+  "noSpacesAllowed": "No spaces allowed",
+  "orScanQrCode": "Or scan QR code",
+  "paringPage": "Pairing Page",
 
+  "changeHostId": "Change Host ID",
+    "onlySupervisorsCanCancelOrders": "Only supervisors can cancel orders",
+  "onlySupervisorsCanCloseOrders": "Only supervisors can close orders",
+  "onlySupervisorsCanFinishOrders": "Only supervisors can finish orders",
+  
 
 
   

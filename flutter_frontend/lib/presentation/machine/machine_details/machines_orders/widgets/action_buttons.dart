@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/erp_order_model.dart';
+
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 
 class ActionButtons extends StatefulWidget {
@@ -27,6 +29,14 @@ class _ActionButtonsState extends State<ActionButtons> {
   bool _isStartLoading = false;
   bool _isCancelLoading = false;
 
+  bool get _canStart => widget.order.status == 'Released';
+  bool get _canClose => widget.order.status == 'Released' && _isSupervisor;
+
+  // check if he is a supervisor
+  bool get _isSupervisor {
+    final role = SessionStorage().getRole().toLowerCase();
+    return role == 'supervisor';
+  }
   Future<void> _reloadOrders() async {
     await context.read<MachineordersProvider>().getMachineOrders(
       widget.machineNo,
@@ -61,7 +71,12 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _handleClose() async {
+<<<<<<< HEAD
     if (_isCancelLoading) return;
+=======
+
+    if (_isCancelLoading || !_canClose) return;
+>>>>>>> temp2
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -137,7 +152,50 @@ class _ActionButtonsState extends State<ActionButtons> {
     );
   }
 
+
   Widget _buildStartButton() {
+<<<<<<< HEAD
+=======
+    if (_canStart) {
+      return ElevatedButton.icon(
+        onPressed: _isStartLoading ? null : _handleStart,
+        icon: _isStartLoading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(
+                Icons.play_arrow_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
+        label: Text(
+          'startOrder'.tr(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0F172A),
+          disabledBackgroundColor: const Color(0xFF0F172A),
+          disabledForegroundColor: Colors.white,
+          foregroundColor: Colors.white,
+          overlayColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+      );
+    }
+
+>>>>>>> temp2
     return ElevatedButton.icon(
       onPressed: _isStartLoading ? null : _handleStart,
       icon: _isStartLoading
@@ -173,6 +231,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Widget _buildCloseButton() {
+<<<<<<< HEAD
     return OutlinedButton.icon(
       onPressed: _isCancelLoading ? null : _handleClose,
       icon: _isCancelLoading
@@ -194,6 +253,41 @@ class _ActionButtonsState extends State<ActionButtons> {
         side: const BorderSide(color: Color(0xFFCBD5E1)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+=======
+    final isEnabled = _canClose;
+
+    return Tooltip(
+      message: !_isSupervisor ? 'onlySupervisorsCanCloseOrders'.tr() : '',
+      showDuration: const Duration(seconds: 3),
+      child: OutlinedButton.icon(
+        onPressed: isEnabled && !_isCancelLoading ? _handleClose : null,
+        icon: _isCancelLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF334155),
+                ),
+              )
+            : const Icon(Icons.close_rounded, size: 16),
+        label: Text(
+          'close'.tr(),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: isEnabled
+              ? const Color(0xFF334155)
+              : const Color(0xFFCBD5E1),
+          side: BorderSide(
+            color: isEnabled
+                ? const Color(0xFFCBD5E1)
+                : const Color(0xFFE2E8F0),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+>>>>>>> temp2
       ),
     );
   }
