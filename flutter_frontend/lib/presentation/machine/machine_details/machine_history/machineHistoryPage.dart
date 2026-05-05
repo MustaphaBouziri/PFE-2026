@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/domain/machines/providers/machineOrders_provider.dart';
-import 'package:pfe_mes/presentation/machine/machine_details/machine_history/widgets/history_card.dart.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machine_history/widgets/history_card.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/machines_orders/models/badge_style.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/operation_detail/operationDetailPage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';

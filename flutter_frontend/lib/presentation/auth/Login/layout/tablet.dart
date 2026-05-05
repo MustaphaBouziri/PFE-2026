@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import 'login_shared_form.dart';
+import '../widgets/login_shared_form.dart';
 
 class LoginTabletLayout extends StatelessWidget {
   final TextEditingController authIdController;

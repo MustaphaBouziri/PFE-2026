@@ -17,7 +17,6 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
   @override
   void initState() {
     super.initState();
-    // Load barcodes when screen is first opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MesBarcodeProvider>().fetchAllBarcodes();
     });
@@ -54,7 +53,7 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
             padding: const EdgeInsets.all(8),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.8,
+              childAspectRatio: 3,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/tableHeader.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/table_header.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/userListRow.dart';
+import 'package:pfe_mes/presentation/admin/addUser/widgets/user_list_row.dart';
 
 class UserListTable extends StatefulWidget {
   final List<MesUser> users;

@@ -216,7 +216,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                           children: [
                             Expanded(
                               child: ScrapTypeRadioTile(
-                                title: 'Material',
+                                title: 'material'.tr(),
                                 value: scrapTypes[0],
                                 groupValue: currentOption,
                                 onChanged: (value) {
@@ -229,7 +229,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                             ),
                             Expanded(
                               child: ScrapTypeRadioTile(
-                                title: 'Finished Product',
+                                title: 'finishedProduct'.tr(),
                                 value: scrapTypes[1],
                                 groupValue: currentOption,
                                 onChanged: (value) {
@@ -275,7 +275,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                     DropdownMenu<ComponentConsumptionModel>(
                       width: 300,
                       controller: _searchController,
-                      hintText: 'Select Component',
+                      hintText: 'selectComponent'.tr(),
                       enableFilter: true,
 
                       menuHeight: 180,

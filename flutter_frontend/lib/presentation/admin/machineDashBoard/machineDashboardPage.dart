@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
-import 'package:pfe_mes/presentation/admin/widgets/MachineCard.dart';
+import 'package:pfe_mes/presentation/admin/machineDashBoard/widgets/machine_dashboard_card.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
@@ -110,7 +110,7 @@ void initState() {
                         ),
                         itemCount: filteredMachine.length,
                         itemBuilder: (context, index) {
-                          return AdminMachineCard(
+                          return MachineDashBoardCard(
                             machine: filteredMachine[index],
                           );
                         },

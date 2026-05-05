@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import 'changePassForm.dart';
+import '../widgets/change_password_form.dart';
 
 class ChangePassWebLayout extends StatelessWidget {
   final TextEditingController newPasswordController;

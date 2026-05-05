@@ -65,11 +65,16 @@ codeunit 50126 "MES Web Service"
         exit(UnboundActions.AdminSetActive(token, userId, isActive));
     end;
 
+    procedure fetchAllEmployees(): Text
+    begin
+        exit (UnboundActions.fetchAllEmployees());
+    end;
+
     // ── Read endpoints (no identity needed) ───────────────────────────────────
 
-    procedure FetchMachines(workCenterNo: Text): Text
+    procedure FetchMachines(workCenterNoJson: Text): Text
     begin
-        exit(MachineFetch.FetchMachines(workCenterNo));
+        exit(MachineFetch.FetchMachines(workCenterNoJson));
     end;
 
     procedure getMachineOrders(machineNo: Text): Text

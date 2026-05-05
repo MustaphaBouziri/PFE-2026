@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class BadgeStyle {
   final Color bg;
@@ -17,40 +18,40 @@ class BadgeStyle {
 BadgeStyle badgeStyleFromStatus(String status) {
   switch (status) {
     case 'Firm Planned':
-      return const BadgeStyle(
-        bg: Color(0xFFF3F0FF),
-        border: Color(0xFFDDD6FE),
-        text: Color(0xFF5B21B6),
-        label: 'FIRM PLANNED',
+      return  BadgeStyle(
+        bg: const Color(0xFFF3F0FF),
+        border: const Color(0xFFDDD6FE),
+        text: const Color(0xFF5B21B6),
+        label: 'firmPlanned'.tr(),
       );
     case 'Planned':
-      return const BadgeStyle(
-        bg: Color(0xFFF3F4F6),
-        border: Color(0xFFE5E7EB),
-        text: Color(0xFF6B7280),
-        label: 'PLANNED',
+      return  BadgeStyle(
+        bg: const  Color(0xFFF3F4F6),
+        border: const Color(0xFFE5E7EB),
+        text: const Color(0xFF6B7280),
+        label: 'planned'.tr(),
       );
     case 'Finished':
-      return const BadgeStyle(
-        bg: Color(0xFFEFF6FF),
-        border: Color(0xFFBFDBFE),
-        text: Color(0xFF1D4ED8),
-        label: 'FINISHED',
+      return  BadgeStyle(
+        bg: const Color(0xFFEFF6FF),
+        border: const Color(0xFFBFDBFE),
+        text: const Color(0xFF1D4ED8),
+        label: 'finished'.tr(),
       );
     case 'Cancelled':
-      return const BadgeStyle(
-        bg: Color(0xFFFFD1D1),
-        border: Color(0xFFFF9393),
-        text: Color(0xFFFF0000),
-        label: 'CANCELLED',
+      return  BadgeStyle(
+        bg: const Color(0xFFFFD1D1),
+        border: const Color(0xFFFF9393),
+        text: const Color(0xFFFF0000),
+        label: 'cancelled'.tr(),
       );
     case 'Released':
     default:
-      return const BadgeStyle(
-        bg: Color(0xFFECFDF5),
-        border: Color(0xFFA7F3D0),
-        text: Color(0xFF065F46),
-        label: 'RELEASED',
+      return  BadgeStyle(
+        bg: const Color(0xFFECFDF5),
+        border: const Color(0xFFA7F3D0),
+        text: const Color(0xFF065F46),
+        label: 'released'.tr(),
       );
   }
 }

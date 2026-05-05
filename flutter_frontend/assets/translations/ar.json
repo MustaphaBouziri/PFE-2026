@@ -214,6 +214,13 @@
   "planned": "مخطط",
   "firmPlanned": "مخطط مؤكد",
   "released": "تم الإصدار",
+
+  
+  "Planned": "مخطط",
+  "Firm Planned": "مخطط مؤكد",
+  "Released": "تم الإصدار",
+
+  
   "plannedQty": "الكمية المخططة",
   "start": "بداية",
   "end": "نهاية",
@@ -245,6 +252,42 @@
   "tutorialSearchFilter": "استخدم شريط البحث هذا للعثور على الآلات بالاسم أو مركز العمل، وتصفيتها حسب الحالة (الكل، شغّال، خامل).",
   "tutorialMachineCard": "انقر على أي بطاقة آلة لعرض تفاصيلها والطلب الحالي والعمليات.",
   "skip": "تخطي",
+
+  "operationFinished": "تمت العملية",
+  "operationCancelled": "تم إلغاء العملية",
+  "machineNumber": "رقم الآلة",
+  "scrapQuantity": "كمية الخردة",
+  
+
+  
+  "declaredBy": "صرح بها",
+  
+  "order": "الأمر",
+
+  "offline": "غير متصل",
+
+
+  
+  "aiAssistant": "مساعد الذكاء الاصطناعي",
+  "clearChat": "مسح المحادثة",
+  "askMessage": "اسألني أي شيء عن آلاتك،\nالطلبات أو الإنتاج.",
+   "askAssistant": "اسأل المساعد…",
+
+  "working": "يعمل",
+  "pause": "إيقاف مؤقت",
+  "resume": "استئناف",
+  "low": "منخفض",
+
+   "selfDeclaration": "تصريح ذاتي",
+  "material": "مادة",
+  "finishedProduct": "منتج نهائي",
+  "selectComponent": "اختر المكون",
+
+  "Admin": "مدير",
+  "Supervisor": "مشرف",
+  "Operator": "مشغل",
+
+
   "tutorialAdminSearch": "هذا هو بحث لوحة تحكم المدير. ابحث عن المستخدمين بالاسم أو البريد الإلكتروني.",
   "tutorialAdminRoleFilter": "تصفية المستخدمين حسب الدور: الكل، مدير، مشرف، أو مشغّل.",
   "tutorialAdminAddUser": "انقر هنا لإضافة مستخدم جديد إلى النظام.",

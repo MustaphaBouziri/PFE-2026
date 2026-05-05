@@ -80,6 +80,8 @@
   "declareOnBehalfOf": "Declare on behalf of",
   "noOperatorsFound": "No operators found",
 
+
+
   "printLabelPageTitle": "Print Label",
   "printButton": "Print",
   "printLandscape": "Landscape",
@@ -157,16 +159,16 @@
   "noBarcodesFound": "No barcodes found.",
   "authenticating": "Authenticating...",
   "generateQR": "Generate QR",
-  "finishProductionOrder": "Finish Production Order",
+  "finishProductionOrder": "Finish Order",
   "cancel": "Cancel",
-  "cancelProductionOrder": "Cancel Production Order",
+  "cancelProductionOrder": "Cancel Order",
   "noKeepGoing": "No, Keep Going",
   "machines": "Machines",
   "reports": "Reports",
   "settings": "Settings",
   "edit": "Edit",
   "finish": "Finish",
-  "yesCancelOrder": "Yes, Cancel Order",
+  "yesCancelOrder": "Yes, Cancel",
   "resetPassword": "Reset Password",
   "changingPassword": "Changing password...",
   "cancelOrder": "Cancel Order",
@@ -213,6 +215,11 @@
   "planned": "Planned",
   "firmPlanned": "Firm Planned",
   "released": "Released",
+
+    "Planned": "Planned",
+  "Firm Planned": "Firm Planned",
+  "Released": "Released", 
+
   "plannedQty": "Planned Qty",
   "start": "Start",
   "end": "End",
@@ -221,7 +228,7 @@
   "cancelled": "CANCELLED",
   "paused": "PAUSED",
   "finished": "FINISHED",
-  "idle": "IDLE",
+  "idle": "Idle",
   "scanned": "Scanned",
   "used": "Used",
   "left": "Left",
@@ -240,6 +247,45 @@
   "last48h": "Last 48h",
   "last7d": "Last 7d",
   "action": "ACTION",
+
+  "operationFinished": "Operation Finished",
+  "operationCancelled": "Operation Cancelled",
+  "machineNumber": "Machine Number",
+  "scrapQuantity": "Scrap Quantity",
+  
+  "declaredBy": "Declared By",
+ 
+  "order": "Order",
+  "operation": "Operation",
+
+  "offline": "Offline",
+  
+ "":"________________chatbot________________",
+  "aiAssistant": "AI Assistant",
+  "clearChat": "Clear Chat",
+  "askMessage": "Ask me anything about your machines,\norders, or production.",
+"askAssistant": "Ask the assistant…",
+
+
+    "working": "Working",
+      "pause": "Pause",
+  "resume": "Resume",
+
+  "low": "Low",
+
+  
+  "selfDeclaration": "Self Declaration",
+  "material": "Material",
+  "finishedProduct": "Finished Product",
+  "selectComponent": "Select Component",
+
+  "Admin": "Admin",
+  "Supervisor": "Supervisor",
+  "Operator": "Operator",
+
+
+
+  
   "tutorialProfilePicture": "Click on your profile picture to access your profile settings and account information.",
   "tutorialSearchFilter": "Use this search bar to find machines by name or work center, and filter them by their status (All, Working, Idle).",
   "tutorialMachineCard": "Tap any machine card to view its details, current order, and operations.",

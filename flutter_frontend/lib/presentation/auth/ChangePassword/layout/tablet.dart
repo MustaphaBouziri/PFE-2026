@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'changePassForm.dart';
+import '../widgets/change_password_form.dart';
 
 class ChangePassTabletLayout extends StatelessWidget {
   final TextEditingController oldPasswordController;

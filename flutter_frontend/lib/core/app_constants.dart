@@ -54,6 +54,7 @@ class AppConstants {
   static const String adminCreateUser   = '${host}AdminCreateUser';
   static const String fetchAllMESUsers  = '${host}fetchAllMESUsers';
   static const String fetchMESUsersByWC = '${host}fetchMESUsersByWC';
+  static const String fetchAllEmployees = '${host}fetchAllEmployees';
 
   // toggle active status of a user
   static const String toggleUserActiveStatus = '${host}AdminSetActive';

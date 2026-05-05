@@ -61,6 +61,7 @@ const webServiceEndpoints = new Set([
   "fetchDelayReport",
   "fetchConsumptionSummary",
   "fetchSupervisorOverview",
+  "fetchAllEmployees"
 ]);
 
 const apiBaseEndpoints = {

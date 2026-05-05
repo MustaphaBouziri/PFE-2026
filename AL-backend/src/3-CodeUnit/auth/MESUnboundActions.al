@@ -661,4 +661,49 @@ codeunit 50125 "MES Unbound Actions"
 
         exit('{"success":true,"message":"User role updated successfully."}');
     end;
+
+   
+    procedure fetchAllEmployees(): Text
+    var
+        EmployeeRec: Record Employee;
+        MESUser: Record "MES User";
+        EmployeesArr: JsonArray;
+        EmployeesObj: JsonObject;
+
+        TempBlob: Codeunit "Temp Blob";
+        Base64Convert: Codeunit "Base64 Convert";
+        MediaInStream: InStream;
+        OutStream: OutStream;
+    begin
+        if EmployeeRec.FindSet() then
+            repeat
+                MESUser.Reset();
+                MESUser.SetRange("Employee ID", EmployeeRec."No.");
+
+                if MESUser.IsEmpty() then begin
+                    Clear(EmployeesObj);
+
+                    EmployeesObj.Add('id', EmployeeRec."No.");
+                    EmployeesObj.Add('firstName', EmployeeRec."First Name");
+                    EmployeesObj.Add('middleName', EmployeeRec."Middle Name");
+                    EmployeesObj.Add('lastName', EmployeeRec."Last Name");
+                    EmployeesObj.Add('email', EmployeeRec."E-Mail");
+                    if EmployeeRec.Image.HasValue then begin
+                        TempBlob.CreateOutStream(OutStream);
+                        EmployeeRec.Image.ExportStream(OutStream);
+
+                        TempBlob.CreateInStream(MediaInStream);
+                        EmployeesObj.Add('imageBase64', Base64Convert.ToBase64(MediaInStream));
+                    end else
+                        EmployeesObj.Add('imageBase64', '');
+
+                    EmployeesArr.Add(EmployeesObj);
+                end;
+
+            until EmployeeRec.Next() = 0;
+
+        exit(JsonHelper.JsonToTextArr(EmployeesArr));
+    end;
 }
+
+    

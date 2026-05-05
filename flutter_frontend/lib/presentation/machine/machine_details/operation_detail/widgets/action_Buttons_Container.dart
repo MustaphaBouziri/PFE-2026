@@ -1,13 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
-import 'package:pfe_mes/presentation/machine/DeclarationLabelPage.dart';
-import 'package:pfe_mes/presentation/machine/printLabelPage.dart';
+import 'package:pfe_mes/presentation/machine/print_lables/printDeclarationLabelPage.dart';
+import 'package:pfe_mes/presentation/machine/print_lables/printLabelPage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
-import 'declaireProductionDialog.dart';
+import 'declaire_production_dialog.dart';
 import 'declare_scrap_dialog.dart';
 
 class ActionButtonsContainer extends StatefulWidget {

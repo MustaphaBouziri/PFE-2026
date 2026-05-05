@@ -17,18 +17,15 @@ class ErpEmployee {
   });
 
   factory ErpEmployee.fromJson(Map<String, dynamic> json) {
-   
-
-    return ErpEmployee(
-      employeeId: json['id']?.toString() ?? '',
-      firstName: json['firstName']?.toString() ?? '',
-      middleName: json['middleName']?.toString() ?? '',
-      lastName: json['lastName']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      imageBase64: json['image']?.toString(),
-      
-    );
-  }
+  return ErpEmployee(
+    employeeId: json['id']?.toString() ?? '',
+    firstName: json['firstName']?.toString() ?? '',
+    middleName: json['middleName']?.toString() ?? '',
+    lastName: json['lastName']?.toString() ?? '',
+    email: json['email']?.toString() ?? '',
+    imageBase64: json['imageBase64']?.toString(),
+  );
+}
 
 
   String get fullName {

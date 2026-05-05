@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
-import 'package:pfe_mes/presentation/admin/AddUser/widgets/userActionMenu.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/user_action_menu.dart';
 import 'package:pfe_mes/presentation/widgets/employee_avatar.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 class UserListRow extends StatelessWidget {
   final MesUser user;
   final bool isCurrentUser;
@@ -74,7 +74,7 @@ class UserListRow extends StatelessWidget {
 
               // Online Status
               BadgeListCell(
-                label: user.isOnline ? 'Online' : 'Offline',
+                label: user.isOnline ? 'online': 'offline',
                 flex: 2,
                 color: user.isOnline
                     ? const Color(0xFF16A34A)
@@ -165,7 +165,7 @@ class BadgeListCell extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
-            label,
+            label.tr(),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

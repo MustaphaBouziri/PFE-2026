@@ -22,8 +22,8 @@ class Machineorderpage extends StatefulWidget {
 }
 
 class _MachineorderpageState extends State<Machineorderpage> {
-  String selectedStatus = 'All';
-  final List<String> status = ['All', 'Planned', 'Firm Planned', 'Released'];
+  String selectedStatus = 'all';
+  final List<String> status = ['all', 'Planned', 'Firm Planned', 'Released'];
   bool sortAscending = true;
   final TextEditingController searchController = TextEditingController();
 
@@ -42,7 +42,7 @@ class _MachineorderpageState extends State<Machineorderpage> {
 
     final filteredOrders = machineOrdersList.where((order) {
       final bool statusMatch =
-          selectedStatus == 'All' || order.status == selectedStatus;
+          selectedStatus == 'all' || order.status == selectedStatus;
       final bool searchMatch =
           order.orderNo.toLowerCase().contains(
             searchController.text.toLowerCase(),

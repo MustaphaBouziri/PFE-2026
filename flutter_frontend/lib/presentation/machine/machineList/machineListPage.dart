@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
-import 'package:pfe_mes/presentation/admin/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/ai/ai_chat_page.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -15,7 +14,7 @@ import 'package:provider/provider.dart';
 import '../../../domain/auth/providers/auth_provider.dart';
 import '../../../domain/machines/providers/mes_machines_provider.dart';
 import '../../tutorials/machine_list_tutorial.dart';
-import 'MachineCard.dart';
+import 'widgets/machine_card.dart';
 
 class Machinelistpage extends StatefulWidget {
   const Machinelistpage({super.key});
@@ -25,17 +24,18 @@ class Machinelistpage extends StatefulWidget {
 }
 
 class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
-  final TextEditingController searchController = TextEditingController();
   final SessionStorage _sessionStorage = SessionStorage();
+  final TextEditingController searchController = TextEditingController();
 
   final ValueNotifier<String> searchQuery = ValueNotifier('');
-  final ValueNotifier<String> statusFilter = ValueNotifier('All');
+  final ValueNotifier<String> statusFilter = ValueNotifier('all');
   final ValueNotifier<Map<String, List<MachineModel>>> dataNotifier =
       ValueNotifier({});
   final ValueNotifier<bool> loadingNotifier = ValueNotifier(true);
+  // chat false = chat close true = chat open
   final ValueNotifier<bool> chatOpen = ValueNotifier(false);
 
-  final List<String> statusOptions = ['All', 'Working', 'Idle'];
+  final List<String> statusOptions = ['all', 'working', 'idle'];
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _machineCardKey = GlobalKey();
   final GlobalKey _profileKey = GlobalKey();
@@ -112,7 +112,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
   }
 
   String _resolveRole() {
-    return _sessionStorage.getRole().toString().trim().toLowerCase() ?? '';
+    return _sessionStorage.getRole().trim().toLowerCase();
   }
 
   List<String> _resolveWorkCenterIds() {
@@ -136,7 +136,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
             machine.workCenterName.toLowerCase().contains(q);
 
         final matchesStatus =
-            status == 'All' ||
+            status == 'all' ||
             machine.status.toLowerCase() == status.toLowerCase();
 
         return matchesSearch && matchesStatus;
@@ -154,33 +154,44 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
     final width = MediaQuery.of(context).size.width;
 
     if (width >= 600) {
+      // for larger screens open the chat panel instead of a dialog
       chatOpen.value = true;
     } else {
+      // for smaller screens open the chat as a full-screen dialog
       showDialog(
         context: context,
-        builder: (context) => const AiChatPage(isModal: true),
+        builder: (context) => const AiChatPage(isDialog: true),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD:flutter_frontend/lib/presentation/machine/machine_List/machineListPage.dart
+=======
+    // final authProvider = context.read<AuthProvider>();
+    final role = _sessionStorage.getRole().toString();
+>>>>>>> temp2:flutter_frontend/lib/presentation/machine/machineList/machineListPage.dart
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     final isTablet = width >= 820 && width <= 1032;
+<<<<<<< HEAD:flutter_frontend/lib/presentation/machine/machine_List/machineListPage.dart
     final role = _resolveRole();
+=======
+>>>>>>> temp2:flutter_frontend/lib/presentation/machine/machineList/machineListPage.dart
 
     return Scaffold(
+      // chat button : listen to chatOpen (true or false )
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: chatOpen,
-        builder: (_, isChatOpen, _) {
-          final isDesktop = MediaQuery.of(context).size.width >= 600;
-          // this to stop making the button on top of the chat pannel if pc
-          if (isChatOpen && isDesktop) return const SizedBox();
-
+        builder: (_, isChatOpen, __) {
+          final isWide = MediaQuery.of(context).size.width >= 600;
+          // this to stop making the button on top of the chat pannel when its open (chatOpen = true) and the screen is anything but Phone (width >= 600)
+          if (isChatOpen && isWide) return const SizedBox();
+          // else show the button
           return IconButton(
             onPressed: () => _openChat(context),
-            icon: const Icon(Icons.smart_toy_outlined, size: 30),
+            icon: const Icon(Icons.chat_outlined, size: 30),
             style: IconButton.styleFrom(
               backgroundColor: const Color(0xFF0F172A),
               foregroundColor: const Color(0xFFE2E8F0),
@@ -201,7 +212,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
               },
               child: Selector<AuthProvider, Uint8List?>(
                 selector: (_, p) => p.profileImageBytes,
-                builder: (_, imageBytes, _) {
+                builder: (_, imageBytes, __) {
                   return CircleAvatar(
                     radius: 18,
                     backgroundImage: imageBytes != null
@@ -259,9 +270,10 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
           ],
         ),
       ),
+      //listens to chatOpen to decide whether to show the chat panel as a dialog
       body: ValueListenableBuilder<bool>(
         valueListenable: chatOpen,
-        builder: (_, isChatOpen, _) {
+        builder: (_, isChatOpen, __) {
           return Stack(
             children: [
               // body
@@ -276,7 +288,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                   height: isTablet ? height * 0.8 : null,
                   width: 400,
                   child: AiChatPage(
-                    isModal: false,
+                    isDialog: false,
                     onClose: () => chatOpen.value = false,
                   ),
                 ),
@@ -294,7 +306,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
 
     return ValueListenableBuilder<bool>(
       valueListenable: loadingNotifier,
-      builder: (_, loading, _) {
+      builder: (_, loading, __) {
         if (loading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -322,12 +334,12 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
               const Spacer(),
               _statusLegendBadge(
                 color: const Color.fromARGB(255, 40, 197, 92),
-                label: 'Working',
+                label: 'working'.tr(),
               ),
               const SizedBox(width: 8),
               _statusLegendBadge(
                 color: const Color.fromARGB(255, 134, 134, 134),
-                label: 'Idle',
+                label: 'idle'.tr(),
               ),
             ],
           ),
@@ -342,7 +354,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
             onSearchChanged: (val) => searchQuery.value = val,
             dropdownItems: statusOptions,
             selectedValue: statusFilter.value,
-            onDropdownChanged: (val) => statusFilter.value = val ?? 'All',
+            onDropdownChanged: (val) => statusFilter.value = val ?? 'all',
           ),
         ),
         const SizedBox(height: 8),
@@ -351,13 +363,13 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
         Expanded(
           child: ValueListenableBuilder<Map<String, List<MachineModel>>>(
             valueListenable: dataNotifier,
-            builder: (_, data, _) {
+            builder: (_, data, __) {
               return ValueListenableBuilder<String>(
                 valueListenable: searchQuery,
-                builder: (_, query, _) {
+                builder: (_, query, __) {
                   return ValueListenableBuilder<String>(
                     valueListenable: statusFilter,
-                    builder: (_, status, _) {
+                    builder: (_, status, __) {
                       final groupedMachines = _applyFilters(
                         data,
                         query,

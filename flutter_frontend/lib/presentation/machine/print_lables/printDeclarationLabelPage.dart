@@ -4,7 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import '../../../../../data/machine/models/mes_operation_model.dart';
+import '../../../../../../data/machine/models/mes_operation_model.dart';
 
 class DeclarationLabelPage extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;

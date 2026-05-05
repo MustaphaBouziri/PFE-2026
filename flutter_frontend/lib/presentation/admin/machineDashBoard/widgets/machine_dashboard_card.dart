@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
-class AdminMachineCard extends StatelessWidget {
+class MachineDashBoardCard extends StatelessWidget {
   final MachineDashboardModel machine;
-  const AdminMachineCard({super.key, required this.machine});
+  const MachineDashBoardCard({super.key, required this.machine});
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class AdminMachineCard extends StatelessWidget {
             ],
           ),
           Text(
-                  'Machine Number: ${machine.machineNo}',
+                  '${'machineNumber'.tr()}: ${machine.machineNo}',
                   style: const TextStyle(
                     
                     color: Color(0xFF64748B),
@@ -100,8 +100,8 @@ class AdminMachineCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    infoRow('operation Finished', machine.operationFinished.toString()),
-                    infoRow('operation Cancelled', machine.operationCancelled.toString()),
+                    infoRow('operationFinished'.tr(), machine.operationFinished.toString()),
+                    infoRow('operationCancelled'.tr(), machine.operationCancelled.toString()),
 
                     infoRow(
                       'quantityProduced'.tr(),
