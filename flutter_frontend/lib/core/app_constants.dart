@@ -1,5 +1,31 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 class AppConstants {
-  static const String host = 'http://localhost:3000/api/';
+  static String host = '';
+
+  static Future<void> changeHost(String newHost) async {
+  newHost = newHost.trim();
+
+  if (newHost.isEmpty) return;
+
+  if (!newHost.endsWith('/')) {
+    newHost = '$newHost/';
+  }
+
+  host = newHost;
+
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('host', host);
+}
+
+  static bool hasHost() {
+    return host.isNotEmpty;
+  }
+
+  static Future<void> loadHost() async {
+  final prefs = await SharedPreferences.getInstance();
+  host = prefs.getString('host') ?? '';
+}
 
   static const Map<String, String> jsonHeaders = {
     'Accept': 'application/json',
@@ -7,7 +33,7 @@ class AppConstants {
   };
 
   // AI agent endpoint (routed through Node middleware)
-  static const String aiChatUrl = '${host}ai/chat';
+  static String get aiChatUrl => '${host}ai/chat';
 
   // ── Dev token ──────────────────────────────────────────────────────────────
   // Set to one of the fixed GUIDs from the MES API Debug page to bypass login.
@@ -17,48 +43,49 @@ class AppConstants {
   //  "adminToken":"DE000000-0000-0000-0000-000000000003"
   // }
   // Set back to null before committing.
-  static const String? devToken = "DE000000-0000-0000-0000-000000000002";
+  static const String? devToken ="DE000000-0000-0000-0000-000000000001";
 
   // ── Auth ───────────────────────────────────────────────────────────────────
-  static const String loginUrl            = '${host}Login';
-  static const String meUrl               = '${host}Me';
-  static const String changePasswordUrl   = '${host}ChangePassword';
-  static const String logoutUrl           = '${host}Logout';
-  static const String adminSetPasswordUrl = '${host}AdminSetPassword';
+  static String get loginUrl => '${host}Login';
+  static String get meUrl => '${host}Me';
+  static String get changePasswordUrl => '${host}ChangePassword';
+  static String get logoutUrl => '${host}Logout';
+  static String get adminSetPasswordUrl => '${host}AdminSetPassword';
 
   // ── Read ───────────────────────────────────────────────────────────────────
-  static const String fetchMachinesUrl            = '${host}FetchMachines';
-  static const String getMachineOrdersUrl         = '${host}getMachineOrders';
-  static const String fetchOngoingOperationsState = '${host}fetchOngoingOperationsState';
-  static const String fetchOperationsHistory      = '${host}fetchOperationsHistory';
-  static const String fetchOperationLiveData      = '${host}fetchOperationLiveData';
-  static const String fetchProductionCycles       = '${host}fetchProductionCycles';
-  static const String fetchBom                    = '${host}fetchBom';
-  static const String fetchAllItemBarcodes        = '${host}fetchAllItemBarcodes';
-  static const String fetchResolveBarcode         = '${host}resolveBarcode';
+  static String get fetchMachinesUrl => '${host}FetchMachines';
+  static String get getMachineOrdersUrl => '${host}getMachineOrders';
+  static String get fetchOngoingOperationsState =>
+      '${host}fetchOngoingOperationsState';
+  static String get fetchOperationsHistory => '${host}fetchOperationsHistory';
+  static String get fetchOperationLiveData => '${host}fetchOperationLiveData';
+  static String get fetchProductionCycles => '${host}fetchProductionCycles';
+  static String get fetchBom => '${host}fetchBom';
+  static String get fetchAllItemBarcodes => '${host}fetchAllItemBarcodes';
+  static String get fetchResolveBarcode => '${host}resolveBarcode';
 
   // ── Write (all require token + onBehalfOfUserId in the request body) ───────
-  static const String startOperation     = '${host}startOperation';
-  static const String declareProduction  = '${host}declareProduction';
-  static const String finishOperationUrl = '${host}finishOperation';
-  static const String cancelOperationUrl = '${host}cancelOperation';
-  static const String pauseOperationUrl  = '${host}pauseOperation';
-  static const String resumeOperationUrl = '${host}resumeOperation';
-  static const String declareScrapUrl    = '${host}declareScrap';
-  static const String insertScans        = '${host}insertScans';
+  static String get startOperation => '${host}startOperation';
+  static String get declareProduction => '${host}declareProduction';
+  static String get finishOperationUrl => '${host}finishOperation';
+  static String get cancelOperationUrl => '${host}cancelOperation';
+  static String get pauseOperationUrl => '${host}pauseOperation';
+  static String get resumeOperationUrl => '${host}resumeOperation';
+  static String get declareScrapUrl => '${host}declareScrap';
+  static String get insertScans => '${host}insertScans';
 
   // ── Admin ──────────────────────────────────────────────────────────────────
-  static const String scrapCodesUrl     = '${host}scrapCodes';
-  static const String employeesUrl      = '${host}employees';
-  static const String workCentersUrl    = '${host}workCenters';
-  static const String adminCreateUser   = '${host}AdminCreateUser';
-  static const String fetchAllMESUsers  = '${host}fetchAllMESUsers';
-  static const String fetchMESUsersByWC = '${host}fetchMESUsersByWC';
-  static const String fetchAllEmployees = '${host}fetchAllEmployees';
+  static String get scrapCodesUrl => '${host}scrapCodes';
+  static String get employeesUrl => '${host}employees';
+  static String get workCentersUrl => '${host}workCenters';
+  static String get adminCreateUser => '${host}AdminCreateUser';
+  static String get fetchAllMESUsers => '${host}fetchAllMESUsers';
+  static String get fetchMESUsersByWC => '${host}fetchMESUsersByWC';
+  static String get fetchAllEmployees => '${host}fetchAllEmployees';
 
   // toggle active status of a user
-  static const String toggleUserActiveStatus = '${host}AdminSetActive';
-  static const String fetchActivityLog       = '${host}fetchActivityLog';
-  static const String fetchMachineDashboard  = '${host}fetchMachineDashboard';
-  static const String adminChangeUserRole    = '${host}AdminChangeUserRole';
+  static String get toggleUserActiveStatus => '${host}AdminSetActive';
+  static String get fetchActivityLog => '${host}fetchActivityLog';
+  static String get fetchMachineDashboard => '${host}fetchMachineDashboard';
+  static String get adminChangeUserRole => '${host}AdminChangeUserRole';
 }

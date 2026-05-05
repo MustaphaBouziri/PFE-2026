@@ -287,6 +287,21 @@
   "Supervisor": "مشرف",
   "Operator": "مشغل",
 
+    "paring": "الاقتران",
+  "pleaseEnterCompanyHostId": "يرجى إدخال معرف مضيف الشركة",
+  "enterCompanyHostUrl": "أدخل رابط مضيف الشركة",
+  "companyHostUrl": "رابط مضيف الشركة",
+  "backslashNotAllowed": "الشرطة المائلة العكسية غير مسموح بها",
+  "invalidCharacters": "أحرف غير صالحة",
+  "noSpacesAllowed": "المسافات غير مسموحة",
+  "orScanQrCode": "أو امسح رمز QR",
+  
+  "paringPage": "صفحة الاقتران",
+   "changeHostId": "تغيير معرف المضيف",
+
+    "onlySupervisorsCanCancelOrders": "فقط المشرفون يمكنهم إلغاء الأوامر",
+  "onlySupervisorsCanCloseOrders": "فقط المشرفون يمكنهم إغلاق الأوامر",
+  "onlySupervisorsCanFinishOrders": "فقط المشرفون يمكنهم إنهاء الأوامر",
 
   "tutorialAdminSearch": "هذا هو بحث لوحة تحكم المدير. ابحث عن المستخدمين بالاسم أو البريد الإلكتروني.",
   "tutorialAdminRoleFilter": "تصفية المستخدمين حسب الدور: الكل، مدير، مشرف، أو مشغّل.",

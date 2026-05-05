@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
 import 'package:pfe_mes/presentation/machine/print_lables/printDeclarationLabelPage.dart';
 import 'package:pfe_mes/presentation/machine/print_lables/printLabelPage.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
+
 import 'declaire_production_dialog.dart';
 import 'declare_scrap_dialog.dart';
 
@@ -36,16 +38,23 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
   bool get _canReportReject =>
       !['finished', 'cancelled', 'paused'].contains(_operationStatus);
 
-  bool get _canCloseOrder => !_isClosed;
+  // only supervisors can close/cancel orders
+  bool get _canCloseOrder => !_isClosed && _isSupervisor;
 
   bool get _canPrintLabel =>
       _operationStatus == 'finished' ||
       widget.operationData.progressPercent >= 100;
 
-  // ── End-order logic ───────────────────────────────────────────────────────
+  // check if the user has supervisor role
+  bool get _isSupervisor {
+    final role = SessionStorage().getRole().toLowerCase();
+    return role == 'supervisor';
+  }
 
+ 
   Future<void> _handleEndOrder() async {
     if (_isEndLoading) return;
+
 
     final confirmed = await _showEndConfirmDialog();
     if (confirmed != true || !mounted) return;
@@ -181,6 +190,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
     );
   }
 
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -271,6 +281,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             isEnabled: _canCloseOrder,
             isLoading: _isEndLoading,
             onTap: _canCloseOrder ? _handleEndOrder : null,
+            disabledReason: !_isSupervisor ? _isComplete? 'onlySupervisorsCanFinishOrders'.tr() :'onlySupervisorsCanCancelOrders'.tr(): null,
           ),
           const SizedBox(height: 8),
 
@@ -306,6 +317,7 @@ class _ActionButton extends StatefulWidget {
   final VoidCallback? onTap;
   final bool isEnabled;
   final bool isLoading;
+  final String? disabledReason;
 
   const _ActionButton({
     required this.title,
@@ -314,6 +326,7 @@ class _ActionButton extends StatefulWidget {
     this.onTap,
     this.isEnabled = true,
     this.isLoading = false,
+    this.disabledReason,
   });
 
   @override
@@ -333,48 +346,52 @@ class _ActionButtonState extends State<_ActionButton> {
         ? Colors.white
         : const Color(0xFF64748B);
 
-    return MouseRegion(
-      cursor: widget.isEnabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.forbidden,
-      onEnter: (_) {
-        if (widget.isEnabled) setState(() => _hovered = true);
-      },
-      onExit: (_) {
-        if (widget.isEnabled) setState(() => _hovered = false);
-      },
-      child: Material(
-        color: effectiveColor,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: (widget.isEnabled && !widget.isLoading) ? widget.onTap : null,
+    return Tooltip(
+      message: widget.disabledReason ?? '',
+      showDuration: const Duration(seconds: 3),
+      child: MouseRegion(
+        cursor: widget.isEnabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.forbidden,
+        onEnter: (_) {
+          if (widget.isEnabled) setState(() => _hovered = true);
+        },
+        onExit: (_) {
+          if (widget.isEnabled) setState(() => _hovered = false);
+        },
+        child: Material(
+          color: effectiveColor,
           borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (widget.isLoading)
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+          child: InkWell(
+            onTap: (widget.isEnabled && !widget.isLoading) ? widget.onTap : null,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.isLoading)
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: contentColor,
+                      ),
+                    )
+                  else
+                    Icon(widget.icon, color: contentColor, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.title,
+                    style: TextStyle(
                       color: contentColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                  )
-                else
-                  Icon(widget.icon, color: contentColor, size: 22),
-                const SizedBox(width: 10),
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    color: contentColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

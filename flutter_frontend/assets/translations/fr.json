@@ -284,6 +284,22 @@
   "Supervisor": "Superviseur",
   "Operator": "Opérateur",
 
+  "paring": "Appairage",
+  "pleaseEnterCompanyHostId": "Veuillez entrer l’ID de l’hôte de l’entreprise",
+  "enterCompanyHostUrl": "Entrez l’URL de l’hôte de l’entreprise",
+  "companyHostUrl": "URL de l’hôte de l’entreprise",
+  "backslashNotAllowed": "Barre oblique inversée non autorisée",
+  "invalidCharacters": "Caractères invalides",
+  "noSpacesAllowed": "Les espaces ne sont pas autorisés",
+  "orScanQrCode": "Ou scannez le code QR",
+ 
+  "paringPage": "Page d’appairage",
+   "changeHostId": "Modifier l’ID de l’hôte",
+     "onlySupervisorsCanCancelOrders": "Seuls les superviseurs peuvent annuler les ordres",
+  "onlySupervisorsCanCloseOrders": "Seuls les superviseurs peuvent clôturer les ordres",
+"onlySupervisorsCanFinishOrders": "Seuls les superviseurs peuvent terminer les ordres",
+  
+
 
   "tutorialAdminSearch": "Recherche du tableau de bord administrateur. Trouvez des utilisateurs par nom ou par e-mail.",
   "tutorialAdminRoleFilter": "Filtrez les utilisateurs par rôle : Tous, Administrateur, Superviseur ou Opérateur.",

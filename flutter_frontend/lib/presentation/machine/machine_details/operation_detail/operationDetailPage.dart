@@ -42,12 +42,12 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
           orderQuantity:         widget.operationData.orderQuantity,
           startDateTime:         widget.operationData.startDateTime,
           endDateTime:           liveData?.endDateTime           ?? widget.operationData.endDateTime,
-          declaredAt:         liveData?.declaredAt         ?? widget.operationData.declaredAt,
+          declaredAt:            liveData?.declaredAt            ?? widget.operationData.declaredAt,
           operationStatus:       liveData?.operationStatus       ?? widget.operationData.operationStatus,
           totalProducedQuantity: liveData?.totalProducedQuantity ?? widget.operationData.totalProducedQuantity,
           scrapQuantity:         liveData?.scrapQuantity         ?? widget.operationData.scrapQuantity,
           progressPercent:       liveData?.progressPercent       ?? widget.operationData.progressPercent,
-          executionId:           liveData?.executionId ?? ""
+          executionId:           liveData?.executionId           ?? ""
         );
 
         return StreamBuilder<List<ProductionCycleModel>>(

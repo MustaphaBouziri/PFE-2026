@@ -156,8 +156,8 @@ class BadgeListCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
-      child: Align(
-        alignment: Alignment.centerLeft,
+      child: Container(
+        alignment: AlignmentDirectional.centerStart,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -195,14 +195,12 @@ class TextListCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: ExpandableText(
+      child:  ExpandableText(
           text: label,
           maxLines: 1,
           style: textStyle ?? const TextStyle(fontSize: 13),
         ),
-      ),
+      
     );
   }
 }

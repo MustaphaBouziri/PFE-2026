@@ -91,11 +91,6 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   ProfileTile(
-                    title: 'ai chat',
-                    icon: Icons.chat_outlined,
-                    onTap :() => Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatPage())),
-                  ),
-                  ProfileTile(
                     title: 'logout',
                     icon: Icons.logout,
                     color: Colors.red,

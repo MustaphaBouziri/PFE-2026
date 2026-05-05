@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/erp_order_model.dart';
+
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 
 class ActionButtons extends StatefulWidget {
@@ -28,10 +30,18 @@ class _ActionButtonsState extends State<ActionButtons> {
   bool _isCancelLoading = false;
 
   bool get _canStart => widget.order.status == 'Released';
-  bool get _canClose => widget.order.status == 'Released';
+  bool get _canClose => widget.order.status == 'Released' && _isSupervisor;
+
+  // check if he is a supervisor
+  bool get _isSupervisor {
+    final role = SessionStorage().getRole().toLowerCase();
+    return role == 'supervisor';
+  }
 
   Future<void> _reloadOrders() async {
-    await context.read<MachineordersProvider>().getMachineOrders(widget.machineNo);
+    await context.read<MachineordersProvider>().getMachineOrders(
+      widget.machineNo,
+    );
   }
 
   Future<void> _handleStart() async {
@@ -62,7 +72,8 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _handleClose() async {
-    if (_isCancelLoading || _canClose) return;
+
+    if (_isCancelLoading || !_canClose) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -70,9 +81,7 @@ class _ActionButtonsState extends State<ActionButtons> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text('cancelOrder'.tr()),
-        content: Text(
-          'cancelOrderConfirm'.tr(args: [widget.order.orderNo]),
-        ),
+        content: Text('cancelOrderConfirm'.tr(args: [widget.order.orderNo])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -140,24 +149,25 @@ class _ActionButtonsState extends State<ActionButtons> {
     );
   }
 
+
   Widget _buildStartButton() {
     if (_canStart) {
       return ElevatedButton.icon(
         onPressed: _isStartLoading ? null : _handleStart,
         icon: _isStartLoading
             ? const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white,
-          ),
-        )
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : const Icon(
-          Icons.play_arrow_rounded,
-          size: 16,
-          color: Colors.white,
-        ),
+                Icons.play_arrow_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
         label: Text(
           'startOrder'.tr(),
           style: TextStyle(
@@ -174,9 +184,7 @@ class _ActionButtonsState extends State<ActionButtons> {
           overlayColor: Colors.transparent,
           shadowColor: Colors.transparent,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
       );
@@ -202,38 +210,46 @@ class _ActionButtonsState extends State<ActionButtons> {
         disabledForegroundColor: const Color(0xFFB0B7C3),
         shadowColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }
-// TODO: account for the can close being false and remove the button
+
   Widget _buildCloseButton() {
-    return OutlinedButton.icon(
-      onPressed: _isCancelLoading ? null : _handleClose,
-      icon: _isCancelLoading
-          ? const SizedBox(
-        width: 14,
-        height: 14,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Color(0xFF334155),
+    final isEnabled = _canClose;
+
+    return Tooltip(
+      message: !_isSupervisor ? 'onlySupervisorsCanCloseOrders'.tr() : '',
+      showDuration: const Duration(seconds: 3),
+      child: OutlinedButton.icon(
+        onPressed: isEnabled && !_isCancelLoading ? _handleClose : null,
+        icon: _isCancelLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF334155),
+                ),
+              )
+            : const Icon(Icons.close_rounded, size: 16),
+        label: Text(
+          'close'.tr(),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
-      )
-          : const Icon(Icons.close_rounded, size: 16),
-      label: Text(
-        'close'.tr(),
-        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF334155),
-        side: const BorderSide(color: Color(0xFFCBD5E1)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: isEnabled
+              ? const Color(0xFF334155)
+              : const Color(0xFFCBD5E1),
+          side: BorderSide(
+            color: isEnabled
+                ? const Color(0xFFCBD5E1)
+                : const Color(0xFFE2E8F0),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }
@@ -255,11 +271,7 @@ class _ActionButtonsState extends State<ActionButtons> {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        closeBtn,
-        const SizedBox(width: 10),
-        startBtn,
-      ],
+      children: [closeBtn, const SizedBox(width: 10), startBtn],
     );
   }
 }
