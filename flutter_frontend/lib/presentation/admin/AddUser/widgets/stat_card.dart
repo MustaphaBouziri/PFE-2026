@@ -1,22 +1,18 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
-import 'package:easy_localization/easy_localization.dart';
-
 
 class Stats extends StatelessWidget {
   final List<MesUser> users;
   final List<String> roles;
 
-  const Stats({
-    super.key,
-    required this.users,
-    required this.roles,
-  });
+  const Stats({super.key, required this.users, required this.roles});
 
   @override
+  @override
   Widget build(BuildContext context) {
-    final activeCount = users.where((u) => u.role != 'Pending').length;
-    final pendingCount = users.where((u) => u.role == 'Pending').length;
+    final activeCount = users.where((u) => u.isActive).length;
+    final pendingCount = users.where((u) => u.isPendingSetup).length;
 
     return RepaintBoundary(
       child: Row(
@@ -54,7 +50,7 @@ class Stats extends StatelessWidget {
           Expanded(
             child: _StatCard(
               title: "totalRoles".tr(),
-              value: roles.length - 1,
+              value: roles.length - 2,
               icon: Icons.admin_panel_settings_outlined,
               iconColor: const Color(0xFF7C3AED),
               iconBg: const Color(0xFFF5F3FF),

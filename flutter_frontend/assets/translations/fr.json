@@ -64,7 +64,7 @@
   "insertedSuccessfully": "Insertion réussie",
   "confirmScans": "Confirmer les scans",
   "usersRolesManagement": "Gestion des utilisateurs et des rôles",
-  "manageUsers": "Gérer les comptes utilisateurs, les rôles et les autorisations dans toute l'organisation",
+  "manageUsers": "Gérer les utilisateurs",
   "exportUsers": "Exporter",
   "tableHeaderUser": "Utilisateur",
   "tableHeaderRole": "Rôle",

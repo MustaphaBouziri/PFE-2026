@@ -498,6 +498,7 @@ codeunit 50125 "MES Unbound Actions"
                     until UserWorkCenter.Next() = 0;
 
                 UserJson.Add('workCenters', WorkCentersArray);
+                UserJson.Add('isPendingSetup', UserRec."Hashed Password" = '');
                 UsersArray.Add(UserJson);
 
             until UserRec.Next() = 0;
