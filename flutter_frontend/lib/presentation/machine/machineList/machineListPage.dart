@@ -6,6 +6,7 @@ import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
 import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
+
 import 'package:pfe_mes/presentation/ai/ai_chat_page.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -391,9 +392,9 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
 
                       return LayoutBuilder(
                         builder: (context, constraints) {
-                          final crossAxisCount = constraints.maxWidth < 600
+                          final crossAxisCount = constraints.maxWidth < 700
                               ? 1
-                              : constraints.maxWidth < 1024
+                              : constraints.maxWidth < 1300
                               ? 2
                               : 4;
 
@@ -436,11 +437,10 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                                           crossAxisSpacing: 16,
                                           mainAxisSpacing: 16,
                                           childAspectRatio:
-                                              constraints.maxWidth < 900
-                                              ? 2.5
-                                              : constraints.maxWidth < 1440
-                                              ? 1.5
-                                              : 2.0,
+                                              constraints.maxWidth >= 600 &&
+                                                  constraints.maxWidth < 1300
+                                              ? 3.5
+                                              : 2.5,
                                         ),
                                     itemBuilder: (_, index) => MachineCard(
                                       machine: machinesList[index],
