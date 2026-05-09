@@ -37,6 +37,22 @@ class GlobalSearchBar extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 onChanged: onSearchChanged,
+
+                // if user clicks anywhere outside the search field
+                // remove focus and hide keyboard
+                onTapOutside: (_) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
+
+                // changes the keyboard button to "Search"
+                textInputAction: TextInputAction.search,
+
+                // if user presses the Search/Done button on the keyboard
+                // remove focus and hide keyboard
+                onSubmitted: (_) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
+
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
@@ -78,7 +94,10 @@ class GlobalSearchBar extends StatelessWidget {
                 itemBuilder: (context) {
                   return dropdownItems!
                       .map(
-                        (e) => PopupMenuItem<String>(value: e, child: Text(e.tr())),
+                        (e) => PopupMenuItem<String>(
+                          value: e,
+                          child: Text(e.tr()),
+                        ),
                       )
                       .toList();
                 },
