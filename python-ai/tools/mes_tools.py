@@ -74,7 +74,7 @@ class ListMachinesTool:
         The executor fans out across all user work centers and merges results.
         """
         try:
-            raw = await _post("FetchMachines", {"workCenterNo": work_center_no}, token)
+            raw = await _post("FetchMachines", {"workCenterNoJson": work_center_no}, token)
             machines = _extract_value(raw)
             if not isinstance(machines, list):
                 machines = []

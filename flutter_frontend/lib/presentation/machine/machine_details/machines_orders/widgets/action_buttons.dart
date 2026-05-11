@@ -71,12 +71,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _handleClose() async {
-<<<<<<< HEAD
     if (_isCancelLoading) return;
-=======
-
-    if (_isCancelLoading || !_canClose) return;
->>>>>>> temp2
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -154,9 +149,7 @@ class _ActionButtonsState extends State<ActionButtons> {
 
 
   Widget _buildStartButton() {
-<<<<<<< HEAD
-=======
-    if (_canStart) {
+ if (_canStart) {
       return ElevatedButton.icon(
         onPressed: _isStartLoading ? null : _handleStart,
         icon: _isStartLoading
@@ -195,7 +188,6 @@ class _ActionButtonsState extends State<ActionButtons> {
       );
     }
 
->>>>>>> temp2
     return ElevatedButton.icon(
       onPressed: _isStartLoading ? null : _handleStart,
       icon: _isStartLoading
@@ -231,29 +223,7 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Widget _buildCloseButton() {
-<<<<<<< HEAD
-    return OutlinedButton.icon(
-      onPressed: _isCancelLoading ? null : _handleClose,
-      icon: _isCancelLoading
-          ? const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Color(0xFF334155),
-              ),
-            )
-          : const Icon(Icons.close_rounded, size: 16),
-      label: Text(
-        'close'.tr(),
-        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF334155),
-        side: const BorderSide(color: Color(0xFFCBD5E1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-=======
+
     final isEnabled = _canClose;
 
     return Tooltip(
@@ -287,7 +257,6 @@ class _ActionButtonsState extends State<ActionButtons> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
->>>>>>> temp2
       ),
     );
   }
