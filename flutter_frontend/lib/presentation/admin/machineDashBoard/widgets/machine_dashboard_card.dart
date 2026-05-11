@@ -7,7 +7,13 @@ import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 class MachineDashBoardCard extends StatelessWidget {
   final MachineDashboardModel machine;
-  const MachineDashBoardCard({super.key, required this.machine});
+  final bool isSmallPhone;
+
+  const MachineDashBoardCard({
+    super.key,
+    required this.machine,
+    required this.isSmallPhone,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +40,10 @@ class MachineDashBoardCard extends StatelessWidget {
             children: [
               ExpandableText(
                 text: machine.machineName,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: isSmallPhone ? 16 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -47,9 +56,9 @@ class MachineDashBoardCard extends StatelessWidget {
                 ),
                 child: Text(
                   machine.workCenterNo,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF2563EB),
+                  style: TextStyle(
+                    fontSize: isSmallPhone ? 9 : 11,
+                    color: const Color(0xFF2563EB),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -57,28 +66,26 @@ class MachineDashBoardCard extends StatelessWidget {
             ],
           ),
           Text(
-                  '${'machineNumber'.tr()}: ${machine.machineNo}',
-                  style: const TextStyle(
-                    
-                    color: Color(0xFF64748B),
-                    
-                  ),
-                ),
-                const SizedBox(height: 30),
-
+            '${'machineNumber'.tr()}: ${machine.machineNo}',
+            style: TextStyle(
+              fontSize: isSmallPhone ? 12 : 14,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 30),
           Row(
             children: [
               // uptime circle
               SizedBox(
-                width: 100,
-                height: 100,
+                width: isSmallPhone ? 85 : 100,
+                height: isSmallPhone ? 85 : 100,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     SizedBox.expand(
                       child: CircularProgressIndicator(
                         value: machine.uptimePercent / 100,
-                        strokeWidth: 12,
+                        strokeWidth: isSmallPhone ? 10 : 12,
                         backgroundColor: Colors.grey.shade200,
                         valueColor: const AlwaysStoppedAnimation(
                           Color(0xFF16A34A),
@@ -87,31 +94,32 @@ class MachineDashBoardCard extends StatelessWidget {
                     ),
                     Text(
                       '${machine.uptimePercent.toStringAsFixed(0)}%',
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: isSmallPhone ? 13 : 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 36),
+              SizedBox(width: isSmallPhone ? 20 : 36),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    infoRow('operationFinished'.tr(), machine.operationFinished.toString()),
-                    infoRow('operationCancelled'.tr(), machine.operationCancelled.toString()),
-
+                    infoRow('operationFinished'.tr(), machine.operationFinished.toString(), isSmallPhone),
+                    infoRow('operationCancelled'.tr(), machine.operationCancelled.toString(), isSmallPhone),
                     infoRow(
                       'quantityProduced'.tr(),
                       machine.totalProduced.toStringAsFixed(0),
+                      isSmallPhone,
                     ),
                     infoRow(
                       'scrapDeclared'.tr(),
                       machine.totalScrap.toStringAsFixed(0),
+                      isSmallPhone,
                     ),
-                    infoRow('uptime'.tr(), machine.formattedUptime),
+                    infoRow('uptime'.tr(), machine.formattedUptime, isSmallPhone),
                   ],
                 ),
               ),
@@ -122,19 +130,29 @@ class MachineDashBoardCard extends StatelessWidget {
     );
   }
 
-  Widget infoRow(String label, String value) {
+  Widget infoRow(String label, String value, bool isSmall) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
+      padding: EdgeInsets.only(bottom: isSmall ? 6 : 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: isSmall ? 13 : 16,
+                color: const Color(0xFF64748B),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+          const SizedBox(width: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: isSmall ? 13 : 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

@@ -34,9 +34,10 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await SessionStorage.init();
   await AppConstants.loadHost();
-  WidgetsFlutterBinding.ensureInitialized();
+  
   await EasyLocalization.ensureInitialized();
 
   runApp(
@@ -80,8 +81,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       // DevicePreview
-      useInheritedMediaQuery: true,
-      builder: DevicePreview.appBuilder,
+      ///useInheritedMediaQuery: true,
+      //builder: DevicePreview.appBuilder,
 
       // Localization (handles RTL automatically ✅)
       locale: context.locale,
