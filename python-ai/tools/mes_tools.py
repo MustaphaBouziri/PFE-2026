@@ -7,9 +7,8 @@ All calls go to the Node middleware, which handles SSPI auth to BC.
 URL path matches the endpoint name exactly — the Node proxy's buildTargetUrl()
 maps /api/<name> to the correct BC web service URL.
 
-The BC AL code (FetchMachines) requires workCenterNo to be non-empty.
-The tool therefore receives an explicit work_center_no and the executor
-fans out one call per work center when needed.
+IMPORTANT: BC OData maps POST body JSON keys to AL procedure parameter names
+case-sensitively. Every key here must match the AL parameter name exactly.
 """
 from __future__ import annotations
 
@@ -31,8 +30,6 @@ async def _post(endpoint: str, body: Dict[str, Any], token: str = "") -> Any:
     """POST to /api/<endpoint> on the Node middleware."""
     url = f"{MIDDLEWARE_BASE_URL}/{endpoint}"
     headers: Dict[str, str] = {"Content-Type": "application/json"}
-    if token:
-        headers["X-Auth-Token"] = token
 
     async with httpx.AsyncClient(timeout=TOOL_HTTP_TIMEOUT) as client:
         resp = await client.post(url, json=body, headers=headers)
@@ -68,13 +65,18 @@ class ListMachinesTool:
 
     async def execute(self, work_center_no: str, token: str = "") -> ToolResult:
         """
-        Fetch machines for a single work center.
-
-        Note: BC requires workCenterNo to be non-empty (see MES Machine Fetch AL).
-        The executor fans out across all user work centers and merges results.
+        AL signature: FetchMachines(workCenterNoJson: Text)
+        The AL procedure parses workCenterNoJson as a JSON object and reads
+        the 'workCenterNos' key from it — so the value must be a JSON-encoded
+        object string, not a bare array.
         """
         try:
-            raw = await _post("FetchMachines", {"workCenterNoJson": work_center_no}, token)
+            raw = await _post(
+                "FetchMachines",
+                {
+                    "workCenterNoJson": json.dumps({"workCenterNos": [work_center_no]})
+                },
+            )
             machines = _extract_value(raw)
             if not isinstance(machines, list):
                 machines = []
@@ -88,8 +90,14 @@ class GetMachineOrdersTool:
     name = "get_machine_orders"
 
     async def execute(self, machine_no: str, token: str = "") -> ToolResult:
+        """
+        AL signature: getMachineOrders(machineNo: Text)
+        """
         try:
-            raw = await _post("getMachineOrders", {"machineNo": machine_no}, token)
+            raw = await _post(
+                "getMachineOrders",
+                {"machineNo": machine_no},
+            )
             orders = _extract_value(raw)
             if not isinstance(orders, list):
                 orders = []
@@ -103,8 +111,14 @@ class GetOngoingOperationsTool:
     name = "get_ongoing_operations"
 
     async def execute(self, machine_no: str, token: str = "") -> ToolResult:
+        """
+        AL signature: fetchOngoingOperationsState(machineNo: Code[20])
+        """
         try:
-            raw = await _post("fetchOngoingOperationsState", {"machineNo": machine_no}, token)
+            raw = await _post(
+                "fetchOngoingOperationsState",
+                {"machineNo": machine_no},
+            )
             ops = _extract_value(raw)
             if not isinstance(ops, list):
                 ops = []
@@ -120,12 +134,18 @@ class GetOperationLiveDataTool:
     async def execute(
         self, machine_no: str, prod_order_no: str, operation_no: str, token: str = ""
     ) -> ToolResult:
+        """
+        AL signature: fetchOperationLiveData(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10])
+        """
         try:
-            raw = await _post("fetchOperationLiveData", {
-                "machineNo":   machine_no,
-                "prodOrderNo": prod_order_no,
-                "operationNo": operation_no,
-            }, token)
+            raw = await _post(
+                "fetchOperationLiveData",
+                {
+                    "machineNo":   machine_no,
+                    "prodOrderNo": prod_order_no,
+                    "operationNo": operation_no,
+                },
+            )
             items = _extract_value(raw)
             live = items[0] if isinstance(items, list) and items else (items or {})
             return ToolResult(tool_name=self.name, success=True, data=live)
@@ -140,12 +160,18 @@ class GetProductionCyclesTool:
     async def execute(
         self, machine_no: str, prod_order_no: str, operation_no: str, token: str = ""
     ) -> ToolResult:
+        """
+        AL signature: fetchProductionCycles(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10])
+        """
         try:
-            raw = await _post("fetchProductionCycles", {
-                "machineNo":   machine_no,
-                "prodOrderNo": prod_order_no,
-                "operationNo": operation_no,
-            }, token)
+            raw = await _post(
+                "fetchProductionCycles",
+                {
+                    "machineNo":   machine_no,
+                    "prodOrderNo": prod_order_no,
+                    "operationNo": operation_no,
+                },
+            )
             cycles = _extract_value(raw)
             if not isinstance(cycles, list):
                 cycles = []
@@ -159,8 +185,14 @@ class GetOperationsHistoryTool:
     name = "get_operations_history"
 
     async def execute(self, machine_no: str, token: str = "") -> ToolResult:
+        """
+        AL signature: fetchOperationsHistory(machineNo: Code[20])
+        """
         try:
-            raw = await _post("fetchOperationsHistory", {"machineNo": machine_no}, token)
+            raw = await _post(
+                "fetchOperationsHistory",
+                {"machineNo": machine_no},
+            )
             ops = _extract_value(raw)
             if not isinstance(ops, list):
                 ops = []
@@ -174,8 +206,15 @@ class GetActivityLogTool:
     name = "get_activity_log"
 
     async def execute(self, hours_back: float, token: str = "") -> ToolResult:
+        """
+        AL signature: fetchActivityLog(hoursBack: Integer)
+        Note: AL uses Integer, so we cast to int to avoid type mismatch.
+        """
         try:
-            raw = await _post("fetchActivityLog", {"hoursBack": hours_back}, token)
+            raw = await _post(
+                "fetchActivityLog",
+                {"hoursBack": int(hours_back)},
+            )
             logs = _extract_value(raw)
             if not isinstance(logs, list):
                 logs = []
@@ -191,11 +230,19 @@ class GetMachineDashboardTool:
     async def execute(
         self, hours_back: float, work_center_nos: List[str], token: str = ""
     ) -> ToolResult:
+        """
+        AL signature: fetchMachineDashboard(hoursBack: Integer; workCenterNoJson: Text)
+        workCenterNoJson must be a JSON-encoded array string e.g. '["100","200"]'
+        hoursBack is Integer in AL so we cast.
+        """
         try:
-            raw = await _post("fetchMachineDashboard", {
-                "hoursBack":        hours_back,
-                "workCenterNoJson": json.dumps(work_center_nos),
-            }, token)
+            raw = await _post(
+                "fetchMachineDashboard",
+                {
+                    "hoursBack":        int(hours_back),
+                    "workCenterNoJson": json.dumps(work_center_nos),
+                },
+            )
             machines = _extract_value(raw)
             if not isinstance(machines, list):
                 machines = []
@@ -216,19 +263,7 @@ class GetProductionOrdersTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Fetch production orders with optional filters.
-
-        status_filter : comma-separated subset of Planned, Firm Planned, Released, Finished.
-                        Empty string returns all statuses.
-        work_center_no: limit to orders with at least one routing line in this WC.
-        machine_no    : limit to orders with at least one routing line on this machine.
-
-        Covers questions such as:
-          - Show me all / active / planned / released production orders
-          - Which orders are assigned to work center X?
-          - Which orders are assigned to machine X?
-          - What is the progress of production order X?
-          - Which orders are behind schedule / urgent / ready to start?
+        AL signature: fetchProductionOrders(statusFilter: Text; workCenterNo: Text; machineNo: Text)
         """
         try:
             raw = await _post(
@@ -236,9 +271,8 @@ class GetProductionOrdersTool:
                 {
                     "statusFilter": status_filter,
                     "workCenterNo": work_center_no,
-                    "machineNo": machine_no,
+                    "machineNo":    machine_no,
                 },
-                token,
             )
             orders = _extract_value(raw)
             if not isinstance(orders, list):
@@ -259,28 +293,16 @@ class GetWorkCenterSummaryTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return per-work-center summary: machine counts, operation queue,
-        operator count, produced quantity, and scrap for the time window.
-
-        work_center_nos : list of work center numbers; empty list = all.
-        hours_back      : lookback window for produced/scrap aggregation.
-
-        Covers questions such as:
-          - What is the status of work center X?
-          - Which work centers have delayed operations?
-          - Which work center has the most stopped machines?
-          - Which work center has the highest scrap / best performance today?
-          - Compare work center X and work center Y.
-          - Are there pending / urgent orders in my work center?
+        AL signature: fetchWorkCenterSummary(workCenterNoJson: Text; hoursBack: Decimal)
+        workCenterNoJson must be a JSON-encoded array string e.g. '["100","200"]'
         """
         try:
             raw = await _post(
                 "fetchWorkCenterSummary",
                 {
                     "workCenterNoJson": json.dumps(work_center_nos),
-                    "hoursBack": hours_back,
+                    "hoursBack":        float(hours_back),
                 },
-                token,
             )
             wcs = _extract_value(raw)
             if not isinstance(wcs, list):
@@ -301,29 +323,16 @@ class GetOperatorSummaryTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return one row per MES user with current activity, machine assignment,
-        produced quantity, scrap, and completed/paused operation counts.
-
-        work_center_nos : limit to users assigned to these work centers.
-                          Empty list = all users regardless of WC.
-        hours_back      : lookback window for produced/scrap aggregation.
-
-        Covers questions such as:
-          - Which operators are currently active / idle?
-          - Which operators are working on which machines?
-          - Which operator produced the most / has the most scrap today?
-          - Which operators have paused operations?
-          - Who is logged in yet not working on any machine?
-          - Give me a supervisor summary for the current shift.
+        AL signature: fetchOperatorSummary(workCenterNoJson: Text; hoursBack: Decimal)
+        workCenterNoJson must be a JSON-encoded array string e.g. '["100","200"]'
         """
         try:
             raw = await _post(
                 "fetchOperatorSummary",
                 {
                     "workCenterNoJson": json.dumps(work_center_nos),
-                    "hoursBack": hours_back,
+                    "hoursBack":        float(hours_back),
                 },
-                token,
             )
             users = _extract_value(raw)
             if not isinstance(users, list):
@@ -342,26 +351,17 @@ class GetMyDataTool:
         hours_back: float,
         token: str = "",
     ) -> ToolResult:
-        print(f"Executing {self.name} with hours_back={hours_back} and token={token[:4]}***")
         """
-        Return data scoped to the authenticated user (identified by token):
-        operations, produced qty, scrap, and machine interactions for the window.
-
-        hours_back : lookback window. Pass shift length for shift-scoped queries.
-                     Use 8.0 for a standard shift, 24.0 for "today".
-
-        Covers questions such as:
-          - What did I produce today / this shift?
-          - How many operations did I complete today?
-          - What was my last operation / machine?
-          - Do I have any paused or unfinished operations?
-          - Did I record scrap today?
-          - Show me my activity / production / scrap history.
+        AL signature: fetchMyData(token: Text; hoursBack: Decimal)
+        Both parameter names must match exactly — 'token' and 'hoursBack'.
         """
         try:
             raw = await _post(
                 "fetchMyData",
-                {"token":token,"hoursBack": hours_back}
+                {
+                    "token":     token,
+                    "hoursBack": float(hours_back),
+                },
             )
             data = _extract_value(raw)
             return ToolResult(tool_name=self.name, success=True, data=data)
@@ -384,32 +384,26 @@ class GetScrapSummaryTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return scrap records with a total, filterable by any combination of
-        order, operation, machine, work center, and operator.
-
-        All filter arguments default to "" (no filter applied).
-
-        Covers questions such as:
-          - How much scrap was recorded today / this shift?
-          - How much scrap was recorded for order X / on machine X / in WC X?
-          - Which scrap code is most frequent?
-          - Which machine / operation / operator has the highest scrap?
-          - Show me scrap details / notes for order X.
-          - What is the scrap percentage for order X?
-          - Compare scrap between machines / work centers.
+        AL signature: fetchScrapSummary(
+            hoursBack: Decimal;
+            prodOrderNo: Code[20];
+            operationNo: Code[10];
+            machineNo: Code[20];
+            workCenterNo: Code[20];
+            operatorId: Code[50]
+        )
         """
         try:
             raw = await _post(
                 "fetchScrapSummary",
                 {
-                    "hoursBack":    hours_back,
+                    "hoursBack":    float(hours_back),
                     "prodOrderNo":  prod_order_no,
                     "operationNo":  operation_no,
                     "machineNo":    machine_no,
                     "workCenterNo": work_center_no,
                     "operatorId":   operator_id,
                 },
-                token,
             )
             data = _extract_value(raw)
             return ToolResult(tool_name=self.name, success=True, data=data)
@@ -424,11 +418,17 @@ class GetBomTool:
     async def execute(
         self, prod_order_no: str, operation_no: str, token: str = ""
     ) -> ToolResult:
+        """
+        AL signature: fetchBom(prodOrderNo: Code[20]; operationNo: Code[10])
+        """
         try:
-            raw = await _post("fetchBom", {
-                "prodOrderNo": prod_order_no,
-                "operationNo": operation_no,
-            }, token)
+            raw = await _post(
+                "fetchBom",
+                {
+                    "prodOrderNo": prod_order_no,
+                    "operationNo": operation_no,
+                },
+            )
             bom = _extract_value(raw)
             if not isinstance(bom, list):
                 bom = []
@@ -448,35 +448,18 @@ class GetDelayReportTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return delayed and blocked operations ranked by delay severity.
-
-        An operation is flagged when EITHER:
-          - Its planned end date-time is in the past and it is not finished.
-          - It has been in Paused state longer than pause_threshold_minutes.
-
-        work_center_nos         : scope to these work centers; empty = all.
-        pause_threshold_minutes : minutes after which a paused op is flagged.
-                                  Default 30 min.
-
-        Covers questions such as:
-          - Which orders / operations are delayed?
-          - Which machines are delaying production?
-          - What is the biggest bottleneck right now?
-          - Which operation has been waiting / paused the longest?
-          - Which work center has the largest backlog?
-          - What is the queue for machine X / work center X?
+        AL signature: fetchDelayReport(workCenterNoJson: Text; pauseThresholdMinutes: Decimal)
+        workCenterNoJson must be a JSON-encoded array string e.g. '["100","200"]'
         """
         try:
             raw = await _post(
                 "fetchDelayReport",
                 {
-                    "workCenterNoJson":       json.dumps(work_center_nos),
-                    "pauseThresholdMinutes":  pause_threshold_minutes,
+                    "workCenterNoJson":      json.dumps(work_center_nos),
+                    "pauseThresholdMinutes": float(pause_threshold_minutes),
                 },
-                token,
             )
             items = _extract_value(raw)
-            print(items)
             if not isinstance(items, list):
                 items = []
             return ToolResult(tool_name=self.name, success=True, data=items)
@@ -497,17 +480,12 @@ class GetConsumptionSummaryTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return component consumption vs. planned BOM quantity per execution,
-        including over-consumption, under-consumption, and missing-consumption flags.
-
-        All filter arguments default to "" / 0.0 (no filter).
-        hours_back = 0 means no time filter (return all executions).
-
-        Covers questions such as:
-          - Is there over-consumption / under-consumption?
-          - Did operation X consume more than expected?
-          - Which operations have missing consumption data?
-          - Show me consumption details for order X.
+        AL signature: fetchConsumptionSummary(
+            prodOrderNo: Code[20];
+            operationNo: Code[10];
+            machineNo: Code[20];
+            hoursBack: Decimal
+        )
         """
         try:
             raw = await _post(
@@ -516,9 +494,8 @@ class GetConsumptionSummaryTool:
                     "prodOrderNo": prod_order_no,
                     "operationNo": operation_no,
                     "machineNo":   machine_no,
-                    "hoursBack":   hours_back,
+                    "hoursBack":   float(hours_back),
                 },
-                token,
             )
             items = _extract_value(raw)
             if not isinstance(items, list):
@@ -540,44 +517,28 @@ class GetSupervisorOverviewTool:
         token: str = "",
     ) -> ToolResult:
         """
-        Return a comprehensive supervisor overview for a shift / time window:
-          - Stopped machines
-          - Abnormally long pauses
-          - Idle operators (logged in but no active operation)
-          - High-scrap operations (> 10 % scrap rate)
-          - Delayed / unstarted overdue operations
-          - Aggregate produced and scrap totals
-
-        work_center_nos         : WC numbers the supervisor covers.
-        hours_back              : lookback window; use shift length (e.g. 8.0).
-        pause_threshold_minutes : paused ops longer than this are flagged.
-                                  Default 30 min.
-
-        Covers questions such as:
-          - Give me the situation / what is wrong right now?
-          - Which machines are stopped under my supervision?
-          - Which operator needs attention / is idle?
-          - What should I prioritize as a supervisor?
-          - Give me a supervisor summary / shift handover.
-          - Are there abnormal pauses?
-          - Which problems require supervisor intervention?
-          - Prepare a handover for the next supervisor.
+        AL signature: fetchSupervisorOverview(
+            workCenterNoJson: Text;
+            hoursBack: Decimal;
+            pauseThresholdMinutes: Decimal
+        )
+        workCenterNoJson must be a JSON-encoded array string e.g. '["100","200"]'
         """
         try:
             raw = await _post(
                 "fetchSupervisorOverview",
                 {
-                    "workCenterNoJson":       json.dumps(work_center_nos),
-                    "hoursBack":              hours_back,
-                    "pauseThresholdMinutes":  pause_threshold_minutes,
+                    "workCenterNoJson":      json.dumps(work_center_nos),
+                    "hoursBack":             float(hours_back),
+                    "pauseThresholdMinutes": float(pause_threshold_minutes),
                 },
-                token,
             )
             data = _extract_value(raw)
             return ToolResult(tool_name=self.name, success=True, data=data)
         except Exception as e:
             logger.warning("get_supervisor_overview failed: %s", e)
             return ToolResult(tool_name=self.name, success=False, error=str(e))
+
 
 # ── Registry ──────────────────────────────────────────────────────────────────
 
