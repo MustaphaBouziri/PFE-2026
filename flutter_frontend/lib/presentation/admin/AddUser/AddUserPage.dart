@@ -203,7 +203,10 @@ class _AddUserPageState extends State<AddUserPage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text("manageUsers".tr()),
+      title: Text(
+          'manageUsers'.tr(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
       actions: [
         Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
         const SizedBox(width: 8),
