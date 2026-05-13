@@ -11,13 +11,14 @@ class MESMachineListService {
  
   Future<Map<String, List<MachineModel>>> fetchOrderedMachinePerDepartments(
     List<String> workCenterNos,
-  ) async {
+  ) async 
+  {
 
-final response = await HttpClient.post(
-  AppConstants.fetchMachinesUrl,
-  { 'workCenterNoJson': jsonEncode({ 'workCenterNos': workCenterNos }) },
-);
-
+    final response = await HttpClient.post(
+      AppConstants.fetchMachinesUrl,
+      { 'workCenterNoJson': jsonEncode({ 'workCenterNos': workCenterNos }) },
+    );
+    
     final List<dynamic> machinesList = HttpResponseParser.parseList(
       response,
       label: 'fetch machines',

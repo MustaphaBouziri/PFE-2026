@@ -1,5 +1,3 @@
-// APPENDED TO: lib/data/shared/http_response_parser.dart
-
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;

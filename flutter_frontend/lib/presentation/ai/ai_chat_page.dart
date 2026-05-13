@@ -1,3 +1,5 @@
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/ai/providers/ai_chat_provider.dart';
@@ -255,9 +257,23 @@ class _MessageBubble extends StatelessWidget {
 
   const _MessageBubble({required this.turn});
 
+  Future<void> _openLink(String? href) async {
+    if (href == null) return;
+
+    final uri = Uri.tryParse(href);
+    if (uri == null) return;
+
+    if (uri.scheme != 'http' && uri.scheme != 'https') return;
+
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUser = turn.role == 'user';
+
+    final textColor = isUser ? Colors.white : const Color(0xFF0F172A);
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -270,16 +286,47 @@ class _MessageBubble extends StatelessWidget {
           color: isUser ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
-          turn.content,
-          style: TextStyle(
-            color: isUser ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
+        child: isUser
+            ? Text(turn.content, style: const TextStyle(color: Colors.white))
+            : MarkdownBody(
+                data: turn.content,
+                selectable: true,
+                onTapLink: (text, href, title) {
+                  _openLink(href);
+                },
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(
+                      p: TextStyle(color: textColor, fontSize: 14, height: 1.4),
+                      h1: TextStyle(
+                        color: textColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h2: TextStyle(
+                        color: textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      strong: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      code: const TextStyle(
+                        fontFamily: 'monospace',
+                        backgroundColor: Color(0xFFE2E8F0),
+                        color: Color(0xFF0F172A),
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+              ),
       ),
     );
   }
 }
+
 
 class _ActionButtons extends StatelessWidget {
   final List<AiRedirectAction> actions;
