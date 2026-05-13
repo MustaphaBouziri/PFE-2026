@@ -79,3 +79,5 @@ summary.txt
 node-middleware/node_modules/
 node_modules/
 .env
+
+__pycache__/
