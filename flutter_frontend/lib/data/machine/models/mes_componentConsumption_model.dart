@@ -6,16 +6,18 @@ class ComponentConsumptionModel {
   final String itemDescription;
   final String barcode;
 
+
   //final double plannedQuantity;
   final double numberScanned;
 
   final String operatorId;
   final String scannedAt;
-  final bool belongsToThisOperation;
+  
   final double quantityPerUnit;
   final double totalQuantityScanned;
   // new 
   final double scrapQuantity;
+  final double inventory;
 
   ComponentConsumptionModel({
     required this.id,
@@ -32,11 +34,12 @@ class ComponentConsumptionModel {
 
     required this.operatorId,
     required this.scannedAt,
-    required this.belongsToThisOperation,
+  
     required this.quantityPerUnit,
 
     // new
-    required this.scrapQuantity
+    required this.scrapQuantity,
+    required this.inventory
 
   });
 
@@ -55,10 +58,11 @@ class ComponentConsumptionModel {
     
       operatorId: json['operatorId'] ?? '',
       scannedAt: json['scannedAt'] ?? '',
-      belongsToThisOperation: json['belongsToThisOperation'] ?? false,
+  
       quantityPerUnit: (json['quantityPerUnit'] as num? ?? 0).toDouble(),
 
       scrapQuantity: (json['scrapQuantity'] as num? ?? 0).toDouble(),
+      inventory: (json['inventory'] as num? ?? 0).toDouble(),
     );
   }
 }

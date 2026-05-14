@@ -26,8 +26,49 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   return widget.components.any((c) => c.itemNo == itemNo);
 }
 
+bool canAddMoreItem(ItemBarcodeModel item) {
+  // find the component for this item
+  ComponentConsumptionModel? component;
+  try {
+    component = widget.components.firstWhere(
+      (c) => c.itemNo == item.itemNo,
+    );
+  } catch (e) {
+    // item not found in components list
+    return false;
+  }
+
+  // find if this item is already in the scanned list
+  ItemBarcodeModel? existingItem;
+  try {
+    existingItem = items.firstWhere(
+      (e) => e.itemNo == item.itemNo,
+    );
+  } catch (e) {
+    // Item not in list yet, that's fine
+  }
+
+ 
+  final totalIfAdded = existingItem != null 
+      ? (existingItem.quantity + 1) * item.quantityPerUnit
+      : item.quantityPerUnit;
+
+  // check if total scanned would exceed available inventory
+  return totalIfAdded <= component.inventory;
+}
+
   // we add new item or we increment qty
   void addItem(ItemBarcodeModel newItem) {
+     // check if item is in components and inventory is available
+  if (!isItemInComponents(newItem.itemNo) || !canAddMoreItem(newItem)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Cannot add more of ${newItem.itemNo} — insufficient inventory'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
     int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
 
 
@@ -37,8 +78,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         itemNo: items[index].itemNo,
         description: items[index].description,
         baseUOM: items[index].baseUOM,
-        inventory: items[index].inventory,
-        shelfNo: items[index].shelfNo,
         lotSize: items[index].lotSize,
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
@@ -53,13 +92,20 @@ class _ScannerWidgetState extends State<ScannerWidget> {
 
   //increase quantity
   void increaseQty(int index) {
+      if (!canAddMoreItem(items[index])) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Insufficient inventory for ${items[index].itemNo}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
     setState(() {
       items[index] = ItemBarcodeModel(
         itemNo: items[index].itemNo,
         description: items[index].description,
         baseUOM: items[index].baseUOM,
-        inventory: items[index].inventory,
-        shelfNo: items[index].shelfNo,
         lotSize: items[index].lotSize,
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
@@ -78,8 +124,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
           itemNo: items[index].itemNo,
           description: items[index].description,
           baseUOM: items[index].baseUOM,
-          inventory: items[index].inventory,
-          shelfNo: items[index].shelfNo,
           lotSize: items[index].lotSize,
           flushingMethod: items[index].flushingMethod,
           barcodeText: items[index].barcodeText,
@@ -161,8 +205,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                           description:
                               result['itemDescription']?.toString() ?? '',
                           baseUOM: result['baseUOM']?.toString() ?? '',
-                          inventory: 0,
-                          shelfNo: '',
+         
                           lotSize: 0,
                           flushingMethod: '',
                           barcodeText: value,
@@ -273,8 +316,9 @@ class _ScannerWidgetState extends State<ScannerWidget> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: items.isEmpty
-                      ? null
+                  // if list is empty or wrong qr code (does not exist in the component list )
+                  onPressed: items.isEmpty || items.any((item) => !isItemInComponents(item.itemNo))
+                      ? null 
                       : () async {
                           final provider = context.read<MesBarcodeProvider>();
                           //call the toJson method in the barcode model

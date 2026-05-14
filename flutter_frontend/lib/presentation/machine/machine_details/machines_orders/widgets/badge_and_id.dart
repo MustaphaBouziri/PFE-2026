@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/data/machine/models/erp_order_model.dart';
 
 import '../models/badge_style.dart';
 
 class BadgeAndId extends StatelessWidget {
-  final dynamic order;
+  final MachineOrderModel order;
   final BadgeStyle badgeStyle;
 
   const BadgeAndId({super.key, required this.order, required this.badgeStyle});
@@ -32,6 +33,15 @@ class BadgeAndId extends StatelessWidget {
         const SizedBox(width: 10),
         Text(
           'ORD-${order.orderNo}',
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+
+        Text(
+          order.operationDescription,
           style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,

@@ -437,10 +437,11 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                                           crossAxisSpacing: 16,
                                           mainAxisSpacing: 16,
                                           childAspectRatio:
-                                              constraints.maxWidth >= 600 &&
-                                                  constraints.maxWidth < 1300
-                                              ? 3.5
-                                              : 2.5,
+                                              constraints.maxWidth <= 600 // phones 
+                                              ? 2.1
+                                              : constraints.maxWidth < 1024
+                                              ? 2 // tabs
+                                              : 2.1, // bog screens 
                                         ),
                                     itemBuilder: (_, index) => MachineCard(
                                       machine: machinesList[index],

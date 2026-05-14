@@ -269,27 +269,23 @@ class ComponentListView extends StatelessWidget {
     return statusAvailable;
   }
 
-  Color getBgColor(String status, bool isSpecific) {
+  Color getBgColor(String status) {
     if (status == statusAvailable) {
-      return isSpecific ? const Color(0xFFDCFCE7) : const Color(0xFFECFDF5);
+      return const Color(0xFFDCFCE7);
     } else if (status == statusLowStock) {
-      return isSpecific
-          ? const Color.fromARGB(255, 255, 251, 219)
-          : const Color.fromARGB(255, 255, 253, 222);
+      return const Color.fromARGB(255, 255, 251, 219);
     } else {
-      return isSpecific
-          ? const Color.fromARGB(255, 255, 236, 236)
-          : const Color.fromARGB(255, 255, 244, 244);
+      return const Color.fromARGB(255, 255, 236, 236);
     }
   }
 
-  Color getBorderColor(String status, bool isSpecific) {
+  Color getBorderColor(String status) {
     if (status == statusAvailable) {
-      return const Color(0xFF16A34A).withOpacity(isSpecific ? 1 : 0.2);
+      return const Color(0xFF16A34A).withOpacity(1);
     } else if (status == statusLowStock) {
-      return const Color(0xFFCA8A04).withOpacity(isSpecific ? 1 : 0.2);
+      return const Color(0xFFCA8A04).withOpacity(1);
     } else {
-      return const Color(0xFFDC2626).withOpacity(isSpecific ? 1 : 0.2);
+      return const Color(0xFFDC2626).withOpacity(1);
     }
   }
 
@@ -299,19 +295,13 @@ class ComponentListView extends StatelessWidget {
     return Icons.cancel_outlined;
   }
 
-  Color getIconColor(String status, bool isSpecific) {
+  Color getIconColor(String status) {
     if (status == statusAvailable) {
-      return isSpecific
-          ? const Color(0xFF16A34A)
-          : const Color(0xFF16A34A).withOpacity(0.8);
+      return const Color(0xFF16A34A);
     } else if (status == statusLowStock) {
-      return isSpecific
-          ? const Color(0xFFCA8A04)
-          : const Color(0xFFCA8A04).withOpacity(0.8);
+      return const Color(0xFFCA8A04);
     } else {
-      return isSpecific
-          ? const Color(0xFFDC2626)
-          : const Color(0xFFDC2626).withOpacity(0.8);
+      return const Color(0xFFDC2626);
     }
   }
 
@@ -326,8 +316,7 @@ class ComponentListView extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final component = components[index];
-        // if the component belongs to this operation, we highlight it more and show full opacity else we show it with less opacity and lighter colors
-        final isSpecific = component.belongsToThisOperation;
+
         // consumed is how many items have been used based on the total produced and the quantity per unit
         final consumed = totalProduced * component.quantityPerUnit;
         // scanned is how many qte of this item u scanned  * qte per unit of measure
@@ -342,17 +331,13 @@ class ComponentListView extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: getBgColor(status, isSpecific),
+            color: getBgColor(status),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: getBorderColor(status, isSpecific)),
+            border: Border.all(color: getBorderColor(status)),
           ),
           child: Row(
             children: [
-              Icon(
-                getIcon(status),
-                color: getIconColor(status, isSpecific),
-                size: 22,
-              ),
+              Icon(getIcon(status), color: getIconColor(status), size: 22),
 
               const SizedBox(width: 12),
 
@@ -361,13 +346,11 @@ class ComponentListView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${component.itemDescription} (${component.quantityPerUnit} per unit)',
+                      '${component.itemDescription} (${component.inventory} in storage)',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isSpecific
-                            ? const Color(0xFF0F172A)
-                            : const Color(0xFF0F172A).withOpacity(0.7),
+                        color: const Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -377,9 +360,7 @@ class ComponentListView extends StatelessWidget {
                       '${remaining.toString()} ${'quantityLeft'.tr()}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isSpecific
-                            ? const Color(0xFF64748B)
-                            : const Color(0xFF64748B).withOpacity(0.7),
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
@@ -391,7 +372,7 @@ class ComponentListView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: getIconColor(status, isSpecific),
+                  color: getIconColor(status),
                 ),
               ),
             ],

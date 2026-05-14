@@ -153,6 +153,7 @@ class _MachineCardState extends State<MachineCard> {
                               ),
                             ],
                           ),
+
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -169,6 +170,51 @@ class _MachineCardState extends State<MachineCard> {
                               ),
                             ],
                           ),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "itemNo".tr(),
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                              Text(
+                               widget.machine.itemNo,
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                            ],
+                          ),
+
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "itemName".tr(),
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                              Text(
+                                widget.machine.itemDescription,
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                            ],
+                          ),
+
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "operationNo".tr(),
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                              Text(
+                                widget.machine.operationNo,
+                                style: TextStyle(fontSize: textSize),
+                              ),
+                            ],
+                          ),
+
                         ],
                       ),
                     ),

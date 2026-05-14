@@ -233,6 +233,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
                       context: context,
                       builder: (_) => DeclareProductionDialog(
                         operationData: widget.operationData,
+                        components: widget.components,
                       ),
                     );
                     if (declaredQty != null && declaredQty > 0 && mounted) {

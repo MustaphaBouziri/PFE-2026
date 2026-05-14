@@ -18,6 +18,7 @@ class OperationCard extends StatelessWidget {
 
   String get _prodOrderNo => operationData.prodOrderNo;
   String get _operationNo => operationData.operationNo;
+  String get _operationDescription =>operationData.operationDescription;
   String get _operationStatus => operationData.operationStatus;
   String get _lastUpdatedAt => operationData.declaredAt;
 
@@ -73,6 +74,7 @@ class OperationCard extends StatelessWidget {
                       if (isWide) {
                         return OperationWideLayout(
                           prodOrderNo: _prodOrderNo,
+                          operationDescription:_operationDescription,
                           operationNo: _operationNo,
                           operationStatus: _operationStatus,
                           declaredAt: _lastUpdatedAt,
@@ -84,6 +86,7 @@ class OperationCard extends StatelessWidget {
                         return OperationNarrowLayout(
                           prodOrderNo: _prodOrderNo,
                           operationNo: _operationNo,
+                          operationDescription: _operationDescription,
                           operationStatus: _operationStatus,
                           declaredAt: _lastUpdatedAt,
                           progress: _progress,

@@ -11,7 +11,8 @@ class OperationNarrowLayout extends StatelessWidget {
   final String prodOrderNo;
   final String operationNo;
   final String operationStatus;
-  final String? declaredAt;
+  final String operationDescription;
+  final String declaredAt;
   final double progress;
   final OperationStatusStyle style;
   final VoidCallback? onTogglePauseResume;
@@ -21,7 +22,8 @@ class OperationNarrowLayout extends StatelessWidget {
     required this.prodOrderNo,
     required this.operationNo,
     required this.operationStatus,
-    this.declaredAt,
+    required this.operationDescription,
+    required this.declaredAt,
     required this.progress,
     required this.style,
     this.onTogglePauseResume,
@@ -38,13 +40,20 @@ class OperationNarrowLayout extends StatelessWidget {
           style: style,
         ),
         const SizedBox(height: 12),
-        OperationInfoGrid(lastUpdatedAt: declaredAt),
+        OperationInfoGrid(
+          lastUpdatedAt: declaredAt,
+          operationDiscription: operationDescription,
+        ),
         const SizedBox(height: 12),
         OperationProgressBar(progress: progress, style: style),
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.touch_app_rounded, size: 12, color: Colors.grey.shade400),
+            Icon(
+              Icons.touch_app_rounded,
+              size: 12,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(width: 4),
             Text(
               'tapCardToViewDetails'.tr(),

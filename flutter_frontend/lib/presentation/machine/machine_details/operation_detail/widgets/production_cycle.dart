@@ -116,12 +116,7 @@ class _ProductionCycleState extends State<ProductionCycle> {
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
-            Expanded(
-              child: Text(
-                'scrap'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            ),
+           
             Expanded(
               child: Text(
                 'time'.tr(),
@@ -161,12 +156,7 @@ class _ProductionCycleState extends State<ProductionCycle> {
                 style: const TextStyle(fontSize: 14),
               ),
             ),
-            Expanded(
-              child: Text(
-                cycle.scrapQuantity.toString(),
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
+            
             Expanded(
               child: Text(
                 cycle.timeLabel,
