@@ -179,16 +179,18 @@ codeunit 50132 "MES Machine Write"
     end;
 
     procedure insertScans(
-        executionId: Code[50];
-        scansJson: Text;
-        operatorId: Code[50];
-        declaredById: Code[50]
-    ): Text
+     executionId: Code[50];
+     scansJson: Text;
+     operatorId: Code[50];
+     declaredById: Code[50]
+ ): Text
     var
         MESExecution: Record "MES Operation Execution";
         MESConsumption: Record "MES Component Consumption";
-        JsonHelper: Codeunit "MES Json Helper";
+        Item: Record Item;
+        ItemJournalLine: Record "Item Journal Line";
         MachineInsert: Codeunit "MES Machine Insert";
+        ItemJournalPost: Codeunit "Item Jnl.-Post";
         ScansArr: JsonArray;
         ScanToken: JsonToken;
         ScanObj: JsonObject;
@@ -197,11 +199,25 @@ codeunit 50132 "MES Machine Write"
         QtyScannedToken: JsonToken;
         UnitOfMeasureToken: JsonToken;
         QuantityPerUnitOfMeasureToken: JsonToken;
+        ItemNo: Code[20];
+        TotalQuantityToReduce: Decimal;
+        LineNo: Integer;
     begin
         if not MESExecution.Get(executionId) then
             exit(BuildFailureResponse('Execution not found'));
 
         ScansArr.ReadFrom(scansJson);
+
+        // Find the next available line number in ARTICLE/DEFAUT
+        Clear(ItemJournalLine);
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", 'ARTICLE');
+        ItemJournalLine.SetRange("Journal Batch Name", 'DEFAUT');
+
+        if ItemJournalLine.FindLast() then
+            LineNo := ItemJournalLine."Line No." + 10000
+        else
+            LineNo := 10000;
 
         foreach ScanToken in ScansArr do begin
             Clear(MESConsumption);
@@ -213,18 +229,65 @@ codeunit 50132 "MES Machine Write"
             ScanObj.Get('unitOfMeasure', UnitOfMeasureToken);
             ScanObj.Get('quantityPerUnitOfMeasure', QuantityPerUnitOfMeasureToken);
 
+            ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+            TotalQuantityToReduce :=
+                QtyScannedToken.AsValue().AsDecimal() *
+                QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
+
+            // Insert consumption record in MES table
             MESConsumption.Init();
             MESConsumption."Execution Id" := executionId;
             MESConsumption."Prod Order No" := MESExecution."Prod Order No";
-            MESConsumption."Item No" := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+            MESConsumption."Item No" := ItemNo;
             MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
             MESConsumption."Quantity Scanned" := QtyScannedToken.AsValue().AsDecimal();
-            MESConsumption."Unit of Measure" := CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10);
-            MESConsumption."Quantity per Unit of Measure" := QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
+            MESConsumption."Unit of Measure" :=
+                CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10);
+            MESConsumption."Quantity per Unit of Measure" :=
+                QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
             MESConsumption."Operator Id" := operatorId;
             MESConsumption."Declared By" := declaredById;
             MESConsumption.Insert(true);
+
+            // Create item journal line for inventory reduction
+            if Item.Get(ItemNo) then begin
+                Clear(ItemJournalLine);
+                ItemJournalLine.Init();
+
+                ItemJournalLine."Journal Template Name" := 'ARTICLE';
+                ItemJournalLine."Journal Batch Name" := 'DEFAUT';
+                ItemJournalLine."Line No." := LineNo;
+                ItemJournalLine."Posting Date" := Today();
+                ItemJournalLine."Document No." :=
+                    CopyStr('MES-' + executionId, 1, 20);
+                ItemJournalLine."Entry Type" :=
+                    ItemJournalLine."Entry Type"::"Negative Adjmt.";
+                ItemJournalLine."Item No." := ItemNo;
+                ItemJournalLine.Description := Item.Description;
+
+                // For Negative Adjmt., use a positive quantity.
+                ItemJournalLine.Quantity := TotalQuantityToReduce;
+
+                ItemJournalLine."Unit of Measure Code" :=
+                    CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10);
+
+                ItemJournalLine.Insert(true);
+
+                // Increment for the next journal line
+                LineNo += 10000;
+            end else
+                Error('Item %1 was not found in the Item table.', ItemNo);
         end;
+
+        // Post the journal lines
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", 'ARTICLE');
+        ItemJournalLine.SetRange("Journal Batch Name", 'DEFAUT');
+
+        if ItemJournalLine.FindSet() then
+            Codeunit.Run(Codeunit::"Item Jnl.-Post", ItemJournalLine)
+        else
+            Error('No journal lines found to post.');
 
         MachineInsert.EnsureUserExecutionInteraction(executionId, operatorId);
 
