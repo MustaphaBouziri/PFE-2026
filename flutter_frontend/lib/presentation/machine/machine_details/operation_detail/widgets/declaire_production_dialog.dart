@@ -93,7 +93,9 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
 
     // check item availablity before api call
     final componentError = _validateComponentAvailability(declaredQty);
+    // if there is an error stop
     if (componentError != null) {
+      //save the error in the _eroorMessage and update the io to show the message 
       setState(() => _errorMessage = componentError);
       return;
     }
@@ -226,7 +228,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                         },
                       ),
                     ),
-
+                    // if not null add a sied box and displau the message
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 8),
                       Text(

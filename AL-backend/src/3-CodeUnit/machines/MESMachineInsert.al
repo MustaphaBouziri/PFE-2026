@@ -152,8 +152,101 @@ codeunit 50133 "MES Machine Insert"
         NewMESOperationProgress."Scrap Quantity" := 0;
         NewMESOperationProgress.Insert(true);
 
+        // if this is the last operation increase this item  inventory
+        if IsLastOperation(prodOrderNo, operationNo) then
+            IncreaseItemInventory(MESExecution."Item No", input, MESExecution."Execution Id");
+
         EnsureUserExecutionInteraction(MESExecution."Execution Id", operatorId);
         EnsureUserExecutionInteraction(MESExecution."Execution Id", declaredById);
+    end;
+
+    // Check if this operation is the last one in the production order routing line 
+    procedure IsLastOperation(prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
+    var
+        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    begin
+        ProdOrderRoutingLine.Reset();
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+        if not ProdOrderRoutingLine.FindFirst() then
+            exit(false);
+
+        // if Next Operation No is empty this is the last operation
+        exit(ProdOrderRoutingLine."Next Operation No." = '');// true false 
+    end;
+
+    // increase item inventory
+    procedure IncreaseItemInventory(
+        itemNo: Code[20];
+        quantity: Decimal;
+        executionId: Code[50]
+    )
+    var
+        Item: Record Item;
+        ItemJournalLine: Record "Item Journal Line";
+        ItemJournalBatch: Record "Item Journal Batch";
+        NoSeriesManagement: Codeunit NoSeriesManagement;
+        ItemJournalPostBatch: Codeunit "Item Jnl.-Post Batch";
+        DocumentNo: Code[20];
+        LineNo: Integer;
+        TemplateNameToUse: Code[10];
+        BatchNameToUse: Code[10];
+    begin
+        if not Item.Get(itemNo) then
+            Error('Item %1 was not found in the Item table.', itemNo);
+
+        // find the first available journal batch
+        ItemJournalBatch.Reset();
+        ItemJournalBatch.SetRange("Journal Template Name", 'ARTICLE');
+        if not ItemJournalBatch.FindFirst() then
+            Error('No Item Journal Batch found for template ARTICLE');
+
+        TemplateNameToUse := ItemJournalBatch."Journal Template Name";
+        BatchNameToUse := ItemJournalBatch.Name;
+
+        // get the next document number from the batch's number series
+        DocumentNo := NoSeriesManagement.GetNextNo(ItemJournalBatch."No. Series", Today(), false);
+
+        // find the next available line number
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+        ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+        if ItemJournalLine.FindLast() then
+            LineNo := ItemJournalLine."Line No." + 10000
+        else
+            LineNo := 10000;
+
+        // create item journal line
+        Clear(ItemJournalLine);
+        ItemJournalLine.Init();
+
+        ItemJournalLine."Journal Template Name" := TemplateNameToUse;
+        ItemJournalLine."Journal Batch Name" := BatchNameToUse;
+        ItemJournalLine."Line No." := LineNo;
+        ItemJournalLine."Posting Date" := Today();
+        ItemJournalLine."Document No." := DocumentNo;
+        ItemJournalLine."Entry Type" := ItemJournalLine."Entry Type"::"Positive Adjmt."; // ← Positive for finished goods
+        ItemJournalLine."Item No." := itemNo;
+        ItemJournalLine.Description := Item.Description;
+        ItemJournalLine."Unit of Measure Code" := Item."Base Unit of Measure";
+        ItemJournalLine."Gen. Prod. Posting Group" := Item."Gen. Prod. Posting Group";
+        ItemJournalLine."Inventory Posting Group" := Item."Inventory Posting Group";
+
+        // set quantity and we need to validate it else wont work
+        ItemJournalLine.Quantity := quantity;
+        ItemJournalLine.Validate("Quantity");
+        ItemJournalLine.Validate("Unit of Measure Code");
+
+        ItemJournalLine.Insert(true);
+
+        // post the journal line
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+        ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+        ItemJournalLine.SetRange("Line No.", LineNo);
+
+        if ItemJournalLine.FindSet() then
+            ItemJournalPostBatch.Run(ItemJournalLine);
     end;
 
     // ──────────────────────────────────────────────

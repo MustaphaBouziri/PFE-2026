@@ -317,7 +317,7 @@ class ComponentListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final component = components[index];
 
-        // consumed is how many items have been used based on the total produced and the quantity per unit
+        // consumed is how many items have been used based on the total produced and the quantity per unit (bike need 50 nails etc)
         final consumed = totalProduced * component.quantityPerUnit;
         // scanned is how many qte of this item u scanned  * qte per unit of measure
         final scanned = component.totalQuantityScanned;

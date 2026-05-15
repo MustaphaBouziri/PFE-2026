@@ -6,18 +6,20 @@ class ComponentConsumptionModel {
   final String itemDescription;
   final String barcode;
 
-
   //final double plannedQuantity;
   final double numberScanned;
 
   final String operatorId;
   final String scannedAt;
-  
+
   final double quantityPerUnit;
   final double totalQuantityScanned;
-  // new 
+  // new
   final double scrapQuantity;
+
   final double inventory;
+  final String baseUOM;
+  final double baseUOMQuantityPerUnit;
 
   ComponentConsumptionModel({
     required this.id,
@@ -34,13 +36,15 @@ class ComponentConsumptionModel {
 
     required this.operatorId,
     required this.scannedAt,
-  
+
     required this.quantityPerUnit,
 
     // new
     required this.scrapQuantity,
-    required this.inventory
+    required this.inventory,
 
+    required this.baseUOM,
+    required this.baseUOMQuantityPerUnit,
   });
 
   factory ComponentConsumptionModel.fromJson(Map<String, dynamic> json) {
@@ -54,15 +58,20 @@ class ComponentConsumptionModel {
 
       //plannedQuantity: (json['plannedQuantity'] as num? ?? 0).toDouble(),
       numberScanned: (json['numberScanned'] as num? ?? 0).toDouble(),
-      totalQuantityScanned: (json['totalQuantityScanned'] as num? ?? 0).toDouble(),
-    
+      totalQuantityScanned: (json['totalQuantityScanned'] as num? ?? 0)
+          .toDouble(),
+
       operatorId: json['operatorId'] ?? '',
       scannedAt: json['scannedAt'] ?? '',
-  
+
       quantityPerUnit: (json['quantityPerUnit'] as num? ?? 0).toDouble(),
 
       scrapQuantity: (json['scrapQuantity'] as num? ?? 0).toDouble(),
       inventory: (json['inventory'] as num? ?? 0).toDouble(),
+
+      baseUOM: json['baseUOM'] ?? '',
+      baseUOMQuantityPerUnit: (json['baseUOMQuantityPerUnit'] as num? ?? 1)
+          .toDouble(),
     );
   }
 }

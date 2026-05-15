@@ -480,12 +480,25 @@ codeunit 50131 "MES Machine Fetch"
                     until MESScrap.Next() = 0;
                 end;
 
-                //get item inventory 
+                //get item inventory + base unit of measure and base's qte per unit
                 item.Reset();
                 item.SetRange("No.", ProductOrderComponent."Item No.");
                 if item.FindFirst() then begin
                     item.CalcFields(Inventory); // Calculate the FlowField before reading it
                     BomObj.Add('inventory', item.Inventory);
+                    //new
+                    BomObj.Add('baseUOM', item."Base Unit of Measure");
+                    ItemUnitOfMeasure.Reset();
+                    ItemUnitOfMeasure.SetRange("Item No.", item."No.");
+                    ItemUnitOfMeasure.SetRange(Code, item."Base Unit of Measure");
+                    if ItemUnitOfMeasure.FindFirst() then
+                        BomObj.Add('baseUOMQuantityPerUnit', ItemUnitOfMeasure."Qty. per Unit of Measure")
+                    else
+                        BomObj.Add('baseUOMQuantityPerUnit', 1);
+                
+                
+
+
                 end;
                 BomObj.Add('itemNo', ProductOrderComponent."Item No.");
                 BomObj.Add('prodorderid', ProductOrderComponent."Prod. Order No.");
@@ -879,73 +892,84 @@ codeunit 50131 "MES Machine Fetch"
     end;
 
     procedure resolveBarcode(barcode: Text): Text
-    var
-        Item: Record Item;
-        ItemIdentifier: Record "Item Identifier";
-        ItemUnitOfMeasure: Record "Item Unit of Measure";
-        quantityPerUnitOfMeasure: Decimal;
-        ResultJson: JsonObject;
-        JsonHelper: Codeunit "MES Json Helper";
-        ItemNo: Code[20];
-        startPos: Integer;
-        endPos: Integer;
-    begin
-        // we check if the barcode contain item number in the string if yes we will extact the item number from the string
-        if StrPos(barcode, 'Item Number:') > 0 then begin
+var
+    Item: Record Item;
+    ItemIdentifier: Record "Item Identifier";
+    ItemUnitOfMeasure: Record "Item Unit of Measure";
+    quantityPerUnitOfMeasure: Decimal;
+    baseUOMQuantityPerUnit: Decimal;
+    ResultJson: JsonObject;
+    JsonHelper: Codeunit "MES Json Helper";
+    ItemNo: Code[20];
+    startPos: Integer;
+    endPos: Integer;
+begin
+    // we check if the barcode contain item number in the string if yes we will extact the item number from the string
+    if StrPos(barcode, 'Item Number:') > 0 then begin
 
-            startPos := StrPos(barcode, 'Item Number: ');
-            startPos := startPos + StrLen('Item Number: ');
+        startPos := StrPos(barcode, 'Item Number: ');
+        startPos := startPos + StrLen('Item Number: ');
 
-            endPos := StrPos(barcode, '|');
-            if endPos = 0 then
-                endPos := StrLen(barcode) + 1;
+        endPos := StrPos(barcode, '|');
+        if endPos = 0 then
+            endPos := StrLen(barcode) + 1;
 
-            ItemNo := CopyStr(barcode, startPos, endPos - startPos);
-            // we search the item table and  get from the "item table new column extension mes barcode code" value  "mes-1100" using the item number that we extracted from the barcode
-            if Item.Get(ItemNo) then
-                // we override the barcode with the MES Barcode Code from the item table to be used in the next step : check if this barcode exist in the identifier table
-                barcode := Item."MES Barcode Code"
-            else begin
-                //if not found it means the item number we extracted does not exist in the item table or its fake or its correpted 
-                ResultJson.Add('resolved', false);
-                ResultJson.Add('message', 'Item not found from DataMatrix');
-                exit(JsonHelper.JsonToText(ResultJson));
-            end;
-        end;
-
-        ItemIdentifier.Reset();
-        ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
-        // we check if the barcode code  exist in the item identifier table if not found it means this is a random barcode /not yet to be registered 
-        if not ItemIdentifier.FindFirst() then begin
+        ItemNo := CopyStr(barcode, startPos, endPos - startPos);
+        // we search the item table and  get from the "item table new column extension mes barcode code" value  "mes-1100" using the item number that we extracted from the barcode
+        if Item.Get(ItemNo) then
+            // we override the barcode with the MES Barcode Code from the item table to be used in the next step : check if this barcode exist in the identifier table
+            barcode := Item."MES Barcode Code"
+        else begin
+            //if not found it means the item number we extracted does not exist in the item table or its fake or its correpted 
             ResultJson.Add('resolved', false);
-            ResultJson.Add('message', 'Barcode not recognized');
+            ResultJson.Add('message', 'Item not found from DataMatrix');
             exit(JsonHelper.JsonToText(ResultJson));
         end;
+    end;
 
-        ItemNo := ItemIdentifier."Item No.";
-        //looks like we have the same validation  the diferent is the sourse one from item id extracted from barcode string one item no from table identifier
-        // this just to ensure the item linked to this barcdoe is still valid in the system and not deleted or soemthing 
-        if not Item.Get(ItemNo) then begin
-            ResultJson.Add('resolved', false);
-            ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
-            exit(JsonHelper.JsonToText(ResultJson));
-        end;
-
-        ItemUnitOfMeasure.Reset();
-        ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
-        ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
-        if ItemUnitOfMeasure.FindFirst() then
-            quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
-
-        ResultJson.Add('resolved', true);
-        ResultJson.Add('itemNo', Item."No.");
-        ResultJson.Add('itemDescription', Item.Description);
-        ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-        ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
-        ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
-
+    ItemIdentifier.Reset();
+    ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
+    // we check if the barcode code  exist in the item identifier table if not found it means this is a random barcode /not yet to be registered 
+    if not ItemIdentifier.FindFirst() then begin
+        ResultJson.Add('resolved', false);
+        ResultJson.Add('message', 'Barcode not recognized');
         exit(JsonHelper.JsonToText(ResultJson));
     end;
+
+    ItemNo := ItemIdentifier."Item No.";
+    //looks like we have the same validation  the diferent is the sourse one from item id extracted from barcode string one item no from table identifier
+    // this just to ensure the item linked to this barcdoe is still valid in the system and not deleted or soemthing 
+    if not Item.Get(ItemNo) then begin
+        ResultJson.Add('resolved', false);
+        ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    // Get barcode UOM's quantity per unit of measure
+    ItemUnitOfMeasure.Reset();
+    ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+    ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
+    if ItemUnitOfMeasure.FindFirst() then
+        quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
+    // get base unit of measure"s  quantity per unit of measure
+    baseUOMQuantityPerUnit := 1; // Base UOM always has 1 (it's the reference)
+    ItemUnitOfMeasure.Reset();
+    ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+    ItemUnitOfMeasure.SetRange(Code, Item."Base Unit of Measure");
+    if ItemUnitOfMeasure.FindFirst() then
+        baseUOMQuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
+    ResultJson.Add('resolved', true);
+    ResultJson.Add('itemNo', Item."No.");
+    ResultJson.Add('itemDescription', Item.Description);
+    ResultJson.Add('baseUOM', Item."Base Unit of Measure");
+    ResultJson.Add('baseUOMQuantityPerUnit', baseUOMQuantityPerUnit); // ← Add this
+    ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
+    ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
+
+    exit(JsonHelper.JsonToText(ResultJson));
+end;
 
 
 
