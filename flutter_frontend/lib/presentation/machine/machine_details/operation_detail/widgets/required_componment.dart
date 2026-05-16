@@ -52,6 +52,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 1210;
     final canScan = widget.operationStatus == "Running";
+    final hasComponents = widget.components.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -86,109 +87,116 @@ class _RequiredComponentState extends State<RequiredComponent> {
                 IconButton(
                   icon: const Icon(Icons.open_in_full),
                   onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        child: Container(
-                          width: 900,
-                          height: 650,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      "requiredComponents".tr(),
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    IconButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      icon: const Icon(Icons.close),
-                                    ),
-                                  ],
+                    hasComponents
+                        ? showDialog(
+                            context: context,
+                            builder: (context) => Dialog(
+                              child: Container(
+                                width: 900,
+                                height: 650,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.white,
                                 ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${widget.components.length} ${'componentsFound'.tr()}',
-                                    ),
-                                    const Spacer(),
-
-                                    // scan button inside dialog
-                                    ElevatedButton(
-                                      onPressed: () =>
-                                          canScan ? _openScanner(context) : {},
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: canScan
-                                            ? const Color(0xFF0F172A)
-                                            : Color(0xFFCBD5E1),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 14,
-                                          horizontal: 14,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "requiredComponents".tr(),
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF0F172A),
+                                            ),
                                           ),
+                                          const Spacer(),
+                                          IconButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            icon: const Icon(Icons.close),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${widget.components.length} ${'componentsFound'.tr()}',
+                                          ),
+                                          const Spacer(),
+
+                                          // scan button inside dialog
+                                          ElevatedButton(
+                                            onPressed: () => canScan
+                                                ? _openScanner(context)
+                                                : {},
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: canScan
+                                                  ? const Color(0xFF0F172A)
+                                                  : Color(0xFFCBD5E1),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 14,
+                                                    horizontal: 14,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'scanItem'.tr(),
+                                              style: TextStyle(
+                                                color: canScan
+                                                    ? Colors.white
+                                                    : const Color(0xff64748B),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      GlobalSearchBar(
+                                        controller: controller,
+                                        onSearchChanged: (_) => setState(() {}),
+                                        dropdownItems: const [
+                                          'all',
+                                          'missing',
+                                          'low',
+                                        ],
+                                        selectedValue: selectedFilter,
+                                        onDropdownChanged: (val) => setState(
+                                          () => selectedFilter = val ?? 'all',
                                         ),
                                       ),
-                                      child: Text(
-                                        'scanItem'.tr(),
-                                        style: TextStyle(
-                                          color: canScan
-                                              ? Colors.white
-                                              : const Color(0xff64748B),
+                                      const SizedBox(height: 12),
+                                      Expanded(
+                                        child: ComponentListView(
+                                          components: filteredComponents,
+                                          totalProduced: widget.totalProduced,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                GlobalSearchBar(
-                                  controller: controller,
-                                  onSearchChanged: (_) => setState(() {}),
-                                  dropdownItems: const [
-                                    'all',
-                                    'missing',
-                                    'low',
-                                  ],
-                                  selectedValue: selectedFilter,
-                                  onDropdownChanged: (val) => setState(
-                                    () => selectedFilter = val ?? 'all',
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                Expanded(
-                                  child: ComponentListView(
-                                    components: filteredComponents,
-                                    totalProduced: widget.totalProduced,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                    );
+                          )
+                        : null;
                   },
                 ),
 
               // scan button in normal view
               SizedBox(
                 child: ElevatedButton.icon(
-                  onPressed: () => canScan ? _openScanner(context) : {},
+                  onPressed: (canScan && hasComponents)
+                      ? () => _openScanner(context)
+                      : null,
 
                   label: Text(
                     'scanItem'.tr(),
@@ -214,29 +222,56 @@ class _RequiredComponentState extends State<RequiredComponent> {
           ),
 
           const SizedBox(height: 16),
-
-          // search and filter
-          GlobalSearchBar(
-            controller: controller,
-            onSearchChanged: (_) => setState(() {}),
-            dropdownItems: const ['all', 'missing', 'low'],
-            selectedValue: selectedFilter,
-            onDropdownChanged: (val) =>
-                setState(() => selectedFilter = val ?? 'all'),
-          ),
-
-          const SizedBox(height: 16),
-          Text('${widget.components.length} ${'componentsFound'.tr()}'),
-          const SizedBox(height: 16),
-
-          // display the list in normal way
-          SizedBox(
-            height: 750,
-            child: ComponentListView(
-              components: filteredComponents,
-              totalProduced: widget.totalProduced,
+          if (!hasComponents)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 60),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 64,
+                      color: const Color(0xFF16A34A).withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'operationDoesNotNeedComponents'.tr(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            // search and filter
+            GlobalSearchBar(
+              controller: controller,
+              onSearchChanged: (_) => setState(() {}),
+              dropdownItems: const ['all', 'missing', 'low'],
+              selectedValue: selectedFilter,
+              onDropdownChanged: (val) =>
+                  setState(() => selectedFilter = val ?? 'all'),
             ),
-          ),
+
+            const SizedBox(height: 16),
+            Text('${widget.components.length} ${'componentsFound'.tr()}'),
+            const SizedBox(height: 16),
+
+            // display the list in normal way
+            SizedBox(
+              height: 750,
+              child: ComponentListView(
+                components: filteredComponents,
+                totalProduced: widget.totalProduced,
+              ),
+            ),
+          ],
         ],
       ),
     );

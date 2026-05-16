@@ -80,6 +80,76 @@ codeunit 50133 "MES Machine Insert"
         end;
     end;
 
+
+
+    // check if this is the first operation in the routing
+    procedure IsFirstOperation(prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
+    var
+        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    begin
+        ProdOrderRoutingLine.Reset();
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+        if not ProdOrderRoutingLine.FindFirst() then
+            exit(false);
+
+        // If previous pperation No. is empty, this is the first operation
+        exit(ProdOrderRoutingLine."Previous Operation No." = '');
+    end;
+
+ // set order to finish in erp
+      procedure SetErpOrderToFinish(
+    prodOrderNo: Code[20];
+    operationNo: Code[10];
+    mesOperationStatus: Enum "MES Operation Status"
+)
+    var
+        ProdOrder: Record "Production Order";
+        ProdOrderStatusMgt: Codeunit "Prod. Order Status Management";
+    begin
+        // get the production order only if it is currently released
+        ProdOrder.Reset();
+        ProdOrder.SetRange(Status, ProdOrder.Status::Released);
+        ProdOrder.SetRange("No.", prodOrderNo);
+
+        if not ProdOrder.FindFirst() then
+            exit; // order not found or not released 
+
+        // rule 1:
+        // if the first operation is cancelled -> finish the production order
+        if IsFirstOperation(prodOrderNo, operationNo) and
+           (mesOperationStatus = "MES Operation Status"::Cancelled)
+        then begin
+            ProdOrderStatusMgt.ChangeProdOrderStatus(
+                ProdOrder,
+                ProdOrder.Status::Finished,
+                Today(),
+                false
+            );
+            exit;
+        end;
+
+        // rule 2:
+        // ff the last operation is finished or cancelled-> finish the production order
+        if IsLastOperation(prodOrderNo, operationNo) and
+           (mesOperationStatus in [
+               "MES Operation Status"::Finished,
+               "MES Operation Status"::Cancelled
+           ])
+        then begin
+            ProdOrderStatusMgt.ChangeProdOrderStatus(
+                ProdOrder,
+                ProdOrder.Status::Finished,
+                Today(),
+                false
+            );
+            exit;
+        end;
+    end;
+
+
+
+
     // ──────────────────────────────────────────────
     // Machine status records
     // ──────────────────────────────────────────────
@@ -302,6 +372,55 @@ codeunit 50133 "MES Machine Insert"
         InsertStartMESMachineStatus(prodOrderNo, machineNo);
         exit(ExecutionId);
     end;
+
+
+
+
+
+
+
+
+
+
+
+    procedure GetPreviousOperationProducedQuantity(executionId: Code[50]): Decimal
+    var
+        MESOperationProgress: Record "MES Operation Progression";
+    begin
+        MESOperationProgress.Reset();
+        MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
+        MESOperationProgress.SetRange("Execution Id", executionId);
+        MESOperationProgress.Ascending(false);
+
+        if MESOperationProgress.FindFirst() then
+            exit(MESOperationProgress."Total Produced Quantity")
+        else
+            exit(0);
+    end;
+
+    procedure GetLatestOperationStatus(executionId: Code[50]; var MESOperationState: Record "MES Operation State")
+    begin
+        MESOperationState.Reset();
+        MESOperationState.SetCurrentKey("Execution Id", "Declared At");
+        MESOperationState.SetRange("Execution Id", executionId);
+        MESOperationState.Ascending(false);
+        MESOperationState.FindFirst();
+    end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ──────────────────────────────────────────────
     // Query helpers
