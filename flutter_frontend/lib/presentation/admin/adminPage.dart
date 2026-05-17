@@ -7,6 +7,7 @@ import 'package:pfe_mes/presentation/admin/activity_log/activityLogPage.dart';
 import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
+import 'package:pfe_mes/presentation/admin/settings/settingsPage.dart';
 import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
@@ -154,9 +155,10 @@ class _AdminPageState extends State<AdminPage> {
                 const MachineDashboardPage(),
                 const ActivityLogPage(),
                 const BarcodeListPage(),
+                const MesSettingsPage(),
                 Center(
                   child: Text(
-                    'Settings Page - Coming Soon!',
+                    'Settings Page hjvvjhzohrboghrgb - Coming Soon!',
                     style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
                   ),
                 ),

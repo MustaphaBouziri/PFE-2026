@@ -111,6 +111,7 @@ codeunit 50131 "MES Machine Fetch"
 
                     if ProductOrderLine.FindFirst() then begin
                         ProductOrderRoutingLineObj.Add('orderNo', ProductOrderRoutingLine."Prod. Order No.");
+                        ProductOrderRoutingLineObj.Add('Description', ProductOrderRoutingLine.Description);
                         ProductOrderRoutingLineObj.Add('status', Format(ProductOrderRoutingLine.Status));
                         ProductOrderRoutingLineObj.Add('operationNo', ProductOrderRoutingLine."Operation No.");
                         ProductOrderRoutingLineObj.Add('plannedStart', ProductOrderRoutingLine."Starting Date-Time");
@@ -739,6 +740,8 @@ procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Tex
         workCenterNoToken: JsonToken;
         workCenterNo: Code[20];
         workCenterFilter: Text;
+        BaseProduced: Decimal;
+        BaseProgression: Record "MES Operation Progression";
     begin
         Clear(MachineArr);
         CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
@@ -770,11 +773,14 @@ procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Tex
                 Clear(PrevStatus);
 
                 // --- Operations ---
+                // FIX: No longer filtering by Execution "Start Time".
+                // The execution may have started before the cutoff window, but
+                // declarations (progressions/scraps) may fall within it.
                 MESExecution.Reset();
                 MESExecution.SetRange("Machine No", Machine."No.");
-                MESExecution.SetFilter("Start Time", '>=%1', CutoffTime);
                 if MESExecution.FindSet() then
                     repeat
+                        // Operation state: check the latest state for this execution
                         MESOperationState.Reset();
                         MESOperationState.SetRange("Execution Id", MESExecution."Execution Id");
                         MESOperationState.SetCurrentKey("Execution Id", "Declared At");
@@ -786,15 +792,34 @@ procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Tex
                                 OperationCancelled += 1;
                         end;
 
+                        // FIX: Produced quantity — delta approach.
+                        // Get the cumulative total just before the cutoff (baseline),
+                        // then get the latest cumulative total within the window.
+                        // Delta = latest_in_window - baseline_before_cutoff.
+                        // This correctly handles executions that started before the window.
+                        BaseProduced := 0;
+
+                        BaseProgression.Reset();
+                        BaseProgression.SetRange("Execution Id", MESExecution."Execution Id");
+                        BaseProgression.SetFilter("Declared At", '<%1', CutoffTime);
+                        BaseProgression.SetCurrentKey("Execution Id", "Declared At");
+                        BaseProgression.Ascending(false);
+                        if BaseProgression.FindFirst() then
+                            BaseProduced := BaseProgression."Total Produced Quantity";
+
                         MESProgression.Reset();
                         MESProgression.SetRange("Execution Id", MESExecution."Execution Id");
+                        MESProgression.SetFilter("Declared At", '>=%1', CutoffTime);
                         MESProgression.SetCurrentKey("Execution Id", "Declared At");
                         MESProgression.Ascending(false);
                         if MESProgression.FindFirst() then
-                            TotalProduced += MESProgression."Total Produced Quantity";
+                            TotalProduced += MESProgression."Total Produced Quantity" - BaseProduced;
 
+                        // FIX: Scrap — filter by "Declared At" within the window,
+                        // not by execution start time.
                         MESScrap.Reset();
                         MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
+                        MESScrap.SetFilter("Declared At", '>=%1', CutoffTime);
                         if MESScrap.FindSet() then
                             repeat
                                 TotalScrap += MESScrap."Scrap Quantity";
@@ -803,6 +828,7 @@ procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Tex
                     until MESExecution.Next() = 0;
 
                 // --- Uptime Calculation ---
+                // (unchanged — logic was correct)
 
                 // Seed PrevStatus/PrevTime from the last status record BEFORE the cutoff
                 MESMachineStatus.Reset();
@@ -856,6 +882,7 @@ procedure fetchMachineDashboard(hoursBack: Decimal; workCenterNoJson: Text): Tex
 
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
+
 
     procedure resolveBarcode(barcode: Text): Text
     var

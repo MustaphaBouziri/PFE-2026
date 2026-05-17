@@ -7,6 +7,8 @@ codeunit 50126 "MES Web Service"
         Tools: Codeunit "MES Tool Functions";
         AuthMgt: Codeunit "MES Auth Mgt";
 
+        settings: Codeunit "MES Settings Functions";
+
     // ── Auth endpoints (no token write logic) ─────────────────────────────────
 
     [NonDebuggable]
@@ -67,7 +69,7 @@ codeunit 50126 "MES Web Service"
 
     procedure fetchAllEmployees(): Text
     begin
-        exit (UnboundActions.fetchAllEmployees());
+        exit(UnboundActions.fetchAllEmployees());
     end;
 
     // ── Read endpoints (no identity needed) ───────────────────────────────────
@@ -392,14 +394,73 @@ codeunit 50126 "MES Web Service"
         exit(UnboundActions.AdminChangeUserRole(token, targetUserId, newRoleInt, workCenterListJson));
     end;
 
-    
+
     procedure resolveBarcode(barcode: Text): Text
     begin
         exit(MachineFetch.resolveBarcode(barcode));
     end;
 
 
+    // ── Badge 2FA endpoints ───────────────────────────────────────────────────
 
+    /// <summary>
+    /// Called by Flutter during login when twoFAEnabled == true.
+    /// userId:        internal userId returned by Login (NOT the authId).
+    /// scannedSecret: raw string read from the badge QR code.
+    /// Returns { "success": true } or { "success": false, "message": "..." }
+    /// </summary>
+    procedure VerifyBadge(userId: Text; scannedSecret: Text): Text
+    var
+        JsonHelper: Codeunit "MES Json Helper";
+        ResultJson: JsonObject;
+        UserIdCode: Code[50];
+    begin
+        UserIdCode := CopyStr(userId, 1, 50);
 
+        if AuthMgt.VerifyBadge(UserIdCode, scannedSecret) then begin
+            ResultJson.Add('success', true);
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        exit(JsonHelper.BuildError('BadgeVerificationFailed', 'Invalid badge. Please try again.'));
+    end;
+
+    /// <summary>
+    /// Admin: get the current badge secret for a user to display the QR code.
+    /// adminToken:   valid Admin MES token.
+    /// targetUserId: internal userId of the target user.
+    /// Returns { "success": true, "badgeSecret": "<64-char hex>" }
+    /// </summary>
+    procedure GetBadgeSecret(adminToken: Text; targetUserId: Text): Text
+    begin
+        exit(AuthMgt.GetBadgeSecret(adminToken, CopyStr(targetUserId, 1, 50)));
+    end;
+
+    /// <summary>
+    /// Admin: regenerate the badge secret for a user (lost badge, etc.).
+    /// adminToken:   valid Admin MES token.
+    /// targetUserId: internal userId of the target user.
+    /// Returns { "success": true, "badgeSecret": "<new 64-char hex>" }
+    /// </summary>
+    procedure RegenerateBadgeSecret(adminToken: Text; targetUserId: Text): Text
+    begin
+        exit(AuthMgt.RegenerateBadgeSecret(adminToken, CopyStr(targetUserId, 1, 50)));
+    end;
+
+    // ── REPLACE fetchSettings() in MESWebService.al with this version ─────────
+    // (adds twoFAEnabled to the response)
+
+    procedure fetchSettings(): Text
+    begin
+        exit(settings.GetMESSettings());
+    end;
+
+    // ── REPLACE updateSettings() in MESWebService.al with this version ────────
+    // (accepts twoFAEnabled parameter)
+
+    procedure updateSettings(PwChangePeriodDays: Integer; twoFAEnabled: Boolean; token: Text): Text
+    begin
+        exit(settings.UpdateMESSettings(PwChangePeriodDays, twoFAEnabled, token));
+    end;
 
 }

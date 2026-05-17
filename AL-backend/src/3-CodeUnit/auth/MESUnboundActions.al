@@ -64,17 +64,19 @@ codeunit 50125 "MES Unbound Actions"
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
     var
-        TokenRec: Record "MES Auth Token";
-        U: Record "MES User";
-        WCRec: Record "MES User Work Center";
-        UserIdCode: Code[50];
-        OutJ: JsonObject;
-        WCArr: JsonArray;
-        EmployeeRec: Record Employee;
-        MediaInStream: InStream;
-        Base64Convert: Codeunit "Base64 Convert";
-        TempBlob: Codeunit "Temp Blob";
-        OutStream: OutStream;
+        TokenRec:       Record "MES Auth Token";
+        U:              Record "MES User";
+        WCRec:          Record "MES User Work Center";
+        MESSettings:    Record "MES Settings";
+        UserIdCode:     Code[50];
+        OutJ:           JsonObject;
+        WCArr:          JsonArray;
+        EmployeeRec:    Record Employee;
+        MediaInStream:  InStream;
+        Base64Convert:  Codeunit "Base64 Convert";
+        TempBlob:       Codeunit "Temp Blob";
+        OutStream:      OutStream;
+        TwoFAEnabled:   Boolean;
     begin
         if (userId = '') or (password = '') then
             exit(JsonHelper.BuildError('Invalid request', 'Username and password are required'));
@@ -89,35 +91,40 @@ codeunit 50125 "MES Unbound Actions"
         if not TryValidateCredentials(UserIdCode, password) then
             exit(JsonHelper.BuildErrorFromLastError('Authentication failed'));
 
-        // INSERT happens OUTSIDE the TryFunction.
+        // Issue token (unchanged)
         TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId);
 
         if not U.Get(TokenRec."User Id") then
             exit(JsonHelper.BuildError('Internal error', 'User data not found after login'));
 
+        // Read TwoFA setting
+        TwoFAEnabled := false;
+        if MESSettings.FindFirst() then
+            TwoFAEnabled := MESSettings."TwoFA Enabled";
+
+        // Work centres
         WCRec.SetRange("User Id", U."User Id");
-        // get all work centers of this user and put them into a json list
         if WCRec.FindSet() then
             repeat
                 WCArr.Add(WCRec."Work Center No.");
-            //WCArr = ["WC01", "WC02"]
             until WCRec.Next() = 0;
 
-        OutJ.Add('success', true);
-        OutJ.Add('workCenters', WCArr);
+        // Build response (same fields as before + twoFAEnabled + userId)
+        OutJ.Add('success',       true);
+        OutJ.Add('twoFAEnabled',  TwoFAEnabled);   // NEW
+        OutJ.Add('workCenters',   WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
-        OutJ.Add('userId', U."User Id");
-        OutJ.Add('authId', U."Auth ID");
-        OutJ.Add('employeeId', U."Employee ID");
-        OutJ.Add('role', Format(U.Role));
-        OutJ.add('isActive', U."Is Active");
-        OutJ.Add('token', Format(TokenRec."Token"));
-        OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
+        OutJ.Add('userId',        U."User Id");     // internal Code[50] — needed for VerifyBadge
+        OutJ.Add('authId',        U."Auth ID");
+        OutJ.Add('employeeId',    U."Employee ID");
+        OutJ.Add('role',          Format(U.Role));
+        OutJ.add('isActive',      U."Is Active");
+        OutJ.Add('token',         Format(TokenRec."Token"));
+        OutJ.Add('expiresAt',     Format(TokenRec."Expires At", 0, 9));
 
         if EmployeeRec.Get(U."Employee ID") then begin
             OutJ.Add('fullName', EmployeeRec.FullName());
-            OutJ.Add('email', EmployeeRec."E-Mail");
-
+            OutJ.Add('email',    EmployeeRec."E-Mail");
             if EmployeeRec.Image.HasValue then begin
                 TempBlob.CreateOutStream(OutStream);
                 EmployeeRec.Image.ExportStream(OutStream);
@@ -126,9 +133,9 @@ codeunit 50125 "MES Unbound Actions"
             end else
                 OutJ.Add('imageBase64', '');
         end else begin
-            OutJ.Add('fullName', '');
-            OutJ.Add('email', '');
-            OutJ.Add('imageBase64', '');
+            OutJ.Add('fullName',   '');
+            OutJ.Add('email',      '');
+            OutJ.Add('imageBase64','');
         end;
 
         exit(JsonHelper.JsonToText(OutJ));

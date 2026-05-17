@@ -125,7 +125,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = _sessionStorage.getUserId() as String;
+    final currentUserId = _sessionStorage.getUserId();
 
     return StreamBuilder<List<MesUser>>(
       stream: _usersStream,
@@ -213,9 +213,9 @@ class _AddUserPageState extends State<AddUserPage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: Text(
-          'manageUsers'.tr(),
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        'manageUsers'.tr(),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
       actions: [
         Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
         const SizedBox(width: 8),

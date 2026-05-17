@@ -19,11 +19,36 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
 
   // Grid configuration breakpoints
   static const List<_GridBreakpoint> _breakpoints = [
-    _GridBreakpoint(maxWidth: 450, crossCount: 1, aspectRatio: 1.4, isSmallPhone: true),
-    _GridBreakpoint(maxWidth: 700, crossCount: 1, aspectRatio: 2.0, isSmallPhone: false),
-    _GridBreakpoint(maxWidth: 1000, crossCount: 2, aspectRatio: 1.6, isSmallPhone: false),
-    _GridBreakpoint(maxWidth: 1300, crossCount: 2, aspectRatio: 2, isSmallPhone: false),
-    _GridBreakpoint(maxWidth: double.infinity, crossCount: 3, aspectRatio: 1.8, isSmallPhone: false),
+    _GridBreakpoint(
+      maxWidth: 450,
+      crossCount: 1,
+      aspectRatio: 1.4,
+      isSmallPhone: true,
+    ),
+    _GridBreakpoint(
+      maxWidth: 700,
+      crossCount: 1,
+      aspectRatio: 2.0,
+      isSmallPhone: false,
+    ),
+    _GridBreakpoint(
+      maxWidth: 1000,
+      crossCount: 2,
+      aspectRatio: 1.6,
+      isSmallPhone: false,
+    ),
+    _GridBreakpoint(
+      maxWidth: 1300,
+      crossCount: 2,
+      aspectRatio: 2,
+      isSmallPhone: false,
+    ),
+    _GridBreakpoint(
+      maxWidth: double.infinity,
+      crossCount: 3,
+      aspectRatio: 1.8,
+      isSmallPhone: false,
+    ),
   ];
 
   @override
@@ -31,7 +56,7 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final SessionStorage sessionStorage = SessionStorage();
-      final workCenters = sessionStorage.getWorkCenters() as List<String>;
+      final workCenters = sessionStorage.getWorkCenters();
       context.read<LogProvider>().fetchMachineDashboard(workCenters);
     });
   }
@@ -40,7 +65,7 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
   Map<String, dynamic> _getGridParameters(double availableWidth) {
     final effectiveWidth = availableWidth - 32;
     const spacing = 12.0;
-    
+
     final breakpoint = _breakpoints.firstWhere(
       (bp) => effectiveWidth < bp.maxWidth,
       orElse: () => _breakpoints.last,
@@ -52,8 +77,8 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
       'maxWidth': breakpoint.crossCount == 3
           ? (effectiveWidth - (spacing * 2)) / breakpoint.crossCount
           : breakpoint.crossCount == 2
-              ? (effectiveWidth - spacing) / breakpoint.crossCount
-              : effectiveWidth,
+          ? (effectiveWidth - spacing) / breakpoint.crossCount
+          : effectiveWidth,
       'isSmallPhone': breakpoint.isSmallPhone,
     };
   }
@@ -67,11 +92,11 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
         .where(
           (m) =>
               m.machineName.toLowerCase().contains(
-                    searchController.text.toLowerCase(),
-                  ) ||
+                searchController.text.toLowerCase(),
+              ) ||
               m.workCenterNo.toLowerCase().contains(
-                    searchController.text.toLowerCase(),
-                  ),
+                searchController.text.toLowerCase(),
+              ),
         )
         .toList();
 
@@ -106,45 +131,44 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
-              ? Center(child: Text(provider.errorMessage!))
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final gridParams = _getGridParameters(constraints.maxWidth);
-                    
-                    return Column(
-                      children: [
-                        // search bar
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: GlobalSearchBar(
-                            controller: searchController,
-                            onSearchChanged: (_) => setState(() {}),
-                          ),
+          ? Center(child: Text(provider.errorMessage!))
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final gridParams = _getGridParameters(constraints.maxWidth);
+
+                return Column(
+                  children: [
+                    // search bar
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: GlobalSearchBar(
+                        controller: searchController,
+                        onSearchChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    // machine grid
+                    Expanded(
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridParams['crossCount'],
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: gridParams['childAspectRatio'],
                         ),
-                        // machine grid
-                        Expanded(
-                          child: GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: gridParams['crossCount'],
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: gridParams['childAspectRatio'],
-                            ),
-                            itemCount: filteredMachine.length,
-                            itemBuilder: (context, index) {
-                              return MachineDashBoardCard(
-                                machine: filteredMachine[index],
-                                isSmallPhone: gridParams['isSmallPhone'],
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                        itemCount: filteredMachine.length,
+                        itemBuilder: (context, index) {
+                          return MachineDashBoardCard(
+                            machine: filteredMachine[index],
+                            isSmallPhone: gridParams['isSmallPhone'],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 }

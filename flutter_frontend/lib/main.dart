@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pfe_mes/core/app_constants.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
+import 'package:pfe_mes/domain/admin/providers/mes_settings_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
 import 'package:pfe_mes/presentation/auth/paring/paringPage.dart';
 import 'package:pfe_mes/presentation/machine/machineList/machineListPage.dart';
@@ -37,7 +38,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SessionStorage.init();
   await AppConstants.loadHost();
-  
+
   await EasyLocalization.ensureInitialized();
 
   runApp(
@@ -56,6 +57,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => AuthProvider()),
             ChangeNotifierProvider(create: (_) => MesUserProvider()),
             ChangeNotifierProvider(create: (_) => ErpEmployeeProvider()),
+            ChangeNotifierProvider(create: (_) => MesSettingsProvider()),
             ChangeNotifierProvider(create: (_) => ErpWorkcenterProvider()),
             ChangeNotifierProvider(create: (_) => MachineordersProvider()),
             ChangeNotifierProvider(create: (_) => MesBarcodeProvider()),
@@ -107,7 +109,7 @@ class MyApp extends StatelessWidget {
           displayColor: const Color(0xFF0F172A),
         ),
       ),
-// global route observer 
+// global route observer
 // this connects the observer to flutter navigation system and allows it to listen to route changes across the entire app
 //witch out it pages will never receive navigations events(pop push stacked ..)
       navigatorObservers: [routeObserver],
@@ -141,7 +143,7 @@ class _AuthGateState extends State<_AuthGate> {
       builder: (context, auth, _) {
          if (!AppConstants.hasHost()) {
         return const ParingPage();
-      } 
+      }
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) {
             return const ChangePasswordPage();

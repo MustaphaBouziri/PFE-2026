@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/storage/session_storage.dart';
-import '../../../../data/auth/services/api_service.dart';
 import '../../../../data/machine/barCode/models/mes_barCode_model.dart';
 import '../../../../data/machine/barCode/services/mes_barCode_service.dart';
 
@@ -33,17 +32,14 @@ class MesBarcodeProvider with ChangeNotifier {
   /// Resolves the session token automatically.
   Future<bool> insertScans(
     String executionId,
-    List<Map<String, dynamic>> scans
+    List<Map<String, dynamic>> scans,
   ) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
     try {
       final token = await _sessionStorage.getToken() ?? '';
-      return await _service.insertScans(
-        executionId,
-        scans,
-      );
+      return await _service.insertScans(executionId, scans);
     } catch (e) {
       errorMessage = e.toString();
       return false;
@@ -54,12 +50,12 @@ class MesBarcodeProvider with ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> resolveBarcode(String barcode) async {
-  try {
-    return await _service.resolveBarcode(barcode);
-  } catch (e) {
-    errorMessage = e.toString();
-    notifyListeners();
-    return null;
+    try {
+      return await _service.resolveBarcode(barcode);
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
   }
-}
 }

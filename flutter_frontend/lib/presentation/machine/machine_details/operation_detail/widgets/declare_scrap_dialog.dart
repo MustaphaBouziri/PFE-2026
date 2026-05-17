@@ -50,8 +50,8 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
   }
 
   List<String> get _supervisorWorkCenters {
-    final wcs = _sessionStorage.getWorkCenters() as List<String>;
-    if (wcs is List) return wcs.map((e) => e.toString()).toList();
+    final wcs = _sessionStorage.getWorkCenters();
+    return wcs.map((e) => e.toString()).toList();
     return [];
   }
 

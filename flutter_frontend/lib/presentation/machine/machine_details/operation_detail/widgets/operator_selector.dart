@@ -69,9 +69,6 @@ class _OperatorSelectorState extends State<OperatorSelector> {
 
   @override
   Widget build(BuildContext context) {
-    print("===================================================================");
-    print(_operators);
-    print("===================================================================");
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),

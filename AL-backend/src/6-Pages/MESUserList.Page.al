@@ -58,6 +58,12 @@ page 50141 "MES User List"
                     Caption = 'Has Password';
                 }
 
+                field("last Password change date"; Rec."Last Password Changed At")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Last Password Change Date';
+                }
+
                 field("Created At"; Rec."Created At")
                 {
                     ApplicationArea = All;

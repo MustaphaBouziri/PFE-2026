@@ -119,6 +119,62 @@ class ApiService {
     );
   }
 
+  // ── Badge 2FA ─────────────────────────────────────────────────────────────
+
+  /// Called during login when the server returns twoFAEnabled: true.
+  /// [userId]        : internal userId from the login response (NOT authId).
+  /// [scannedSecret] : raw string decoded from the badge QR code.
+  /// Returns { "success": true } or { "success": false, "message": "..." }
+  Future<Map<String, dynamic>> verifyBadge({
+    required String userId,
+    required String scannedSecret,
+  }) async {
+    try {
+      final response = await HttpClient.post(AppConstants.verifyBadgeUrl, {
+        'userId': userId,
+        'scannedSecret': scannedSecret,
+      });
+      return HttpResponseParser.parseObject(response, label: 'verifyBadge');
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  /// Admin dialog: get the current badge secret for a user.
+  /// Returns { "success": true, "badgeSecret": "<64-char hex>" }
+  Future<Map<String, dynamic>> getBadgeSecret({
+    required String targetUserId,
+  }) async {
+    try {
+      final token = _storage.getToken();
+      final response = await HttpClient.post(AppConstants.getBadgeSecretUrl, {
+        'adminToken': token,
+        'targetUserId': targetUserId,
+      });
+      return HttpResponseParser.parseObject(response, label: 'getBadgeSecret');
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  /// Admin dialog: regenerate the badge secret for a user (lost badge).
+  /// Returns { "success": true, "badgeSecret": "<new 64-char hex>" }
+  Future<Map<String, dynamic>> regenerateBadge({
+    required String targetUserId,
+  }) async {
+    try {
+      final token = _storage.getToken();
+      final response = await HttpClient.post(AppConstants.regenerateBadgeUrl, {
+        'adminToken': token,
+        'targetUserId': targetUserId,
+      });
+      return HttpResponseParser.parseObject(response, label: 'regenerateBadge');
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+
   // ── Persistence passthrough (for callers that need async token access) ───
 
   String? getToken() => _storage.getToken();

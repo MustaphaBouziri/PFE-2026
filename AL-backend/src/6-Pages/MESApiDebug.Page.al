@@ -1,9 +1,3 @@
-/// Debug page extended to include a Dev Setup action group.
-/// The new action runs MESDevSetup and prints the three permanent
-/// token GUIDs into LastResponse so the developer can copy them.
-///
-/// NOTE: Only the additions/changes relative to the original page are
-/// shown below.  In practice this file replaces MESApiDebug.Page.al.
 page 50140 "MES API Debug"
 {
     PageType = Card;
@@ -63,89 +57,6 @@ page 50140 "MES API Debug"
     {
         area(Processing)
         {
-            group("Auth API")
-            {
-                Caption = 'Auth API';
-                action(Login)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Login';
-                    Image = Start;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    PromotedIsBig = true;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.Login(UserId, Password, DeviceId);
-                    end;
-                }
-                action(Logout)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Logout';
-                    Image = Stop;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.Logout(Token);
-                    end;
-                }
-                action(Me)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Me';
-                    Image = Info;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.Me(Token);
-                    end;
-                }
-                action(ChangePassword)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Change Password';
-                    Image = Change;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.ChangePassword(Token, OldPassword, NewPassword);
-                    end;
-                }
-            }
-
-            group("Admin API")
-            {
-                Caption = 'Admin API';
-                action(AdminSetPassword)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Admin: Set Password';
-                    Image = Edit;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.AdminSetPassword(Token, UserId, NewPassword);
-                    end;
-                }
-                action(AdminSetActive)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Admin: Set Active';
-                    Image = Status;
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-                    begin
-                        LastResponse := AuthAPI.AdminSetActive(Token, UserId, IsActive);
-                    end;
-                }
-            }
-
             group(Setup)
             {
                 Caption = 'Setup';
@@ -164,10 +75,6 @@ page 50140 "MES API Debug"
                 }
             }
 
-            // ── Dev Setup group ───────────────────────────────────────────
-            // Provisions three permanent dev users/tokens and prints the
-            // token GUIDs into LastResponse so they can be pasted into
-            // AppConstants.devToken in Flutter.
             group("Dev Setup")
             {
                 Caption = 'Dev Setup (sandbox only)';
@@ -180,13 +87,28 @@ page 50140 "MES API Debug"
                     PromotedCategory = Process;
                     PromotedIsBig = true;
                     ToolTip = 'Creates DEV-OPERATOR, DEV-SUPERVISOR, DEV-ADMIN with permanent tokens. NEVER run in production.';
-
                     trigger OnAction()
                     var
                         DevSetup: Codeunit "MES Dev Setup";
                     begin
                         DevSetup.Run();
                         LastResponse := DevSetup.GetTokenSummary();
+                    end;
+                }
+
+                action(RunPasswordExpiryCheck)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Run Password Expiry Check';
+                    Image = Refresh;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    ToolTip = 'Runs the expiry worker and prints a full per-user diagnostic report into Last Response so you can see exactly why each user was or was not flagged.';
+                    trigger OnAction()
+                    var
+                        Worker: Codeunit "MES Password Expiry Worker";
+                    begin
+                        LastResponse := Worker.CheckAndFlagExpiredPasswordsVerbose();
                     end;
                 }
             }
@@ -228,6 +150,7 @@ page 50140 "MES API Debug"
         B.AppendLine('Auth  : Login · Logout · Me · ChangePassword');
         B.AppendLine('Admin : AdminCreateUser · AdminSetPassword · AdminSetActive');
         B.AppendLine('Dev   : RunDevSetup  (prints 3 token GUIDs to Response)');
+        B.AppendLine('Dev   : RunPasswordExpiryCheck  (runs worker immediately)');
         B.Append('All   : POST /ODataV4/MESWebService_<ProcedureName>');
         ApiList := B.ToText();
     end;

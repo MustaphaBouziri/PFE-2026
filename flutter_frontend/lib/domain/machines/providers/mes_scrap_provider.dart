@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/storage/session_storage.dart';
-import '../../../data/auth/services/api_service.dart';
 import '../../../data/machine/models/mes_scrapCode_model.dart';
 import '../../../data/machine/services/mes_scrap_service.dart';
 import '../../shared/async_state_mixin.dart';
@@ -29,10 +28,8 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
     required String scrapCode,
     required double quantity,
     String description = '',
-    String materialId='',
+    String materialId = '',
     required onBehalfOfUserId,
-
-
   }) async {
     final result = await runAsync(() async {
       return await _service.declareScrap(
@@ -40,9 +37,8 @@ class MesScrapProvider with ChangeNotifier, AsyncStateMixin {
         scrapCode: scrapCode,
         quantity: quantity,
         description: description,
-        materialId:materialId,
+        materialId: materialId,
         onBehalfOfUserId: onBehalfOfUserId,
-
       );
     });
     return result ?? false;

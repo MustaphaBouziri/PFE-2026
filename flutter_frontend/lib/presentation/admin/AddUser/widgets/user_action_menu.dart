@@ -4,6 +4,7 @@ import 'package:pfe_mes/domain/admin/providers/erp_workCenter_provider.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_user_provider.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/change_role_dialog.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/user_badge_dialog.dart';
 import 'package:pfe_mes/presentation/admin/addUser/widgets/generate_password_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -18,22 +19,20 @@ class UserActionMenu extends StatelessWidget {
     return RepaintBoundary(
       child: PopupMenuButton<String>(
         color: Colors.white,
-        icon: const Icon(
-          Icons.more_vert,
-          size: 20,
-          color: Color(0xFF64748B),
-        ),
+        icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF64748B)),
         onSelected: (val) => _handleMenuAction(context, val, user),
         itemBuilder: (context) => [
           PopupMenuItem(
             value: 'editRoleDepartement',
             child: Text('changeRole'.tr()),
           ),
-          if (user.isActive)
+          if (user.isActive) ...[
             PopupMenuItem(
               value: 'generatePassword',
               child: Text('generatePassword'.tr()),
             ),
+            PopupMenuItem(value: 'viewBadge', child: Text('viewBadge'.tr())),
+          ],
           user.isActive
               ? PopupMenuItem(
                   value: 'deactivate',
@@ -71,6 +70,9 @@ class UserActionMenu extends StatelessWidget {
       case 'editRoleDepartement':
         _openChangeRoleDialog(context, user);
         break;
+      case 'viewBadge':
+        _openUserBadgeDialog(context, user);
+        break;
       case 'generatePassword':
         if (user.isActive) {
           showDialog(
@@ -85,10 +87,7 @@ class UserActionMenu extends StatelessWidget {
     }
   }
 
-  Future<void> _openChangeRoleDialog(
-    BuildContext context,
-    MesUser user,
-  ) async {
+  Future<void> _openChangeRoleDialog(BuildContext context, MesUser user) async {
     await context.read<ErpWorkcenterProvider>().fetchWorkCenters();
 
     if (!context.mounted) return;
@@ -101,9 +100,28 @@ class UserActionMenu extends StatelessWidget {
 
     if (!context.mounted) return;
     if (result == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('roleUpdatedSuccessfully'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr())));
+    }
+  }
+
+  Future<void> _openUserBadgeDialog(BuildContext context, MesUser user) async {
+    await context.read<ErpWorkcenterProvider>().fetchWorkCenters();
+
+    if (!context.mounted) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => UserBadgeDialog(user: user),
+    );
+
+    if (!context.mounted) return;
+    if (result == true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr())));
     }
   }
 }

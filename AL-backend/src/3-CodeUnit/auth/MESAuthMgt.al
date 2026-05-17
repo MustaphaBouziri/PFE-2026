@@ -66,6 +66,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Role := Role;
         U."Is Active" := true;
         U."Need To Change Pw" := true;
+        U."Last Password Changed At" := 0DT;
         U."Created At" := CurrentDateTime();
         U.Insert(true);
     end;
@@ -324,5 +325,79 @@ codeunit 50111 "MES Auth Mgt"
         T.Insert(true);
         exit(T);
     end;
+
+      // ── Badge 2FA ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Compare ScannedSecret (read from QR code) against the stored Badge Secret.
+    /// Returns TRUE when they match, FALSE otherwise.
+    /// Called during login when MES Settings."TwoFA Enabled" is true.
+    /// </summary>
+    procedure VerifyBadge(UserId: Code[50]; ScannedSecret: Text): Boolean
+    var
+        U: Record "MES User";
+    begin
+        if not U.Get(UserId) then
+            exit(false);
+        if U."Badge Secret" = '' then
+            exit(false);
+        exit(U."Badge Secret" = CopyStr(ScannedSecret, 1, 64));
+    end;
+
+    /// <summary>
+    /// Regenerate the Badge Secret for TargetUserId.
+    /// Requires a valid Admin token.
+    /// Returns { "success": true, "badgeSecret": "<new 64-char hex>" }
+    /// The caller (Flutter admin dialog) uses the returned secret to re-render the QR.
+    /// </summary>
+    procedure RegenerateBadgeSecret(AdminToken: Text; TargetUserId: Code[50]): Text
+    var
+        AdminUser:       Record "MES User";
+        U:               Record "MES User";
+        CryptographyMgt: Codeunit "Cryptography Management";
+        JsonHelper:      Codeunit "MES Json Helper";
+        ResultJson:      JsonObject;
+        NewSecret:       Text[64];
+        Input:           Text;
+    begin
+        RequireAdmin(AdminToken, AdminUser);
+
+        if not U.Get(TargetUserId) then
+            exit(JsonHelper.BuildError('NotFound', 'User not found'));
+
+        Input     := Format(CreateGuid()) + Format(CreateGuid()) + Format(CurrentDateTime());
+        NewSecret := CopyStr(CryptographyMgt.GenerateHash(Input, 2), 1, 64);
+
+        U."Badge Secret" := NewSecret;
+        U.Modify(true);
+
+        ResultJson.Add('success', true);
+        ResultJson.Add('badgeSecret', NewSecret);
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
+    /// <summary>
+    /// Return the current Badge Secret for TargetUserId.
+    /// Requires a valid Admin token.
+    /// Returns { "success": true, "badgeSecret": "<64-char hex>" }
+    /// Used by the admin dialog to show the current QR without regenerating.
+    /// </summary>
+    procedure GetBadgeSecret(AdminToken: Text; TargetUserId: Code[50]): Text
+    var
+        AdminUser:  Record "MES User";
+        U:          Record "MES User";
+        JsonHelper: Codeunit "MES Json Helper";
+        ResultJson: JsonObject;
+    begin
+        RequireAdmin(AdminToken, AdminUser);
+
+        if not U.Get(TargetUserId) then
+            exit(JsonHelper.BuildError('NotFound', 'User not found'));
+
+        ResultJson.Add('success', true);
+        ResultJson.Add('badgeSecret', U."Badge Secret");
+        exit(JsonHelper.JsonToText(ResultJson));
+    end;
+
 
 }

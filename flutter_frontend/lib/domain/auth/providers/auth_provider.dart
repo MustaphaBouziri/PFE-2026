@@ -13,6 +13,12 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _userData;
+  bool _pendingBadge = false;
+  String? _pendingToken;
+  Map<String, dynamic>? _pendingUserData;
+  String? _pendingUserId; // internal userId for VerifyBadge call
+
+  bool get pendingBadge => _pendingBadge;
 
   AuthProvider() {
     _syncUserDataFromSession();
@@ -47,22 +53,39 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final deviceId = await _getDeviceId();
+      final deviceId =
+          'flutter-device-${DateTime.now().millisecondsSinceEpoch}';
       final result = await _apiService.login(userId, password, deviceId);
 
-      if (result['success'] == true) {
-        _isAuthenticated = true;
-        _syncUserDataFromSession();
-        _errorMessage = null;
+      if (result['success'] != true) {
+        _errorMessage = result['message'] as String? ?? 'Login failed';
         _isLoading = false;
         notifyListeners();
-        return true;
+        return false;
       }
 
-      _errorMessage = result['message'] as String? ?? 'Login failed';
+      final twoFAEnabled = result['twoFAEnabled'] == true;
+
+      if (twoFAEnabled) {
+        // Hold everything in memory — do NOT persist until badge passes
+        _pendingBadge = true;
+        _pendingToken = result['token'] as String?;
+        _pendingUserData = result;
+        _pendingUserId = result['userId'] as String?;
+        _isLoading = false;
+        notifyListeners();
+        return true; // login() returns true = credentials OK; caller checks pendingBadge
+      }
+
+      // No 2FA — persist and authenticate immediately (existing behaviour)
+      await _sessionStorage.saveToken(result['token'] as String);
+      await _sessionStorage.saveUserData(result);
+      _isAuthenticated = true;
+      await _syncUserDataFromSession();
+      _errorMessage = null;
       _isLoading = false;
       notifyListeners();
-      return false;
+      return true;
     } catch (e) {
       _errorMessage = 'Connection error: $e';
       _isLoading = false;
@@ -171,6 +194,84 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Called by the badge scan dialog with the raw scanned value.
+  /// On success: persists token/userData and marks authenticated.
+  /// On failure: sets errorMessage; caller shows it in the dialog.
+  Future<bool> verifyBadge(String scannedSecret) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _apiService.verifyBadge(
+        userId: _pendingUserId ?? '',
+        scannedSecret: scannedSecret,
+      );
+
+      if (result['success'] == true) {
+        // Persist what we were holding in memory
+        await _sessionStorage.saveToken(_pendingToken!);
+        await _sessionStorage.saveUserData(_pendingUserData!);
+        _isAuthenticated = true;
+        _pendingBadge = false;
+        _pendingToken = null;
+        _pendingUserData = null;
+        _pendingUserId = null;
+        await _syncUserDataFromSession();
+        _errorMessage = null;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage =
+          result['message'] as String? ?? 'Badge verification failed';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Connection error: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Cancel badge scan — clear pending state and go back to login form.
+  void cancelBadgeScan() {
+    _pendingBadge = false;
+    _pendingToken = null;
+    _pendingUserData = null;
+    _pendingUserId = null;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// Admin: get badge secret for a user (to render QR in the dialog).
+  Future<Map<String, dynamic>> getBadgeSecret(String targetUserId) async {
+    return await _apiService.getBadgeSecret(targetUserId: targetUserId);
+  }
+
+  /// Admin: regenerate badge secret (returns new secret to re-render QR).
+  Future<Map<String, dynamic>> regenerateBadge(String targetUserId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final result = await _apiService.regenerateBadge(
+        targetUserId: targetUserId,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': e.toString()};
     }
   }
 }

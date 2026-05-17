@@ -38,7 +38,16 @@ class BadgeAndId extends StatelessWidget {
             color: Color(0xFF0F172A),
           ),
         ),
-      ],
+        const SizedBox(width: 10),
+        Text(
+          'hhhhhhh-${order.description}',
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        ],
     );
   }
 }

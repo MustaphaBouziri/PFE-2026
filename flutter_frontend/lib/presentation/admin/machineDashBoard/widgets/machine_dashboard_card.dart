@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
@@ -107,8 +105,16 @@ class MachineDashBoardCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    infoRow('operationFinished'.tr(), machine.operationFinished.toString(), isSmallPhone),
-                    infoRow('operationCancelled'.tr(), machine.operationCancelled.toString(), isSmallPhone),
+                    infoRow(
+                      'operationFinished'.tr(),
+                      machine.operationFinished.toString(),
+                      isSmallPhone,
+                    ),
+                    infoRow(
+                      'operationCancelled'.tr(),
+                      machine.operationCancelled.toString(),
+                      isSmallPhone,
+                    ),
                     infoRow(
                       'quantityProduced'.tr(),
                       machine.totalProduced.toStringAsFixed(0),
@@ -119,7 +125,11 @@ class MachineDashBoardCard extends StatelessWidget {
                       machine.totalScrap.toStringAsFixed(0),
                       isSmallPhone,
                     ),
-                    infoRow('uptime'.tr(), machine.formattedUptime, isSmallPhone),
+                    infoRow(
+                      'uptime'.tr(),
+                      machine.formattedUptime,
+                      isSmallPhone,
+                    ),
                   ],
                 ),
               ),

@@ -8,13 +8,15 @@ class MachineOrderModel {
   final String itemDescription;
   final double orderQuantity;
   final String operationDescription;
-
+  final String description;
+  
   MachineOrderModel({
     required this.orderNo,
     required this.status,
     required this.operationNo,
     required this.plannedStart,
     required this.plannedEnd,
+    required this.description,
     required this.itemNo,
     required this.itemDescription,
     required this.orderQuantity,
@@ -33,6 +35,7 @@ class MachineOrderModel {
           ? DateTime.tryParse(json['plannedEnd'].toString())
           : null,
       itemNo: json['itemNo'] ?? '',
+      description: json['description'] ?? '',
       itemDescription: json['ItemDescription'] ?? '',
       orderQuantity: (json['OrderQuantity'] ?? 0).toDouble(),
       operationDescription: json['operationDescription'] ?? '',

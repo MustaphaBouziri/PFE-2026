@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/data/admin/models/mes_log_model.dart';
 import 'package:pfe_mes/domain/admin/providers/mes_log_provider.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
@@ -63,7 +62,7 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
           DropdownButton<int>(
             value: provider.selectedHours,
             underline: const SizedBox(),
-          
+
             items: provider.hourOptions
                 .map(
                   (h) => DropdownMenuItem(
@@ -117,13 +116,13 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 32),
-              Expanded(flex: 2, child: tableTitle(title: 'operator')),
-      Expanded(flex: 2, child: tableTitle(title: 'declaredBy')),
-      Expanded(flex: 2, child: tableTitle(title: 'machine')),
-      Expanded(flex: 2, child: tableTitle(title: 'order')),
-      Expanded(flex: 2, child: tableTitle(title: 'operation')),
-      Expanded(flex: 3, child: tableTitle(title: 'action')),
-      Expanded(flex: 2, child: tableTitle(title: 'time')),
+                      Expanded(flex: 2, child: tableTitle(title: 'operator')),
+                      Expanded(flex: 2, child: tableTitle(title: 'declaredBy')),
+                      Expanded(flex: 2, child: tableTitle(title: 'machine')),
+                      Expanded(flex: 2, child: tableTitle(title: 'order')),
+                      Expanded(flex: 2, child: tableTitle(title: 'operation')),
+                      Expanded(flex: 3, child: tableTitle(title: 'action')),
+                      Expanded(flex: 2, child: tableTitle(title: 'time')),
                     ],
                   ),
                 ),
@@ -148,10 +147,7 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               flex: 2,
-                              child: rowValue(
-                                value: log.operatorName,
-                              ),
-                              
+                              child: rowValue(value: log.operatorName),
                             ),
 
                             Expanded(

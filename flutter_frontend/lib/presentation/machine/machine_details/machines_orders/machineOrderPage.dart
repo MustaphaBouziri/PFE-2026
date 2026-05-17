@@ -69,6 +69,11 @@ class _MachineorderpageState extends State<Machineorderpage> {
       return sortAscending ? dateComparison : -dateComparison;
     });
 
+    print('Filtered Orders: ${filteredOrders.length}'); // Debugging line
+    for (final order in filteredOrders) {
+      print('Order No: ${order.orderNo}, Status: ${order.status}, Planned Start: ${order.plannedStart}, Description: ${order.description}'); // Debugging line
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: provider.isLoading

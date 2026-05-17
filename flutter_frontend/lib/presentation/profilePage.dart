@@ -39,8 +39,8 @@ class ProfilePage extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final SessionStorage _sessionStorage = SessionStorage();
     final fullName = _sessionStorage.getFullName().toString();
-    final userData = _sessionStorage.getUserData() as Map<String, dynamic>;
-    final email = userData?['email']?.toString() ?? 'email';
+    final userData = _sessionStorage.getUserData();
+    final email = userData['email']?.toString() ?? 'email';
     final imageBytes = auth.profileImageBytes;
     final isPhone = MediaQuery.of(context).size.width < 600;
     return Scaffold(

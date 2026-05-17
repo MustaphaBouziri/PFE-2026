@@ -59,9 +59,14 @@ const webServiceEndpoints = new Set([
   "fetchMyData",
   "fetchScrapSummary",
   "fetchDelayReport",
+  "VerifyBadge",
+  "GetBadgeSecret",
+  "RegenerateBadgeSecret",
   "fetchConsumptionSummary",
   "fetchSupervisorOverview",
-  "fetchAllEmployees"
+  "fetchAllEmployees",
+  "updateSettings",
+  "fetchSettings",
 ]);
 
 const apiBaseEndpoints = {
