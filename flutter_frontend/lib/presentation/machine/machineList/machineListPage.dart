@@ -441,7 +441,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                                               ? 170
                                               : constraints.maxWidth < 1024
                                               ? 170 // tabs
-                                              : 200, // big screens 
+                                              : 170, // big screens 
                                         ),
                                     itemBuilder: (_, index) => MachineCard(
                                       machine: machinesList[index],
