@@ -109,8 +109,8 @@ class _EmptyState extends StatelessWidget {
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No operations currently active\nfor this machine',
+           Text(
+            'noOperationsCurrentlyActiveForThisMachine'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,

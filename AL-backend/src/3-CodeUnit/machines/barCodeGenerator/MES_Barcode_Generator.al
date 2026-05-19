@@ -9,12 +9,10 @@ codeunit 50100 "MES Barcode Generator"
             Error('Item %1 not found.', itemNo);
 
         BarcodeText := StrSubstNo(
-            'Item Number: %1|Item Description: %2|Base UOM: %3|Inventory: %4|Shelf No: %5|Lot Size: %6|Flushing Method: %7',
+            'Item Number: %1|Item Description: %2|Base UOM: %3|Lot Size: %6|Flushing Method: %7',
             Item."No.",
             Item.Description,
             Item."Base Unit of Measure",
-            Item.Inventory,
-            Item."Shelf No.",
             Item."Lot Size",
             Item."Flushing Method"
         );

@@ -7,7 +7,6 @@ import 'package:pfe_mes/presentation/widgets/employee_avatar.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
-
 class AddUserDialog extends StatefulWidget {
   const AddUserDialog({super.key});
 
@@ -25,6 +24,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
   String? selectedEmployeeId;
   String? selectedRole;
+  String? errorMessage;
 
   // only supervisor can select multiple work centers
   // operator gets one, admin gets none
@@ -293,16 +293,14 @@ class _AddUserDialogState extends State<AddUserDialog> {
                         height: 200,
                         child: ListView.separated(
                           itemCount: workCenters.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 6),
+                          separatorBuilder: (_, _) => const SizedBox(height: 6),
                           itemBuilder: (context, index) {
                             final wc = workCenters[index];
-                            final isSelected =
-                                selectedWorkCenterIndexes.contains(index);
+                            final isSelected = selectedWorkCenterIndexes
+                                .contains(index);
 
                             return GestureDetector(
-                              onTap: () =>
-                                  workCenterSelection(index, wc.id),
+                              onTap: () => workCenterSelection(index, wc.id),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 14,
@@ -347,6 +345,42 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
                     const SizedBox(height: 20),
 
+                    // error message display
+                    if (errorMessage != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     // submit
                     SizedBox(
                       width: double.infinity,
@@ -354,31 +388,23 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (selectedEmployeeId == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('pleaseSelectEmployee'.tr()),
-                              ),
-                            );
+                            setState(() {
+                              errorMessage = 'pleaseSelectEmployee'.tr();
+                            });
                             return;
                           }
                           if (selectedRole == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('pleaseSelectRole'.tr()),
-                              ),
-                            );
+                            setState(() {
+                              errorMessage = 'pleaseSelectRole'.tr();
+                            });
                             return;
                           }
 
                           if (selectedRole != 'Admin' &&
                               selectedWorkCenterIds.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('pleaseSelectWorkCenter'.tr()),
-                              ),
-                            );
+                            setState(() {
+                              errorMessage = 'pleaseSelectAtLeastOneWorkCenter'.tr();
+                            });
                             return;
                           }
                           final success = await mesUserProvider.addUser(
@@ -389,20 +415,16 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('userAddedSuccessfully'.tr()),
+                                content: Text('userAddedSuccessfully'.tr()),
                               ),
                             );
                             Navigator.of(context).pop();
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
+                            setState(() {
+                              errorMessage =
                                   mesUserProvider.errorMessage ??
-                                      'failedToAddUser'.tr(),
-                                ),
-                              ),
-                            );
+                                  'failedToAddUser'.tr();
+                            });
                           }
                         },
                         style: ElevatedButton.styleFrom(

@@ -51,7 +51,7 @@ void main() async {
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       child: DevicePreview(
-        enabled: false,
+        enabled: true,
         builder: (context) => MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => AuthProvider()),

@@ -5,13 +5,20 @@ import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../data/machine/models/mes_operation_model.dart';
+import '../../../../../data/machine/models/mes_componentConsumption_model.dart';
+import '../../../../../domain/auth/providers/auth_provider.dart';
 import '../../../../../domain/machines/providers/machineOrders_provider.dart';
 import 'operator_selector.dart';
 
 class DeclareProductionDialog extends StatefulWidget {
   final OperationStatusAndProgressModel operationData;
+  final List<ComponentConsumptionModel> components;
 
-  const DeclareProductionDialog({super.key, required this.operationData});
+  const DeclareProductionDialog({
+    super.key,
+    required this.operationData,
+    required this.components,
+  });
 
   @override
   State<DeclareProductionDialog> createState() =>
@@ -45,6 +52,27 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
     return wcs.map((e) => e.toString()).toList();
   }
 
+  //  check if components are available for a given quantity
+  String? _validateComponentAvailability(double declaredQty) {
+    for (final component in widget.components) {
+      // consumed is how many items have been used based on the total produced and the quantity per unit
+      final consumed =
+          widget.operationData.totalProducedQuantity *
+          component.quantityPerUnit;
+      final scanned = component.totalQuantityScanned;
+      final scrap = component.scrapQuantity;
+      final remaining = scanned - consumed - scrap;
+
+      // calculate how many of this component will be needed for the declared quantity
+      final neededForDeclaredQty = declaredQty * component.quantityPerUnit;
+      // If remaining is less than what's needed, return error message
+      if (remaining < neededForDeclaredQty) {
+       return 'insufficientComponentQuantity'.tr();
+      }
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _qtyController.dispose();
@@ -53,6 +81,17 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final declaredQty = double.parse(_qtyController.text);
+
+    // check item availablity before api call
+    final componentError = _validateComponentAvailability(declaredQty);
+    // if there is an error stop
+    if (componentError != null) {
+      //save the error in the _eroorMessage and update the io to show the message 
+      setState(() => _errorMessage = componentError);
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -64,11 +103,11 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
         widget.operationData.prodOrderNo,
         widget.operationData.operationNo,
         widget.operationData.machineNo,
-        double.parse(_qtyController.text),
+        declaredQty,
         _onBehalfOfUserId,
       );
 
-      if (mounted) Navigator.of(context).pop(double.parse(_qtyController.text));
+      if (mounted) Navigator.of(context).pop(declaredQty);
     } catch (e) {
       setState(
         () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
@@ -85,17 +124,12 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       insetPadding: const EdgeInsets.all(30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        // FIX: added maxHeight so the dialog never overflows the screen,
-        // and the inner scrollable can expand to fill available space.
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 360),
         child: Column(
-          // FIX: mainAxisSize.min removed from the outer Column so the
-          // Column fills the ConstrainedBox height, giving the Expanded
-          // child a finite height to work with.
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header (fixed, never scrolls) ─────────────────────────────
+            // ── Header ─────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
               child: Row(
@@ -128,32 +162,18 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
             const Divider(height: 20),
 
             // ── Scrollable body ────────────────────────────────────────────
-            // FIX: Expanded + SingleChildScrollView gives the content area a
-            // bounded height and lets it scroll if the keyboard or the
-            // OperatorSelector pushes content beyond the dialog's maxHeight.
-            // This prevents the TextFormField from disappearing and stops
-            // text from being painted on top of other widgets.
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
                 child: Column(
-                  // FIX: mainAxisSize.min here is correct — the Column
-                  // should only be as tall as its children inside the scroll
-                  // view, not try to fill the scroll viewport.
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Operator selector (supervisors only) ───────────────
-                    // FIX: wrapped in AnimatedSwitcher so the transition from
-                    // the loading state to the dropdown is smooth and does not
-                    // cause a layout jump that overlaps the form field below.
                     if (_isSupervisor) ...[
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
                         child: OperatorSelector(
-                          // FIX: key forces a clean rebuild when workCenters
-                          // change, preventing stale loading-indicator frames
-                          // from being painted over the dropdown.
                           key: ValueKey(_supervisorWorkCenters.join(',')),
                           workCenterIds: _supervisorWorkCenters,
                           onOperatorSelected: (userId) =>
@@ -201,7 +221,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
                         },
                       ),
                     ),
-
+                    // if not null add a sied box and displau the message
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 8),
                       Text(

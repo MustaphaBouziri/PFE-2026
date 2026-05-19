@@ -80,6 +80,76 @@ codeunit 50133 "MES Machine Insert"
         end;
     end;
 
+
+
+    // check if this is the first operation in the routing
+    procedure IsFirstOperation(prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
+    var
+        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    begin
+        ProdOrderRoutingLine.Reset();
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+        if not ProdOrderRoutingLine.FindFirst() then
+            exit(false);
+
+        // If previous pperation No. is empty, this is the first operation
+        exit(ProdOrderRoutingLine."Previous Operation No." = '');
+    end;
+
+ // set order to finish in erp
+      procedure SetErpOrderToFinish(
+    prodOrderNo: Code[20];
+    operationNo: Code[10];
+    mesOperationStatus: Enum "MES Operation Status"
+)
+    var
+        ProdOrder: Record "Production Order";
+        ProdOrderStatusMgt: Codeunit "Prod. Order Status Management";
+    begin
+        // get the production order only if it is currently released
+        ProdOrder.Reset();
+        ProdOrder.SetRange(Status, ProdOrder.Status::Released);
+        ProdOrder.SetRange("No.", prodOrderNo);
+
+        if not ProdOrder.FindFirst() then
+            exit; // order not found or not released 
+
+        // rule 1:
+        // if the first operation is cancelled -> finish the production order
+        if IsFirstOperation(prodOrderNo, operationNo) and
+           (mesOperationStatus = "MES Operation Status"::Cancelled)
+        then begin
+            ProdOrderStatusMgt.ChangeProdOrderStatus(
+                ProdOrder,
+                ProdOrder.Status::Finished,
+                Today(),
+                false
+            );
+            exit;
+        end;
+
+        // rule 2:
+        // ff the last operation is finished or cancelled-> finish the production order
+        if IsLastOperation(prodOrderNo, operationNo) and
+           (mesOperationStatus in [
+               "MES Operation Status"::Finished,
+               "MES Operation Status"::Cancelled
+           ])
+        then begin
+            ProdOrderStatusMgt.ChangeProdOrderStatus(
+                ProdOrder,
+                ProdOrder.Status::Finished,
+                Today(),
+                false
+            );
+            exit;
+        end;
+    end;
+
+
+
+
     // ──────────────────────────────────────────────
     // Machine status records
     // ──────────────────────────────────────────────
@@ -152,8 +222,101 @@ codeunit 50133 "MES Machine Insert"
         NewMESOperationProgress."Scrap Quantity" := 0;
         NewMESOperationProgress.Insert(true);
 
+        // if this is the last operation increase this item  inventory
+        if IsLastOperation(prodOrderNo, operationNo) then
+            IncreaseItemInventory(MESExecution."Item No", input, MESExecution."Execution Id");
+
         EnsureUserExecutionInteraction(MESExecution."Execution Id", operatorId);
         EnsureUserExecutionInteraction(MESExecution."Execution Id", declaredById);
+    end;
+
+    // Check if this operation is the last one in the production order routing line 
+    procedure IsLastOperation(prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
+    var
+        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    begin
+        ProdOrderRoutingLine.Reset();
+        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+        if not ProdOrderRoutingLine.FindFirst() then
+            exit(false);
+
+        // if Next Operation No is empty this is the last operation
+        exit(ProdOrderRoutingLine."Next Operation No." = '');// true false 
+    end;
+
+    // increase item inventory
+    procedure IncreaseItemInventory(
+        itemNo: Code[20];
+        quantity: Decimal;
+        executionId: Code[50]
+    )
+    var
+        Item: Record Item;
+        ItemJournalLine: Record "Item Journal Line";
+        ItemJournalBatch: Record "Item Journal Batch";
+        NoSeriesManagement: Codeunit NoSeriesManagement;
+        ItemJournalPostBatch: Codeunit "Item Jnl.-Post Batch";
+        DocumentNo: Code[20];
+        LineNo: Integer;
+        TemplateNameToUse: Code[10];
+        BatchNameToUse: Code[10];
+    begin
+        if not Item.Get(itemNo) then
+            Error('Item %1 was not found in the Item table.', itemNo);
+
+        // find the first available journal batch
+        ItemJournalBatch.Reset();
+        ItemJournalBatch.SetRange("Journal Template Name", 'ARTICLE');
+        if not ItemJournalBatch.FindFirst() then
+            Error('No Item Journal Batch found for template ARTICLE');
+
+        TemplateNameToUse := ItemJournalBatch."Journal Template Name";
+        BatchNameToUse := ItemJournalBatch.Name;
+
+        // get the next document number from the batch's number series
+        DocumentNo := NoSeriesManagement.GetNextNo(ItemJournalBatch."No. Series", Today(), false);
+
+        // find the next available line number
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+        ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+        if ItemJournalLine.FindLast() then
+            LineNo := ItemJournalLine."Line No." + 10000
+        else
+            LineNo := 10000;
+
+        // create item journal line
+        Clear(ItemJournalLine);
+        ItemJournalLine.Init();
+
+        ItemJournalLine."Journal Template Name" := TemplateNameToUse;
+        ItemJournalLine."Journal Batch Name" := BatchNameToUse;
+        ItemJournalLine."Line No." := LineNo;
+        ItemJournalLine."Posting Date" := Today();
+        ItemJournalLine."Document No." := DocumentNo;
+        ItemJournalLine."Entry Type" := ItemJournalLine."Entry Type"::"Positive Adjmt."; // ← Positive for finished goods
+        ItemJournalLine."Item No." := itemNo;
+        ItemJournalLine.Description := Item.Description;
+        ItemJournalLine."Unit of Measure Code" := Item."Base Unit of Measure";
+        ItemJournalLine."Gen. Prod. Posting Group" := Item."Gen. Prod. Posting Group";
+        ItemJournalLine."Inventory Posting Group" := Item."Inventory Posting Group";
+
+        // set quantity and we need to validate it else wont work
+        ItemJournalLine.Quantity := quantity;
+        ItemJournalLine.Validate("Quantity");
+        ItemJournalLine.Validate("Unit of Measure Code");
+
+        ItemJournalLine.Insert(true);
+
+        // post the journal line
+        ItemJournalLine.Reset();
+        ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+        ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+        ItemJournalLine.SetRange("Line No.", LineNo);
+
+        if ItemJournalLine.FindSet() then
+            ItemJournalPostBatch.Run(ItemJournalLine);
     end;
 
     // ──────────────────────────────────────────────
@@ -209,6 +372,55 @@ codeunit 50133 "MES Machine Insert"
         InsertStartMESMachineStatus(prodOrderNo, machineNo);
         exit(ExecutionId);
     end;
+
+
+
+
+
+
+
+
+
+
+
+    procedure GetPreviousOperationProducedQuantity(executionId: Code[50]): Decimal
+    var
+        MESOperationProgress: Record "MES Operation Progression";
+    begin
+        MESOperationProgress.Reset();
+        MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
+        MESOperationProgress.SetRange("Execution Id", executionId);
+        MESOperationProgress.Ascending(false);
+
+        if MESOperationProgress.FindFirst() then
+            exit(MESOperationProgress."Total Produced Quantity")
+        else
+            exit(0);
+    end;
+
+    procedure GetLatestOperationStatus(executionId: Code[50]; var MESOperationState: Record "MES Operation State")
+    begin
+        MESOperationState.Reset();
+        MESOperationState.SetCurrentKey("Execution Id", "Declared At");
+        MESOperationState.SetRange("Execution Id", executionId);
+        MESOperationState.Ascending(false);
+        MESOperationState.FindFirst();
+    end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ──────────────────────────────────────────────
     // Query helpers

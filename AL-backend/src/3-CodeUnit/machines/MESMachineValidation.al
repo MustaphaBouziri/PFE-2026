@@ -5,25 +5,76 @@ codeunit 50134 "MES Machine Validation"
 {
     Access = Internal;
 
-    [TryFunction]
-    procedure TryStartOperation(
-        prodOrderNo: Code[20];
-        operationNo: Code[10];
-        machineNo: Code[20]
-    )
-    var
-        ProdOrderRoutingLine: Record "Prod. Order Routing Line";
-    begin
-        ProdOrderRoutingLine.Reset();
-        ProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status::Released);
-        ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
-        ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
+[TryFunction]
+procedure TryStartOperation(
+    prodOrderNo: Code[20];
+    operationNo: Code[10];
+    machineNo: Code[20]
+)
+var
+    ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    PreviousProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    PreviousMESExecution: Record "MES Operation Execution";
+    PreviousMESOperationState: Record "MES Operation State";
+    PreviousOperationNo: Code[10];
+    TotalProducedQuantity: Decimal;
+    MachineInsert: Codeunit "MES Machine Insert";
+begin
+    ProdOrderRoutingLine.Reset();
+    ProdOrderRoutingLine.SetRange(Status, ProdOrderRoutingLine.Status::Released);
+    ProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+    ProdOrderRoutingLine.SetRange("Operation No.", operationNo);
 
-        if not ProdOrderRoutingLine.FindFirst() then
-            Error('Routing line not found or order is not in Released status.');
-
+    if not ProdOrderRoutingLine.FindFirst() then
+        Error('Routing line not found or order is not in Released status.');
         EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
+
+    // check if theres a previous operation
+    PreviousOperationNo := ProdOrderRoutingLine."Previous Operation No.";
+    
+    if PreviousOperationNo <> '' then begin
+        PreviousProdOrderRoutingLine.Reset();
+        PreviousProdOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
+        PreviousProdOrderRoutingLine.SetRange("Operation No.", PreviousOperationNo);
+        
+        if PreviousProdOrderRoutingLine.FindFirst() then begin
+            // If previous operation is a Work Center we  treat as done 
+            if PreviousProdOrderRoutingLine.Type = PreviousProdOrderRoutingLine.Type::"Work Center" then
+                exit;
+            
+            // previous operation is a Machine Center we  validate if it's finished
+            PreviousMESExecution.Reset();
+            PreviousMESExecution.SetRange("Prod Order No", prodOrderNo);
+            PreviousMESExecution.SetRange("Operation No", PreviousOperationNo);
+            
+            if PreviousMESExecution.FindFirst() then begin
+                // check the latest status of the previous operation
+                GetLatestOperationStatus(PreviousMESExecution."Execution Id", PreviousMESOperationState);
+                
+                // allow starting if previous operation is cancelled
+                if PreviousMESOperationState."Operation Status" = PreviousMESOperationState."Operation Status"::Cancelled then
+                    exit;
+                
+                // If send ahead quantity is 0 previous must be finished
+                if PreviousProdOrderRoutingLine."Send-Ahead Quantity" = 0 then begin
+                    if PreviousMESOperationState."Operation Status" <> PreviousMESOperationState."Operation Status"::Finished then
+                        Error('Previous operation must be fully finished before starting this one.');
+                end else begin
+                    // if send ahead quantity exists check if minimum quantity is produced
+                    TotalProducedQuantity := MachineInsert.GetPreviousOperationProducedQuantity(PreviousMESExecution."Execution Id");
+                    
+                    if TotalProducedQuantity < PreviousProdOrderRoutingLine."Send-Ahead Quantity" then
+                        Error('You must produce at least %1 units in previous operation before starting this one.', 
+                              PreviousProdOrderRoutingLine."Send-Ahead Quantity");
+                end;
+            end else begin
+                Error('Previous operation has not started yet.');
+            end;
+        end;
     end;
+
+    
+end;
 
 
     [TryFunction]

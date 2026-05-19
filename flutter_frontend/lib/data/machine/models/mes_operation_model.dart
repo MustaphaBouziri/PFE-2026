@@ -13,6 +13,7 @@ class OperationStatusAndProgressModel {
   final String itemDescription;
   final String executionId;
   final String itemNo;
+  final String operationDescription;
 
   OperationStatusAndProgressModel({
     required this.prodOrderNo,
@@ -29,6 +30,7 @@ class OperationStatusAndProgressModel {
     required this.itemDescription,
     required this.executionId,
     required this.itemNo,
+    required this.operationDescription,
   });
 
   factory OperationStatusAndProgressModel.fromJson(Map<String, dynamic> json) {
@@ -48,7 +50,9 @@ class OperationStatusAndProgressModel {
       itemDescription: json['itemDescription'] ?? '',
       executionId: json['executionId'] ?? '',
       itemNo: json['itemNo'] ?? '',
+      operationDescription: json['operationDescription'] ?? '',
     );
+
   }
 
   @override

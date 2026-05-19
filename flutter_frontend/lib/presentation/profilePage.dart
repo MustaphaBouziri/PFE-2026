@@ -3,14 +3,20 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/auth/ChangePassword/changePassPage.dart';
-
 import 'package:provider/provider.dart';
 
 import 'ai/ai_chat_page.dart';
 import 'auth/Login/loginPage.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool isLoggingOut = false;
 
   void _showLanguageMenu(BuildContext context, TapDownDetails details) async {
     final selected = await showMenu<String>(
@@ -37,14 +43,20 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+
     final SessionStorage _sessionStorage = SessionStorage();
     final fullName = _sessionStorage.getFullName().toString();
     final userData = _sessionStorage.getUserData();
+
     final email = userData['email']?.toString() ?? 'email';
     final imageBytes = auth.profileImageBytes;
     final isPhone = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
-      appBar: AppBar(title: Text('account'.tr()), centerTitle: true),
+      appBar: AppBar(
+        title: Text('account'.tr()),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           const SizedBox(height: 30),
@@ -52,22 +64,35 @@ class ProfilePage extends StatelessWidget {
             radius: 40,
             backgroundImage: imageBytes != null
                 ? MemoryImage(imageBytes)
-                : const NetworkImage('https://picsum.photos/200/200')
-                      as ImageProvider,
+                : const NetworkImage(
+                    'https://picsum.photos/200/200',
+                  ) as ImageProvider,
           ),
           const SizedBox(height: 8),
           Text(
             fullName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(email, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          Text(
+            email,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
             padding: isPhone
-                ? EdgeInsets.all(16)
-                : const EdgeInsets.symmetric(horizontal: 70, vertical: 16),
+                ? const EdgeInsets.all(16)
+                : const EdgeInsets.symmetric(
+                    horizontal: 70,
+                    vertical: 16,
+                  ),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -78,7 +103,8 @@ class ProfilePage extends StatelessWidget {
                   ProfileTile(
                     title: 'changeLanguage',
                     icon: Icons.language,
-                    onTapDown: (details) => _showLanguageMenu(context, details),
+                    onTapDown: (details) =>
+                        _showLanguageMenu(context, details),
                   ),
                   ProfileTile(
                     title: 'changePassword',
@@ -94,14 +120,30 @@ class ProfilePage extends StatelessWidget {
                     title: 'logout',
                     icon: Icons.logout,
                     color: Colors.red,
+                    trailing: isLoggingOut
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
                     onTap: () async {
+                      setState(() => isLoggingOut = true);
+
                       await auth.logout();
 
-                      if (!context.mounted) return;
+                      if (!mounted) return;
 
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                            (route) => false,
+                        MaterialPageRoute(
+                          builder: (_) => const LoginPage(),
+                        ),
+                        (route) => false,
                       );
                     },
                   ),
@@ -121,6 +163,7 @@ class ProfileTile extends StatelessWidget {
   final VoidCallback? onTap;
   final void Function(TapDownDetails)? onTapDown;
   final Color? color;
+  final Widget? trailing;
 
   const ProfileTile({
     super.key,
@@ -129,6 +172,7 @@ class ProfileTile extends StatelessWidget {
     this.onTap,
     this.onTapDown,
     this.color,
+    this.trailing,
   });
 
   @override
@@ -154,7 +198,10 @@ class ProfileTile extends StatelessWidget {
               color: itemColor.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: itemColor),
+            child: Icon(
+              icon,
+              color: itemColor,
+            ),
           ),
           title: Text(
             title.tr(),
@@ -164,7 +211,8 @@ class ProfileTile extends StatelessWidget {
               color: itemColor,
             ),
           ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          trailing:
+              trailing ?? const Icon(Icons.arrow_forward_ios, size: 16),
         ),
       ),
     );

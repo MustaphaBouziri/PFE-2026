@@ -118,7 +118,6 @@
   "changeDepartment": "Changer de département",
   "deactivate": "Désactiver",
   "activate": "Activer",
-  "pleaseSelectEmployeeRoleWorkCenter": "Veuillez sélectionner un employé, un rôle et un centre de travail",
   "userAddedSuccessfully": "Utilisateur ajouté avec succès !",
   "failedToAddUser": "Échec de l'ajout de l'utilisateur",
   "addUser": "Ajouter l'utilisateur",
@@ -160,7 +159,7 @@
   "generateQR": "Générer un QR",
   "finishProductionOrder": "Terminer l'ordre",
   "cancel": "Annuler",
-  "cancelProductionOrder": "Annuler l'ordre",
+  "cancelProductionOrder": "annuler l'opération",
   "noKeepGoing": "Non, continuer",
   "machines": "Machines",
   "reports": "Rapports",
@@ -299,6 +298,26 @@
   "onlySupervisorsCanCloseOrders": "Seuls les superviseurs peuvent clôturer les ordres",
 "onlySupervisorsCanFinishOrders": "Seuls les superviseurs peuvent terminer les ordres",
   
+
+  "pleaseSelectRole": "Veuillez sélectionner un rôle",
+  "pleaseSelectEmployee": "Veuillez sélectionner un employé",
+  "itemNo": "N° d'article",
+  "operationNo": "N° d'opération",
+  "noOperationsCurrentlyActiveForThisMachine": "Aucune opération active\npour cette machine",
+  "operationDescription": "Description de l'opération",
+  "itemNotInBOMForThisOperation": "Article non présent dans la nomenclature pour cette opération",
+  "invalidBarcodeUOM": "Unité du code-barres invalide : ${unit}. L'unité de base est ${base}. Elle doit être égale ou supérieure à l'unité de base.",
+  "insufficientInventoryAdd": "Impossible d'ajouter davantage de {} — stock insuffisant",
+  "insufficientInventoryItem": "Stock insuffisant pour ${itemNo}",
+  "barcodeNotRecognized": "Code-barres non reconnu",
+  "errorSubmittingScans": "Erreur lors de l'envoi des scans",
+  "loadingOperators": "Chargement des opérateurs…",
+  "insufficientComponentQuantity": "La quantité scannée est insuffisante",
+  "pleaseSelectScrapCode": "Veuillez sélectionner un code de rebut",
+  "pleaseSelectComponent": "Veuillez sélectionner un composant",
+  "insufficientInventoryFor": "Stock insuffisant pour ",
+ 
+
 
 
   "tutorialAdminSearch": "Recherche du tableau de bord administrateur. Trouvez des utilisateurs par nom ou par e-mail.",

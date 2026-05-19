@@ -38,6 +38,7 @@ class _OperationDetailPageState extends State<OperationDetailPage> {
           operationNo:           widget.operationData.operationNo,
           itemNo:                widget.operationData.itemNo,
           itemDescription:       widget.operationData.itemDescription,
+          operationDescription:  widget.operationData.operationDescription,
           
           orderQuantity:         widget.operationData.orderQuantity,
           startDateTime:         widget.operationData.startDateTime,

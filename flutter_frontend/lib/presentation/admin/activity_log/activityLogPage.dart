@@ -120,7 +120,10 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
                       Expanded(flex: 2, child: tableTitle(title: 'declaredBy')),
                       Expanded(flex: 2, child: tableTitle(title: 'machine')),
                       Expanded(flex: 2, child: tableTitle(title: 'order')),
-                      Expanded(flex: 2, child: tableTitle(title: 'operation')),
+                      Expanded(
+                        flex: 2,
+                        child: tableTitle(title: 'operationNo'),
+                      ),
                       Expanded(flex: 3, child: tableTitle(title: 'action')),
                       Expanded(flex: 2, child: tableTitle(title: 'time')),
                     ],

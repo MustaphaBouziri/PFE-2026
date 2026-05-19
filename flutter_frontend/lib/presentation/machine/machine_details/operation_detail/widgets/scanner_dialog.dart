@@ -21,45 +21,128 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   List<ItemBarcodeModel> items = [];
   final MobileScannerController controller = MobileScannerController();
   bool isScanning = true;
+  bool isSubmitting = false;
+  String? errorMessage;
+  
   //check if item is in components list
   bool isItemInComponents(String itemNo) {
   return widget.components.any((c) => c.itemNo == itemNo);
 }
 
+bool canAddMoreItem(ItemBarcodeModel item) {
+  // find the component for this item
+  ComponentConsumptionModel? component;
+  try {
+    component = widget.components.firstWhere(
+      (c) => c.itemNo == item.itemNo,
+    );
+  } catch (e) {
+    // item not found in components list
+    return false;
+  }
+
+  // VALIDATION: barcode UOM must NOT be smaller than item base UOM
+  // Check: barcode quantityPerUnit >= base quantityPerUnit
+  // If barcode qty per unit < base qty per unit, barcode is smaller → INVALID
+  if (item.quantityPerUnit < component.baseUOMQuantityPerUnit) {
+    return false; // Block: barcode UOM is smaller than base UOM
+  }
+
+
+
+  // find if this item is already in the scanned list
+  ItemBarcodeModel? existingItem;
+  try {
+    existingItem = items.firstWhere(
+      (e) => e.itemNo == item.itemNo,
+    );
+  } catch (e) {
+    // Item not in list yet, that's fine
+  }
+
+ 
+  final totalIfAdded = existingItem != null 
+      ? (existingItem.quantity + 1) * item.quantityPerUnit
+      : item.quantityPerUnit;
+
+  // check if total scanned would exceed available inventory
+  return totalIfAdded <= component.inventory;
+}
+
   // we add new item or we increment qty
   void addItem(ItemBarcodeModel newItem) {
-    int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
-
-
-    if (index != -1) {
-      // same item already in list — increment quantity, keep all other fields
-      items[index] = ItemBarcodeModel(
-        itemNo: items[index].itemNo,
-        description: items[index].description,
-        baseUOM: items[index].baseUOM,
-        inventory: items[index].inventory,
-        shelfNo: items[index].shelfNo,
-        lotSize: items[index].lotSize,
-        flushingMethod: items[index].flushingMethod,
-        barcodeText: items[index].barcodeText,
-        quantity: items[index].quantity + 1,
-        quantityPerUnit: items[index].quantityPerUnit,
-        unitOfMeasure: items[index].unitOfMeasure,
-      );
-    } else {
-      items.add(newItem);
-    }
+  if (!isItemInComponents(newItem.itemNo)) {
+    setState(() {
+      errorMessage = 'itemNotInBOMForThisOperation'.tr();
+    });
+    return;
   }
+
+  final component = widget.components.firstWhere(
+    (c) => c.itemNo == newItem.itemNo,
+  );
+
+  // VALIDATION: Check if barcode UOM is smaller than base UOM
+  // If barcode quantityPerUnit < base quantityPerUnit, barcode is smaller (invalid)
+  if (newItem.quantityPerUnit < component.baseUOMQuantityPerUnit) {
+    setState(() {
+     errorMessage = 'invalidBarcodeUOM'.tr(args: [
+  newItem.unitOfMeasure,
+  component.baseUOM,
+]);
+    });
+    return;
+  }
+
+  if (!canAddMoreItem(newItem)) {
+    setState(() {
+     errorMessage = 'insufficientInventoryAdd'.tr(args: [
+  newItem.itemNo,
+]);
+    });
+    return;
+  }
+
+  // Clear error when adding successfully
+  setState(() {
+    errorMessage = null;
+  });
+
+  int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
+
+  if (index != -1) {
+    // same item already in list — increment quantity, keep all other fields
+    items[index] = ItemBarcodeModel(
+      itemNo: items[index].itemNo,
+      description: items[index].description,
+      baseUOM: items[index].baseUOM,
+      lotSize: items[index].lotSize,
+      flushingMethod: items[index].flushingMethod,
+      barcodeText: items[index].barcodeText,
+      quantity: items[index].quantity + 1,
+      quantityPerUnit: items[index].quantityPerUnit,
+      unitOfMeasure: items[index].unitOfMeasure,
+    );
+  } else {
+    items.add(newItem);
+  }
+}
 
   //increase quantity
   void increaseQty(int index) {
+      if (!canAddMoreItem(items[index])) {
     setState(() {
+      errorMessage =
+    'insufficientInventoryFor'.tr() + items[index].itemNo;
+    });
+    return;
+  }
+    setState(() {
+      errorMessage = null;
       items[index] = ItemBarcodeModel(
         itemNo: items[index].itemNo,
         description: items[index].description,
         baseUOM: items[index].baseUOM,
-        inventory: items[index].inventory,
-        shelfNo: items[index].shelfNo,
         lotSize: items[index].lotSize,
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
@@ -74,12 +157,11 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   void decreaseQty(int index) {
     setState(() {
       if (items[index].quantity > 1) {
+        errorMessage = null;
         items[index] = ItemBarcodeModel(
           itemNo: items[index].itemNo,
           description: items[index].description,
           baseUOM: items[index].baseUOM,
-          inventory: items[index].inventory,
-          shelfNo: items[index].shelfNo,
           lotSize: items[index].lotSize,
           flushingMethod: items[index].flushingMethod,
           barcodeText: items[index].barcodeText,
@@ -93,7 +175,10 @@ class _ScannerWidgetState extends State<ScannerWidget> {
 
   //delete item from list
   void removeItem(int index) {
-    setState(() => items.removeAt(index));
+    setState(() {
+      errorMessage = null;
+      items.removeAt(index);
+    });
   }
 
   @override
@@ -144,14 +229,12 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                         if (!mounted) return;
 
                         if (result == null || result['resolved'] != true) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                result?['message']?.toString() ??
-                                    'Barcode not recognized',
-                              ),
-                            ),
-                          );
+                          setState(() {
+                            errorMessage = result?['message']?.toString() ??
+                                'barcodeNotRecognized'.tr();
+                          });
+                          setState(() => isScanning = true);
+                          controller.start();
                           return;
                         }
 
@@ -161,8 +244,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                           description:
                               result['itemDescription']?.toString() ?? '',
                           baseUOM: result['baseUOM']?.toString() ?? '',
-                          inventory: 0,
-                          shelfNo: '',
+         
                           lotSize: 0,
                           flushingMethod: '',
                           barcodeText: value,
@@ -175,6 +257,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                         );
 
                         setState(() => addItem(item));
+                        setState(() => isScanning = true);
+                        controller.start();
                       },
                     ),
                   ),
@@ -187,7 +271,10 @@ class _ScannerWidgetState extends State<ScannerWidget> {
             //resume camera button
             ElevatedButton(
               onPressed: () {
-                setState(() => isScanning = true);
+                setState(() {
+                  isScanning = true;
+                  errorMessage = null;
+                });
                 controller.start();
               },
               style: ElevatedButton.styleFrom(
@@ -205,6 +292,35 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
+
+            // Error message display
+            if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEEEE),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFDC2626)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          errorMessage!,
+                          style: const TextStyle(
+                            color: Color(0xFFDC2626),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // list of items you scanned
             Expanded(
@@ -273,9 +389,12 @@ class _ScannerWidgetState extends State<ScannerWidget> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: items.isEmpty
-                      ? null
+                  // if list is empty or wrong qr code (does not exist in the component list )
+                  onPressed: (items.isEmpty || items.any((item) => !isItemInComponents(item.itemNo)) || isSubmitting)
+                      ? null 
                       : () async {
+                          setState(() => isSubmitting = true);
+                          
                           final provider = context.read<MesBarcodeProvider>();
                           //call the toJson method in the barcode model
                           //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
@@ -290,24 +409,20 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                           if (!mounted) return;
 
                           if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('insertedSuccessfully'.tr()),
-                              ),
-                            );
+                            setState(() {
+                              errorMessage = null;
+                              isSubmitting = false;
+                            });
                             // trigger bom stream refresh so quantities update immediately
                             context
                                 .read<MesComponentconsumptionProvider>()
                                 .triggerRefresh();
                             Navigator.pop(context);
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  provider.errorMessage ?? 'error'.tr(),
-                                ),
-                              ),
-                            );
+                            setState(() {
+                              errorMessage = provider.errorMessage ?? 'errorSubmittingScans'.tr();
+                              isSubmitting = false;
+                            });
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -317,10 +432,19 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(
-                    'confirmScans'.tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'confirmScans'.tr(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
                 ),
               ),
             ),

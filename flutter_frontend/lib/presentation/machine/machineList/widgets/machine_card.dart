@@ -29,10 +29,7 @@ class _MachineCardState extends State<MachineCard> {
         final statusHeight = isLarge ? 36.0 : 30.0;
         final statusWidth = isLarge ? 120.0 : 100.0;
 
-        final status = (widget.machine.status)
-            .toString()
-            .trim()
-            .toLowerCase();
+        final status = (widget.machine.status).toString().trim().toLowerCase();
 
         Color statusBg;
         Color statusText;
@@ -43,14 +40,12 @@ class _MachineCardState extends State<MachineCard> {
           statusBg = const Color.fromARGB(76, 158, 158, 158);
           statusText = const Color.fromARGB(255, 85, 85, 85);
           leftBorder = const Color.fromARGB(255, 158, 158, 158);
-          label= 'idle'.tr();
-          
-        
+          label = 'idle'.tr();
         } else {
           statusBg = const Color.fromARGB(40, 40, 197, 92);
           statusText = Colors.green;
           leftBorder = Colors.green;
-           label='working'.tr();
+          label = 'working'.tr();
         }
 
         return MouseRegion(
@@ -154,20 +149,33 @@ class _MachineCardState extends State<MachineCard> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "currentOrder".tr(),
-                                style: TextStyle(fontSize: textSize),
-                              ),
-                              Text(
-                                widget.machine.currentOrder.isEmpty
-                                    ? 'noActiveOrder'.tr()
-                                    : widget.machine.currentOrder,
-                                style: TextStyle(fontSize: textSize),
-                              ),
-                            ],
+                          MachineInfoRow(
+                            label: "currentOrder".tr(),
+                            value: widget.machine.currentOrder.isEmpty
+                                ? 'noActiveOrder'.tr()
+                                : widget.machine.currentOrder,
+                            textSize: textSize,
+                          ),
+                          MachineInfoRow(
+                            label: "itemNo".tr(),
+                            value: widget.machine.itemNo.isEmpty
+                                ? 'noActiveOrder'.tr()
+                                : widget.machine.itemNo,
+                            textSize: textSize,
+                          ),
+                          MachineInfoRow(
+                            label: "productName".tr(),
+                            value: widget.machine.itemDescription.isEmpty
+                                ? 'noActiveOrder'.tr()
+                                : widget.machine.itemDescription,
+                            textSize: textSize,
+                          ),
+                          MachineInfoRow(
+                            label: "operationNo".tr(),
+                            value: widget.machine.operationNo.isEmpty
+                                ? 'noActiveOrder'.tr()
+                                : widget.machine.operationNo,
+                            textSize: textSize,
                           ),
                         ],
                       ),
@@ -179,6 +187,30 @@ class _MachineCardState extends State<MachineCard> {
           ),
         );
       },
+    );
+  }
+}
+
+class MachineInfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final double textSize;
+
+  const MachineInfoRow({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.textSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: textSize)),
+        Text(value, style: TextStyle(fontSize: textSize)),
+      ],
     );
   }
 }

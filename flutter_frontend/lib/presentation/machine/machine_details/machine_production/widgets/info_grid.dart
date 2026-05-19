@@ -4,24 +4,31 @@ import 'package:flutter/material.dart';
 import '../../shared/utils.dart';
 import 'info_cell.dart';
 
-/// Horizontal row of metadata cells shown on each operation card.
-/// Mirrors the role of [InfoGrid] in the machineOrderPage layer.
-///
-/// Displays: Status label, and a human-readable Last Updated timestamp.
 class OperationInfoGrid extends StatelessWidget {
   final String? lastUpdatedAt;
+  final String? operationDiscription;
 
-  const OperationInfoGrid({super.key, this.lastUpdatedAt});
-
+  const OperationInfoGrid({
+    super.key,
+    this.lastUpdatedAt,
+    this.operationDiscription,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        OperationInfoCell(
-          label: 'lastUpdated'.tr(),
-          value: Utils.formatTimestamp(lastUpdatedAt),
-        ),
+        if (lastUpdatedAt != null)
+          OperationInfoCell(
+            label: 'lastUpdated'.tr(),
+            value: Utils.formatTimestamp(lastUpdatedAt),
+          ),
+
+        if (operationDiscription != null)
+          OperationInfoCell(
+            label: 'operationDescription'.tr(),
+            value: operationDiscription!,
+          ),
       ],
     );
   }

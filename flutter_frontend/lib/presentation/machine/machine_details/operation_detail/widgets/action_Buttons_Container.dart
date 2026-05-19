@@ -163,7 +163,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
               backgroundColor: const Color(0xFFDC2626),
             ),
             child: Text(
-              'yesCancelOrder'.tr(),
+              'yesCancelOperation'.tr(),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -233,6 +233,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
                       context: context,
                       builder: (_) => DeclareProductionDialog(
                         operationData: widget.operationData,
+                        components: widget.components,
                       ),
                     );
                     if (declaredQty != null && declaredQty > 0 && mounted) {

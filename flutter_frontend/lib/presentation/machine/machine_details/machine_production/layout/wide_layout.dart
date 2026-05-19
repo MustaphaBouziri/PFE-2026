@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/machine_production/widgets/info_cell.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/shared/utils.dart';
 
 import '../models/status_style.dart';
 import '../widgets/action_buttons.dart';
@@ -11,6 +13,7 @@ class OperationWideLayout extends StatelessWidget {
   final String prodOrderNo;
   final String operationNo;
   final String operationStatus;
+  final String operationDescription;
   final String? declaredAt;
   final double progress;
   final OperationStatusStyle style;
@@ -21,6 +24,7 @@ class OperationWideLayout extends StatelessWidget {
     required this.prodOrderNo,
     required this.operationNo,
     required this.operationStatus,
+    required this.operationDescription,
     this.declaredAt,
     required this.progress,
     required this.style,
@@ -42,13 +46,20 @@ class OperationWideLayout extends StatelessWidget {
                 style: style,
               ),
               const SizedBox(height: 12),
-              OperationInfoGrid(lastUpdatedAt: declaredAt),
+              OperationInfoGrid(
+                lastUpdatedAt: declaredAt,
+                operationDiscription: operationDescription,
+              ),
               const SizedBox(height: 12),
               OperationProgressBar(progress: progress, style: style),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.touch_app_rounded, size: 12, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.touch_app_rounded,
+                    size: 12,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'tapCardToViewDetails'.tr(),
