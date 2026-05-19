@@ -34,10 +34,6 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
   Future<void> getMachineOrders(String machineNo) async {
     await runAsync(() async {
       machineOrders = await _service.getMachineOrders(machineNo);
-      print("service response: $machineOrders"); // Debugging line
-      for (final order in machineOrders) {
-        print('Order No: ${order.orderNo}, Status: ${order.status}, Planned Start: ${order.plannedStart}, Description: ${order.description} hhhhhhhr'); // Debugging line
-      }
     });
   }
 

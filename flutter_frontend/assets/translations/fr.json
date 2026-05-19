@@ -316,8 +316,38 @@
   "pleaseSelectScrapCode": "Veuillez sélectionner un code de rebut",
   "pleaseSelectComponent": "Veuillez sélectionner un composant",
   "insufficientInventoryFor": "Stock insuffisant pour ",
- 
 
+    "settingsSavedSuccessfully": "Paramètres enregistrés avec succès",
+  "systemSettings": "Paramètres système",
+  "failedToLoadSettings": "Échec du chargement des paramètres",
+  "passwordPolicy": "Politique de mot de passe",
+  "security": "Sécurité",
+  "unsavedChanges": "Modifications non enregistrées",
+  "discard": "Ignorer",
+  "passwordChangePeriod": "Période de changement du mot de passe",
+  "daysBetweenPasswordResets": "Nombre de jours entre les réinitialisations obligatoires du mot de passe",
+  "exampleDays": "ex. 90",
+  "days": "jours",
+  "fieldRequired": "Ce champ est requis",
+  "validDays": "Entrez un nombre valide de jours (min. 1)",
+  "maxDays": "Le maximum autorisé est de 3650 jours",
+  "badgeQrTwoFactorAuth": "Authentification à deux facteurs par badge QR",
+  "badgeRequiredOnLogin": "Les opérateurs doivent scanner leur badge lors de la connexion",
+  "badgeNotRequiredOnLogin": "Le scan du badge n'est pas requis lors de la connexion",
+
+
+    "viewBadge": "Voir le badge",
+  "fetchFailed": "Échec de la récupération des données",
+  "regenerateBadge": "Régénérer le badge",
+  "regenerateBadgeWarning": "Êtes-vous sûr de vouloir régénérer le badge de {} ?",
+  "regenerate": "Régénérer",
+  "badgeRegenerated": "Badge régénéré avec succès",
+  "regenerateFailed": "Échec de la régénération du badge",
+  "employeeBadge": "Badge employé",
+  "badgeQRDescription": "Ce code QR est utilisé pour l'authentification et l'identification",
+  "exportPDF": "Exporter en PDF",
+ 
+"FailedToFetchData": "Échec de la récupération des données",
 
 
   "tutorialAdminSearch": "Recherche du tableau de bord administrateur. Trouvez des utilisateurs par nom ou par e-mail.",

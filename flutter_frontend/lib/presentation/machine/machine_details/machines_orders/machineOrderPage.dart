@@ -79,9 +79,51 @@ class _MachineorderpageState extends State<Machineorderpage> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
-          ? Center(child: Text(provider.errorMessage!))
+          ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'FailedToFetchData'.tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: const Color(0xFF94A3B8),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          )
           : machineOrdersList.isEmpty
-          ? Center(child: Text('noOrdersFound'.tr()))
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.history_toggle_off,
+                    size: 48,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'noOrdersFound'.tr(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF94A3B8),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

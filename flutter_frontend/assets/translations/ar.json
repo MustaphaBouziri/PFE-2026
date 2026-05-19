@@ -321,7 +321,40 @@
   "pleaseSelectComponent": "يرجى اختيار مكوّن",
   "insufficientInventoryFor": "مخزون غير كافٍ لـ ",
 
+   "settingsSavedSuccessfully": "تم حفظ الإعدادات بنجاح",
+  "systemSettings": "إعدادات النظام",
+  "failedToLoadSettings": "فشل في تحميل الإعدادات",
+  "passwordPolicy": "سياسة كلمة المرور",
+  "security": "الأمان",
+  "unsavedChanges": "تغييرات غير محفوظة",
+  "discard": "تجاهل",
+  "passwordChangePeriod": "فترة تغيير كلمة المرور",
+  "daysBetweenPasswordResets": "عدد الأيام بين عمليات إعادة تعيين كلمة المرور الإلزامية",
+  "exampleDays": "مثال: 90",
+  "days": "أيام",
+  "fieldRequired": "هذا الحقل مطلوب",
+  "validDays": "أدخل عددًا صالحًا من الأيام (الحد الأدنى 1)",
+  "maxDays": "الحد الأقصى المسموح به هو 3650 يومًا",
+  "badgeQrTwoFactorAuth": "المصادقة الثنائية عبر رمز QR للبطاقة",
+  "badgeRequiredOnLogin": "يجب على المشغلين مسح بطاقاتهم عند تسجيل الدخول",
+  "badgeNotRequiredOnLogin": "مسح البطاقة غير مطلوب عند تسجيل الدخول",
+
+
+    "viewBadge": "عرض البطاقة",
+  "fetchFailed": "فشل في جلب البيانات",
+  "regenerateBadge": "إعادة إنشاء البطاقة",
+  "regenerateBadgeWarning": "هل أنت متأكد أنك تريد إعادة إنشاء بطاقة {}؟",
+  "regenerate": "إعادة إنشاء",
+  "badgeRegenerated": "تمت إعادة إنشاء البطاقة بنجاح",
+  "regenerateFailed": "فشل في إعادة إنشاء البطاقة",
+  "employeeBadge": "بطاقة الموظف",
+  "badgeQRDescription": "يُستخدم رمز QR هذا للمصادقة والتعريف",
+  "exportPDF": "تصدير كملف PDF",
   
+
+  "FailedToFetchData": "فشل في جلب البيانات",
+
+
 
   "tutorialAdminSearch": "هذا هو بحث لوحة تحكم المدير. ابحث عن المستخدمين بالاسم أو البريد الإلكتروني.",
   "tutorialAdminRoleFilter": "تصفية المستخدمين حسب الدور: الكل، مدير، مشرف، أو مشغّل.",

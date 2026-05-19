@@ -66,9 +66,12 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final employees = context.watch<ErpEmployeeProvider>().employees;
-    final workCenters = context.watch<ErpWorkcenterProvider>().workCenters;
+    final employeeProvider = context.watch<ErpEmployeeProvider>();
+    final workCenterProvider = context.watch<ErpWorkcenterProvider>();
     final mesUserProvider = context.read<MesUserProvider>();
+
+    final employees = employeeProvider.employees;
+    final workCenters = workCenterProvider.workCenters;
 
     final filteredEmployees = employees
         .where(
@@ -154,80 +157,132 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
                     const SizedBox(height: 10),
 
-                    // employee list
-                    SizedBox(
-                      height: 250,
-                      child: ListView.separated(
-                        itemCount: filteredEmployees.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 6),
-                        itemBuilder: (context, index) {
-                          final employee = filteredEmployees[index];
-                          final isSelected = selectedEmployeeIndex == index;
-
-                          return GestureDetector(
-                            onTap: () => setState(() {
-                              selectedEmployeeIndex = index;
-                              selectedEmployeeId = employee.employeeId;
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.blue.shade50
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? const Color.fromARGB(255, 73, 111, 143)
-                                      : Colors.grey.shade300,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  // Simple avatar - just image
-                                  EmployeeAvatar(
-                                    imageBase64: employee.imageBase64,
-                                    radius: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          employee.fullName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        Text(
-                                          employee.email,
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: Colors.blue,
-                                      size: 20,
-                                    ),
-                                ],
+                    // employee list — show error if fetch failed
+                   if (employeeProvider.errorMessage != null)
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.cloud_off_outlined,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'FailedToFetchData'.tr(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: const Color(0xFF94A3B8),
+                                height: 1.5,
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
+                      )
+                      else if (employeeProvider.isLoading)
+                      SizedBox(
+                        height: 250,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.blue.shade600,
+                          ),
+                        ),
+                      )
+                     
+                    else if (employees.isEmpty)
+                      SizedBox(
+                        height: 250,
+                        child: Center(
+                          child: Text(
+                            'noEmployeesFound'.tr(),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 250,
+                        child: ListView.separated(
+                          itemCount: filteredEmployees.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 6),
+                          itemBuilder: (context, index) {
+                            final employee = filteredEmployees[index];
+                            final isSelected = selectedEmployeeIndex == index;
+
+                            return GestureDetector(
+                              onTap: () => setState(() {
+                                selectedEmployeeIndex = index;
+                                selectedEmployeeId = employee.employeeId;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.blue.shade50
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color.fromARGB(
+                                            255,
+                                            73,
+                                            111,
+                                            143,
+                                          )
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Simple avatar - just image
+                                    EmployeeAvatar(
+                                      imageBase64: employee.imageBase64,
+                                      radius: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            employee.fullName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          Text(
+                                            employee.email,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.blue,
+                                        size: 20,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
 
                     const SizedBox(height: 20),
 
@@ -288,59 +343,107 @@ class _AddUserDialogState extends State<AddUserDialog> {
                         ),
                       const SizedBox(height: 10),
 
-                      // work center list
-                      SizedBox(
-                        height: 200,
-                        child: ListView.separated(
-                          itemCount: workCenters.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 6),
-                          itemBuilder: (context, index) {
-                            final wc = workCenters[index];
-                            final isSelected = selectedWorkCenterIndexes
-                                .contains(index);
-
-                            return GestureDetector(
-                              onTap: () => workCenterSelection(index, wc.id),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFFF0FDF4)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? const Color(0xFF16A34A)
-                                        : Colors.grey.shade300,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      wc.workCenterName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    if (isSelected)
-                                      const Icon(
-                                        Icons.check_circle,
-                                        color: Color(0xFF16A34A),
-                                        size: 18,
-                                      ),
-                                  ],
+                      // work center list — show error if fetch failed
+                      if (workCenterProvider.errorMessage != null)
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cloud_off_outlined,
+                                size: 48,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'FailedToFetchData'.tr(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: const Color(0xFF94A3B8),
+                                  height: 1.5,
                                 ),
                               ),
-                            );
-                          },
+                            ],
+                          ),
+                        )
+                      else if (workCenterProvider.isLoading)
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.blue.shade600,
+                            ),
+                          ),
+                        )
+                      
+                      else if (workCenters.isEmpty)
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text(
+                              'noWorkCentersFound'.tr(),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 200,
+                          child: ListView.separated(
+                            itemCount: workCenters.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 6),
+                            itemBuilder: (context, index) {
+                              final wc = workCenters[index];
+                              final isSelected = selectedWorkCenterIndexes
+                                  .contains(index);
+
+                              return GestureDetector(
+                                onTap: () => workCenterSelection(index, wc.id),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? const Color(0xFFF0FDF4)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? const Color(0xFF16A34A)
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        wc.workCenterName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Color(0xFF16A34A),
+                                          size: 18,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
                     ],
 
                     const SizedBox(height: 20),
@@ -403,7 +506,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           if (selectedRole != 'Admin' &&
                               selectedWorkCenterIds.isEmpty) {
                             setState(() {
-                              errorMessage = 'pleaseSelectAtLeastOneWorkCenter'.tr();
+                              errorMessage = 'pleaseSelectAtLeastOneWorkCenter'
+                                  .tr();
                             });
                             return;
                           }

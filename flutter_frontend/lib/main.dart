@@ -28,8 +28,6 @@ import 'package:pfe_mes/presentation/admin/adminPage.dart';
 
 import 'package:pfe_mes/presentation/auth/Login/loginPage.dart';
 
-
-
 //this is a global navigation listener it watched pages push,pop or pages that r covered by other pages (stacked)
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
@@ -43,15 +41,11 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [
-        Locale('en'),
-        Locale('fr'),
-        Locale('ar'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('fr'), Locale('ar')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       child: DevicePreview(
-        enabled: true,
+        enabled: false,
         builder: (context) => MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -97,21 +91,19 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
-          shape: Border(
-            bottom: BorderSide(
-              color: Color(0xFFE2E8F0),
-              width: 1,
-            ),
-          ),
+          shape: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: Color(0xFF0F172A), // Your global loading color
         ),
         textTheme: GoogleFonts.interTextTheme().apply(
           bodyColor: const Color(0xFF0F172A),
           displayColor: const Color(0xFF0F172A),
         ),
       ),
-// global route observer
-// this connects the observer to flutter navigation system and allows it to listen to route changes across the entire app
-//witch out it pages will never receive navigations events(pop push stacked ..)
+      // global route observer
+      // this connects the observer to flutter navigation system and allows it to listen to route changes across the entire app
+      //witch out it pages will never receive navigations events(pop push stacked ..)
       navigatorObservers: [routeObserver],
 
       home: const _AuthGate(),
@@ -141,9 +133,9 @@ class _AuthGateState extends State<_AuthGate> {
     final SessionStorage _sessionStorage = SessionStorage();
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
-         if (!AppConstants.hasHost()) {
-        return const ParingPage();
-      }
+        if (!AppConstants.hasHost()) {
+          return const ParingPage();
+        }
         if (auth.isAuthenticated) {
           if (auth.needsPasswordChange) {
             return const ChangePasswordPage();

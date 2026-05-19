@@ -131,7 +131,26 @@ class _MachineDashboardPageState extends State<MachineDashboardPage> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
-          ? Center(child: Text(provider.errorMessage!))
+          ? Center(child:Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.cloud_off_outlined,
+                    size: 48,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'FailedToFetchData'.tr(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: const Color(0xFF94A3B8),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),)
           : LayoutBuilder(
               builder: (context, constraints) {
                 final gridParams = _getGridParameters(constraints.maxWidth);

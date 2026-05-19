@@ -316,6 +316,38 @@
   "pleaseSelectComponent": "Please select a component",
   "insufficientInventoryFor": "Insufficient inventory for ",
 
+    "settingsSavedSuccessfully": "Settings saved successfully",
+  "systemSettings": "System Settings",
+  "failedToLoadSettings": "Failed to load settings",
+  "passwordPolicy": "Password Policy",
+  "security": "Security",
+  "unsavedChanges": "Unsaved changes",
+  "discard": "Discard",
+  "passwordChangePeriod": "Password Change Period",
+  "daysBetweenPasswordResets": "Days between mandatory password resets",
+  "exampleDays": "e.g. 90",
+  "days": "days",
+  "fieldRequired": "This field is required",
+  "validDays": "Enter a valid number of days (min. 1)",
+  "maxDays": "Maximum allowed is 3650 days",
+  "badgeQrTwoFactorAuth": "Badge QR Two-Factor Auth",
+  "badgeRequiredOnLogin": "Operators must scan their badge on login",
+  "badgeNotRequiredOnLogin": "Badge scan not required on login",
+
+
+  "viewBadge": "View Badge",
+  "fetchFailed": "Failed to fetch data",
+  "regenerateBadge": "Regenerate Badge",
+  "regenerateBadgeWarning": "Are you sure you want to regenerate the badge for {}?",
+  "regenerate": "Regenerate",
+  "badgeRegenerated": "Badge regenerated successfully",
+  "regenerateFailed": "Failed to regenerate badge",
+  "employeeBadge": "Employee Badge",
+  "badgeQRDescription": "This QR code is used for authentication and identification",
+  "exportPDF": "Export as PDF",
+
+
+ "FailedToFetchData": "Failed to fetch data",
   
 
 

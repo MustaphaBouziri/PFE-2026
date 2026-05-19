@@ -227,7 +227,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                   ),
                 ),
                 Text(
-                  role,
+                  role.tr(),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
