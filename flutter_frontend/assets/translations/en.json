@@ -120,7 +120,7 @@
   "changeDepartment": "Change Department",
   "deactivate": "Deactivate",
   "activate": "Activate",
-  "pleaseSelectEmployeeRoleWorkCenter": "Please select employee, role, and work center",
+
   "userAddedSuccessfully": "User added successfully!",
   "failedToAddUser": "Failed to add user",
   "changeDept": "Change Dept",
@@ -161,7 +161,7 @@
   "generateQR": "Generate QR",
   "finishProductionOrder": "Finish Order",
   "cancel": "Cancel",
-  "cancelProductionOrder": "Cancel Order",
+  "cancelProductionOrder": "Cancel Operation",
   "noKeepGoing": "No, Keep Going",
   "machines": "Machines",
   "reports": "Reports",
@@ -224,7 +224,7 @@
   "start": "Start",
   "end": "End",
   "cancelOrderConfirm": "Are you sure you want to cancel order {}?\n\nThis will mark the operation as finished and free the machine.",
-  "yesCancelOrder": "Yes, Cancel Order",
+  "yesCancelOrder": "Yes, Cancel Operation",
   "cancelled": "CANCELLED",
   "paused": "PAUSED",
   "finished": "FINISHED",
@@ -296,6 +296,26 @@
     "onlySupervisorsCanCancelOrders": "Only supervisors can cancel orders",
   "onlySupervisorsCanCloseOrders": "Only supervisors can close orders",
   "onlySupervisorsCanFinishOrders": "Only supervisors can finish orders",
+  
+  
+  "pleaseSelectRole": "Please select a role",
+  "pleaseSelectEmployee": "Please select an employee",
+  "itemNo": "Item No",
+  "operationNo": "Operation No",
+  "noOperationsCurrentlyActiveForThisMachine": "No operations currently active\nfor this machine",
+  "operationDescription": "Operation Description",
+  "itemNotInBOMForThisOperation": "Item not in BOM for this operation",
+  "invalidBarcodeUOM": "Invalid barcode UOM: ${unit}. Item base UOM is ${base}. Barcode UOM must be equal or larger than base UOM.",
+"insufficientInventoryAdd": "Cannot add more of {} — insufficient inventory",
+  "insufficientInventoryItem": "Insufficient inventory for ${itemNo}",
+  "barcodeNotRecognized": "Barcode not recognized",
+  "errorSubmittingScans": "Error submitting scans",
+  "loadingOperators": "Loading operators…",
+"insufficientComponentQuantity": "Scanned quantity is not enough",
+  "pleaseSelectScrapCode": "Please select a scrap code",
+  "pleaseSelectComponent": "Please select a component",
+  "insufficientInventoryFor": "Insufficient inventory for ",
+
   
 
 

@@ -163,7 +163,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
               backgroundColor: const Color(0xFFDC2626),
             ),
             child: Text(
-              'yesCancelOrder'.tr(),
+              'yesCancelOperation'.tr(),
               style: const TextStyle(color: Colors.white),
             ),
           ),

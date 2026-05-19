@@ -44,7 +44,7 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
           // title
           Text(
             //"currentProductionOrder".tr(),
-            'Operation: '+widget.operationData.operationDescription,
+            'operationLabel'.tr()+' '+widget.operationData.operationDescription,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

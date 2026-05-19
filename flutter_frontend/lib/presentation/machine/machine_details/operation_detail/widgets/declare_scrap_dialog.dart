@@ -77,12 +77,12 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
 
     //validation
     if (_selectedCode == null) {
-      setState(() => _errorMessage = 'Please select a scrap code');
+      setState(() => _errorMessage = 'pleaseSelectScrapCode'.tr());
       return;
     }
 
     if (currentOption == scrapTypes[0] && selectedComponent == null) {
-      setState(() => _errorMessage = 'Please select a component');
+      setState(() => _errorMessage = 'pleaseSelectComponent'.tr());
       return;
     }
 

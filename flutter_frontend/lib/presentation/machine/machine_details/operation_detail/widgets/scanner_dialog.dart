@@ -73,7 +73,7 @@ bool canAddMoreItem(ItemBarcodeModel item) {
   void addItem(ItemBarcodeModel newItem) {
   if (!isItemInComponents(newItem.itemNo)) {
     setState(() {
-      errorMessage = 'Item not in BOM for this operation';
+      errorMessage = 'itemNotInBOMForThisOperation'.tr();
     });
     return;
   }
@@ -86,16 +86,19 @@ bool canAddMoreItem(ItemBarcodeModel item) {
   // If barcode quantityPerUnit < base quantityPerUnit, barcode is smaller (invalid)
   if (newItem.quantityPerUnit < component.baseUOMQuantityPerUnit) {
     setState(() {
-      errorMessage = 'Invalid barcode UOM: ${newItem.unitOfMeasure}. '
-          'Item base UOM is ${component.baseUOM}. '
-          'Barcode UOM must be equal or larger than base UOM.';
+     errorMessage = 'invalidBarcodeUOM'.tr(args: [
+  newItem.unitOfMeasure,
+  component.baseUOM,
+]);
     });
     return;
   }
 
   if (!canAddMoreItem(newItem)) {
     setState(() {
-      errorMessage = 'Cannot add more of ${newItem.itemNo} — insufficient inventory';
+     errorMessage = 'insufficientInventoryAdd'.tr(args: [
+  newItem.itemNo,
+]);
     });
     return;
   }
@@ -129,7 +132,8 @@ bool canAddMoreItem(ItemBarcodeModel item) {
   void increaseQty(int index) {
       if (!canAddMoreItem(items[index])) {
     setState(() {
-      errorMessage = 'Insufficient inventory for ${items[index].itemNo}';
+      errorMessage =
+    'insufficientInventoryFor'.tr() + items[index].itemNo;
     });
     return;
   }
@@ -227,7 +231,7 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                         if (result == null || result['resolved'] != true) {
                           setState(() {
                             errorMessage = result?['message']?.toString() ??
-                                'Barcode not recognized';
+                                'barcodeNotRecognized'.tr();
                           });
                           setState(() => isScanning = true);
                           controller.start();
@@ -416,7 +420,7 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                             Navigator.pop(context);
                           } else {
                             setState(() {
-                              errorMessage = provider.errorMessage ?? 'Error submitting scans';
+                              errorMessage = provider.errorMessage ?? 'errorSubmittingScans'.tr();
                               isSubmitting = false;
                             });
                           }

@@ -70,17 +70,17 @@ class _OperatorSelectorState extends State<OperatorSelector> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Padding(
+      return  Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
-            SizedBox(width: 10),
-            Text('Loading operators…', style: TextStyle(fontSize: 13)),
+           const  SizedBox(width: 10),
+            Text('loadingOperators'.tr(), style: const TextStyle(fontSize: 13)),
           ],
         ),
       );

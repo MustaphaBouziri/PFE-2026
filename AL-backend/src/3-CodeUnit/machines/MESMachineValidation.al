@@ -27,6 +27,7 @@ begin
 
     if not ProdOrderRoutingLine.FindFirst() then
         Error('Routing line not found or order is not in Released status.');
+        EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
 
     // check if theres a previous operation
     PreviousOperationNo := ProdOrderRoutingLine."Previous Operation No.";
@@ -72,7 +73,7 @@ begin
         end;
     end;
 
-    EnsureNoRunningOperation(machineNo, prodOrderNo, operationNo);
+    
 end;
 
 

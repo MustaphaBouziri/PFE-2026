@@ -68,13 +68,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       final neededForDeclaredQty = declaredQty * component.quantityPerUnit;
       // If remaining is less than what's needed, return error message
       if (remaining < neededForDeclaredQty) {
-        return 'insufficientComponentQuantity'.tr(
-          args: [
-            component.itemDescription,
-            remaining.toStringAsFixed(0),
-            neededForDeclaredQty.toStringAsFixed(0),
-          ],
-        );
+       return 'insufficientComponentQuantity'.tr();
       }
     }
     return null;
