@@ -13,27 +13,41 @@ class MesSettingsPage extends StatefulWidget {
 
 class _MesSettingsPageState extends State<MesSettingsPage> {
   final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _periodController;
   late ValueNotifier<bool> _isDirty;
-  String _savedValue = '';
+
+  String _savedPeriod = '';
+  bool _savedTwoFA = false;
+
+  // Local mutable copy of the toggle — not persisted until Save is tapped
+  bool _twoFAEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _isDirty = ValueNotifier(false);
     _periodController = TextEditingController();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<MesSettingsProvider>();
       provider.fetchSettings().then((_) {
         if (provider.settings != null) {
-          _savedValue = provider.settings!.pwChangePeriod;
-          _periodController.text = _savedValue;
+          _savedPeriod = provider.settings!.pwChangePeriod;
+          _savedTwoFA  = provider.settings!.twoFAEnabled;
+          _periodController.text = _savedPeriod;
+          setState(() => _twoFAEnabled = _savedTwoFA);
         }
       });
     });
-    _periodController.addListener(() {
-      _isDirty.value = _periodController.text.trim() != _savedValue.trim();
-    });
+
+    _periodController.addListener(_checkDirty);
+  }
+
+  void _checkDirty() {
+    _isDirty.value =
+        _periodController.text.trim() != _savedPeriod.trim() ||
+            _twoFAEnabled != _savedTwoFA;
   }
 
   @override
@@ -43,12 +57,24 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
     super.dispose();
   }
 
+  void _onToggle2FA(bool value) {
+    setState(() => _twoFAEnabled = value);
+    _checkDirty();
+  }
+
   Future<void> _save(MesSettingsProvider provider) async {
     if (!_formKey.currentState!.validate()) return;
-    final ok = await provider.updateSettings(_periodController.text.trim());
+
+    final ok = await provider.updateSettings(
+      _periodController.text.trim(),
+      newTwoFAEnabled: _twoFAEnabled,
+    );
+
     if (!mounted) return;
+
     if (ok) {
-      _savedValue = _periodController.text.trim();
+      _savedPeriod = _periodController.text.trim();
+      _savedTwoFA  = _twoFAEnabled;
       _isDirty.value = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -85,6 +111,12 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
     }
   }
 
+  void _discard() {
+    _periodController.text = _savedPeriod;
+    setState(() => _twoFAEnabled = _savedTwoFA);
+    _isDirty.value = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MesSettingsProvider>(
@@ -94,14 +126,6 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Color(0xFF1A1F36),
-                size: 18,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
             title: const Text(
               'System Settings',
               style: TextStyle(
@@ -122,7 +146,7 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
               strokeWidth: 2.5,
             ),
           )
-              : provider.saveError != null
+              : provider.errorMessage != null && provider.settings == null
               ? _ErrorView(
             message: provider.errorMessage ?? 'Failed to load settings',
             onRetry: provider.fetchSettings,
@@ -132,12 +156,12 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
               : _SettingsBody(
             formKey: _formKey,
             periodController: _periodController,
+            twoFAEnabled: _twoFAEnabled,
             isSaving: provider.isSaving,
             isDirty: _isDirty,
+            onToggle2FA: _onToggle2FA,
             onSave: () => _save(provider),
-            onDiscard: () {
-              _periodController.text = _savedValue;
-            },
+            onDiscard: _discard,
           ),
         );
       },
@@ -151,16 +175,20 @@ class _SettingsBody extends StatelessWidget {
   const _SettingsBody({
     required this.formKey,
     required this.periodController,
+    required this.twoFAEnabled,
     required this.isSaving,
     required this.isDirty,
+    required this.onToggle2FA,
     required this.onSave,
     required this.onDiscard,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController periodController;
+  final bool twoFAEnabled;
   final bool isSaving;
   final ValueNotifier<bool> isDirty;
+  final ValueChanged<bool> onToggle2FA;
   final VoidCallback onSave;
   final VoidCallback onDiscard;
 
@@ -176,134 +204,19 @@ class _SettingsBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section header
+                  // ── Password Policy section ────────────────────────────────
                   const _SectionLabel(label: 'Password Policy'),
                   const SizedBox(height: 12),
+                  _PasswordPeriodCard(controller: periodController),
 
-                  // Card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE8EAF0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEEF2FF),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.lock_reset_rounded,
-                                  color: Color(0xFF3B6FF0),
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Password Change Period',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                        color: Color(0xFF1A1F36),
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Days between mandatory password resets',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF8892A4),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: periodController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1A1F36),
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'e.g. 90',
-                              hintStyle: const TextStyle(color: Color(0xFFBBC2CF)),
-                              suffixText: 'days',
-                              suffixStyle: const TextStyle(
-                                color: Color(0xFF8892A4),
-                                fontSize: 13,
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF8F9FC),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 13,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                const BorderSide(color: Color(0xFFE8EAF0)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                const BorderSide(color: Color(0xFFE8EAF0)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF3B6FF0),
-                                  width: 1.5,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                const BorderSide(color: Color(0xFFC0392B)),
-                              ),
-                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'This field is required';
-                              }
-                              final n = int.tryParse(v.trim());
-                              if (n == null || n < 1) {
-                                return 'Enter a valid number of days (min. 1)';
-                              }
-                              if (n > 3650) return 'Maximum allowed is 3650 days';
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 28),
+
+                  // ── Security section ───────────────────────────────────────
+                  const _SectionLabel(label: 'Security'),
+                  const SizedBox(height: 12),
+                  _TwoFACard(
+                    enabled: twoFAEnabled,
+                    onToggle: onToggle2FA,
                   ),
                 ],
               ),
@@ -311,7 +224,7 @@ class _SettingsBody extends StatelessWidget {
           ),
         ),
 
-        // Persistent bottom action bar — only this subtree rebuilds on dirty changes
+        // Persistent bottom action bar
         ValueListenableBuilder<bool>(
           valueListenable: isDirty,
           builder: (context, dirty, _) {
@@ -350,13 +263,10 @@ class _SettingsBody extends StatelessWidget {
                       onPressed: isSaving ? null : onDiscard,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                            horizontal: 16, vertical: 10),
                         side: const BorderSide(color: Color(0xFFCDD2DC)),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                       child: const Text(
                         'Discard',
@@ -373,21 +283,16 @@ class _SettingsBody extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF3B6FF0),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                            horizontal: 16, vertical: 10),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                       child: isSaving
                           ? const SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                            strokeWidth: 2, color: Colors.white),
                       )
                           : const Text(
                         'Save',
@@ -405,6 +310,217 @@ class _SettingsBody extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+// ─── Password period card (extracted for clarity) ─────────────────────────────
+
+class _PasswordPeriodCard extends StatelessWidget {
+  const _PasswordPeriodCard({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8EAF0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.lock_reset_rounded,
+                    color: Color(0xFF3B6FF0),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Password Change Period',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFF1A1F36),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Days between mandatory password resets',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF8892A4)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1A1F36),
+              ),
+              decoration: InputDecoration(
+                hintText: 'e.g. 90',
+                hintStyle: const TextStyle(color: Color(0xFFBBC2CF)),
+                suffixText: 'days',
+                suffixStyle:
+                const TextStyle(color: Color(0xFF8892A4), fontSize: 13),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FC),
+                contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFE8EAF0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFE8EAF0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                  const BorderSide(color: Color(0xFF3B6FF0), width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFC0392B)),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'This field is required';
+                final n = int.tryParse(v.trim());
+                if (n == null || n < 1) return 'Enter a valid number of days (min. 1)';
+                if (n > 3650) return 'Maximum allowed is 3650 days';
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 2FA toggle card ──────────────────────────────────────────────────────────
+
+class _TwoFACard extends StatelessWidget {
+  const _TwoFACard({required this.enabled, required this.onToggle});
+
+  final bool enabled;
+  final ValueChanged<bool> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          // Highlight border in blue when enabled
+          color: enabled ? const Color(0xFF3B6FF0) : const Color(0xFFE8EAF0),
+          width: enabled ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: enabled
+                    ? const Color(0xFFEEF2FF)
+                    : const Color(0xFFF5F6FA),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.badge_outlined,
+                color: enabled
+                    ? const Color(0xFF3B6FF0)
+                    : const Color(0xFF8892A4),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Labels
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Badge QR Two-Factor Auth',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Color(0xFF1A1F36),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    enabled
+                        ? 'Operators must scan their badge on login'
+                        : 'Badge scan not required on login',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: enabled
+                          ? const Color(0xFF3B6FF0)
+                          : const Color(0xFF8892A4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Toggle
+            Switch(
+              value: enabled,
+              onChanged: onToggle,
+              activeColor: const Color(0xFF3B6FF0),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -440,11 +556,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.wifi_off_rounded,
-            color: Color(0xFFCDD2DC),
-            size: 48,
-          ),
+          const Icon(Icons.wifi_off_rounded, color: Color(0xFFCDD2DC), size: 48),
           const SizedBox(height: 12),
           Text(
             message,

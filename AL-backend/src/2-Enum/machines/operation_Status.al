@@ -2,7 +2,7 @@ enum 50102 "MES Operation Status"
 {
     Extensible = true;
 
-    
+
 
     value(0; Running)
     {
@@ -20,5 +20,9 @@ enum 50102 "MES Operation Status"
     value(3; Cancelled)
     {
         Caption = 'Cancelled';
+    }
+    value(4; Interrupted)
+    {
+        Caption = 'Interrupted';
     }
 }

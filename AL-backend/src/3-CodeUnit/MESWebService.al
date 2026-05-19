@@ -455,12 +455,10 @@ codeunit 50126 "MES Web Service"
         exit(settings.GetMESSettings());
     end;
 
-    // ── REPLACE updateSettings() in MESWebService.al with this version ────────
-    // (accepts twoFAEnabled parameter)
-
-    procedure updateSettings(PwChangePeriodDays: Integer; twoFAEnabled: Boolean; token: Text): Text
+    
+    procedure updateSettings(pwChangePeriodDays: Integer; twoFAEnabled: Boolean; token: Text): Text
     begin
-        exit(settings.UpdateMESSettings(PwChangePeriodDays, twoFAEnabled, token));
+     exit(settings.UpdateMESSettings(pwChangePeriodDays, twoFAEnabled, token));
     end;
 
 }

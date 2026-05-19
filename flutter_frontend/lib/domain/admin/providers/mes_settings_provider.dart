@@ -8,7 +8,7 @@ import '../../shared/async_state_mixin.dart';
 class MesSettingsProvider with ChangeNotifier, AsyncStateMixin {
   final SettingService _service = SettingService();
   final StreamController<void> _refreshController =
-      StreamController<void>.broadcast();
+  StreamController<void>.broadcast();
 
   SettingModel? settings;
   bool isSaving = false;
@@ -30,7 +30,10 @@ class MesSettingsProvider with ChangeNotifier, AsyncStateMixin {
     notifyListeners();
   }
 
-  Future<bool> updateSettings(String newPeriod) async {
+  /// Save both fields at once.
+  /// [newPeriod]     — password change period in days (as string from text field).
+  /// [newTwoFAEnabled] — current state of the 2FA toggle.
+  Future<bool> updateSettings(String newPeriod, {required bool newTwoFAEnabled}) async {
     if (settings == null) return false;
     isSaving = true;
     saveError = null;
@@ -38,7 +41,10 @@ class MesSettingsProvider with ChangeNotifier, AsyncStateMixin {
     notifyListeners();
 
     try {
-      final updated = settings!.copyWith(pwChangePeriod: newPeriod);
+      final updated = settings!.copyWith(
+        pwChangePeriod: newPeriod,
+        twoFAEnabled: newTwoFAEnabled,
+      );
       await _service.updateSettings(updated);
       settings = updated;
       saveSuccess = true;

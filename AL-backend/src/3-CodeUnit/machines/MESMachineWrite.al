@@ -134,7 +134,7 @@ codeunit 50132 "MES Machine Write"
 
         exit(ExecuteOperationTransition(
             machineNo, prodOrderNo, operationNo,
-            MESOperationStatus."Operation Status"::Cancelled,
+            MESOperationStatus."Operation Status"::Interrupted,
             MesUserId));
     end;
 

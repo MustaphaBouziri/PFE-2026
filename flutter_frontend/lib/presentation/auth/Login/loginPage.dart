@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/auth/Login/widgets/badgeScanDialog.dart';
 import 'package:provider/provider.dart';
 
 import '/domain/auth/providers/auth_provider.dart';
@@ -25,11 +26,10 @@ class _LoginPageState extends State<LoginPage> {
     passwordController.dispose();
     super.dispose();
   }
-
   Future<void> login() async {
     if (!formKey.currentState!.validate()) return;
 
-    final userId = authIdController.text.trim();
+    final userId   = authIdController.text.trim();
     final password = passwordController.text.trim();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -39,25 +39,39 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (!success) {
+      // Wrong credentials — show error dialog (existing behaviour)
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("loginFailed".tr()),
+          title: Text('loginFailed'.tr()),
           content: Text(
-            authProvider.errorMessage ??
-                "unknownError".tr(),
+            authProvider.errorMessage ?? 'unknownError'.tr(),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("ok".tr()),
+              child: Text('ok'.tr()),
             ),
           ],
         ),
       );
+      return;
     }
-    // On success, main.dart Consumer automatically routes to the correct page
-    // based on needsPasswordChange and role — no manual navigation needed here.
+
+    // Credentials OK — check if badge scan is required
+    if (authProvider.pendingBadge) {
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false, // operator must scan or explicitly cancel
+        builder: (_) => const BadgeScanDialog(),
+      );
+      // After the dialog closes:
+      // - Success: AuthProvider.isAuthenticated == true → _AuthGate reroutes
+      // - Cancel:  AuthProvider.cancelBadgeScan() was called → back to login form
+      return;
+    }
+
+    // No 2FA — _AuthGate handles routing automatically (existing behaviour)
   }
 
   @override

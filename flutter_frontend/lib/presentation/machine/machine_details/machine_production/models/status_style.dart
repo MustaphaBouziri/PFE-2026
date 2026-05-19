@@ -26,7 +26,7 @@ class OperationStatusStyle {
 OperationStatusStyle operationStatusStyleFromStatus(String status) {
   switch (status) {
     case 'Running':
-      return  OperationStatusStyle(
+      return OperationStatusStyle(
         badgeBg: const Color(0xFFECFDF5),
         badgeBorder: const Color(0xFFA7F3D0),
         badgeText: const Color(0xFF065F46),
@@ -35,7 +35,7 @@ OperationStatusStyle operationStatusStyleFromStatus(String status) {
         label: 'running'.tr(),
       );
     case 'Cancelled':
-      return  OperationStatusStyle(
+      return OperationStatusStyle(
         badgeBg: const Color(0xFFFDECEC),
         badgeBorder: const Color(0xFFF3A7A7),
         badgeText: const Color(0xFF5F0606),
@@ -45,7 +45,7 @@ OperationStatusStyle operationStatusStyleFromStatus(String status) {
       );
 
     case 'Paused':
-      return  OperationStatusStyle(
+      return OperationStatusStyle(
         badgeBg: const Color(0xFFFFFBEB),
         badgeBorder: const Color(0xFFFDE68A),
         badgeText: const Color(0xFF92400E),
@@ -54,8 +54,18 @@ OperationStatusStyle operationStatusStyleFromStatus(String status) {
         label: 'paused'.tr(),
       );
 
+    case 'Interrupted':
+      return OperationStatusStyle(
+        badgeBg: const Color(0xFFFFFBEB),
+        badgeBorder: const Color(0xFFFDE68A),
+        badgeText: const Color(0xFF92400E),
+        progressColor: const Color(0xFFF59E0B),
+        leftRail: const Color(0xFFF59E0B),
+        label: 'interrupted'.tr(),
+      );
+
     case 'Finished':
-      return  OperationStatusStyle(
+      return OperationStatusStyle(
         badgeBg: const Color(0xFFEFF6FF),
         badgeBorder: const Color(0xFFBFDBFE),
         badgeText: const Color(0xFF1E40AF),
@@ -66,7 +76,7 @@ OperationStatusStyle operationStatusStyleFromStatus(String status) {
 
     case 'Idle':
     default:
-      return  OperationStatusStyle(
+      return OperationStatusStyle(
         badgeBg: const Color(0xFFF3F4F6),
         badgeBorder: const Color(0xFFE5E7EB),
         badgeText: const Color(0xFF6B7280),

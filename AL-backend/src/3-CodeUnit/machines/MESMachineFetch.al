@@ -161,7 +161,8 @@ codeunit 50131 "MES Machine Fetch"
                         ShouldInclude := MESOperationStatus."Operation Status" in
                         [
                             MESOperationStatus."Operation Status"::Finished,
-                            MESOperationStatus."Operation Status"::Cancelled
+                            MESOperationStatus."Operation Status"::Cancelled,
+                            MESOperationStatus."Operation Status"::Interrupted
                         ]
                     else
                         ShouldInclude := MESOperationStatus."Operation Status" in
