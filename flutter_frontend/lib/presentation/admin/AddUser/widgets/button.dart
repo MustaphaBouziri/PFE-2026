@@ -41,7 +41,7 @@ class _ButtonsState extends State<Buttons> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           height: 36,
-          width: 140,
+          width: 170,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: hovered ? hoverBg : bgColor,

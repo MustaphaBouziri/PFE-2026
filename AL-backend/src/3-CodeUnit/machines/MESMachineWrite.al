@@ -178,7 +178,8 @@ codeunit 50132 "MES Machine Write"
             MesUserId));
     end;
 
-  procedure insertScans(
+/*
+procedure insertScans(
     executionId: Code[50];
     scansJson: Text;
     operatorId: Code[50];
@@ -311,6 +312,226 @@ begin
 
     exit(BuildSuccessResponse());
 end;
+*/
+procedure insertScans(
+    executionId: Code[50];
+    scansJson: Text;
+    operatorId: Code[50];
+    declaredById: Code[50]
+): Text
+var
+    MESExecution: Record "MES Operation Execution";
+    MESConsumption: Record "MES Component Consumption";
+    Item: Record Item;
+    ProdOrder: Record "Production Order";
+    ProdOrderLine: Record "Prod. Order Line";
+    ItemJournalLine: Record "Item Journal Line";
+    ItemJournalBatch: Record "Item Journal Batch";
+    MachineInsert: Codeunit "MES Machine Insert";
+    ItemJournalPostBatch: Codeunit "Item Jnl.-Post Batch";
+    ScansArr: JsonArray;
+    ScanToken: JsonToken;
+    ScanObj: JsonObject;
+    ItemNoToken: JsonToken;
+    BarcodeToken: JsonToken;
+    QtyScannedToken: JsonToken;
+    UnitOfMeasureToken: JsonToken;
+    QuantityPerUnitOfMeasureToken: JsonToken;
+    ItemNo: Code[20];
+    QtyScanned: Decimal;
+    LineNo: Integer;
+    TemplateNameToUse: Code[10];
+    BatchNameToUse: Code[10];
+    ProdOrderNo: Code[20];
+    ProdOrderLineNo: Integer;
+begin
+    if not MESExecution.Get(executionId) then
+        exit(BuildFailureResponse('Execution not found'));
+
+    ProdOrderNo := MESExecution."Prod Order No";
+
+    // Get the production order to verify it exists
+    ProdOrder.Reset();
+    ProdOrder.SetFilter("No.", ProdOrderNo);
+
+    if not ProdOrder.FindFirst() then
+        exit(BuildFailureResponse(
+            'Production Order not found: ' + ProdOrderNo));
+
+    ScansArr.ReadFrom(scansJson);
+
+    // find the first available journal batch
+    ItemJournalBatch.Reset();
+    ItemJournalBatch.SetRange(
+        "Journal Template Name",
+        'ARTICLE');
+
+    if not ItemJournalBatch.FindFirst() then
+        exit(BuildFailureResponse(
+            'No Item Journal Batch found for template ARTICLE'));
+
+    TemplateNameToUse :=
+        ItemJournalBatch."Journal Template Name";
+
+    BatchNameToUse :=
+        ItemJournalBatch.Name;
+
+    //find the next available line number
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ItemJournalLine.FindLast() then
+        LineNo := ItemJournalLine."Line No." + 10000
+    else
+        LineNo := 10000;
+
+    foreach ScanToken in ScansArr do begin
+        Clear(MESConsumption);
+
+        ScanObj := ScanToken.AsObject();
+
+        ScanObj.Get('itemNo', ItemNoToken);
+        ScanObj.Get('barcode', BarcodeToken);
+        ScanObj.Get('quantityScanned', QtyScannedToken);
+        ScanObj.Get('unitOfMeasure', UnitOfMeasureToken);
+        ScanObj.Get(
+            'quantityPerUnitOfMeasure',
+            QuantityPerUnitOfMeasureToken);
+
+        ItemNo :=
+            CopyStr(
+                ItemNoToken.AsValue().AsText(),
+                1,
+                20);
+
+        QtyScanned :=
+            QtyScannedToken.AsValue().AsDecimal();
+
+        // insert consumption record in our mes table
+        MESConsumption.Init();
+        MESConsumption."Execution Id" := executionId;
+        MESConsumption."Prod Order No" := ProdOrderNo;
+        MESConsumption."Item No" := ItemNo;
+        MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
+        MESConsumption."Quantity Scanned" := QtyScanned;
+
+        MESConsumption."Unit of Measure" :=
+            CopyStr(
+                UnitOfMeasureToken.AsValue().AsText(),
+                1,
+                10);
+
+        MESConsumption."Quantity per Unit of Measure" :=
+            QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
+
+        MESConsumption."Operator Id" := operatorId;
+        MESConsumption."Declared By" := declaredById;
+
+        MESConsumption.Insert(true);
+
+        // create item journal line to reduce inventory
+        if Item.Get(ItemNo) then begin
+            // Get the production order line for this item
+            ProdOrderLine.Reset();
+            ProdOrderLine.SetRange(Status, ProdOrder.Status);
+            ProdOrderLine.SetRange("Prod. Order No.", ProdOrderNo);
+            ProdOrderLine.SetRange("Item No.", ItemNo);
+
+            if ProdOrderLine.FindFirst() then
+                ProdOrderLineNo := ProdOrderLine."Line No."
+            else
+                ProdOrderLineNo := 10000;
+
+            Clear(ItemJournalLine);
+
+            ItemJournalLine.Init();
+
+            ItemJournalLine."Journal Template Name" :=
+                TemplateNameToUse;
+
+            ItemJournalLine."Journal Batch Name" :=
+                BatchNameToUse;
+
+            ItemJournalLine."Line No." := LineNo;
+
+            ItemJournalLine.Validate(
+                "Posting Date",
+                Today());
+
+            // DO NOT SET DOCUMENT NO - Let the system auto-assign it during insert
+
+            // Set production order
+            ItemJournalLine.Validate(
+                "Order Type",
+                ItemJournalLine."Order Type"::Production);
+
+            ItemJournalLine.Validate(
+                "Order No.",
+                ProdOrderNo);
+
+            ItemJournalLine.Validate(
+                "Order Line No.",
+                ProdOrderLineNo);
+
+            ItemJournalLine.Validate(
+                "Item No.",
+                ItemNo);
+
+            ItemJournalLine.Validate(
+                "Unit of Measure Code",
+                CopyStr(
+                    UnitOfMeasureToken.AsValue().AsText(),
+                    1,
+                    10));
+
+            // Set entry type
+            ItemJournalLine.Validate(
+                "Entry Type",
+                ItemJournalLine."Entry Type"::Consumption);
+
+            // Validate quantity
+            ItemJournalLine.Validate(
+                Quantity,
+                QtyScanned);
+
+            ItemJournalLine.Insert(true);
+
+            LineNo += 10000;
+        end else
+            Error(
+                'Item %1 was not found in the Item table.',
+                ItemNo);
+    end;
+
+    // post the journal lines
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ItemJournalLine.FindSet() then begin
+        ItemJournalPostBatch.Run(ItemJournalLine);
+    end else
+        Error('No journal lines found to post.');
+
+    MachineInsert.EnsureUserExecutionInteraction(
+        executionId,
+        operatorId);
+
+    exit(BuildSuccessResponse());
+end;
 
     procedure declareScrap(
         executionId: Code[50];
@@ -354,6 +575,7 @@ end;
         ClearLastError();
 
         case targetStatus of
+            MESOperationStatus."Operation Status"::Interrupted,
             MESOperationStatus."Operation Status"::Finished,
             MESOperationStatus."Operation Status"::Cancelled:
                 if not MachineValidation.TryCloseOperation(machineNo, prodOrderNo, operationNo) then
@@ -372,8 +594,8 @@ end;
             MachineInsert.InsertStartMESMachineStatus(prodOrderNo, machineNo)
         else
             MachineInsert.InsertIdleMachineStatus(machineNo);
-            // new change to verify with u  : 
-         if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled] then
+        // new change to verify with u  : 
+        if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled] then
             MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo, targetStatus);
 
         exit(BuildSuccessResponse());

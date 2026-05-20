@@ -74,7 +74,7 @@ codeunit 50133 "MES Machine Insert"
         EnsureUserExecutionInteraction(MESExecution."Execution Id", mesUserId);
 
         // Stamp the end time on the execution record when the operation closes.
-        if status in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled] then begin
+        if status in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled,"MES Operation Status"::Interrupted] then begin
             MESExecution."End Time" := CurrentDateTime();
             MESExecution.Modify(true);
         end;
@@ -246,7 +246,10 @@ codeunit 50133 "MES Machine Insert"
     end;
 
     // increase item inventory
-    procedure IncreaseItemInventory(
+
+
+/*
+procedure IncreaseItemInventory(
         itemNo: Code[20];
         quantity: Decimal;
         executionId: Code[50]
@@ -318,7 +321,178 @@ codeunit 50133 "MES Machine Insert"
         if ItemJournalLine.FindSet() then
             ItemJournalPostBatch.Run(ItemJournalLine);
     end;
+*/
+procedure IncreaseItemInventory(
+    itemNo: Code[20];
+    quantity: Decimal;
+    executionId: Code[50]
+)
+var
+    Item: Record Item;
+    MESExecution: Record "MES Operation Execution";
+    ProdOrder: Record "Production Order";
+    ProdOrderLine: Record "Prod. Order Line";
+    ItemJournalLine: Record "Item Journal Line";
+    ExistingItemJournalLine: Record "Item Journal Line";
+    ItemJournalBatch: Record "Item Journal Batch";
+    ItemJournalPostBatch: Codeunit "Item Jnl.-Post Batch";
+    LineNo: Integer;
+    TemplateNameToUse: Code[10];
+    BatchNameToUse: Code[10];
+    ProdOrderNo: Code[20];
+    DocumentNo: Code[20];
+begin
+    if not Item.Get(itemNo) then
+        Error(
+            'Item %1 was not found in the Item table.',
+            itemNo);
 
+    if not MESExecution.Get(executionId) then
+        Error(
+            'Execution %1 was not found.',
+            executionId);
+
+    ProdOrderNo := MESExecution."Prod Order No";
+
+    // Get the production order to verify it exists
+    ProdOrder.Reset();
+    ProdOrder.SetFilter("No.", ProdOrderNo);
+
+    if not ProdOrder.FindFirst() then
+        Error(
+            'Production Order not found: %1',
+            ProdOrderNo);
+
+    // find the first available journal batch
+    ItemJournalBatch.Reset();
+    ItemJournalBatch.SetRange(
+        "Journal Template Name",
+        'ARTICLE');
+
+    if not ItemJournalBatch.FindFirst() then
+        Error(
+            'No Item Journal Batch found for template ARTICLE');
+
+    TemplateNameToUse :=
+        ItemJournalBatch."Journal Template Name";
+
+    BatchNameToUse :=
+        ItemJournalBatch.Name;
+
+    // get existing document no from batch
+    ExistingItemJournalLine.Reset();
+
+    ExistingItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ExistingItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ExistingItemJournalLine.FindFirst() then
+        DocumentNo := ExistingItemJournalLine."Document No."
+    else
+        DocumentNo := 'T00024';
+
+    // find the next available line number
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ItemJournalLine.FindLast() then
+        LineNo := ItemJournalLine."Line No." + 10000
+    else
+        LineNo := 10000;
+
+    // create item journal line
+    Clear(ItemJournalLine);
+
+    ItemJournalLine.Init();
+
+    ItemJournalLine."Journal Template Name" :=
+        TemplateNameToUse;
+
+    ItemJournalLine."Journal Batch Name" :=
+        BatchNameToUse;
+
+    ItemJournalLine."Line No." := LineNo;
+
+    ItemJournalLine.Validate(
+        "Posting Date",
+        Today());
+
+    // DO NOT SET DOCUMENT NO - Let the system auto-assign it during insert
+    ItemJournalLine."Document No." := DocumentNo;
+
+    // Set production order
+    ItemJournalLine.Validate(
+        "Order Type",
+        ItemJournalLine."Order Type"::Production);
+
+    ItemJournalLine.Validate(
+        "Order No.",
+        ProdOrderNo);
+
+    // Get production order line
+    ProdOrderLine.Reset();
+    ProdOrderLine.SetRange(Status, ProdOrder.Status);
+    ProdOrderLine.SetRange("Prod. Order No.", ProdOrderNo);
+    ProdOrderLine.SetRange("Item No.", itemNo);
+
+    if ProdOrderLine.FindFirst() then
+        ItemJournalLine.Validate(
+            "Order Line No.",
+            ProdOrderLine."Line No.");
+
+    ItemJournalLine.Validate(
+        "Item No.",
+        itemNo);
+
+    ItemJournalLine.Validate(
+        "Unit of Measure Code",
+        Item."Base Unit of Measure");
+
+    // Set entry type
+    ItemJournalLine.Validate(
+        "Entry Type",
+        ItemJournalLine."Entry Type"::Output);
+
+    // IMPORTANT FOR OUTPUT JOURNALS - set output quantity instead of regular quantity
+    ItemJournalLine.Validate(
+        "Output Quantity",
+        quantity);
+
+    ItemJournalLine.Insert(true);
+
+    // post the journal line
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Document No.",
+        DocumentNo);
+
+    ItemJournalLine.SetRange(
+        "Line No.",
+        LineNo);
+
+    if ItemJournalLine.FindSet() then
+        ItemJournalPostBatch.Run(ItemJournalLine);
+end;
     // ──────────────────────────────────────────────
     // Scrap records
     // ──────────────────────────────────────────────

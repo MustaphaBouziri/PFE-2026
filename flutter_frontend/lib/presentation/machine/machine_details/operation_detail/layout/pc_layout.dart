@@ -99,6 +99,8 @@ class _PcLayoutState extends State<PcLayout> {
                       totalProduced: widget.operationData.totalProducedQuantity,
                       executionId: widget.operationData.executionId,
                       operationStatus: widget.operationData.operationStatus,
+                      orderQuantity:widget.operationData.orderQuantity,
+                      outputScrapQuantity: widget.operationData.scrapQuantity,
                     )
                   ],
                 ),

@@ -25,7 +25,7 @@
   "machinesList": "Machines List",
   "noMachinesFound": "no machines found",
   "logout": "Logout",
-  "currentOrder": "Current Order:",
+  "currentOrder": "Current Order",
   "noActiveOrder": "No active order",
   "product": "Product",
   "startedAt": "Started At",
@@ -64,7 +64,7 @@
   "insertedSuccessfully": "Inserted successfully",
   "confirmScans": "Confirm Scans",
   "usersRolesManagement": "Users & Roles Management",
-  "manageUsers": "manage Users",
+  "manageUsers": "Manage Users",
   "exportUsers": "Export Users",
   "tableHeaderUser": "User",
   "tableHeaderRole": "Role",
@@ -224,7 +224,7 @@
   "start": "Start",
   "end": "End",
   "cancelOrderConfirm": "Are you sure you want to cancel order {}?\n\nThis will mark the operation as finished and free the machine.",
-  "yesCancelOrder": "Yes, Cancel Operation",
+  
   "cancelled": "CANCELLED",
   "paused": "PAUSED",
   "finished": "FINISHED",
@@ -248,8 +248,8 @@
   "last7d": "Last 7d",
   "action": "ACTION",
 
-  "operationFinished": "Operation Finished",
-  "operationCancelled": "Operation Cancelled",
+  "operationFinished": "Operation Finished:",
+  "operationCancelled": "Operation Cancelled:",
   "machineNumber": "Machine Number",
   "scrapQuantity": "Scrap Quantity",
   
@@ -311,8 +311,8 @@
   "barcodeNotRecognized": "Barcode not recognized",
   "errorSubmittingScans": "Error submitting scans",
   "loadingOperators": "Loading operators…",
-"insufficientComponentQuantity": "Scanned quantity is not enough",
-  "pleaseSelectScrapCode": "Please select a scrap code",
+"insufficientComponentQuantity": "remaining quantity is not enough",
+  "pleaseSelectScrapCode": "select a scrap code",
   "pleaseSelectComponent": "Please select a component",
   "insufficientInventoryFor": "Insufficient inventory for ",
 

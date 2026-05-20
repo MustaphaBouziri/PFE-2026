@@ -4,7 +4,7 @@ import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/addUser/AddUserPage.dart';
 import 'package:pfe_mes/presentation/admin/activity_log/activityLogPage.dart';
-import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/admin/settings/settingsPage.dart';
@@ -70,28 +70,22 @@ class _AdminPageState extends State<AdminPage> {
                   onTap: () => setState(() => _selectedIndex = 0),
                 ),
                 SidebarItem(
-                  icon: Icons.precision_manufacturing_outlined,
-                  label: 'machineDashboard'.tr(),
+                  icon: Icons.bar_chart_outlined,
+                  label: 'activityLogs'.tr(),
                   isSelected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
                 SidebarItem(
-                  icon: Icons.bar_chart_outlined,
-                  label: 'activityLogs'.tr(),
+                  icon: Icons.settings_outlined,
+                  label: "Barcode List",
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
                 ),
                 SidebarItem(
                   icon: Icons.settings_outlined,
-                  label: "Barcode List",
+                  label: 'settings'.tr(),
                   isSelected: _selectedIndex == 3,
                   onTap: () => setState(() => _selectedIndex = 3),
-                ),
-                SidebarItem(
-                  icon: Icons.settings_outlined,
-                  label: 'settings'.tr(),
-                  isSelected: _selectedIndex == 4,
-                  onTap: () => setState(() => _selectedIndex = 4),
                 ),
 
                 const Spacer(),
@@ -152,16 +146,10 @@ class _AdminPageState extends State<AdminPage> {
               index: _selectedIndex,
               children: [
                 const AddUserPage(),
-                const MachineDashboardPage(),
                 const ActivityLogPage(),
                 const BarcodeListPage(),
                 const MesSettingsPage(),
-                Center(
-                  child: Text(
-                    'Settings Page hjvvjhzohrboghrgb - Coming Soon!',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-                  ),
-                ),
+                
               ],
             ),
           ),
