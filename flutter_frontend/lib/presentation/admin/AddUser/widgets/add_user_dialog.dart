@@ -28,8 +28,9 @@ class _AddUserDialogState extends State<AddUserDialog> {
 
   // only supervisor can select multiple work centers
   // operator gets one, admin gets none
-  bool get isMultiSelect => selectedRole == 'Supervisor';
-  bool get _showWorkCenters => selectedRole != 'Admin';
+  // Use selectedRoleIndex to determine if multi-select (1 = supervisor)
+  bool get isMultiSelect => selectedRoleIndex == 1;
+  bool get _showWorkCenters => selectedRoleIndex != 2;
 
   final TextEditingController searchController = TextEditingController();
 
@@ -59,6 +60,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
       selectedRoleIndex = index;
       selectedRole = role;
 
+      // clear work center selections when role changes
       selectedWorkCenterIndexes = [];
       selectedWorkCenterIds = [];
     });
@@ -158,7 +160,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     const SizedBox(height: 10),
 
                     // employee list — show error if fetch failed
-                   if (employeeProvider.errorMessage != null)
+                    if (employeeProvider.errorMessage != null)
                       Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -181,7 +183,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           ],
                         ),
                       )
-                      else if (employeeProvider.isLoading)
+                    else if (employeeProvider.isLoading)
                       SizedBox(
                         height: 250,
                         child: Center(
@@ -190,7 +192,6 @@ class _AddUserDialogState extends State<AddUserDialog> {
                           ),
                         ),
                       )
-                     
                     else if (employees.isEmpty)
                       SizedBox(
                         height: 250,
@@ -334,8 +335,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                       ),
                       // hint shown only for supervisor
                       if (isMultiSelect)
-                        const Text(
-                          'You can select multiple departments',
+                         Text(
+                          'multiSelect'.tr(),
                           style: TextStyle(
                             fontSize: 11,
                             color: Color(0xFF64748B),
@@ -376,7 +377,6 @@ class _AddUserDialogState extends State<AddUserDialog> {
                             ),
                           ),
                         )
-                      
                       else if (workCenters.isEmpty)
                         SizedBox(
                           height: 200,
@@ -503,7 +503,8 @@ class _AddUserDialogState extends State<AddUserDialog> {
                             return;
                           }
 
-                          if (selectedRole != 'Admin' &&
+                          // Admin (index 2) doesn't need work centers
+                          if (selectedRoleIndex != 2 &&
                               selectedWorkCenterIds.isEmpty) {
                             setState(() {
                               errorMessage = 'pleaseSelectAtLeastOneWorkCenter'

@@ -101,18 +101,20 @@
   "describeTheDefect": "Describe the defect...",
   "scrapDeclaredSuccessfully": "Scrap declared successfully.",
   "failedToDeclareScrap": "Failed to declare scrap.",
-
+ "clickToPrint": "Click to print",
   "addNewUser": "Add New User",
   "totalUsers": "Total Users",
   "active": "Active",
   "pendingApproval": "Pending Approval",
+   "pending": "Pending",
+   "Pending": "Pending",
   "totalRoles": "Total Roles",
   "online": "Online",
   "addNewMesUser": "Add New MES User",
   "selectEmployee": "Select Employee",
   "selectRole": "Select Role",
   "operator": "Operator",
-  "machine": "MACHINE",
+  "machine": "Machine",
   "supervisor": "Supervisor",
   "admin": "Admin",
   "selectWorkCenter": "Select Work Center",
@@ -120,7 +122,7 @@
   "changeDepartment": "Change Department",
   "deactivate": "Deactivate",
   "activate": "Activate",
-
+"addUser": "Add user",
   "userAddedSuccessfully": "User added successfully!",
   "failedToAddUser": "Failed to add user",
   "changeDept": "Change Dept",
@@ -246,8 +248,8 @@
   "last24h": "Last 24h",
   "last48h": "Last 48h",
   "last7d": "Last 7d",
-  "action": "ACTION",
-
+  "action": "Action",
+ "interrupted": "Interrupted",
   "operationFinished": "Operation Finished:",
   "operationCancelled": "Operation Cancelled:",
   "machineNumber": "Machine Number",
@@ -349,7 +351,7 @@
 
  "FailedToFetchData": "Failed to fetch data",
   
-
+"operationDoesNotNeedComponents": "This operation does not need components",
 
   
   "tutorialProfilePicture": "Click on your profile picture to access your profile settings and account information.",

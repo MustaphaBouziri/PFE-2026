@@ -248,7 +248,7 @@ codeunit 50133 "MES Machine Insert"
     // increase item inventory
 
 
-/*
+
 procedure IncreaseItemInventory(
         itemNo: Code[20];
         quantity: Decimal;
@@ -321,8 +321,8 @@ procedure IncreaseItemInventory(
         if ItemJournalLine.FindSet() then
             ItemJournalPostBatch.Run(ItemJournalLine);
     end;
-*/
-procedure IncreaseItemInventory(
+
+/*procedure IncreaseItemInventory(
     itemNo: Code[20];
     quantity: Decimal;
     executionId: Code[50]
@@ -332,19 +332,22 @@ var
     MESExecution: Record "MES Operation Execution";
     ProdOrder: Record "Production Order";
     ProdOrderLine: Record "Prod. Order Line";
+    ProdOrderRoutingLine: Record "Prod. Order Routing Line";
     ItemJournalLine: Record "Item Journal Line";
-    ExistingItemJournalLine: Record "Item Journal Line";
     ItemJournalBatch: Record "Item Journal Batch";
-    ItemJournalPostBatch: Codeunit "Item Jnl.-Post Batch";
+    ItemLedgerEntry: Record "Item Ledger Entry";
+    ItemJournalPostLine: Codeunit "Item Jnl.-Post Line";
     LineNo: Integer;
     TemplateNameToUse: Code[10];
     BatchNameToUse: Code[10];
     ProdOrderNo: Code[20];
-    DocumentNo: Code[20];
 begin
+    if quantity <= 0 then
+        Error('Quantity must be greater than 0.');
+
     if not Item.Get(itemNo) then
         Error(
-            'Item %1 was not found in the Item table.',
+            'Item %1 was not found.',
             itemNo);
 
     if not MESExecution.Get(executionId) then
@@ -354,48 +357,47 @@ begin
 
     ProdOrderNo := MESExecution."Prod Order No";
 
-    // Get the production order to verify it exists
+    // production order
     ProdOrder.Reset();
-    ProdOrder.SetFilter("No.", ProdOrderNo);
+    ProdOrder.SetRange("No.", ProdOrderNo);
 
     if not ProdOrder.FindFirst() then
         Error(
-            'Production Order not found: %1',
+            'Production Order %1 was not found.',
             ProdOrderNo);
 
-    // find the first available journal batch
-    ItemJournalBatch.Reset();
-    ItemJournalBatch.SetRange(
-        "Journal Template Name",
-        'ARTICLE');
-
-    if not ItemJournalBatch.FindFirst() then
+    if ProdOrder.Status <> ProdOrder.Status::Released then
         Error(
-            'No Item Journal Batch found for template ARTICLE');
+            'Production Order %1 must be Released.',
+            ProdOrderNo);
 
-    TemplateNameToUse :=
-        ItemJournalBatch."Journal Template Name";
+    // batch
+    if not ItemJournalBatch.Get('ARTICLE', 'MES') then begin
+        ItemJournalBatch.Init();
+        ItemJournalBatch."Journal Template Name" := 'ARTICLE';
+        ItemJournalBatch.Name := 'MES';
+        ItemJournalBatch.Description := 'MES Article Journal';
+        ItemJournalBatch.Insert(true);
+    end;
 
-    BatchNameToUse :=
-        ItemJournalBatch.Name;
+    TemplateNameToUse := 'ARTICLE';
+    BatchNameToUse := 'MES';
 
-    // get existing document no from batch
-    ExistingItemJournalLine.Reset();
+    // cleanup old lines
+    ItemJournalLine.Reset();
 
-    ExistingItemJournalLine.SetRange(
+    ItemJournalLine.SetRange(
         "Journal Template Name",
         TemplateNameToUse);
 
-    ExistingItemJournalLine.SetRange(
+    ItemJournalLine.SetRange(
         "Journal Batch Name",
         BatchNameToUse);
 
-    if ExistingItemJournalLine.FindFirst() then
-        DocumentNo := ExistingItemJournalLine."Document No."
-    else
-        DocumentNo := 'T00024';
+    if ItemJournalLine.FindSet() then
+        ItemJournalLine.DeleteAll();
 
-    // find the next available line number
+    // line no
     ItemJournalLine.Reset();
 
     ItemJournalLine.SetRange(
@@ -411,7 +413,47 @@ begin
     else
         LineNo := 10000;
 
-    // create item journal line
+    // prod order line
+    ProdOrderLine.Reset();
+
+    ProdOrderLine.SetRange(
+        Status,
+        ProdOrder.Status);
+
+    ProdOrderLine.SetRange(
+        "Prod. Order No.",
+        ProdOrderNo);
+
+    ProdOrderLine.SetRange(
+        "Item No.",
+        itemNo);
+
+    if not ProdOrderLine.FindFirst() then
+        Error(
+            'No production order line found for item %1.',
+            itemNo);
+
+    // routing
+    ProdOrderRoutingLine.Reset();
+
+    ProdOrderRoutingLine.SetRange(
+        Status,
+        ProdOrder.Status);
+
+    ProdOrderRoutingLine.SetRange(
+        "Prod. Order No.",
+        ProdOrderNo);
+
+    ProdOrderRoutingLine.SetRange(
+        "Routing Reference No.",
+        ProdOrderLine."Line No.");
+
+    if not ProdOrderRoutingLine.FindFirst() then
+        Error(
+            'No routing line found for production order %1.',
+            ProdOrderNo);
+
+    // create line
     Clear(ItemJournalLine);
 
     ItemJournalLine.Init();
@@ -428,10 +470,16 @@ begin
         "Posting Date",
         Today());
 
-    // DO NOT SET DOCUMENT NO - Let the system auto-assign it during insert
-    ItemJournalLine."Document No." := DocumentNo;
+    ItemJournalLine.Validate(
+        "Entry Type",
+        ItemJournalLine."Entry Type"::Output);
 
-    // Set production order
+    ItemJournalLine."Document No." := 'MES';
+
+    ItemJournalLine.Validate(
+        "Item No.",
+        itemNo);
+
     ItemJournalLine.Validate(
         "Order Type",
         ItemJournalLine."Order Type"::Production);
@@ -440,59 +488,63 @@ begin
         "Order No.",
         ProdOrderNo);
 
-    // Get production order line
-    ProdOrderLine.Reset();
-    ProdOrderLine.SetRange(Status, ProdOrder.Status);
-    ProdOrderLine.SetRange("Prod. Order No.", ProdOrderNo);
-    ProdOrderLine.SetRange("Item No.", itemNo);
+    ItemJournalLine.Validate(
+        "Order Line No.",
+        ProdOrderLine."Line No.");
 
-    if ProdOrderLine.FindFirst() then
+    ItemJournalLine.Validate(
+        "Operation No.",
+        ProdOrderRoutingLine."Operation No.");
+
+    if ProdOrder."Location Code" <> '' then
         ItemJournalLine.Validate(
-            "Order Line No.",
-            ProdOrderLine."Line No.");
+            "Location Code",
+            ProdOrder."Location Code");
 
-    ItemJournalLine.Validate(
-        "Item No.",
-        itemNo);
-
-    ItemJournalLine.Validate(
-        "Unit of Measure Code",
-        Item."Base Unit of Measure");
-
-    // Set entry type
-    ItemJournalLine.Validate(
-        "Entry Type",
-        ItemJournalLine."Entry Type"::Output);
-
-    // IMPORTANT FOR OUTPUT JOURNALS - set output quantity instead of regular quantity
+    // quantity
     ItemJournalLine.Validate(
         "Output Quantity",
         quantity);
 
     ItemJournalLine.Insert(true);
 
-    // post the journal line
-    ItemJournalLine.Reset();
+    // validations before posting
+    if ItemJournalLine."Operation No." = '' then
+        Error('Operation No is empty.');
 
-    ItemJournalLine.SetRange(
-        "Journal Template Name",
-        TemplateNameToUse);
+    if ItemJournalLine."Order No." = '' then
+        Error('Order No is empty.');
 
-    ItemJournalLine.SetRange(
-        "Journal Batch Name",
-        BatchNameToUse);
+    if ItemJournalLine."Order Line No." = 0 then
+        Error('Order Line No is empty.');
 
-    ItemJournalLine.SetRange(
-        "Document No.",
-        DocumentNo);
+    if ItemJournalLine."Output Quantity" <= 0 then
+        Error('Output quantity invalid.');
 
-    ItemJournalLine.SetRange(
-        "Line No.",
-        LineNo);
+    // post line
+    ItemJournalPostLine.RunWithCheck(ItemJournalLine);
 
-    if ItemJournalLine.FindSet() then
-        ItemJournalPostBatch.Run(ItemJournalLine);
-end;
+    // verify ledger entry created
+    ItemLedgerEntry.Reset();
+
+    ItemLedgerEntry.SetRange(
+        "Item No.",
+        itemNo);
+
+    if not ItemLedgerEntry.FindLast() then
+        Error(
+            'No Item Ledger Entry exists for item %1.',
+            itemNo);
+
+    Error(
+        'SUCCESS\\' +
+        'Entry No=%1\\' +
+        'Quantity=%2\\' +
+        'Remaining Quantity=%3',
+        ItemLedgerEntry."Entry No.",
+        ItemLedgerEntry.Quantity,
+        ItemLedgerEntry."Remaining Quantity");
+end;*/
     // ──────────────────────────────────────────────
     // Scrap records
     // ──────────────────────────────────────────────

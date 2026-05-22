@@ -465,6 +465,7 @@ codeunit 50131 "MES Machine Fetch"
                 // get this item from the item unit table where same number and with this code 
                 QuantityPerUnit := ProductOrderComponent."Quantity per";
                 ItemUnitOfMeasure.Reset();
+                // basicaly to better understand : prod order component tell u how much items required of this item , lets in prod order component it tell u a bike need 10 boxes of glue , we pass the unit of measure to the record item unit of measure to get how many piece of glue in 1 box it have nothing to do with qr code 
                 ItemUnitOfMeasure.SetRange("Item No.", ProductOrderComponent."Item No.");
                 ItemUnitOfMeasure.SetRange(Code, ProductOrderComponent."Unit of Measure Code");
                 if ItemUnitOfMeasure.FindFirst() then

@@ -76,8 +76,8 @@ class _AdminPageState extends State<AdminPage> {
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
                 SidebarItem(
-                  icon: Icons.settings_outlined,
-                  label: "Barcode List",
+                  icon: Icons.qr_code,
+                  label: 'barcodes'.tr(),
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
                 ),

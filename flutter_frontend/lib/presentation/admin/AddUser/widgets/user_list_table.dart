@@ -68,7 +68,7 @@ class _UserListTableState extends State<UserListTable> {
                             key: ValueKey(user.userId),
                             user: user,
                             isCurrentUser:
-                                user.userId == widget.currentUserId,
+                              user.authId.toString() == widget.currentUserId.toString(),
                           );
                         },
                       ),
