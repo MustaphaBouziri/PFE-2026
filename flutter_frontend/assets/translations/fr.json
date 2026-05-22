@@ -103,6 +103,7 @@
   "addNewUser": "Ajouter un utilisateur",
   "totalUsers": "Total utilisateurs",
   "active": "Actif",
+ " usersExportedSuccessfully": "Utilisateurs exportés avec succès",
   "pendingApproval": "En attente d'approbation",
   "pending": "En attente",
   "Pending": "En attente",

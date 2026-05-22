@@ -79,6 +79,7 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
       _isDirty.value = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          
           content: Row(
             children: [
               const Icon(
@@ -90,7 +91,7 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
               Text('settingsSavedSuccessfully'.tr()),
             ],
           ),
-          backgroundColor: const Color(0xFF2E7D5E),
+          backgroundColor:Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),

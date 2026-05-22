@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Buttons extends StatefulWidget {
   final String text;
   final bool isprimary;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool isLoading;
 
   const Buttons({
@@ -24,6 +24,7 @@ class _ButtonsState extends State<Buttons> {
   @override
   Widget build(BuildContext context) {
     final color = widget.isprimary ? Colors.white : const Color(0xFF0F172A);
+    final loaderColor = widget.isprimary ? Colors.white : const Color(0xFF2563EB);
 
     final bgColor = widget.isprimary
         ? const Color(0xFF2563EB)
@@ -68,7 +69,7 @@ class _ButtonsState extends State<Buttons> {
                       height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: color,
+                        color: loaderColor,
                       ),
                     ),
                   ),

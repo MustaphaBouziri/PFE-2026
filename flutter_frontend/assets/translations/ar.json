@@ -145,6 +145,7 @@
   "quantityProduced": "الكمية المُنتَجة:",
   "scrapDeclared": "التالف المبلغ عنه:",
   "uptime": "وقت التشغيل:",
+   "usersExportedSuccessfully": "تم تصدير المستخدمين بنجاح",
   "loginUpdated": "بيانات الدخول الجديدة:",
   "unexpectedError": "حدث خطأ غير متوقع.",
   "generatePassword": "إنشاء كلمة مرور",

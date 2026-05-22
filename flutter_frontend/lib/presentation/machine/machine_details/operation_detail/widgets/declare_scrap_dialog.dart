@@ -185,7 +185,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
       context.read<MachineordersProvider>().triggerRefresh();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())));
+      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr()),backgroundColor: Colors.green,));
     } else {
       setState(() {
         _errorMessage =

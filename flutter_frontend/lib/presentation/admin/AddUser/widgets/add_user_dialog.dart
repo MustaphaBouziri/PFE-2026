@@ -521,6 +521,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('userAddedSuccessfully'.tr()),
+                                backgroundColor: Colors.green,
                               ),
                             );
                             Navigator.of(context).pop();

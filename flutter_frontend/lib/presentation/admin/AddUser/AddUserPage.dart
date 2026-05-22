@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/core/exel/export_user.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/add_user_dialog.dart';
@@ -40,6 +41,7 @@ class _AddUserPageState extends State<AddUserPage> {
   static const int _pageSize = 10;
 
   bool isLoading = false;
+   bool _isExporting = false;
   bool _tutorialShown = false;
 
   late final Stream<List<MesUser>> _usersStream;
@@ -123,6 +125,30 @@ class _AddUserPageState extends State<AddUserPage> {
     }).toList();
   }
 
+  void _exportUsers(List<MesUser> users) async {
+  setState(() => _isExporting = true);
+
+  await Future.delayed(Duration.zero);
+
+  try {
+    final exportService = ExportUserService();
+    await exportService.exportUsersToExcel(users);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('usersExportedSuccessfully'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isExporting = false);
+    }
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final currentUserId = _sessionStorage.getUserId();
@@ -132,14 +158,14 @@ class _AddUserPageState extends State<AddUserPage> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
-            appBar: _buildAppBar(),
+            appBar: _buildAppBar(const []),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
         if (snapshot.hasError) {
           return Scaffold(
-            appBar: _buildAppBar(),
+            appBar: _buildAppBar(const []),
             body: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -189,7 +215,7 @@ class _AddUserPageState extends State<AddUserPage> {
             .toList();
 
         return Scaffold(
-          appBar: _buildAppBar(),
+          appBar: _buildAppBar(users),
           body: Column(
             children: [
               Padding(
@@ -231,14 +257,19 @@ class _AddUserPageState extends State<AddUserPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(List<MesUser> users) {
     return AppBar(
       title: Text(
         'manageUsers'.tr(),
         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
       actions: [
-        Buttons(text: "exportUsers".tr(), isprimary: false, onTap: () {}),
+        Buttons(
+          text: "exportUsers".tr(),
+          isprimary: false,
+          onTap: _isExporting ? null : () => _exportUsers(users),
+          isLoading: _isExporting,
+        ),
         const SizedBox(width: 8),
         Container(
           key: _addUserKey,

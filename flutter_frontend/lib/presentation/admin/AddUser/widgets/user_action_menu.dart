@@ -102,7 +102,7 @@ class UserActionMenu extends StatelessWidget {
     if (result == true) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr())));
+      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr()),backgroundColor: Colors.green,));
     }
   }
 
