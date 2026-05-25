@@ -48,6 +48,9 @@ class _RequiredComponentState extends State<RequiredComponent> {
       builder: (context) => ScannerWidget(
         executionId: widget.executionId,
         components: widget.components,
+        orderRemainingQte: widget.orderQuantity-widget.totalProduced,
+        
+
       ),
     );
   }

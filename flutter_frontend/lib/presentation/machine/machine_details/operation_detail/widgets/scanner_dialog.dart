@@ -11,10 +11,12 @@ import 'package:provider/provider.dart';
 class ScannerWidget extends StatefulWidget {
   final String executionId;
   final List<ComponentConsumptionModel> components;
+  final double orderRemainingQte;
   const ScannerWidget({
     super.key,
     required this.executionId,
     required this.components,
+    required this.orderRemainingQte,
   });
 
   @override
@@ -332,6 +334,21 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                   final item = items[index];
                   // check if item is in components list
                   final exists = isItemInComponents(item.itemNo);
+
+                  //////////////////////////////////////////////
+                  // i need to get the component quanitye per so
+                  final totalScanned = (item.quantity * item.quantityPerUnit)
+                      .toStringAsFixed(0);
+                  //i search the component list where this item no in it and store it in varriable component
+                  final component = widget.components.firstWhere(
+                    (c) => c.itemNo == item.itemNo,
+                  );
+                  // i use the varriable's qute per meaning thi item scanned component quantity per
+
+                  final outOf =
+                      (widget.orderRemainingQte * component.quantityPerUnit)
+                          .toStringAsFixed(0);
+                  ///////////////////////////////////////////
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -355,8 +372,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                                 ),
                               ),
                               subtitle: Text(
-                                // shows: "Qty: 2 × BOX (100 PCS each) = 200 PCS total"
-                                '${'qty'.tr()}${item.quantity} × ${item.unitOfMeasure} (${item.quantityPerUnit.toStringAsFixed(0)} PCS each) = ${(item.quantity * item.quantityPerUnit).toStringAsFixed(0)} PCS total',
+                                '${item.quantity} ${item.unitOfMeasure} = $totalScanned pcs out of $outOf',
                                 style: const TextStyle(
                                   color: Color(0xFF64748B),
                                 ),
