@@ -990,15 +990,11 @@ begin
     ResultJson.Add('itemNo', Item."No.");
     ResultJson.Add('itemDescription', Item.Description);
     ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-    ResultJson.Add('baseUOMQuantityPerUnit', baseUOMQuantityPerUnit); // ← Add this
+    ResultJson.Add('baseUOMQuantityPerUnit', baseUOMQuantityPerUnit);
     ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
     ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
 
     exit(JsonHelper.JsonToText(ResultJson));
 end;
-
-
-
-
 }
 
