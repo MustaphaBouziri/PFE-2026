@@ -260,7 +260,19 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                               // Keep camera stopped - user must click "Scan Again" to continue
                             },
                           )
-                        : Container(color: Colors.white),
+                        : Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.pause_circle_outline,
+                                  size: 70,
+                                  color: Colors.orange,
+                                ),
+                                Text('cameraIsPaused'.tr())
+                              ],
+                            ),
+                          ),
                   ),
                 ),
               ),

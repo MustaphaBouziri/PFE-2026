@@ -1,12 +1,9 @@
-import 'dart:io';
-import 'dart:html' as html;
-
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
+import 'export_user_mobile.dart' if (dart.library.html) 'export_user_web.dart'
+    as platform_export;
 
 class ExportUserService {
   Future<void> exportUsersToExcel(List<MesUser> users) async {
@@ -95,8 +92,8 @@ class ExportUserService {
       sheetObject.setColumnWidth(2, 20);
       sheetObject.setColumnWidth(3, 15);
 
-      // row hight
-      sheetObject.setRowHeight(0, 22); 
+      // row height
+      sheetObject.setRowHeight(0, 22);
 
       for (int i = 1; i <= users.length; i++) {
         sheetObject.setRowHeight(i, 20);
@@ -109,46 +106,11 @@ class ExportUserService {
         throw Exception('Failed to encode Excel file');
       }
 
-      // web
-      if (kIsWeb) {
-        _downloadFileWeb(bytes);
-      }
-
-      // this is for mobile and dezsktop
-      else {
-        final directory = await getApplicationDocumentsDirectory();
-
-        final filePath =
-            '${directory.path}/MES_Users_${DateTime.now().millisecondsSinceEpoch}.xlsx';
-
-        final file = File(filePath);
-
-        await file.writeAsBytes(bytes);
-
-        // share file 
-        await Share.shareXFiles(
-          [XFile(filePath)],
-          text: 'MES Users Export',
-        );
-      }
+      // Delegate to platform-specific implementation
+      final fileName = 'MES_Users_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      await platform_export.downloadFile(bytes, fileName);
     } catch (e) {
       throw Exception('Failed to export users: $e');
     }
-  }
-
-  // download for web
-  void _downloadFileWeb(List<int> bytes) {
-    final blob = html.Blob([bytes]);
-
-    final url = html.Url.createObjectUrlFromBlob(blob);
-
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute(
-        'download',
-        'MES_Users_${DateTime.now().millisecondsSinceEpoch}.xlsx',
-      )
-      ..click();
-
-    html.Url.revokeObjectUrl(url);
   }
 }

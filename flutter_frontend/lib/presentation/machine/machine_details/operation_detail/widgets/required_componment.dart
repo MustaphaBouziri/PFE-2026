@@ -48,9 +48,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
       builder: (context) => ScannerWidget(
         executionId: widget.executionId,
         components: widget.components,
-        orderRemainingQte: widget.orderQuantity-widget.totalProduced,
-        
-
+        orderRemainingQte: widget.orderQuantity - widget.totalProduced,
       ),
     );
   }
@@ -187,7 +185,8 @@ class _RequiredComponentState extends State<RequiredComponent> {
                                           components: filteredComponents,
                                           totalProduced: widget.totalProduced,
                                           orderQuantity: widget.orderQuantity,
-                                          outputScrapQuantity:widget.outputScrapQuantity
+                                          outputScrapQuantity:
+                                              widget.outputScrapQuantity,
                                         ),
                                       ),
                                     ],
@@ -279,7 +278,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
                 components: filteredComponents,
                 totalProduced: widget.totalProduced,
                 orderQuantity: widget.orderQuantity,
-                outputScrapQuantity:widget.outputScrapQuantity,
+                outputScrapQuantity: widget.outputScrapQuantity,
               ),
             ),
           ],
@@ -312,7 +311,7 @@ class ComponentListView extends StatelessWidget {
   static const statusLowStock = 'lowStock';
   static const statusAvailable = 'available';
 
-    String getStatus(
+  String getStatus(
     double remaining,
     double scanned,
     double orderQuantity,
@@ -325,6 +324,7 @@ class ComponentListView extends StatelessWidget {
     if (remaining < requiredForOrder) return statusLowStock;
     return statusAvailable;
   }
+
   Color getBgColor(String status) {
     if (status == statusAvailable) {
       return const Color(0xFFDCFCE7);
@@ -379,10 +379,12 @@ class ComponentListView extends StatelessWidget {
         final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
 
-        final scrap = component.scrapQuantity+component.quantityPerUnit*outputScrapQuantity;
+        final scrap =
+            component.scrapQuantity +
+            component.quantityPerUnit * outputScrapQuantity;
         final remaining = scanned - consumed - scrap;
 
-       final status = getStatus(
+        final status = getStatus(
           remaining,
           scanned,
           orderQuantity,
@@ -407,7 +409,13 @@ class ComponentListView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${component.itemDescription} (${component.inventory} in storage)',
+                      'componentInventoryInStorage'.tr(
+                        args: [
+                          component.itemDescription,
+                          component.inventory.toString(),
+                        ],
+                      ),
+
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

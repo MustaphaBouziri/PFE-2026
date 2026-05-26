@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/change_password_form.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChangePassMobileLayout extends StatelessWidget {
   final TextEditingController newPasswordController;
@@ -39,10 +39,14 @@ class ChangePassMobileLayout extends StatelessWidget {
                 child: Column(
                   children: [
                     //___________________ LOGO ___________________
-                    const Icon(
-                      Icons.factory_outlined,
-                      size: 70,
-                      color: mainColor,
+                    SvgPicture.asset(
+                      'assets/images/applogo.svg',
+                      width: 70,
+                      height: 70,
+                      colorFilter: const ColorFilter.mode(
+                        mainColor,
+                        BlendMode.srcIn,
+                      ),
                     ),
 
                     const SizedBox(height: 20),

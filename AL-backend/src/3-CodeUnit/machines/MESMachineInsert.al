@@ -118,7 +118,10 @@ codeunit 50133 "MES Machine Insert"
         // rule 1:
         // if the first operation is cancelled -> finish the production order
         if IsFirstOperation(prodOrderNo, operationNo) and
-           (mesOperationStatus = "MES Operation Status"::Cancelled)
+           (mesOperationStatus in [
+               "MES Operation Status"::Cancelled,
+               "MES Operation Status"::Interrupted
+           ])
         then begin
             ProdOrderStatusMgt.ChangeProdOrderStatus(
                 ProdOrder,
@@ -134,7 +137,8 @@ codeunit 50133 "MES Machine Insert"
         if IsLastOperation(prodOrderNo, operationNo) and
            (mesOperationStatus in [
                "MES Operation Status"::Finished,
-               "MES Operation Status"::Cancelled
+               "MES Operation Status"::Cancelled,
+               "MES Operation Status"::Interrupted
            ])
         then begin
             ProdOrderStatusMgt.ChangeProdOrderStatus(

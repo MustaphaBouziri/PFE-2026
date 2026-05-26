@@ -317,7 +317,7 @@
   "barcodeNotRecognized": "Code-barres non reconnu",
   "errorSubmittingScans": "Erreur lors de l'envoi des scans",
   "loadingOperators": "Chargement des opérateurs…",
-  "insufficientComponentQuantity": "La quantité restante est insuffisante",
+"insufficientComponentQuantity": "Les composants restants ne sont pas suffisants",
   "pleaseSelectScrapCode": "sélectionner un code de rebut",
   "pleaseSelectComponent": "Veuillez sélectionner un composant",
   "insufficientInventoryFor": "Stock insuffisant pour ",
@@ -353,8 +353,8 @@
   "exportPDF": "Exporter en PDF",
  
 "FailedToFetchData": "Échec de la récupération des données",
-
-
+"cameraIsPaused": "La caméra est en pause",
+"componentInventoryInStorage": "{} ({} en stock)" ,
   "tutorialAdminSearch": "Recherche du tableau de bord administrateur. Trouvez des utilisateurs par nom ou par e-mail.",
   "tutorialAdminRoleFilter": "Filtrez les utilisateurs par rôle : Tous, Administrateur, Superviseur ou Opérateur.",
   "tutorialAdminAddUser": "Cliquez ici pour ajouter un nouvel utilisateur au système.",

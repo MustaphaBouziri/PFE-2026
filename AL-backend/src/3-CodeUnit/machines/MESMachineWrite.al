@@ -374,7 +374,7 @@ end;
         else
             MachineInsert.InsertIdleMachineStatus(machineNo);
             // new change to verify with u  : 
-         if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled] then
+         if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled, "MES Operation Status"::Interrupted] then
             MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo, targetStatus);
 
         exit(BuildSuccessResponse());

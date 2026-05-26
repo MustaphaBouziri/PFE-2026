@@ -227,7 +227,7 @@
   "start": "Start",
   "end": "End",
   "cancelOrderConfirm": "Are you sure you want to cancel order {}?\n\nThis will mark the operation as finished and free the machine.",
-  
+  "cameraIsPaused": "Camera is paused",
   "cancelled": "CANCELLED",
   "paused": "PAUSED",
   "finished": "FINISHED",
@@ -314,7 +314,7 @@
   "barcodeNotRecognized": "Barcode not recognized",
   "errorSubmittingScans": "Error submitting scans",
   "loadingOperators": "Loading operators…",
-"insufficientComponentQuantity": "remaining quantity is not enough",
+"insufficientComponentQuantity": "Remaining components are not enough",
   "pleaseSelectScrapCode": "select a scrap code",
   "pleaseSelectComponent": "Please select a component",
   "insufficientInventoryFor": "Insufficient inventory for ",
@@ -353,7 +353,7 @@
  "FailedToFetchData": "Failed to fetch data",
   
 "operationDoesNotNeedComponents": "This operation does not need components",
-
+"componentInventoryInStorage": "{} ({} in storage)",
   
   "tutorialProfilePicture": "Click on your profile picture to access your profile settings and account information.",
   "tutorialSearchFilter": "Use this search bar to find machines by name or work center, and filter them by their status (All, Working, Idle).",
