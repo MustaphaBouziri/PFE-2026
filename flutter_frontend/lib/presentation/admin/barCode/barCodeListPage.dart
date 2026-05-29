@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pfe_mes/domain/machines/barCode/provider/mes_barCode_provider.dart';
-import 'package:pfe_mes/presentation/machine/barCode/widgets/dataMatrix_card.dart';
+import 'package:pfe_mes/presentation/admin/barCode/widgets/dataMatrix_card.dart';
 import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:printing/printing.dart';
@@ -93,8 +93,11 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           build: (pw.Context ctx) => pw.Center(
-            child: pw.Image(pw.MemoryImage(barcodeImage),
-                width: 300, height: 300),
+            child: pw.Image(
+              pw.MemoryImage(barcodeImage),
+              width: 300,
+              height: 300,
+            ),
           ),
         ),
       );
@@ -116,7 +119,8 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
       }
     }
   }
-   @override
+
+  @override
   void dispose() {
     searchcontroller.dispose();
     super.dispose();
@@ -146,6 +150,14 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
           'barcodes'.tr(),
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<MesBarcodeProvider>().fetchAllBarcodes();
+            },
+          ),
+        ],
       ),
       body: Consumer<MesBarcodeProvider>(
         builder: (ctx, provider, _) {
@@ -256,6 +268,4 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
       ),
     );
   }
-
- 
 }

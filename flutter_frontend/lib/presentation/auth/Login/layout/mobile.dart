@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/login_shared_form.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LoginMobileLayout extends StatelessWidget {
   final TextEditingController authIdController;
@@ -50,8 +51,8 @@ class LoginMobileLayout extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    const Text(
-                      "Login Page",
+                     Text(
+                      "loginPage".tr(),
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,

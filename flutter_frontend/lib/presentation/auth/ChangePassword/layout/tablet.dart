@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/change_password_form.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChangePassTabletLayout extends StatelessWidget {
   final TextEditingController oldPasswordController;
@@ -69,8 +70,8 @@ class ChangePassTabletLayout extends StatelessWidget {
 
                           const SizedBox(height: 24),
 
-                          const Text(
-                            "Login Page",
+                           Text(
+                            "changePasswordPage".tr(),
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,

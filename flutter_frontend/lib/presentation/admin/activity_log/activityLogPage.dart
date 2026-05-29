@@ -44,6 +44,9 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
           ) ||
           log.action.toLowerCase().contains(
             searchController.text.toLowerCase(),
+          ) ||
+          log.timestamp.toLowerCase().contains(
+            searchController.text.toLowerCase(),
           );
       return typeMatch && searchMatch;
     }).toList();

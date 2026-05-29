@@ -120,11 +120,12 @@ codeunit 50131 "MES Machine Fetch"
 
         if ProductOrderRoutingLine.FindSet() then
             repeat
+            //check if operation already started meaning execution exist
                 MESExecution.Reset();
                 MESExecution.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
                 MESExecution.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
                 MESExecution.SetRange("Machine No", MachineNo);
-
+                //if no execution exist then :
                 if not MESExecution.FindFirst() then begin
                     Clear(ProductOrderRoutingLineObj);
 
@@ -174,9 +175,10 @@ codeunit 50131 "MES Machine Fetch"
 
         MESExecution.Reset();
         MESExecution.SetRange("Machine No", machineNo);
-
+// get all executions foro this machine (tab 2)
         if MESExecution.FindSet() then
             repeat
+            //get the latest status for this execution
                 MESOperationStatus.Reset();
                 MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
                 MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
@@ -198,6 +200,7 @@ codeunit 50131 "MES Machine Fetch"
                         ];
 
                     if ShouldInclude then begin
+                        //need to track when operatoin started and finished (to ask)
                         Clear(StartDateTime);
                         Clear(EndDateTime);
                         CurrentOperationStatus := Format(MESOperationStatus."Operation Status");
@@ -268,7 +271,9 @@ codeunit 50131 "MES Machine Fetch"
 
         exit(JsonHelper.JsonToTextArr(MESOperationStatusArr));
     end;
+    
 
+    // real time details for a specific operation to get current status,produced quantity,scrap and progress...
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20];
         operationNo: Code[10]): Text
     var
@@ -293,28 +298,30 @@ codeunit 50131 "MES Machine Fetch"
             MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
             MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
             MESOperationStatus.Ascending(false);
-
+// aizen to ask why not repeat why find first ? find first first operation so how running or paused is enough why only 1 recard
             if MESOperationStatus.FindFirst() then begin
+                // as long last operation status aint finish u good to go
                 if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
                    (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
-
+// aizen why we do format for status
                     Clear(MESOperationStatusObj);
                     MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
                     // calculate scrap 
                     scrapQuantity := 0;
                     MESScrap.Reset();
                     MESScrap.SetRange("Execution Id", MESExecution."Execution Id");
-                    MESScrap.SetRange("Material Id", ''); // to exclude scrap records with material id which are not related to the current operation
+                    MESScrap.SetRange("Material Id", ''); // general scrap (not linked to a specific material) the "finsihed product not cadre"
                     if MESScrap.FindSet() then begin
                         repeat
                             scrapQuantity += MESScrap."Scrap Quantity";
                         until MESScrap.Next() = 0;
                     end;
+                    //get progress data
                     MESOperationProgress.Reset();
                     MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                     MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
                     MESOperationProgress.Ascending(false);
-
+                  
                     if MESOperationProgress.FindFirst() then begin
                         MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
                         MESOperationStatusObj.Add('executionId', MESOperationStatus."Execution Id");
@@ -332,7 +339,7 @@ codeunit 50131 "MES Machine Fetch"
 
         exit(JsonHelper.JsonToTextArr(MESOperationStatusArr));
     end;
-
+   // get a history of all production cycles 
     procedure fetchProductionCycles(
         machineNo: Code[20];
         prodOrderNo: Code[20];
@@ -371,7 +378,6 @@ codeunit 50131 "MES Machine Fetch"
                 //CycleObj.Add('scrapQuantity', OperationCycle."Scrap Quantity");
                 CycleObj.Add('operatorId', OperationCycle."Operator Id");
                 CycleObj.Add('declaredAt', Format(OperationCycle."Declared At"));
-
                 if MESUser.Get(OperationCycle."Operator Id") then begin
                     if Employee.Get(MESUser."Employee ID") then begin
                         CycleObj.Add('firstName', Employee."First Name");
@@ -392,6 +398,7 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(CycleArr));
     end;
 
+//get all component needed fot this operation + show how much of this component has been consumed and scanned so far
     procedure fetchBom(
        prodOrderNo: Code[20];
        operationNo: Code[10]): Text
@@ -418,6 +425,9 @@ codeunit 50131 "MES Machine Fetch"
         Clear(BomArr);
 
         MESExecution.Reset();
+        // aizen we not machine as well ?
+        // MESExecution.SetRange("Machine No", machineNo);
+
         MESExecution.SetRange("Prod Order No", prodOrderNo);
         MESExecution.SetRange("Operation No", operationNo);
         if MESExecution.FindFirst() then
@@ -430,7 +440,7 @@ codeunit 50131 "MES Machine Fetch"
         | ----- | --------- | ------------ |
         | 1001  | 10        | A            |
         */
-
+     
         ProductOrderRoutingLine.Reset();
         ProductOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         ProductOrderRoutingLine.SetRange("Operation No.", operationNo);
@@ -454,7 +464,7 @@ codeunit 50131 "MES Machine Fetch"
                     if MESComponentConsumption.FindSet() then
                         //if there is no record in mes Component json wil return consumed qte 0 
                         repeat
-                            // count how many scan records exist for this component 
+                            // count how many scan records exist for this component (5 boxes scanned)
                             numberScanned += MESComponentConsumption."Quantity Scanned";
                             //convert to  units exemple if  1 box have 5 nails and i scanned 2 boxes total is 10
                             TotalQuantityScanned += MESComponentConsumption."Quantity Scanned" * MESComponentConsumption."Quantity per Unit of Measure";// qte scanned * quantity per unit of measure, so if i scanned 1 box of nail and each box has 5 piece the total quantity scanned will be 5 piece of nail
@@ -465,7 +475,7 @@ codeunit 50131 "MES Machine Fetch"
                 // get this item from the item unit table where same number and with this code 
                 QuantityPerUnit := ProductOrderComponent."Quantity per";
                 ItemUnitOfMeasure.Reset();
-                // basicaly to better understand : prod order component tell u how much items required of this item , lets in prod order component it tell u a bike need 10 boxes of glue , we pass the unit of measure to the record item unit of measure to get how many piece of glue in 1 box it have nothing to do with qr code 
+                // basicaly to better understand : prod order component tell u how much items required of this item , lets say  in prod order component it tell u a bike need 10 boxes of glue , we pass the unit of measure to the record item unit of measure to get how many piece of glue in 1 box it have nothing to do with qr code 
                 ItemUnitOfMeasure.SetRange("Item No.", ProductOrderComponent."Item No.");
                 ItemUnitOfMeasure.SetRange(Code, ProductOrderComponent."Unit of Measure Code");
                 if ItemUnitOfMeasure.FindFirst() then
@@ -498,8 +508,8 @@ codeunit 50131 "MES Machine Fetch"
                         BomObj.Add('baseUOMQuantityPerUnit', ItemUnitOfMeasure."Qty. per Unit of Measure")
                     else
                         BomObj.Add('baseUOMQuantityPerUnit', 1);
-                
-                
+
+
 
 
                 end;
@@ -557,6 +567,8 @@ codeunit 50131 "MES Machine Fetch"
         ItemObj: JsonObject;
         ResultText: Text;
     begin
+        Item.Reset();
+        Item.SetFilter("MES Barcode Code", '<>%1', '');
         Item.FindSet();
         repeat
             /**
@@ -916,85 +928,86 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
 
-
+// decode a barcode to identify the iteme and its unit of measure return item detials
     procedure resolveBarcode(barcode: Text): Text
-var
-    Item: Record Item;
-    ItemIdentifier: Record "Item Identifier";
-    ItemUnitOfMeasure: Record "Item Unit of Measure";
-    quantityPerUnitOfMeasure: Decimal;
-    baseUOMQuantityPerUnit: Decimal;
-    ResultJson: JsonObject;
-    JsonHelper: Codeunit "MES Json Helper";
-    ItemNo: Code[20];
-    startPos: Integer;
-    endPos: Integer;
-begin
-    // we check if the barcode contain item number in the string if yes we will extact the item number from the string
-    if StrPos(barcode, 'Item Number:') > 0 then begin
+    var
+        Item: Record Item;
+        ItemIdentifier: Record "Item Identifier";
+        ItemUnitOfMeasure: Record "Item Unit of Measure";
+        quantityPerUnitOfMeasure: Decimal;
+        baseUOMQuantityPerUnit: Decimal;
+        ResultJson: JsonObject;
+        JsonHelper: Codeunit "MES Json Helper";
+        ItemNo: Code[20];
+        startPos: Integer;
+        endPos: Integer;
+    begin
+        //case our barcode 
+        // we check if the barcode contain item number in the string if yes we will extact the item number from the string
+        if StrPos(barcode, 'Item Number:') > 0 then begin
 
-        startPos := StrPos(barcode, 'Item Number: ');
-        startPos := startPos + StrLen('Item Number: ');
+            startPos := StrPos(barcode, 'Item Number: ');
+            startPos := startPos + StrLen('Item Number: ');
 
-        endPos := StrPos(barcode, '|');
-        if endPos = 0 then
-            endPos := StrLen(barcode) + 1;
+            endPos := StrPos(barcode, '|');
+            if endPos = 0 then
+                endPos := StrLen(barcode) + 1;
 
-        ItemNo := CopyStr(barcode, startPos, endPos - startPos);
-        // we search the item table and  get from the "item table new column extension mes barcode code" value  "mes-1100" using the item number that we extracted from the barcode
-        if Item.Get(ItemNo) then
-            // we override the barcode with the MES Barcode Code from the item table to be used in the next step : check if this barcode exist in the identifier table
-            barcode := Item."MES Barcode Code"
-        else begin
-            //if not found it means the item number we extracted does not exist in the item table or its fake or its correpted 
+            ItemNo := CopyStr(barcode, startPos, endPos - startPos);
+            // we search the item table and  get from the "item table new column extension mes barcode code" value  "mes-1100" using the item number that we extracted from the barcode
+            if Item.Get(ItemNo) then
+                // we override the barcode with the MES Barcode Code from the item table to be used in the next step : check if this barcode exist in the identifier table
+                barcode := Item."MES Barcode Code"
+            else begin
+                //if not found it means the item number we extracted does not exist in the item table or its fake or its correpted 
+                ResultJson.Add('resolved', false);
+                ResultJson.Add('message', 'Item not found from DataMatrix');
+                exit(JsonHelper.JsonToText(ResultJson));
+            end;
+        end;
+
+        ItemIdentifier.Reset();
+        ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
+        // we check if the barcode code  exist in the item identifier table if not found it means this is a random barcode /not yet to be registered 
+        if not ItemIdentifier.FindFirst() then begin
             ResultJson.Add('resolved', false);
-            ResultJson.Add('message', 'Item not found from DataMatrix');
+            ResultJson.Add('message', 'Barcode not recognized');
             exit(JsonHelper.JsonToText(ResultJson));
         end;
-    end;
 
-    ItemIdentifier.Reset();
-    ItemIdentifier.SetRange(Code, CopyStr(barcode, 1, 20));
-    // we check if the barcode code  exist in the item identifier table if not found it means this is a random barcode /not yet to be registered 
-    if not ItemIdentifier.FindFirst() then begin
-        ResultJson.Add('resolved', false);
-        ResultJson.Add('message', 'Barcode not recognized');
+        ItemNo := ItemIdentifier."Item No.";
+        //looks like we have the same validation  the diferent is the sourse one from item id extracted from barcode string one item no from table identifier
+        // this just to ensure the item linked to this barcdoe is still valid in the system and not deleted or soemthing 
+        if not Item.Get(ItemNo) then begin
+            ResultJson.Add('resolved', false);
+            ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
+            exit(JsonHelper.JsonToText(ResultJson));
+        end;
+
+        // Get barcode UOM's quantity per unit of measure
+        ItemUnitOfMeasure.Reset();
+        ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+        ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
+        if ItemUnitOfMeasure.FindFirst() then
+            quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
+        // get base unit of measure"s  quantity per unit of measure
+        baseUOMQuantityPerUnit := 1; // Base UOM always has 1 (it's the reference)
+        ItemUnitOfMeasure.Reset();
+        ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
+        ItemUnitOfMeasure.SetRange(Code, Item."Base Unit of Measure");
+        if ItemUnitOfMeasure.FindFirst() then
+            baseUOMQuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure";
+
+        ResultJson.Add('resolved', true);
+        ResultJson.Add('itemNo', Item."No.");
+        ResultJson.Add('itemDescription', Item.Description);
+        ResultJson.Add('baseUOM', Item."Base Unit of Measure");
+        ResultJson.Add('baseUOMQuantityPerUnit', baseUOMQuantityPerUnit);
+        ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
+        ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
+
         exit(JsonHelper.JsonToText(ResultJson));
     end;
-
-    ItemNo := ItemIdentifier."Item No.";
-    //looks like we have the same validation  the diferent is the sourse one from item id extracted from barcode string one item no from table identifier
-    // this just to ensure the item linked to this barcdoe is still valid in the system and not deleted or soemthing 
-    if not Item.Get(ItemNo) then begin
-        ResultJson.Add('resolved', false);
-        ResultJson.Add('message', 'Item ' + ItemNo + ' not found');
-        exit(JsonHelper.JsonToText(ResultJson));
-    end;
-
-    // Get barcode UOM's quantity per unit of measure
-    ItemUnitOfMeasure.Reset();
-    ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
-    ItemUnitOfMeasure.SetRange(Code, ItemIdentifier."Unit of Measure Code");
-    if ItemUnitOfMeasure.FindFirst() then
-        quantityPerUnitOfMeasure := ItemUnitOfMeasure."Qty. per Unit of Measure";
-
-    // get base unit of measure"s  quantity per unit of measure
-    baseUOMQuantityPerUnit := 1; // Base UOM always has 1 (it's the reference)
-    ItemUnitOfMeasure.Reset();
-    ItemUnitOfMeasure.SetRange("Item No.", ItemNo);
-    ItemUnitOfMeasure.SetRange(Code, Item."Base Unit of Measure");
-    if ItemUnitOfMeasure.FindFirst() then
-        baseUOMQuantityPerUnit := ItemUnitOfMeasure."Qty. per Unit of Measure";
-
-    ResultJson.Add('resolved', true);
-    ResultJson.Add('itemNo', Item."No.");
-    ResultJson.Add('itemDescription', Item.Description);
-    ResultJson.Add('baseUOM', Item."Base Unit of Measure");
-    ResultJson.Add('baseUOMQuantityPerUnit', baseUOMQuantityPerUnit);
-    ResultJson.Add('unitOfMeasure', ItemIdentifier."Unit of Measure Code");
-    ResultJson.Add('quantityPerUnitOfMeasure', quantityPerUnitOfMeasure);
-
-    exit(JsonHelper.JsonToText(ResultJson));
-end;
 }
 

@@ -30,4 +30,18 @@ class Utils {
       return raw;
     }
   }
+
+  static String formatSearchableDate(dynamic dt) {
+  if (dt == null) return '';
+
+  final DateTime? dateTime = DateTime.tryParse(dt.toString());
+
+  if (dateTime == null) return '';
+
+  final day = dateTime.day.toString().padLeft(2, '0');
+  final month = dateTime.month.toString().padLeft(2, '0');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  final monthName = months[dateTime.month - 1];
+  return '$day $monthName ${dateTime.year} $day/$month/${dateTime.year} $day-$month-${dateTime.year}';
+}
 }

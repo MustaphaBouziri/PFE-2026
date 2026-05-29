@@ -229,7 +229,7 @@ codeunit 50133 "MES Machine Insert"
         // if this is the last operation increase this item  inventory
         if IsLastOperation(prodOrderNo, operationNo) then
             IncreaseItemInventory(MESExecution."Item No", input, MESExecution."Execution Id");
-
+//aizen twise ??
         EnsureUserExecutionInteraction(MESExecution."Execution Id", operatorId);
         EnsureUserExecutionInteraction(MESExecution."Execution Id", declaredById);
     end;
@@ -580,13 +580,14 @@ end;*/
             MESScrap."scrap Description" := CopyStr(ScrapRec.Description, 1, 100);
 
         MESScrap.Insert(true);
+        //aizen why here we didnt do the esure user whatever 
     end;
 
     // ──────────────────────────────────────────────
     // Composite helpers
     // ──────────────────────────────────────────────
 
-    /// Orchestrates all inserts required to start a fresh operation.
+    /// Orchestrates all inserts required to start a fresh operation. (inisual info working, default value etc )
     procedure InsertStartOperationRecords(
         prodOrderNo: Code[20];
         operationNo: Code[10];
@@ -604,15 +605,7 @@ end;*/
     end;
 
 
-
-
-
-
-
-
-
-
-
+// return thr total produced quantity used in the validation layer to check send ahead quanity =
     procedure GetPreviousOperationProducedQuantity(executionId: Code[50]): Decimal
     var
         MESOperationProgress: Record "MES Operation Progression";
@@ -639,19 +632,6 @@ end;*/
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     // ──────────────────────────────────────────────
     // Query helpers
     // ──────────────────────────────────────────────
@@ -670,6 +650,7 @@ end;*/
         MESExecution.FindFirst();
     end;
 
+// aizen this check ig the execution already exist by not in validation
     procedure ExecutionExists(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
     var
         MESExecution: Record "MES Operation Execution";

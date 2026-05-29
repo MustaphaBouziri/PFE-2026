@@ -5,7 +5,7 @@ import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/presentation/admin/addUser/AddUserPage.dart';
 import 'package:pfe_mes/presentation/admin/activity_log/activityLogPage.dart';
 import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
-import 'package:pfe_mes/presentation/machine/barCode/barCodeListPage.dart';
+import 'package:pfe_mes/presentation/admin/barCode/barCodeListPage.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
 import 'package:pfe_mes/presentation/admin/settings/settingsPage.dart';
 import 'package:provider/provider.dart';
