@@ -177,7 +177,7 @@ codeunit 50132 "MES Machine Write"
             MESOperationStatus."Operation Status"::Running,
             MesUserId));
     end;
-
+/*
   procedure insertScans(
     executionId: Code[50];
     scansJson: Text;
@@ -310,7 +310,155 @@ begin
     MachineInsert.EnsureUserExecutionInteraction(executionId, operatorId);
 
     exit(BuildSuccessResponse());
+end;*/
+procedure insertScans(
+    executionId: Code[50];
+    scansJson: Text;
+    operatorId: Code[50];
+    declaredById: Code[50]
+): Text
+var
+    MESExecution: Record "MES Operation Execution";
+    MESConsumption: Record "MES Component Consumption";
+    Item: Record Item;
+    ItemJournalLine: Record "Item Journal Line";
+    ItemJournalBatch: Record "Item Journal Batch";
+    NoSeriesManagement: Codeunit NoSeriesManagement;
+    MachineInsert: Codeunit "MES Machine Insert";
+    ItemJournalPostLine: Codeunit "Item Jnl.-Post Line";
+    ScansArr: JsonArray;
+    ScanToken: JsonToken;
+    ScanObj: JsonObject;
+    ItemNoToken: JsonToken;
+    BarcodeToken: JsonToken;
+    QtyScannedToken: JsonToken;
+    UnitOfMeasureToken: JsonToken;
+    QuantityPerUnitOfMeasureToken: JsonToken;
+    ProdOrderLine: Record "Prod. Order Line";
+    ProdOrder: Record "Production Order";
+    ItemNo: Code[20];
+    QtyScanned: Decimal;
+    LineNo: Integer;
+    TemplateNameToUse: Code[10];
+    BatchNameToUse: Code[10];
+    DocumentNo: Code[20];
+begin
+    if not MESExecution.Get(executionId) then
+        exit(BuildFailureResponse('Execution not found'));
+
+    // find production order
+    ProdOrder.Reset();
+    ProdOrder.SetRange("No.", MESExecution."Prod Order No");
+    if not ProdOrder.FindFirst() then
+        exit(BuildFailureResponse('Production order not found.'));
+
+    // find production order line
+    ProdOrderLine.Reset();
+    ProdOrderLine.SetRange(Status, ProdOrder.Status);
+    ProdOrderLine.SetRange("Prod. Order No.", MESExecution."Prod Order No");
+    if not ProdOrderLine.FindFirst() then
+        exit(BuildFailureResponse('Production order line not found.'));
+
+    ScansArr.ReadFrom(scansJson);
+
+    // batch
+    if not ItemJournalBatch.Get('ARTICLE', 'DEFAUT') then
+        exit(BuildFailureResponse('Journal batch ARTICLE/DEFAUT not found.'));
+
+    TemplateNameToUse := 'ARTICLE';
+    BatchNameToUse := 'DEFAUT';
+
+    // document no - use no series if batch has one
+    if ItemJournalBatch."No. Series" <> '' then
+        DocumentNo := NoSeriesManagement.GetNextNo(ItemJournalBatch."No. Series", Today(), true)
+    else
+        DocumentNo := CopyStr('MES-' + executionId, 1, 20);
+
+    // cleanup old lines
+    ItemJournalLine.Reset();
+    ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+    ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+    if ItemJournalLine.FindSet() then
+        ItemJournalLine.DeleteAll();
+
+    // find next available line number
+    ItemJournalLine.Reset();
+    ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+    ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
+    if ItemJournalLine.FindLast() then
+        LineNo := ItemJournalLine."Line No." + 10000
+    else
+        LineNo := 10000;
+
+    foreach ScanToken in ScansArr do begin
+        Clear(MESConsumption);
+        ScanObj := ScanToken.AsObject();
+
+        ScanObj.Get('itemNo', ItemNoToken);
+        ScanObj.Get('barcode', BarcodeToken);
+        ScanObj.Get('quantityScanned', QtyScannedToken);
+        ScanObj.Get('unitOfMeasure', UnitOfMeasureToken);
+        ScanObj.Get('quantityPerUnitOfMeasure', QuantityPerUnitOfMeasureToken);
+
+        ItemNo := CopyStr(ItemNoToken.AsValue().AsText(), 1, 20);
+        QtyScanned := QtyScannedToken.AsValue().AsDecimal();
+
+        // insert consumption record in MES table
+        MESConsumption.Init();
+        MESConsumption."Execution Id" := executionId;
+        MESConsumption."Prod Order No" := MESExecution."Prod Order No";
+        MESConsumption."Item No" := ItemNo;
+        MESConsumption.Barcode := BarcodeToken.AsValue().AsText();
+        MESConsumption."Quantity Scanned" := QtyScanned;
+        MESConsumption."Unit of Measure" :=
+            CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10);
+        MESConsumption."Quantity per Unit of Measure" :=
+            QuantityPerUnitOfMeasureToken.AsValue().AsDecimal();
+        MESConsumption."Operator Id" := operatorId;
+        MESConsumption."Declared By" := declaredById;
+        MESConsumption.Insert(true);
+
+        // create consumption journal line
+        if Item.Get(ItemNo) then begin
+            Clear(ItemJournalLine);
+            ItemJournalLine.Init();
+
+            ItemJournalLine."Journal Template Name" := TemplateNameToUse;
+            ItemJournalLine."Journal Batch Name" := BatchNameToUse;
+            ItemJournalLine."Line No." := LineNo;
+
+            ItemJournalLine.Validate("Posting Date", Today());
+            ItemJournalLine.Validate("Entry Type", ItemJournalLine."Entry Type"::Consumption);
+
+            ItemJournalLine."Document No." := DocumentNo;
+
+            ItemJournalLine.Validate("Item No.", ItemNo);
+            ItemJournalLine.Validate("Order Type", ItemJournalLine."Order Type"::Production);
+            ItemJournalLine.Validate("Order No.", MESExecution."Prod Order No");
+            ItemJournalLine.Validate("Order Line No.", ProdOrderLine."Line No.");
+
+            ItemJournalLine.Validate(
+                "Unit of Measure Code",
+                CopyStr(UnitOfMeasureToken.AsValue().AsText(), 1, 10));
+
+            ItemJournalLine.Validate("Quantity", QtyScanned);
+
+            ItemJournalLine.Insert(true);
+
+            // post line immediately after insert
+            ItemJournalPostLine.RunWithCheck(ItemJournalLine);
+
+            LineNo += 10000;
+        end else
+            exit(BuildFailureResponse(StrSubstNo('Item %1 was not found.', ItemNo)));
+    end;
+
+    MachineInsert.EnsureUserExecutionInteraction(executionId, operatorId);
+
+    exit(BuildSuccessResponse());
 end;
+
+
 
     procedure declareScrap(
         executionId: Code[50];
