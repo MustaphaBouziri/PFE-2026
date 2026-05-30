@@ -49,6 +49,14 @@ page 50115 "MES Component Consumption"
                 {
                     ApplicationArea = All;
                 }
+                Field("Unit of Measure"; Rec."Unit of Measure")
+                {
+                    ApplicationArea = All;
+                }
+                Field("Quantity per Unit of Measure"; Rec."Quantity per Unit of Measure")
+                {
+                    ApplicationArea = All;
+                }
 
                 //field("Quantity Consumed"; Rec."Quantity Consumed")
                 //{

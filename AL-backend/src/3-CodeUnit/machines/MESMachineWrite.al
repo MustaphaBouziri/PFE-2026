@@ -547,6 +547,8 @@ end;
 
         MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo, mesUserId);
         MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled, mesUserId);
+        // i added this for close operation if first or last operation
+         MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo, "MES Operation Status"::Cancelled);
 
         exit(BuildSuccessResponse());
     end;

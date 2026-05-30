@@ -612,6 +612,7 @@ codeunit 50131 "MES Machine Fetch"
         CutoffTime: DateTime;
         OperatorName: Text;
         DeclaredByName: Text;
+        QuantityScannedInUnits: Decimal;
     begin
         Clear(LogArr);
         CutoffTime := CurrentDateTime() - (hoursBack * 3600000.0);
@@ -741,6 +742,7 @@ codeunit 50131 "MES Machine Fetch"
 
 
                 if MESExecution.Get(MESConsumption."Execution Id") then begin
+                    QuantityScannedInUnits := MESConsumption."Quantity Scanned" * MESConsumption."Quantity per Unit of Measure";
                     LogObj.Add('type', 'scan');
                     LogObj.Add('operatorId', MESConsumption."Operator Id");
                     LogObj.Add('operatorName', OperatorName);
@@ -749,7 +751,9 @@ codeunit 50131 "MES Machine Fetch"
                     LogObj.Add('machineNo', MESExecution."Machine No");
                     LogObj.Add('prodOrderNo', MESExecution."Prod Order No");
                     LogObj.Add('operationNo', MESExecution."Operation No");
-                    LogObj.Add('action', 'Scanned item ' + MESConsumption."Item No");
+                    //Item 1300 scanned: 10 packets (50 units)
+                    LogObj.Add('action', 'Scanned item ' + MESConsumption."Item No" + ': ' + Format(MESConsumption."Quantity Scanned") + ' ' + MESConsumption."Unit of Measure" +
+                        ' (' + Format(QuantityScannedInUnits) + ' units)');
                     LogObj.Add('timestamp', Format(MESConsumption."Scanned At"));
                     LogArr.Add(LogObj);
                 end;
