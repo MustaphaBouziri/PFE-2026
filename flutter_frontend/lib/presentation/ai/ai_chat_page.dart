@@ -1,7 +1,11 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/ai/operationDeepLinkPage.dart';
+import 'package:pfe_mes/presentation/machine/machine_details/tabsMain.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/storage/session_storage.dart';
 import '../../domain/ai/providers/ai_chat_provider.dart';
 import '../../domain/auth/providers/auth_provider.dart';
 import '../../data/ai/models/ai_chat_model.dart';
@@ -11,11 +15,7 @@ class AiChatPage extends StatefulWidget {
   final VoidCallback? onClose;
   final bool isDialog;
 
-  const AiChatPage({
-    super.key,
-    this.onClose,
-    this.isDialog = true,
-  });
+  const AiChatPage({super.key, this.onClose, this.isDialog = true});
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -24,6 +24,26 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  // ── Role helpers ──────────────────────────────────────────────────────────
+
+  String get _currentRole =>
+      SessionStorage().getRole().trim().toLowerCase();
+
+  bool get _isSupervisor => _currentRole == 'supervisor';
+
+  /// Returns only the actions the current role is allowed to see/execute.
+  /// Operators cannot be redirected to the machine dashboard.
+  List<AiRedirectAction> _filterActions(List<AiRedirectAction> actions) {
+    return actions.where((a) {
+      switch (a.actionType) {
+        case 'redirect_machine_dashboard':
+          return _isSupervisor;
+        default:
+          return true;
+      }
+    }).toList();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -45,32 +65,165 @@ class _AiChatPageState extends State<AiChatPage> {
     final auth = context.read<AuthProvider>();
     final ai = context.read<AiChatProvider>();
 
-
-    await ai.sendMessage(
-      message: text,
-    );
+    await ai.sendMessage(message: text);
 
     _scrollToBottom();
   }
 
-  void _handleAction(BuildContext context, AiRedirectAction action) {
-    switch (action.actionType) {
-      case 'redirect_machine':
-        final machineNo = action.payload['machineNo'] as String? ?? '';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Navigate to machine $machineNo')),
-        );
-        break;
-      case 'redirect_operation':
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(action.label)),
-        );
-        break;
+  // ── Navigation helpers ────────────────────────────────────────────────────
+
+  void _dismissThenNavigate(Future<void> Function() navigate) {
+    if (widget.isDialog) {
+      Navigator.of(context).pop();
+    } else {
+      widget.onClose?.call();
+    }
+    Future.delayed(const Duration(milliseconds: 150), navigate);
+  }
+
+  /// Pop the entire navigation stack back to the root (MachineListPage),
+  /// then push [page] so the breadcrumb is clean:
+  ///   MachineListPage → [page]
+  Future<void> _pushFromRoot(Widget page) async {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    // One extra microtask so the pop animation settles before pushing.
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (!mounted) return;
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
+
+
+  /// Pop to root, push MachineMainPage, then push [extra] on top.
+  /// Breadcrumb: MachineListPage → MachineMainPage (tab [tabIndex]) → [extra]
+  Future<void> _pushFromRootViaMainPage({
+    required String machineNo,
+    required String machineName,
+    required int tabIndex,
+    required Widget extra,
+  }) async {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MachineMainPage(
+          machineNo: machineNo,
+          machineName: machineName,
+          initialTabIndex: tabIndex,
+        ),
+      ),
+    );
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => extra));
+  }
+
+  void _handleAction(AiRedirectAction action) {
+    final actionType = action.actionType;
+    final payload = (action.payload as Map<String, dynamic>?) ?? {};
+
+    final machineNo = payload['machineNo'] as String? ?? '';
+    final machineName = payload['machineName'] as String? ?? machineNo;
+
+    switch (actionType) {
+    // 1. Machine list — already at root, just dismiss the chat
       case 'redirect_machine_list':
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        break;
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        });
+
+    // 2. Machine / Orders — opens on the orders tab (tab 0)
+    //    redirect_orders is an alias for redirect_machine
+      case 'redirect_machine':
+      case 'redirect_orders':
+        if (machineNo.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
+          return;
+        }
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          await _pushFromRoot(
+            MachineMainPage(
+              machineNo: machineNo,
+              machineName: machineName,
+              initialTabIndex: 0,
+            ),
+          );
+        });
+
+    // 3. History — opens MachineMainPage on the history tab (tab 2)
+      case 'redirect_history':
+        if (machineNo.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
+          return;
+        }
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          await _pushFromRoot(
+            MachineMainPage(
+              machineNo: machineNo,
+              machineName: machineName,
+              initialTabIndex: 2,
+            ),
+          );
+        });
+
+    // 4. Operation — full deep-link:
+    //    MachineListPage → MachineMainPage (tab 1) → OperationDeepLinkPage
+    //                                                  → OperationDetailPage
+      case 'redirect_operation':
+        final prodOrderNo = payload['prodOrderNo'] as String? ?? '';
+        final operationNo = payload['operationNo'] as String? ?? '';
+        if (machineNo.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
+          return;
+        }
+        if (prodOrderNo.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('missingProdOrderNo'.tr())));
+          return;
+        }
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          await _pushFromRootViaMainPage(
+            machineNo: machineNo,
+            machineName: machineName,
+            tabIndex: 1,
+            extra: OperationDeepLinkPage(
+              machineNo: machineNo,
+              machineName: machineName,
+              prodOrderNo: prodOrderNo,
+              operationNo: operationNo,
+            ),
+          );
+        });
+
+    // 5. Machine dashboard — supervisor only
+      case 'redirect_machine_dashboard':
+        if (!_isSupervisor) {
+          // Should never reach here due to _filterActions, but belt-and-suspenders
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('actionNotAllowed'.tr())));
+          return;
+        }
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          await _pushFromRoot(const MachineDashboardPage());
+        });
+
       default:
-        break;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('unknownAction'.tr(args: [actionType]))),
+        );
     }
   }
 
@@ -95,9 +248,7 @@ class _AiChatPageState extends State<AiChatPage> {
       return Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 800, maxHeight: 800),
           child: _buildChatContent(),
@@ -133,20 +284,14 @@ class _AiChatPageState extends State<AiChatPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(
-                color: Colors.grey[300]!,
-                width: 1,
-              ),
+              bottom: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
           ),
           child: Row(
             children: [
-               Text(
+              Text(
                 'aiAssistant'.tr(),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               IconButton(
@@ -172,44 +317,47 @@ class _AiChatPageState extends State<AiChatPage> {
                     child: aiProvider.history.isEmpty
                         ? const _EmptyState()
                         : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.all(16),
-                            itemCount: aiProvider.history.length,
-                            itemBuilder: (context, index) {
-                              final turn = aiProvider.history[index];
-                              final hasActions =
-                                  turn.role == 'assistant' &&
-                                  aiProvider.lastResponse?.actions.isNotEmpty ==
-                                      true &&
-                                  index == aiProvider.history.length - 1;
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: aiProvider.history.length,
+                      itemBuilder: (context, index) {
+                        final turn = aiProvider.history[index];
+                        final isLastAssistant =
+                            turn.role == 'assistant' &&
+                                index == aiProvider.history.length - 1;
 
-                              return Column(
-                                children: [
-                                  _MessageBubble(turn: turn),
-                                  if (hasActions)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: _ActionButtons(
-                                        actions:
-                                            aiProvider.lastResponse!.actions,
-                                        onTap: (action) =>
-                                            _handleAction(context, action),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            },
-                          ),
+                        // Apply role-based filtering before rendering buttons
+                        final filteredActions = isLastAssistant &&
+                            aiProvider.lastResponse?.actions
+                                .isNotEmpty ==
+                                true
+                            ? _filterActions(
+                            aiProvider.lastResponse!.actions)
+                            : <AiRedirectAction>[];
+
+                        return Column(
+                          children: [
+                            _MessageBubble(turn: turn),
+                            if (filteredActions.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: _ActionButtons(
+                                  actions: filteredActions,
+                                  onTap: (action) =>
+                                      _handleAction(action),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                   if (aiProvider.errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         aiProvider.errorMessage!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 12,
-                        ),
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
                       ),
                     ),
                 ],
@@ -236,20 +384,20 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
-  Widget build(BuildContext context) =>  Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-           const Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
-            const SizedBox(height: 12),
-            Text(
-              'askMessage'.tr(),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.smart_toy_outlined, size: 48, color: Colors.grey),
+        const SizedBox(height: 12),
+        Text(
+          'askMessage'.tr(),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _MessageBubble extends StatelessWidget {
@@ -289,44 +437,43 @@ class _MessageBubble extends StatelessWidget {
         child: isUser
             ? Text(turn.content, style: const TextStyle(color: Colors.white))
             : MarkdownBody(
-                data: turn.content,
-                selectable: true,
-                onTapLink: (text, href, title) {
-                  _openLink(href);
-                },
-                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                    .copyWith(
-                      p: TextStyle(color: textColor, fontSize: 14, height: 1.4),
-                      h1: TextStyle(
-                        color: textColor,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      h2: TextStyle(
-                        color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      strong: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      code: const TextStyle(
-                        fontFamily: 'monospace',
-                        backgroundColor: Color(0xFFE2E8F0),
-                        color: Color(0xFF0F172A),
-                      ),
-                      codeblockDecoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-              ),
+          data: turn.content,
+          selectable: true,
+          onTapLink: (text, href, title) {
+            _openLink(href);
+          },
+          styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+              .copyWith(
+            p: TextStyle(color: textColor, fontSize: 14, height: 1.4),
+            h1: TextStyle(
+              color: textColor,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            h2: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            strong: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+            code: const TextStyle(
+              fontFamily: 'monospace',
+              backgroundColor: Color(0xFFE2E8F0),
+              color: Color(0xFF0F172A),
+            ),
+            codeblockDecoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
-
 
 class _ActionButtons extends StatelessWidget {
   final List<AiRedirectAction> actions;
@@ -336,28 +483,27 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        children: actions
-            .map(
-              (action) => ElevatedButton(
-                onPressed: () => onTap(action),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFe2e8f0),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: Text(
-                  action.label,
-                  style: const TextStyle(color: Color(0xFF0F172A)),
-                ),
-              ),
-            )
-            .toList(),
-      );
+    spacing: 8,
+    runSpacing: 4,
+    children: actions
+        .map(
+          (action) => ElevatedButton(
+        onPressed: () => onTap(action),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFe2e8f0),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        child: Text(
+          action.label,
+          style: const TextStyle(color: Color(0xFF0F172A)),
+        ),
+      ),
+    )
+        .toList(),
+  );
 }
 
 class _InputBar extends StatelessWidget {
@@ -373,45 +519,45 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onSubmitted: (_) => onSend(),
-                  decoration: InputDecoration(
-                    hintText: 'askAssistant'.tr(),
-                    filled: true,
-                    fillColor: const Color(0xFFe5e7eb),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onSubmitted: (_) => onSend(),
+              decoration: InputDecoration(
+                hintText: 'askAssistant'.tr(),
+                filled: true,
+                fillColor: const Color(0xFFe5e7eb),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
-              const SizedBox(width: 8),
-              isLoading
-                  ? const SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : IconButton.filled(
-                      onPressed: onSend,
-                      icon: const Icon(Icons.send),
-                      style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                      ),
-                    ),
-            ],
+            ),
           ),
-        ),
-      );
+          const SizedBox(width: 8),
+          isLoading
+              ? const SizedBox(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+              : IconButton.filled(
+            onPressed: onSend,
+            icon: const Icon(Icons.send),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

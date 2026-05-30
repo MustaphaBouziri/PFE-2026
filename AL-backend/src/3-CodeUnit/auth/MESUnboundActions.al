@@ -91,16 +91,20 @@ codeunit 50125 "MES Unbound Actions"
         if not TryValidateCredentials(UserIdCode, password) then
             exit(JsonHelper.BuildErrorFromLastError('Authentication failed'));
 
-        // Issue token (unchanged)
-        TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId);
-
-        if not U.Get(TokenRec."User Id") then
-            exit(JsonHelper.BuildError('Internal error', 'User data not found after login'));
-
         // Read TwoFA setting
         TwoFAEnabled := false;
         if MESSettings.FindFirst() then
             TwoFAEnabled := MESSettings."TwoFA Enabled";
+
+        // Issue token 
+        if TwoFAEnabled then
+            TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId, true) // pending token if 2FA enabled
+        else
+            TokenRec := AuthMgt.IssueNewToken(UserIdCode, deviceId, false);
+
+        if not U.Get(TokenRec."User Id") then
+            exit(JsonHelper.BuildError('Internal error', 'User data not found after login'));
+
 
         // Work centres
         WCRec.SetRange("User Id", U."User Id");
@@ -373,7 +377,11 @@ codeunit 50125 "MES Unbound Actions"
         // Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
             exit(JsonHelper.BuildErrorFromLastError('Status update failed'));
-
+        
+        // you can not activate/deactivate your own account — guard against accidentally locking yourself out.
+        if AdminUserId = UserIdCode then
+            Error('Cannot modify your own account status.');
+        
         // Step 2 — SetActive performs writes (Modify + RevokeAll)
         AuthMgt.SetActive(UserIdCode, isActive);
 
@@ -489,7 +497,7 @@ codeunit 50125 "MES Unbound Actions"
                             LastSeenAt := AuthToken."Last Seen At";
 
                         // online = at least one token is valid right now
-                        if (not AuthToken.Revoked) and (AuthToken."Expires At" > CurrentDateTime()) then
+                        if (AuthToken.State = AuthToken.State::Active) and (AuthToken."Expires At" > CurrentDateTime()) then
                             IsOnline := true;
                     until AuthToken.Next() = 0;
 

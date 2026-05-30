@@ -1,4 +1,4 @@
-table 50111 "MES Component Consumption"
+table 50111 "MES scan"
 {
     DataClassification = CustomerContent;
     Caption = 'MES Component Consumption';

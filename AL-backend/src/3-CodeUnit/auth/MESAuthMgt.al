@@ -126,9 +126,9 @@ codeunit 50111 "MES Auth Mgt"
             Error('Invalid credentials.');
     end;
 
-    procedure IssueNewToken(UserId: Code[50]; DeviceId: Text): Record "MES Auth Token"
+    procedure IssueNewToken(UserId: Code[50]; DeviceId: Text; Pending: Boolean): Record "MES Auth Token"
     begin
-        exit(IssueToken(UserId, DeviceId));
+        exit(IssueToken(UserId, DeviceId, Pending));
     end;
 
     /// <summary>
@@ -148,19 +148,19 @@ codeunit 50111 "MES Auth Mgt"
         Clear(U);
         Clear(T);
         if TokenText = '' then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. token text ||';
+        errorMessage := 'Unauthorized. Invalid or expired token. ';
         if not Evaluate(TokenGuid, TokenText) then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. evaluate ||';
+        errorMessage := 'Unauthorized. Invalid or expired token.';
         if not T.Get(TokenGuid) then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. get ||';
-        if T.Revoked then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. revoked ||';
+        errorMessage := 'Unauthorized. Invalid or expired token.';
+        if T.State <> T.State::Active then exit(false);
+        errorMessage := 'Unauthorized. Invalid or expired token.';
         if T."Expires At" <= CurrentDateTime() then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. expired ||';
+        errorMessage := 'Unauthorized. Invalid or expired token.';
         if not U.Get(T."User Id") then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. getuser ||';
+        errorMessage := 'Unauthorized. Invalid or expired token.';
         if not U."Is Active" then exit(false);
-        errorMessage := 'Unauthorized. Invalid or expired token. active ||';
+        errorMessage := 'Unauthorized. Invalid or expired token.';
         exit(true);
     end;
 
@@ -188,7 +188,7 @@ codeunit 50111 "MES Auth Mgt"
         if TokenText = '' then exit(false);
         if not Evaluate(TokenGuid, TokenText) then exit(false);
         if not T.Get(TokenGuid) then exit(false);
-        T.Revoked := true;
+        T.State := T.State::Revoked;
         T.Modify(true);
         exit(true);
     end;
@@ -269,8 +269,8 @@ codeunit 50111 "MES Auth Mgt"
     begin
         if not U.Get(TargetUserId) then
             Error('User %1 not found.', TargetUserId);
-        if AdminUser."User Id" = TargetUserId then
-            Error('Cannot modify your own account status.');
+        
+       
 
         U."Is Active" := Active;
         U.Modify(true);
@@ -307,7 +307,7 @@ codeunit 50111 "MES Auth Mgt"
     /// Creates, persists, and returns a new session token.
     /// TTL: 12 hours (hardcoded).  Move to a setup table if configurability needed.
     /// </summary>
-    local procedure IssueToken(UserId: Code[50]; DeviceId: Text): Record "MES Auth Token"
+    local procedure IssueToken(UserId: Code[50]; DeviceId: Text;Pending: Boolean): Record "MES Auth Token"
     var
         T: Record "MES Auth Token";
         TTL: Duration;
@@ -321,7 +321,10 @@ codeunit 50111 "MES Auth Mgt"
         T."Issued At" := CurrentDateTime();
         T."Expires At" := CurrentDateTime() + TTL;
         T."Last Seen At" := CurrentDateTime();
-        T.Revoked := false;
+        if Pending then
+            T.State := T.State::Pending
+        else
+            T.State := T.State::Active;
         T.Insert(true);
         exit(T);
     end;
@@ -333,15 +336,26 @@ codeunit 50111 "MES Auth Mgt"
     /// Returns TRUE when they match, FALSE otherwise.
     /// Called during login when MES Settings."TwoFA Enabled" is true.
     /// </summary>
-    procedure VerifyBadge(UserId: Code[50]; ScannedSecret: Text): Boolean
+    procedure VerifyBadge(ScannedSecret: Text; Token: text): Boolean
     var
         U: Record "MES User";
+        T: Record "MES Auth Token";
+        result: Boolean;
     begin
-        if not U.Get(UserId) then
+
+        if not T.Get(Token) then
+            exit(false);
+        if not U.Get(T."User Id") then
             exit(false);
         if U."Badge Secret" = '' then
             exit(false);
-        exit(U."Badge Secret" = CopyStr(ScannedSecret, 1, 64));
+
+        result := U."Badge Secret" = CopyStr(ScannedSecret, 1, 64);
+        if result then
+            TouchToken(T); // update Last Seen At on successful 2FA
+            T.State := T.State::Active; // promote from pending to active on successful 2FA
+            T.Modify(true);
+        exit(result);
     end;
 
     /// <summary>

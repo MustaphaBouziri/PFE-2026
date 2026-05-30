@@ -186,12 +186,9 @@ end;
             Error('Execution %1 not found.', executionId);
 
         GetLatestOperationStatus(executionId, MESOperationState);
-        if MESOperationState."Operation Status" in [
-            MESOperationState."Operation Status"::Finished,
-            MESOperationState."Operation Status"::Cancelled,
-            MESOperationState."Operation Status"::Paused
-        ] then
-            Error('Cannot declare scrap on a finished, cancelled or paused operation.');
+
+        if MESOperationState."Operation Status" <> MESOperationState."Operation Status"::Running then
+            Error('Cannot declare scrap on a non running operation.');
 
         if not ScrapRec.Get(scrapCode) then
             Error('Scrap code %1 does not exist.', scrapCode);

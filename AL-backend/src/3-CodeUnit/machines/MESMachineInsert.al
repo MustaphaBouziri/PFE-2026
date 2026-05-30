@@ -188,7 +188,6 @@ codeunit 50133 "MES Machine Insert"
         MESOperationProgress.Init();
         MESOperationProgress."Execution Id" := executionId;
         MESOperationProgress."Cycle Quantity" := 0;
-        MESOperationProgress."Scrap Quantity" := 0;
         MESOperationProgress."Total Produced Quantity" := 0;
         MESOperationProgress."Operator Id" := mesUserId;
         MESOperationProgress.Insert(true);
@@ -219,7 +218,6 @@ codeunit 50133 "MES Machine Insert"
         NewMESOperationProgress."Declared By" := declaredById;
         NewMESOperationProgress."Cycle Quantity" := input;
         NewMESOperationProgress."Total Produced Quantity" := MESOperationProgress."Total Produced Quantity" + input;
-        NewMESOperationProgress."Scrap Quantity" := 0;
         NewMESOperationProgress.Insert(true);
 
         // if this is the last operation increase this item  inventory

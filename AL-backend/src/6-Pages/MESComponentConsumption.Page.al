@@ -1,7 +1,7 @@
 page 50115 "MES Component Consumption"
 {
     PageType = List;
-    SourceTable = "MES Component Consumption";
+    SourceTable = "MES scan";
     ApplicationArea = All;
     UsageCategory = Lists;
     Caption = 'MES Component Consumption';
@@ -43,7 +43,7 @@ page 50115 "MES Component Consumption"
                     ApplicationArea = All;
                 }
 
-               
+
 
                 field("Quantity Scanned"; Rec."Quantity Scanned")
                 {

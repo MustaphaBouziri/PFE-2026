@@ -23,9 +23,7 @@ codeunit 50112 "MES Auth Validation"
                     HasSpecial := true;
             end;
         end;
-        exit(true); // during developement 
-        // TODO: return this to how it is after it is no longer needed
-        //exit(HasUpper and HasLower and HasDigit and HasSpecial);
+        exit(HasUpper and HasLower and HasDigit and HasSpecial);
     end;
 
     procedure RevokeAllTokensForUser(UserId: Code[50])
@@ -35,7 +33,7 @@ codeunit 50112 "MES Auth Validation"
         T.SetRange("User Id", UserId);
         if T.FindSet(true) then
             repeat
-                T.Revoked := true;
+                T.State := T.State::Revoked;
                 T.Modify(true);
             until T.Next() = 0;
     end;

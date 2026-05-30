@@ -419,7 +419,7 @@ class _PasswordPeriodCard extends StatelessWidget {
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'This field is required';
                 final n = int.tryParse(v.trim());
-                if (n == null || n < 1) return 'Enter a valid number of days (min. 1)';
+                if (n == null || n < 0) return 'Enter a valid number of days (min. 0)';
                 if (n > 3650) return 'Maximum allowed is 3650 days';
                 return null;
               },

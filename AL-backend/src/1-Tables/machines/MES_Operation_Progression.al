@@ -18,12 +18,7 @@ table 50109 "MES Operation Progression"
         field(3; "Cycle Quantity"; Decimal)
         {
             DecimalPlaces = 0 : 5;
-        }
-
-        field(4; "Scrap Quantity"; Decimal)
-        {
-            DecimalPlaces = 0 : 5;
-        }
+        }  
 
         field(5; "Total Produced Quantity"; Decimal)
         {

@@ -30,6 +30,7 @@ class _MachineCardState extends State<MachineCard> {
         final statusWidth = isLarge ? 120.0 : 100.0;
 
         final status = (widget.machine.status).toString().trim().toLowerCase();
+        final bool isIdle = status != 'working';
 
         Color statusBg;
         Color statusText;
@@ -151,32 +152,33 @@ class _MachineCardState extends State<MachineCard> {
                           const SizedBox(height: 16),
                           MachineInfoRow(
                             label: "currentOrder".tr(),
-                            value: widget.machine.currentOrder.isEmpty
-                                ? 'noActiveOrder'.tr()
+                            value: isIdle
+                                ? '-'
                                 : widget.machine.currentOrder,
                             textSize: textSize,
                           ),
                           MachineInfoRow(
+                            label: "operationNo".tr(),
+                            value: isIdle
+                                ? '-'
+                                : widget.machine.operationNo,
+                            textSize: textSize,
+                          ),
+                          MachineInfoRow(
                             label: "itemNo".tr(),
-                            value: widget.machine.itemNo.isEmpty
-                                ? 'noActiveOrder'.tr()
+                            value: isIdle
+                                ? '-'
                                 : widget.machine.itemNo,
                             textSize: textSize,
                           ),
                           MachineInfoRow(
                             label: "productName".tr(),
-                            value: widget.machine.itemDescription.isEmpty
-                                ? 'noActiveOrder'.tr()
+                            value: isIdle
+                                ? '-'
                                 : widget.machine.itemDescription,
                             textSize: textSize,
                           ),
-                          MachineInfoRow(
-                            label: "operationNo".tr(),
-                            value: widget.machine.operationNo.isEmpty
-                                ? 'noActiveOrder'.tr()
-                                : widget.machine.operationNo,
-                            textSize: textSize,
-                          ),
+
                         ],
                       ),
                     ),

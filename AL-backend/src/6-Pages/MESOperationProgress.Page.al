@@ -43,10 +43,7 @@ page 50109 "MES Operation Progression"
                     ApplicationArea = All;
                 }
 
-                field("Scrap Quantity"; Rec."Scrap Quantity")
-                {
-                    ApplicationArea = All;
-                }
+
 
                 field("Last Updated At"; Rec."Declared At")
                 {

@@ -28,11 +28,6 @@ class ApiService {
       });
 
       final result = HttpResponseParser.parseObject(response, label: 'login');
-
-      if (result['success'] == true) {
-        await _storage.saveToken(result['token'] as String);
-        await _storage.saveUserData(result);
-      }
       return result;
     } catch (e) {
       return {'error': 'Connection failed', 'message': e.toString()};
@@ -126,13 +121,13 @@ class ApiService {
   /// [scannedSecret] : raw string decoded from the badge QR code.
   /// Returns { "success": true } or { "success": false, "message": "..." }
   Future<Map<String, dynamic>> verifyBadge({
-    required String userId,
     required String scannedSecret,
+    required String token,
   }) async {
     try {
       final response = await HttpClient.post(AppConstants.verifyBadgeUrl, {
-        'userId': userId,
         'scannedSecret': scannedSecret,
+        'token': token,
       });
       return HttpResponseParser.parseObject(response, label: 'verifyBadge');
     } catch (e) {

@@ -12,10 +12,17 @@ class MachineMainPage extends StatefulWidget {
   final String machineNo;
   final String machineName;
 
+  /// Optional: which tab to open on first render.
+  ///   0 = Orders (default)
+  ///   1 = Ongoing operations
+  ///   2 = History
+  final int initialTabIndex;
+
   const MachineMainPage({
     super.key,
     required this.machineNo,
     required this.machineName,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -23,9 +30,15 @@ class MachineMainPage extends StatefulWidget {
 }
 
 class _MachineMainPageState extends State<MachineMainPage> {
-  int selectedIndex = 0;
+  late int selectedIndex;
   final GlobalKey _navBarKey = GlobalKey();
   bool _tutorialShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialTabIndex.clamp(0, 2);
+  }
 
   void _handleStartOrderSuccess() {
     setState(() {
@@ -89,7 +102,6 @@ class _MachineMainPageState extends State<MachineMainPage> {
             },
           ),
           Expanded(
-
             child: _buildTabContent(selectedIndex),
           ),
         ],

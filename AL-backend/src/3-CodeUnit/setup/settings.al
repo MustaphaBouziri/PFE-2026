@@ -34,20 +34,23 @@ codeunit 50124 "MES Settings Functions"
         MESSettings: Record "MES Settings";
         AdminUserId: Code[50];
         resultJson: JsonObject;
+        DefaultMs: BigInteger;
     begin
         if not AuthVal.TryValidateAdminToken(token, AdminUserId) then
             exit(JsonHelper.BuildErrorFromLastError('Settings update failed'));
 
-        if PwChangePeriodDays < 1 then
-            Error('Password change period must be at least 1 day.');
+        if PwChangePeriodDays < 0 then
+            Error('Password change period must be a positive number.');
 
         if MESSettings.FindFirst() then begin
-            MESSettings."PW change period" := PwChangePeriodDays * 86400000;
+            DefaultMs := PwChangePeriodDays * 86400000L;
+            MESSettings."PW change period" := DefaultMs;
             MESSettings."TwoFA Enabled" := TwoFAEnabled;
             MESSettings.Modify(true);
         end else begin
             MESSettings.Init();
-            MESSettings."PW change period" := PwChangePeriodDays * 86400000;
+            DefaultMs := PwChangePeriodDays * 86400000L;
+            MESSettings."PW change period" := DefaultMs;
             MESSettings."TwoFA Enabled" := TwoFAEnabled;
             MESSettings.Insert(true);
         end;

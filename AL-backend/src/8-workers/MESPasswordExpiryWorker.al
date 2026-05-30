@@ -67,7 +67,7 @@ codeunit 50129 "MES Password Expiry Worker"
             B.AppendLine('PW change period (ms): ' + Format(PwChangePeriodMs) +
                 '  ≈ ' + Format(Round(PwChangePeriodMs / 86400000, 0.1)) + ' days');
 
-        if PwChangePeriodMs <= 0 then begin
+        if PwChangePeriodMs < 0 then begin
             if Verbose then
                 B.AppendLine('ABORT: PW change period is 0 or negative – feature is disabled.');
             Report := B.ToText();

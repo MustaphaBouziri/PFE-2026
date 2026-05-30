@@ -409,7 +409,7 @@ codeunit 50126 "MES Web Service"
     /// scannedSecret: raw string read from the badge QR code.
     /// Returns { "success": true } or { "success": false, "message": "..." }
     /// </summary>
-    procedure VerifyBadge(userId: Text; scannedSecret: Text): Text
+    procedure VerifyBadge(scannedSecret: Text; token: text): Text
     var
         JsonHelper: Codeunit "MES Json Helper";
         ResultJson: JsonObject;
@@ -417,7 +417,7 @@ codeunit 50126 "MES Web Service"
     begin
         UserIdCode := CopyStr(userId, 1, 50);
 
-        if AuthMgt.VerifyBadge(UserIdCode, scannedSecret) then begin
+        if AuthMgt.VerifyBadge(scannedSecret,token) then begin
             ResultJson.Add('success', true);
             exit(JsonHelper.JsonToText(ResultJson));
         end;
@@ -429,7 +429,7 @@ codeunit 50126 "MES Web Service"
     /// Admin: get the current badge secret for a user to display the QR code.
     /// adminToken:   valid Admin MES token.
     /// targetUserId: internal userId of the target user.
-    /// Returns { "success": true, "badgeSecret": "<64-char hex>" }
+    /// Returns { "success": true, "badgeSecret": "64-char hex" }
     /// </summary>
     procedure GetBadgeSecret(adminToken: Text; targetUserId: Text): Text
     begin
@@ -440,7 +440,7 @@ codeunit 50126 "MES Web Service"
     /// Admin: regenerate the badge secret for a user (lost badge, etc.).
     /// adminToken:   valid Admin MES token.
     /// targetUserId: internal userId of the target user.
-    /// Returns { "success": true, "badgeSecret": "<new 64-char hex>" }
+    /// Returns { "success": true, "badgeSecret": "new 64-char hex" }
     /// </summary>
     procedure RegenerateBadgeSecret(adminToken: Text; targetUserId: Text): Text
     begin

@@ -135,7 +135,7 @@ codeunit 50127 "MES Dev Setup"
         // 31 Dec 9999 — effectively non-expiring for dev purposes.
         T."Expires At" := CreateDateTime(DMY2Date(31, 12, 9999), 235959T);
         T."Last Seen At" := CurrentDateTime();
-        T.Revoked := false;
+        T.State := T.State::Active;
         T.Insert(true);
     end;
 }

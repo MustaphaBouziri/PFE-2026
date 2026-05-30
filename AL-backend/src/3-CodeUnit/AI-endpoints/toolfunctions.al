@@ -864,23 +864,7 @@ codeunit 50128 "MES Tool Functions"
 
         if MESAuthToken.FindSet() then
             repeat
-                if (not MESAuthToken.Revoked) and (MESAuthToken."Expires At" > CurrentDateTime()) then
-                    exit(true);
-            until MESAuthToken.Next() = 0;
-
-        exit(false);
-    end;
-
-    local procedure IsUserLoggedInAt(MESUser: Record "MES User"; AtDateTime: DateTime): Boolean
-    var
-        MESAuthToken: Record "MES Auth Token";
-    begin
-        MESAuthToken.Reset();
-        MESAuthToken.SetRange("User Id", MESUser."User Id");
-
-        if MESAuthToken.FindSet() then
-            repeat
-                if (not MESAuthToken.Revoked) and (MESAuthToken."Expires At" > AtDateTime) then
+                if (MESAuthToken."State" = MESAuthToken."State"::Active) and (MESAuthToken."Expires At" > CurrentDateTime()) then
                     exit(true);
             until MESAuthToken.Next() = 0;
 
@@ -1314,7 +1298,7 @@ codeunit 50128 "MES Tool Functions"
         MESExecution: Record "MES Operation Execution"
     ): Decimal
     var
-        MESConsumption: Record "MES Component Consumption";
+        MESConsumption: Record "MES scan";
         ConsumedQty: Decimal;
     begin
         ConsumedQty := 0;
@@ -1469,7 +1453,7 @@ codeunit 50128 "MES Tool Functions"
         if MESUser.FindSet() then
             repeat
                 if IsUserInSupervisorWorkCenterScope(MESUser, WorkCenterFilter) then
-                    if IsUserLoggedInAt(MESUser, Now) then
+                    if IsUserLoggedInNow(MESUser) then
                         if not UserHasRunningOperation(MESUser) then begin
                             OperatorName := '';
 

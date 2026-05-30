@@ -17,15 +17,17 @@ class AuthProvider with ChangeNotifier {
   String? _pendingToken;
   Map<String, dynamic>? _pendingUserData;
   String? _pendingUserId; // internal userId for VerifyBadge call
+  bool _isCheckingAuth = true;
 
+  bool get isCheckingAuth => _isCheckingAuth;
   bool get pendingBadge => _pendingBadge;
 
   AuthProvider() {
     _syncUserDataFromSession();
   }
 
-  Future<void> _syncUserDataFromSession() async {
-    _userData = await _sessionStorage.getUserData();
+  Future<void> _syncUserDataFromSession({Map<String, dynamic>? data}) async {
+    _userData = data ?? await _sessionStorage.getUserData();
   }
 
   bool get isAuthenticated => _isAuthenticated;
@@ -36,14 +38,30 @@ class AuthProvider with ChangeNotifier {
 
   bool get needsPasswordChange => _userData?['needToChangePw'] ?? false;
 
+  String get role => _userData?['role']?.toString() ?? 'Operator';
+
   Future<void> checkAuthStatus() async {
-    final result = await _apiService.getCurrentUser();
-    if (result['success'] == true) {
-      _isAuthenticated = true;
-      _syncUserDataFromSession();
+    _isCheckingAuth = true;
+    notifyListeners();
+
+    try {
+      final token = await _sessionStorage.getToken();
+      if (token == null || token.isEmpty) {
+        _isAuthenticated = false;
+        return;
+      }
+      final result = await _apiService.getCurrentUser();
+      if (result['success'] == true) {
+        _isAuthenticated = true;
+        await _syncUserDataFromSession();
+      } else {
+        await logout();
+      }
+    } catch (_) {
+      _isAuthenticated = false;
+    } finally {
+      _isCheckingAuth = false;
       notifyListeners();
-    } else {
-      await logout();
     }
   }
 
@@ -77,11 +95,11 @@ class AuthProvider with ChangeNotifier {
         return true; // login() returns true = credentials OK; caller checks pendingBadge
       }
 
-      // No 2FA — persist and authenticate immediately (existing behaviour)
+      // No 2FA path
       await _sessionStorage.saveToken(result['token'] as String);
       await _sessionStorage.saveUserData(result);
+      await _syncUserDataFromSession(data: result); // use what we already have
       _isAuthenticated = true;
-      await _syncUserDataFromSession();
       _errorMessage = null;
       _isLoading = false;
       notifyListeners();
@@ -207,20 +225,20 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final result = await _apiService.verifyBadge(
-        userId: _pendingUserId ?? '',
         scannedSecret: scannedSecret,
+        token: _pendingToken.toString(),
       );
 
       if (result['success'] == true) {
         // Persist what we were holding in memory
         await _sessionStorage.saveToken(_pendingToken!);
         await _sessionStorage.saveUserData(_pendingUserData!);
+        await _syncUserDataFromSession(data: _pendingUserData); // use what we already have
         _isAuthenticated = true;
         _pendingBadge = false;
         _pendingToken = null;
         _pendingUserData = null;
         _pendingUserId = null;
-        await _syncUserDataFromSession();
         _errorMessage = null;
         _isLoading = false;
         notifyListeners();
