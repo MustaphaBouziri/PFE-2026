@@ -74,7 +74,7 @@ codeunit 50133 "MES Machine Insert"
         EnsureUserExecutionInteraction(MESExecution."Execution Id", mesUserId);
 
         // Stamp the end time on the execution record when the operation closes.
-        if status in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled] then begin
+        if status in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled,"MES Operation Status"::Interrupted] then begin
             MESExecution."End Time" := CurrentDateTime();
             MESExecution.Modify(true);
         end;
@@ -118,7 +118,10 @@ codeunit 50133 "MES Machine Insert"
         // rule 1:
         // if the first operation is cancelled -> finish the production order
         if IsFirstOperation(prodOrderNo, operationNo) and
-           (mesOperationStatus = "MES Operation Status"::Cancelled)
+           (mesOperationStatus in [
+               "MES Operation Status"::Cancelled,
+               "MES Operation Status"::Interrupted
+           ])
         then begin
             ProdOrderStatusMgt.ChangeProdOrderStatus(
                 ProdOrder,
@@ -134,7 +137,8 @@ codeunit 50133 "MES Machine Insert"
         if IsLastOperation(prodOrderNo, operationNo) and
            (mesOperationStatus in [
                "MES Operation Status"::Finished,
-               "MES Operation Status"::Cancelled
+               "MES Operation Status"::Cancelled,
+               "MES Operation Status"::Interrupted
            ])
         then begin
             ProdOrderStatusMgt.ChangeProdOrderStatus(
@@ -223,7 +227,7 @@ codeunit 50133 "MES Machine Insert"
         // if this is the last operation increase this item  inventory
         if IsLastOperation(prodOrderNo, operationNo) then
             IncreaseItemInventory(MESExecution."Item No", input, MESExecution."Execution Id");
-
+//aizen twise ??
         EnsureUserExecutionInteraction(MESExecution."Execution Id", operatorId);
         EnsureUserExecutionInteraction(MESExecution."Execution Id", declaredById);
     end;
@@ -244,7 +248,10 @@ codeunit 50133 "MES Machine Insert"
     end;
 
     // increase item inventory
-    procedure IncreaseItemInventory(
+
+
+
+procedure IncreaseItemInventory(
         itemNo: Code[20];
         quantity: Decimal;
         executionId: Code[50]
@@ -317,6 +324,229 @@ codeunit 50133 "MES Machine Insert"
             ItemJournalPostBatch.Run(ItemJournalLine);
     end;
 
+/*procedure IncreaseItemInventory(
+    itemNo: Code[20];
+    quantity: Decimal;
+    executionId: Code[50]
+)
+var
+    Item: Record Item;
+    MESExecution: Record "MES Operation Execution";
+    ProdOrder: Record "Production Order";
+    ProdOrderLine: Record "Prod. Order Line";
+    ProdOrderRoutingLine: Record "Prod. Order Routing Line";
+    ItemJournalLine: Record "Item Journal Line";
+    ItemJournalBatch: Record "Item Journal Batch";
+    ItemLedgerEntry: Record "Item Ledger Entry";
+    ItemJournalPostLine: Codeunit "Item Jnl.-Post Line";
+    LineNo: Integer;
+    TemplateNameToUse: Code[10];
+    BatchNameToUse: Code[10];
+    ProdOrderNo: Code[20];
+begin
+    if quantity <= 0 then
+        Error('Quantity must be greater than 0.');
+
+    if not Item.Get(itemNo) then
+        Error(
+            'Item %1 was not found.',
+            itemNo);
+
+    if not MESExecution.Get(executionId) then
+        Error(
+            'Execution %1 was not found.',
+            executionId);
+
+    ProdOrderNo := MESExecution."Prod Order No";
+
+    // production order
+    ProdOrder.Reset();
+    ProdOrder.SetRange("No.", ProdOrderNo);
+
+    if not ProdOrder.FindFirst() then
+        Error(
+            'Production Order %1 was not found.',
+            ProdOrderNo);
+
+    if ProdOrder.Status <> ProdOrder.Status::Released then
+        Error(
+            'Production Order %1 must be Released.',
+            ProdOrderNo);
+
+    // batch
+    if not ItemJournalBatch.Get('ARTICLE', 'MES') then begin
+        ItemJournalBatch.Init();
+        ItemJournalBatch."Journal Template Name" := 'ARTICLE';
+        ItemJournalBatch.Name := 'MES';
+        ItemJournalBatch.Description := 'MES Article Journal';
+        ItemJournalBatch.Insert(true);
+    end;
+
+    TemplateNameToUse := 'ARTICLE';
+    BatchNameToUse := 'MES';
+
+    // cleanup old lines
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ItemJournalLine.FindSet() then
+        ItemJournalLine.DeleteAll();
+
+    // line no
+    ItemJournalLine.Reset();
+
+    ItemJournalLine.SetRange(
+        "Journal Template Name",
+        TemplateNameToUse);
+
+    ItemJournalLine.SetRange(
+        "Journal Batch Name",
+        BatchNameToUse);
+
+    if ItemJournalLine.FindLast() then
+        LineNo := ItemJournalLine."Line No." + 10000
+    else
+        LineNo := 10000;
+
+    // prod order line
+    ProdOrderLine.Reset();
+
+    ProdOrderLine.SetRange(
+        Status,
+        ProdOrder.Status);
+
+    ProdOrderLine.SetRange(
+        "Prod. Order No.",
+        ProdOrderNo);
+
+    ProdOrderLine.SetRange(
+        "Item No.",
+        itemNo);
+
+    if not ProdOrderLine.FindFirst() then
+        Error(
+            'No production order line found for item %1.',
+            itemNo);
+
+    // routing
+    ProdOrderRoutingLine.Reset();
+
+    ProdOrderRoutingLine.SetRange(
+        Status,
+        ProdOrder.Status);
+
+    ProdOrderRoutingLine.SetRange(
+        "Prod. Order No.",
+        ProdOrderNo);
+
+    ProdOrderRoutingLine.SetRange(
+        "Routing Reference No.",
+        ProdOrderLine."Line No.");
+
+    if not ProdOrderRoutingLine.FindFirst() then
+        Error(
+            'No routing line found for production order %1.',
+            ProdOrderNo);
+
+    // create line
+    Clear(ItemJournalLine);
+
+    ItemJournalLine.Init();
+
+    ItemJournalLine."Journal Template Name" :=
+        TemplateNameToUse;
+
+    ItemJournalLine."Journal Batch Name" :=
+        BatchNameToUse;
+
+    ItemJournalLine."Line No." := LineNo;
+
+    ItemJournalLine.Validate(
+        "Posting Date",
+        Today());
+
+    ItemJournalLine.Validate(
+        "Entry Type",
+        ItemJournalLine."Entry Type"::Output);
+
+    ItemJournalLine."Document No." := 'MES';
+
+    ItemJournalLine.Validate(
+        "Item No.",
+        itemNo);
+
+    ItemJournalLine.Validate(
+        "Order Type",
+        ItemJournalLine."Order Type"::Production);
+
+    ItemJournalLine.Validate(
+        "Order No.",
+        ProdOrderNo);
+
+    ItemJournalLine.Validate(
+        "Order Line No.",
+        ProdOrderLine."Line No.");
+
+    ItemJournalLine.Validate(
+        "Operation No.",
+        ProdOrderRoutingLine."Operation No.");
+
+    if ProdOrder."Location Code" <> '' then
+        ItemJournalLine.Validate(
+            "Location Code",
+            ProdOrder."Location Code");
+
+    // quantity
+    ItemJournalLine.Validate(
+        "Output Quantity",
+        quantity);
+
+    ItemJournalLine.Insert(true);
+
+    // validations before posting
+    if ItemJournalLine."Operation No." = '' then
+        Error('Operation No is empty.');
+
+    if ItemJournalLine."Order No." = '' then
+        Error('Order No is empty.');
+
+    if ItemJournalLine."Order Line No." = 0 then
+        Error('Order Line No is empty.');
+
+    if ItemJournalLine."Output Quantity" <= 0 then
+        Error('Output quantity invalid.');
+
+    // post line
+    ItemJournalPostLine.RunWithCheck(ItemJournalLine);
+
+    // verify ledger entry created
+    ItemLedgerEntry.Reset();
+
+    ItemLedgerEntry.SetRange(
+        "Item No.",
+        itemNo);
+
+    if not ItemLedgerEntry.FindLast() then
+        Error(
+            'No Item Ledger Entry exists for item %1.',
+            itemNo);
+
+    Error(
+        'SUCCESS\\' +
+        'Entry No=%1\\' +
+        'Quantity=%2\\' +
+        'Remaining Quantity=%3',
+        ItemLedgerEntry."Entry No.",
+        ItemLedgerEntry.Quantity,
+        ItemLedgerEntry."Remaining Quantity");
+end;*/
     // ──────────────────────────────────────────────
     // Scrap records
     // ──────────────────────────────────────────────
@@ -348,13 +578,14 @@ codeunit 50133 "MES Machine Insert"
             MESScrap."scrap Description" := CopyStr(ScrapRec.Description, 1, 100);
 
         MESScrap.Insert(true);
+        //aizen why here we didnt do the esure user whatever 
     end;
 
     // ──────────────────────────────────────────────
     // Composite helpers
     // ──────────────────────────────────────────────
 
-    /// Orchestrates all inserts required to start a fresh operation.
+    /// Orchestrates all inserts required to start a fresh operation. (inisual info working, default value etc )
     procedure InsertStartOperationRecords(
         prodOrderNo: Code[20];
         operationNo: Code[10];
@@ -372,15 +603,7 @@ codeunit 50133 "MES Machine Insert"
     end;
 
 
-
-
-
-
-
-
-
-
-
+// return thr total produced quantity used in the validation layer to check send ahead quanity =
     procedure GetPreviousOperationProducedQuantity(executionId: Code[50]): Decimal
     var
         MESOperationProgress: Record "MES Operation Progression";
@@ -407,19 +630,6 @@ codeunit 50133 "MES Machine Insert"
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     // ──────────────────────────────────────────────
     // Query helpers
     // ──────────────────────────────────────────────
@@ -438,6 +648,7 @@ codeunit 50133 "MES Machine Insert"
         MESExecution.FindFirst();
     end;
 
+// aizen this check ig the execution already exist by not in validation
     procedure ExecutionExists(machineNo: Code[20]; prodOrderNo: Code[20]; operationNo: Code[10]): Boolean
     var
         MESExecution: Record "MES Operation Execution";

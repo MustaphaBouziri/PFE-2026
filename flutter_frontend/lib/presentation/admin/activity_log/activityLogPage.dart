@@ -44,6 +44,9 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
           ) ||
           log.action.toLowerCase().contains(
             searchController.text.toLowerCase(),
+          ) ||
+          log.timestamp.toLowerCase().contains(
+            searchController.text.toLowerCase(),
           );
       return typeMatch && searchMatch;
     }).toList();
@@ -85,7 +88,26 @@ class _ActivityLogPageState extends State<ActivityLogPage> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
-          ? Center(child: Text(provider.errorMessage!))
+          ? Center(child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.cloud_off_outlined,
+                    size: 48,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'FailedToFetchData'.tr(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: const Color(0xFF94A3B8),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),)
           : Column(
               children: [
                 // search bar

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
 import 'package:pfe_mes/main.dart';
-import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
 
 import 'package:pfe_mes/presentation/ai/ai_chat_page.dart';
 import 'package:pfe_mes/presentation/profilePage.dart';
@@ -227,7 +227,7 @@ class _MachinelistpageState extends State<Machinelistpage> with RouteAware {
                   ),
                 ),
                 Text(
-                  role,
+                  role.tr(),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,

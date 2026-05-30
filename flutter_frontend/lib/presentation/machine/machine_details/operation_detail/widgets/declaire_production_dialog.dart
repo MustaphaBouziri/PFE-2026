@@ -60,7 +60,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
           widget.operationData.totalProducedQuantity *
           component.quantityPerUnit;
       final scanned = component.totalQuantityScanned;
-      final scrap = component.scrapQuantity;
+      final scrap = component.scrapQuantity+component.quantityPerUnit*widget.operationData.scrapQuantity;
       final remaining = scanned - consumed - scrap;
 
       // calculate how many of this component will be needed for the declared quantity

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 /// Single label / value pair used inside [OperationInfoGrid].
 /// Mirrors the role of [InfoCell] in the machineOrderPage layer.
@@ -18,7 +19,8 @@ class OperationInfoCell extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          ExpandableText(
+            text: 
             label,
             style: const TextStyle(
               fontSize: 11,
@@ -26,15 +28,15 @@ class OperationInfoCell extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
+          ExpandableText(
+            text: 
             value,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: Color(0xFF0F172A),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            
           ),
         ],
       ),

@@ -163,7 +163,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
               backgroundColor: const Color(0xFFDC2626),
             ),
             child: Text(
-              'yesCancelOperation'.tr(),
+              'yesCancelOrder'.tr(),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -262,6 +262,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
                     context: context,
                     builder: (_) => DeclareScrapDialog(
                       executionId: widget.operationData.executionId,
+                      operationData: widget.operationData,
                       components: widget.components,
                     ),
                   )

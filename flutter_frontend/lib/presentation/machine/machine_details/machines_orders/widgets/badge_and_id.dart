@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_mes/data/machine/models/erp_order_model.dart';
+import 'package:pfe_mes/presentation/widgets/expandableText.dart';
 
 import '../models/badge_style.dart';
 
@@ -40,13 +41,16 @@ class BadgeAndId extends StatelessWidget {
           ),
         ),
 
+        SizedBox(width: 10),
 
-        Text(
-          order.operationDescription,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+        Expanded(
+          child: ExpandableText(
+            text: order.operationDescription,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F172A),
+            ),
           ),
         ),
       ],

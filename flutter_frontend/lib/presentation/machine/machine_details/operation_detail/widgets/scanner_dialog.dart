@@ -10,8 +10,14 @@ import 'package:provider/provider.dart';
 
 class ScannerWidget extends StatefulWidget {
   final String executionId;
-    final List<ComponentConsumptionModel> components;
-  const ScannerWidget({super.key, required this.executionId, required this.components});
+  final List<ComponentConsumptionModel> components;
+  final double orderRemainingQte;
+  const ScannerWidget({
+    super.key,
+    required this.executionId,
+    required this.components,
+    required this.orderRemainingQte,
+  });
 
   @override
   State<ScannerWidget> createState() => _ScannerWidgetState();
@@ -23,120 +29,109 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   bool isScanning = true;
   bool isSubmitting = false;
   String? errorMessage;
-  
+
   //check if item is in components list
   bool isItemInComponents(String itemNo) {
-  return widget.components.any((c) => c.itemNo == itemNo);
-}
-
-bool canAddMoreItem(ItemBarcodeModel item) {
-  // find the component for this item
-  ComponentConsumptionModel? component;
-  try {
-    component = widget.components.firstWhere(
-      (c) => c.itemNo == item.itemNo,
-    );
-  } catch (e) {
-    // item not found in components list
-    return false;
+    return widget.components.any((c) => c.itemNo == itemNo);
   }
 
-  // VALIDATION: barcode UOM must NOT be smaller than item base UOM
-  // Check: barcode quantityPerUnit >= base quantityPerUnit
-  // If barcode qty per unit < base qty per unit, barcode is smaller → INVALID
-  if (item.quantityPerUnit < component.baseUOMQuantityPerUnit) {
-    return false; // Block: barcode UOM is smaller than base UOM
+  bool canAddMoreItem(ItemBarcodeModel item) {
+    // find the component for this item
+    ComponentConsumptionModel? component;
+    try {
+      component = widget.components.firstWhere((c) => c.itemNo == item.itemNo);
+    } catch (e) {
+      // item not found in components list
+      return false;
+    }
+
+    // VALIDATION: barcode UOM must NOT be smaller than item base UOM
+    // Check: barcode quantityPerUnit >= base quantityPerUnit
+    // If barcode qty per unit < base qty per unit, barcode is smaller → INVALID
+    if (item.quantityPerUnit < component.baseUOMQuantityPerUnit) {
+      return false; // Block: barcode UOM is smaller than base UOM
+    }
+
+    // find if this item is already in the scanned list
+    ItemBarcodeModel? existingItem;
+    try {
+      existingItem = items.firstWhere((e) => e.itemNo == item.itemNo);
+    } catch (e) {
+      // Item not in list yet, that's fine
+    }
+
+    final totalIfAdded = existingItem != null
+        ? (existingItem.quantity + 1) * item.quantityPerUnit
+        : item.quantityPerUnit;
+
+    // check if total scanned would exceed available inventory
+    return totalIfAdded <= component.inventory;
   }
-
-
-
-  // find if this item is already in the scanned list
-  ItemBarcodeModel? existingItem;
-  try {
-    existingItem = items.firstWhere(
-      (e) => e.itemNo == item.itemNo,
-    );
-  } catch (e) {
-    // Item not in list yet, that's fine
-  }
-
- 
-  final totalIfAdded = existingItem != null 
-      ? (existingItem.quantity + 1) * item.quantityPerUnit
-      : item.quantityPerUnit;
-
-  // check if total scanned would exceed available inventory
-  return totalIfAdded <= component.inventory;
-}
 
   // we add new item or we increment qty
   void addItem(ItemBarcodeModel newItem) {
-  if (!isItemInComponents(newItem.itemNo)) {
-    setState(() {
-      errorMessage = 'itemNotInBOMForThisOperation'.tr();
-    });
-    return;
-  }
+    if (!isItemInComponents(newItem.itemNo)) {
+      setState(() {
+        errorMessage = 'itemNotInBOMForThisOperation'.tr();
+      });
+      return;
+    }
 
-  final component = widget.components.firstWhere(
-    (c) => c.itemNo == newItem.itemNo,
-  );
-
-  // VALIDATION: Check if barcode UOM is smaller than base UOM
-  // If barcode quantityPerUnit < base quantityPerUnit, barcode is smaller (invalid)
-  if (newItem.quantityPerUnit < component.baseUOMQuantityPerUnit) {
-    setState(() {
-     errorMessage = 'invalidBarcodeUOM'.tr(args: [
-  newItem.unitOfMeasure,
-  component.baseUOM,
-]);
-    });
-    return;
-  }
-
-  if (!canAddMoreItem(newItem)) {
-    setState(() {
-     errorMessage = 'insufficientInventoryAdd'.tr(args: [
-  newItem.itemNo,
-]);
-    });
-    return;
-  }
-
-  // Clear error when adding successfully
-  setState(() {
-    errorMessage = null;
-  });
-
-  int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
-
-  if (index != -1) {
-    // same item already in list — increment quantity, keep all other fields
-    items[index] = ItemBarcodeModel(
-      itemNo: items[index].itemNo,
-      description: items[index].description,
-      baseUOM: items[index].baseUOM,
-      lotSize: items[index].lotSize,
-      flushingMethod: items[index].flushingMethod,
-      barcodeText: items[index].barcodeText,
-      quantity: items[index].quantity + 1,
-      quantityPerUnit: items[index].quantityPerUnit,
-      unitOfMeasure: items[index].unitOfMeasure,
+    final component = widget.components.firstWhere(
+      (c) => c.itemNo == newItem.itemNo,
     );
-  } else {
-    items.add(newItem);
+
+    // VALIDATION: Check if barcode UOM is smaller than base UOM
+    // If barcode quantityPerUnit < base quantityPerUnit, barcode is smaller (invalid)
+    if (newItem.quantityPerUnit < component.baseUOMQuantityPerUnit) {
+      setState(() {
+        errorMessage = 'invalidBarcodeUOM'.tr(
+          args: [newItem.unitOfMeasure, component.baseUOM],
+        );
+      });
+      return;
+    }
+
+    if (!canAddMoreItem(newItem)) {
+      setState(() {
+        errorMessage = 'insufficientInventoryAdd'.tr(args: [newItem.itemNo]);
+      });
+      return;
+    }
+
+    // Clear error when adding successfully
+    setState(() {
+      errorMessage = null;
+    });
+
+    int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
+
+    if (index != -1) {
+      // same item already in list — increment quantity, keep all other fields
+      items[index] = ItemBarcodeModel(
+        itemNo: items[index].itemNo,
+        description: items[index].description,
+        baseUOM: items[index].baseUOM,
+        lotSize: items[index].lotSize,
+        flushingMethod: items[index].flushingMethod,
+        barcodeText: items[index].barcodeText,
+        quantity: items[index].quantity + 1,
+        quantityPerUnit: items[index].quantityPerUnit,
+        unitOfMeasure: items[index].unitOfMeasure,
+      );
+    } else {
+      items.add(newItem);
+    }
   }
-}
 
   //increase quantity
   void increaseQty(int index) {
-      if (!canAddMoreItem(items[index])) {
-    setState(() {
-      errorMessage =
-    'insufficientInventoryFor'.tr() + items[index].itemNo;
-    });
-    return;
-  }
+    if (!canAddMoreItem(items[index])) {
+      setState(() {
+        errorMessage = 'insufficientInventoryFor'.tr() + items[index].itemNo;
+      });
+      return;
+    }
     setState(() {
       errorMessage = null;
       items[index] = ItemBarcodeModel(
@@ -206,61 +201,78 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: MobileScanner(
-                      controller: controller,
-                      onDetect: (barcodeCapture) async {
-                        if (!isScanning) return;
+                    child: isScanning
+                        ? MobileScanner(
+                            controller: controller,
+                            onDetect: (barcodeCapture) async {
+                              if (!isScanning) return;
 
-                        final barcode = barcodeCapture.barcodes.first;
-                        final value = barcode.rawValue;
+                              final barcode = barcodeCapture.barcodes.first;
+                              final value = barcode.rawValue;
 
-                        if (value == null) return;
+                              if (value == null) return;
 
-                        setState(() => isScanning = false);
-                        controller.stop();
+                              // Immediately disable scanning to prevent multiple detections
+                              setState(() => isScanning = false);
 
-                        // all barcodes go through resolveBarcode now
-                        // our datamatrix: bc looks up the code MES-1100 in item identifier
-                        // external barcode: bc looks up the external code in identifier identifier
-                        final result = await context
-                            .read<MesBarcodeProvider>()
-                            .resolveBarcode(value);
+                              // all barcodes go through resolveBarcode now
+                              // our datamatrix: bc looks up the code MES-1100 in item identifier
+                              // external barcode: bc looks up the external code in identifier identifier
+                              final result = await context
+                                  .read<MesBarcodeProvider>()
+                                  .resolveBarcode(value);
 
-                        if (!mounted) return;
+                              if (!mounted) return;
 
-                        if (result == null || result['resolved'] != true) {
-                          setState(() {
-                            errorMessage = result?['message']?.toString() ??
-                                'barcodeNotRecognized'.tr();
-                          });
-                          setState(() => isScanning = true);
-                          controller.start();
-                          return;
-                        }
+                              if (result == null ||
+                                  result['resolved'] != true) {
+                                setState(() {
+                                  errorMessage =
+                                      result?['message']?.toString() ??
+                                      'barcodeNotRecognized'.tr();
+                                  // Keep isScanning = false, user must click "Scan Again"
+                                });
+                                // DON'T restart camera automatically
+                                return;
+                              }
 
-                        // build model from BC response — same structure for both our and external barcodes
-                        final item = ItemBarcodeModel(
-                          itemNo: result['itemNo']?.toString() ?? '',
-                          description:
-                              result['itemDescription']?.toString() ?? '',
-                          baseUOM: result['baseUOM']?.toString() ?? '',
-         
-                          lotSize: 0,
-                          flushingMethod: '',
-                          barcodeText: value,
-                          quantity: 1,
-                          quantityPerUnit:
-                              (result['quantityPerUnitOfMeasure'] as num? ?? 1)
-                                  .toDouble(),
-                          unitOfMeasure:
-                              result['unitOfMeasure']?.toString() ?? '',
-                        );
+                              // build model from BC response — same structure for both our and external barcodes
+                              final item = ItemBarcodeModel(
+                                itemNo: result['itemNo']?.toString() ?? '',
+                                description:
+                                    result['itemDescription']?.toString() ?? '',
+                                baseUOM: result['baseUOM']?.toString() ?? '',
 
-                        setState(() => addItem(item));
-                        setState(() => isScanning = true);
-                        controller.start();
-                      },
-                    ),
+                                lotSize: 0,
+                                flushingMethod: '',
+                                barcodeText: value,
+                                quantity: 1,
+                                quantityPerUnit:
+                                    (result['quantityPerUnitOfMeasure']
+                                                as num? ??
+                                            1)
+                                        .toDouble(),
+                                unitOfMeasure:
+                                    result['unitOfMeasure']?.toString() ?? '',
+                              );
+
+                              setState(() => addItem(item));
+                              // Keep camera stopped - user must click "Scan Again" to continue
+                            },
+                          )
+                        : Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.pause_circle_outline,
+                                  size: 70,
+                                  color: Colors.orange,
+                                ),
+                                Text('cameraIsPaused'.tr())
+                              ],
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -275,7 +287,6 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                   isScanning = true;
                   errorMessage = null;
                 });
-                controller.start();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F172A),
@@ -306,7 +317,11 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 20),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -330,7 +345,22 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                 itemBuilder: (context, index) {
                   final item = items[index];
                   // check if item is in components list
-                  final exists =isItemInComponents(item.itemNo);
+                  final exists = isItemInComponents(item.itemNo);
+
+                  //////////////////////////////////////////////
+                  // i need to get the component quanitye per so
+                  final totalScanned = (item.quantity * item.quantityPerUnit)
+                      .toStringAsFixed(0);
+                  //i search the component list where this item no in it and store it in varriable component
+                  final component = widget.components.firstWhere(
+                    (c) => c.itemNo == item.itemNo,
+                  );
+                  // i use the varriable's qute per meaning thi item scanned component quantity per
+
+                  final outOf =
+                      (widget.orderRemainingQte * component.quantityPerUnit)
+                          .toStringAsFixed(0);
+                  ///////////////////////////////////////////
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -342,18 +372,19 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                         children: [
                           Expanded(
                             child: ListTile(
-                              
                               title: ExpandableText(
                                 text: '${item.itemNo} - ${item.description}',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: exists? const Color(0xFF0F172A) : Colors.red, // red if item not in components list
+                                  color: exists
+                                      ? const Color(0xFF0F172A)
+                                      : Colors
+                                            .red, // red if item not in components list
                                 ),
                               ),
                               subtitle: Text(
-                                // shows: "Qty: 2 × BOX (100 PCS each) = 200 PCS total"
-                                '${'qty'.tr()}${item.quantity} × ${item.unitOfMeasure} (${item.quantityPerUnit.toStringAsFixed(0)} PCS each) = ${(item.quantity * item.quantityPerUnit).toStringAsFixed(0)} PCS total',
+                                '${item.quantity} ${item.unitOfMeasure} = $totalScanned pcs out of $outOf',
                                 style: const TextStyle(
                                   color: Color(0xFF64748B),
                                 ),
@@ -390,11 +421,16 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                 width: double.infinity,
                 child: ElevatedButton(
                   // if list is empty or wrong qr code (does not exist in the component list )
-                  onPressed: (items.isEmpty || items.any((item) => !isItemInComponents(item.itemNo)) || isSubmitting)
-                      ? null 
+                  onPressed:
+                      (items.isEmpty ||
+                          items.any(
+                            (item) => !isItemInComponents(item.itemNo),
+                          ) ||
+                          isSubmitting)
+                      ? null
                       : () async {
                           setState(() => isSubmitting = true);
-                          
+
                           final provider = context.read<MesBarcodeProvider>();
                           //call the toJson method in the barcode model
                           //item.map iterates over each ItemBarcodeModel in items and for each item return a new map {} "return value of ToJson is a map"
@@ -420,7 +456,9 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                             Navigator.pop(context);
                           } else {
                             setState(() {
-                              errorMessage = provider.errorMessage ?? 'errorSubmittingScans'.tr();
+                              errorMessage =
+                                  provider.errorMessage ??
+                                  'errorSubmittingScans'.tr();
                               isSubmitting = false;
                             });
                           }
@@ -437,7 +475,9 @@ bool canAddMoreItem(ItemBarcodeModel item) {
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                             strokeWidth: 2,
                           ),
                         )

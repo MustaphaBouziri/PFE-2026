@@ -146,8 +146,8 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final workCenters = context.watch<ErpWorkcenterProvider>().workCenters;
-
+    final workCenterProvider = context.watch<ErpWorkcenterProvider>();
+final workCenters = workCenterProvider.workCenters;
     return Dialog(
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
@@ -305,7 +305,31 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
                       const SizedBox(height: 10),
                       SizedBox(
                         height: 200,
-                        child: workCenters.isEmpty
+                        child: 
+                        workCenterProvider.errorMessage!=null?
+                         Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cloud_off_outlined,
+                                size: 48,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'FailedToFetchData'.tr(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: const Color(0xFF94A3B8),
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                         ):
+                        workCenters.isEmpty
                             ? const Center(child: CircularProgressIndicator())
                             : ListView.separated(
                                 itemCount: workCenters.length,

@@ -9,6 +9,8 @@ class RequiredComponent extends StatefulWidget {
   final double totalProduced;
   final String executionId;
   final String operationStatus;
+  final double orderQuantity;
+  final double outputScrapQuantity;
 
   const RequiredComponent({
     super.key,
@@ -16,6 +18,8 @@ class RequiredComponent extends StatefulWidget {
     required this.totalProduced,
     required this.executionId,
     required this.operationStatus,
+    required this.orderQuantity,
+    required this.outputScrapQuantity,
   });
 
   @override
@@ -44,6 +48,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
       builder: (context) => ScannerWidget(
         executionId: widget.executionId,
         components: widget.components,
+        orderRemainingQte: widget.orderQuantity - widget.totalProduced,
       ),
     );
   }
@@ -179,6 +184,9 @@ class _RequiredComponentState extends State<RequiredComponent> {
                                         child: ComponentListView(
                                           components: filteredComponents,
                                           totalProduced: widget.totalProduced,
+                                          orderQuantity: widget.orderQuantity,
+                                          outputScrapQuantity:
+                                              widget.outputScrapQuantity,
                                         ),
                                       ),
                                     ],
@@ -269,6 +277,8 @@ class _RequiredComponentState extends State<RequiredComponent> {
               child: ComponentListView(
                 components: filteredComponents,
                 totalProduced: widget.totalProduced,
+                orderQuantity: widget.orderQuantity,
+                outputScrapQuantity: widget.outputScrapQuantity,
               ),
             ),
           ],
@@ -284,6 +294,8 @@ class ComponentListView extends StatelessWidget {
   final double totalProduced;
   final bool shrinkWrap;
   final bool disableScroll;
+  final double orderQuantity;
+  final double outputScrapQuantity;
 
   const ComponentListView({
     super.key,
@@ -291,16 +303,25 @@ class ComponentListView extends StatelessWidget {
     required this.totalProduced,
     this.shrinkWrap = false,
     this.disableScroll = false,
+    required this.orderQuantity,
+    required this.outputScrapQuantity,
   });
 
   static const statusMissing = 'missing';
   static const statusLowStock = 'lowStock';
   static const statusAvailable = 'available';
 
-  String getStatus(double remaining, double scanned) {
-    if (scanned == 0 || remaining <= 0)
+  String getStatus(
+    double remaining,
+    double scanned,
+    double orderQuantity,
+    double quantityPerUnit,
+  ) {
+    final requiredForOrder = orderQuantity * quantityPerUnit;
+
+    if (scanned == 0 || remaining < quantityPerUnit)
       return statusMissing; // if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
-    if (remaining < scanned * 0.2) return statusLowStock;
+    if (remaining < requiredForOrder) return statusLowStock;
     return statusAvailable;
   }
 
@@ -358,10 +379,17 @@ class ComponentListView extends StatelessWidget {
         final scanned = component.totalQuantityScanned;
         // remaining is how many items are left to be scanned or used
 
-        final scrap = component.scrapQuantity;
+        final scrap =
+            component.scrapQuantity +
+            component.quantityPerUnit * outputScrapQuantity;
         final remaining = scanned - consumed - scrap;
 
-        final status = getStatus(remaining, scanned);
+        final status = getStatus(
+          remaining,
+          scanned,
+          orderQuantity,
+          component.quantityPerUnit,
+        );
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -381,7 +409,13 @@ class ComponentListView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${component.itemDescription} (${component.inventory} in storage)',
+                      'componentInventoryInStorage'.tr(
+                        args: [
+                          component.itemDescription,
+                          component.inventory.toString(),
+                        ],
+                      ),
+
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

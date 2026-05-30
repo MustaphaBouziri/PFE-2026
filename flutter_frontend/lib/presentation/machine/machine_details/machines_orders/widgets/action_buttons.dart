@@ -117,7 +117,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('orderCancelledSuccessfully'.tr())),
+        SnackBar(content: Text('orderCancelledSuccessfully'.tr()),backgroundColor: Colors.green,),
       );
     } catch (e) {
       if (!mounted) return;

@@ -76,6 +76,7 @@ begin
     
 end;
 
+// validate that an operation can be canceled before it has started(new execution)
 
     [TryFunction]
     procedure TryCancelOperationBeforeStart(

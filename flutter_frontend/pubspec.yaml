@@ -42,8 +42,13 @@ dependencies:
   pdf: ^3.12.0
   test: ^1.24.0
   google_fonts: ^8.0.1
+  excel: ^4.0.6
+  path_provider: ^2.1.5
+  share_plus: ^13.1.0
+  flutter_svg: ^2.3.0
+  flutter_launcher_icons: ^0.14.4
 
-  flutter_staggered_grid_view: ^0.7.0
+  
 
 
 
@@ -69,6 +74,11 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/appIcon.png"
+
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -92,6 +102,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/translations/
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

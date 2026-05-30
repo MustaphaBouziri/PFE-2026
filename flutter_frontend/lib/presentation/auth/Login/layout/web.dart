@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/login_shared_form.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginWebLayout extends StatelessWidget {
   final TextEditingController authIdController;
@@ -51,7 +52,15 @@ class LoginWebLayout extends StatelessWidget {
                 //___________________ LOGO / TITLE ___________________
                 Column(
                   children:  [
-                    Icon(Icons.factory_outlined, size: 60, color: mainColor),
+                    SvgPicture.asset(
+                      'assets/images/applogo.svg',
+                      width: 100,
+                      height: 100,
+                      colorFilter: const ColorFilter.mode(
+                        mainColor,
+                        BlendMode.srcIn,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       "loginPage".tr(),

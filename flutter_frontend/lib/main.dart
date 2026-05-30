@@ -45,7 +45,7 @@ void main() async {
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       child: DevicePreview(
-        enabled: true,
+        enabled: false,
         builder: (context) => MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -75,6 +75,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      key: ValueKey(context.locale.languageCode),
 
       // DevicePreview
       ///useInheritedMediaQuery: true,
@@ -92,6 +93,9 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           shape: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: Color(0xFF0F172A), // Your global loading color
         ),
         textTheme: GoogleFonts.interTextTheme().apply(
           bodyColor: const Color(0xFF0F172A),

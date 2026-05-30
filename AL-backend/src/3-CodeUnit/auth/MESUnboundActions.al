@@ -453,6 +453,8 @@ codeunit 50125 "MES Unbound Actions"
         MediaInStream: InStream;
         OutStream: OutStream;
     begin
+        UserRec.SetCurrentKey("Created At");
+        UserRec.Ascending(false);
         if UserRec.FindSet() then
             repeat
                 Clear(UserJson);

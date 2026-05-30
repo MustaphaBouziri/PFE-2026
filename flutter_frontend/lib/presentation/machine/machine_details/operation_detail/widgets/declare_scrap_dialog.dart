@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
+import 'package:pfe_mes/data/machine/models/mes_operation_model.dart';
 import 'package:pfe_mes/domain/auth/providers/auth_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/machineOrders_provider.dart';
 import 'package:pfe_mes/domain/machines/providers/mes_componentConsumption_provider.dart';
@@ -16,11 +17,13 @@ import '../../../../../domain/machines/providers/mes_scrap_provider.dart';
 class DeclareScrapDialog extends StatefulWidget {
   final String executionId;
   final List<ComponentConsumptionModel> components;
+  final OperationStatusAndProgressModel operationData;
 
   const DeclareScrapDialog({
     super.key,
     required this.executionId,
     required this.components,
+    required this.operationData,
   });
 
   @override
@@ -72,6 +75,53 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
     super.dispose();
   }
 
+  String? _validateMaterialScrapAvailability(double declaredQty) {
+    if (selectedComponent == null) return null;
+
+    final component = selectedComponent!;
+
+    // How much has already been consumed by produced units
+    final consumed =
+        widget.operationData.totalProducedQuantity * component.quantityPerUnit;
+
+    // How much was scanned
+    final scanned = component.totalQuantityScanned;
+
+    final scrap = component.scrapQuantity;
+
+    // Remaining quantity available
+    final remaining = scanned - consumed - scrap;
+
+    // The declared material scrap is entered in the component base unit
+    if (remaining < declaredQty) {
+      return 'insufficientComponentQuantity'.tr();
+    }
+
+    return null;
+  }
+
+  String? _validateFinishedProductAvailability(double declaredQty) {
+    for (final component in widget.components) {
+      // consumed is how many items have been used based on the total produced and the quantity per unit
+      final consumed =
+          widget.operationData.totalProducedQuantity *
+          component.quantityPerUnit;
+      final scanned = component.totalQuantityScanned;
+      final scrap =
+          component.scrapQuantity +
+          component.quantityPerUnit * widget.operationData.scrapQuantity;
+      final remaining = scanned - consumed - scrap;
+
+      // calculate how many of this component will be needed for the declared quantity
+      final neededForDeclaredQty = declaredQty * component.quantityPerUnit;
+      // If remaining is less than what's needed, return error message
+      if (remaining < neededForDeclaredQty) {
+        return 'insufficientComponentQuantity'.tr();
+      }
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -84,6 +134,30 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
     if (currentOption == scrapTypes[0] && selectedComponent == null) {
       setState(() => _errorMessage = 'pleaseSelectComponent'.tr());
       return;
+    }
+
+    // Validate material scrap quantity against available stock
+    if (currentOption == scrapTypes[0]) {
+      final declaredQty = double.parse(_qtyController.text);
+      final componentError = _validateMaterialScrapAvailability(declaredQty);
+
+      if (componentError != null) {
+        setState(() => _errorMessage = componentError);
+        return;
+      }
+    }
+
+    // Validate finished product scrap quantity against available stock
+    if (currentOption == scrapTypes[1]) {
+      final declaredQty = double.parse(_qtyController.text);
+      final finishedProductError = _validateFinishedProductAvailability(
+        declaredQty,
+      );
+
+      if (finishedProductError != null) {
+        setState(() => _errorMessage = finishedProductError);
+        return;
+      }
     }
 
     setState(() {
@@ -111,7 +185,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
       context.read<MachineordersProvider>().triggerRefresh();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr())));
+      ).showSnackBar(SnackBar(content: Text('scrapDeclaredSuccessfully'.tr()),backgroundColor: Colors.green,));
     } else {
       setState(() {
         _errorMessage =

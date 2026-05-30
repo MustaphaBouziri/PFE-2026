@@ -41,7 +41,7 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('${'failed'.tr()}: $e')));
+        ).showSnackBar(SnackBar(content: Text('${'failed'.tr()}: $e'),backgroundColor: Colors.red,));
       }
     }
   }
@@ -68,7 +68,28 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
           }
 
           if (snapshot.hasError) {
-            return _ErrorState(error: snapshot.error.toString());
+            return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'FailedToFetchData'.tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: const Color(0xFF94A3B8),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          );
           }
 
           final operations = snapshot.data!;
@@ -124,39 +145,5 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
-  final String error;
 
-  const _ErrorState({required this.error});
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            size: 48,
-            color: Colors.red.shade300,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Failed to load operations',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            error,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-          ),
-        ],
-      ),
-    );
-  }
-}
