@@ -351,6 +351,12 @@
   "employeeBadge": "Badge employé",
   "badgeQRDescription": "Ce code QR est utilisé pour l'authentification et l'identification",
   "exportPDF": "Exporter en PDF",
+    "scanYourBadge": "Scannez votre badge",
+    "holdBadgeToCamera": "Placez votre badge devant la caméra",
+    "hideManualEntry": "Masquer la saisie manuelle",
+    "enterCodeManually": "Saisir le code manuellement",
+    "badgeCode": "Code du badge",
+    "verify": "Vérifier",
  
 "FailedToFetchData": "Échec de la récupération des données",
 "cameraIsPaused": "La caméra est en pause",

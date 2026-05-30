@@ -235,6 +235,8 @@ class _RequiredComponentState extends State<RequiredComponent> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 60),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
+
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -272,15 +274,17 @@ class _RequiredComponentState extends State<RequiredComponent> {
             const SizedBox(height: 16),
 
             // display the list in normal way
-            SizedBox(
-              height: 750,
-              child: ComponentListView(
-                components: filteredComponents,
-                totalProduced: widget.totalProduced,
-                orderQuantity: widget.orderQuantity,
-                outputScrapQuantity: widget.outputScrapQuantity,
+            
+               ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 750),
+                child: ComponentListView(
+                  components: filteredComponents,
+                  totalProduced: widget.totalProduced,
+                  orderQuantity: widget.orderQuantity,
+                  outputScrapQuantity: widget.outputScrapQuantity,
+                ),
               ),
-            ),
+            
           ],
         ],
       ),
@@ -292,8 +296,7 @@ class _RequiredComponentState extends State<RequiredComponent> {
 class ComponentListView extends StatelessWidget {
   final List<ComponentConsumptionModel> components;
   final double totalProduced;
-  final bool shrinkWrap;
-  final bool disableScroll;
+
   final double orderQuantity;
   final double outputScrapQuantity;
 
@@ -301,8 +304,7 @@ class ComponentListView extends StatelessWidget {
     super.key,
     required this.components,
     required this.totalProduced,
-    this.shrinkWrap = false,
-    this.disableScroll = false,
+
     required this.orderQuantity,
     required this.outputScrapQuantity,
   });
@@ -364,10 +366,8 @@ class ComponentListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      shrinkWrap: shrinkWrap,
-      physics: disableScroll
-          ? const NeverScrollableScrollPhysics()
-          : const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: components.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {

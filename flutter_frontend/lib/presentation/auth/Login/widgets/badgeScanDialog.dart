@@ -249,7 +249,7 @@ class _BadgeScanDialogState extends State<BadgeScanDialog> {
               TextButton(
                 onPressed: _cancel,
                 child: Text(
-                  'cancelAndGoBack'.tr(),
+                  'cancel'.tr(),
                   style: const TextStyle(
                       fontSize: 12, color: Colors.grey),
                 ),

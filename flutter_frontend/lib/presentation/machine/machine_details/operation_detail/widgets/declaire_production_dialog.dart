@@ -124,9 +124,9 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
       insetPadding: const EdgeInsets.all(30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 360),
+        constraints: const BoxConstraints(maxWidth: 520),
         child: Column(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ─────────────────────────────
@@ -162,7 +162,7 @@ class _DeclareProductionDialogState extends State<DeclareProductionDialog> {
             const Divider(height: 20),
 
             // ── Scrollable body ────────────────────────────────────────────
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
                 child: Column(

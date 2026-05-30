@@ -222,6 +222,12 @@
     "Planned": "Planned",
   "Firm Planned": "Firm Planned",
   "Released": "Released", 
+     "scanYourBadge": "Scan your badge",
+    "holdBadgeToCamera": "Hold your badge in front of the camera",
+    "hideManualEntry": "Hide manual entry",
+    "enterCodeManually": "Enter code manually",
+    "badgeCode": "Badge code",
+    "verify": "Verify",
 
   "plannedQty": "Planned Qty",
   "start": "Start",
