@@ -373,8 +373,8 @@ codeunit 50132 "MES Machine Write"
             MachineInsert.InsertStartMESMachineStatus(prodOrderNo, machineNo)
         else
             MachineInsert.InsertIdleMachineStatus(machineNo);
-            // new change to verify with u  : 
-         if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled, "MES Operation Status"::Interrupted] then
+        // new change to verify with u  : 
+        if targetStatus in ["MES Operation Status"::Finished, "MES Operation Status"::Cancelled, "MES Operation Status"::Interrupted] then
             MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo, targetStatus);
 
         exit(BuildSuccessResponse());
@@ -382,23 +382,34 @@ codeunit 50132 "MES Machine Write"
 
     /// Bootstraps all records for an operation that was never started, then immediately cancels it.
     local procedure ExecuteCancelUnstartedOperation(
-        prodOrderNo: Code[20];
-        operationNo: Code[10];
-        machineNo: Code[20];
-        mesUserId: Code[50]
-    ): Text
+         prodOrderNo: Code[20];
+         operationNo: Code[10];
+         machineNo: Code[20];
+         mesUserId: Code[50]
+     ): Text
     var
         MachineValidation: Codeunit "MES Machine Validation";
         MachineInsert: Codeunit "MES Machine Insert";
         MESOperationStatus: Record "MES Operation State";
+        ExecutionId: Code[50];
     begin
         ClearLastError();
 
         if not MachineValidation.TryCancelOperationBeforeStart(prodOrderNo, operationNo, machineNo) then
             exit(BuildFailureResponse(GetLastErrorText()));
 
-        MachineInsert.InsertStartOperationRecords(prodOrderNo, operationNo, machineNo, mesUserId);
-        MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo, MESOperationStatus."Operation Status"::Cancelled, mesUserId);
+        // Create only the bare execution row – do NOT call InsertStartOperationRecords
+        // which would also fire InsertStartMESMachineStatus (machine → Working).
+        ExecutionId := MachineInsert.InsertMESOperationExecution(prodOrderNo, operationNo, machineNo);
+        MachineInsert.EnsureUserExecutionInteraction(ExecutionId, mesUserId);
+        MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Cancelled, mesUserId);
+
+        // Update machine dashboard to Idle – was entirely missing before.
+        MachineInsert.InsertIdleMachineStatus(machineNo);
+
+        MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo,
+            MESOperationStatus."Operation Status"::Cancelled);
 
         exit(BuildSuccessResponse());
     end;

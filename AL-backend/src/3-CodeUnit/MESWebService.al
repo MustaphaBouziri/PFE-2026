@@ -129,6 +129,8 @@ codeunit 50126 "MES Web Service"
         OperatorId: Code[50];
         ErrorResult: Text;
     begin
+        if not TryResolveIdentity(token, '', DeclaredById, OperatorId, ErrorResult) then
+            exit(ErrorResult);
         exit(MachineWrite.startOperation(prodOrderNo, operationNo, machineNo, OperatorId));
     end;
 

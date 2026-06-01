@@ -565,6 +565,10 @@ end;*/
         MESScrap: Record "MES Operation Scrap";
         ScrapRec: Record Scrap;
     begin
+        EnsureUserExecutionInteraction(executionId, operatorId);
+        if (declaredById <> '') and (declaredById <> operatorId) then
+            EnsureUserExecutionInteraction(executionId, declaredById);
+
         MESScrap.Init();
         MESScrap."Execution Id" := executionId;
         MESScrap."Scrap Quantity" := quantity;
@@ -578,7 +582,6 @@ end;*/
             MESScrap."scrap Description" := CopyStr(ScrapRec.Description, 1, 100);
 
         MESScrap.Insert(true);
-        //aizen why here we didnt do the esure user whatever 
     end;
 
     // ──────────────────────────────────────────────

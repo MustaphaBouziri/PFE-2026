@@ -1,5 +1,5 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:pfe_mes/presentation/admin/machineDashBoard/machineDashboardPage.dart';
+import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/ai/operationDeepLinkPage.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/tabsMain.dart';
 import 'package:url_launcher/url_launcher.dart';

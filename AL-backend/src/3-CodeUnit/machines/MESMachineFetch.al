@@ -120,7 +120,7 @@ codeunit 50131 "MES Machine Fetch"
 
         if ProductOrderRoutingLine.FindSet() then
             repeat
-            //check if operation already started meaning execution exist
+                //check if operation already started meaning execution exist
                 MESExecution.Reset();
                 MESExecution.SetRange("Prod Order No", ProductOrderRoutingLine."Prod. Order No.");
                 MESExecution.SetRange("Operation No", ProductOrderRoutingLine."Operation No.");
@@ -175,10 +175,10 @@ codeunit 50131 "MES Machine Fetch"
 
         MESExecution.Reset();
         MESExecution.SetRange("Machine No", machineNo);
-// get all executions foro this machine (tab 2)
+        // get all executions foro this machine (tab 2)
         if MESExecution.FindSet() then
             repeat
-            //get the latest status for this execution
+                //get the latest status for this execution
                 MESOperationStatus.Reset();
                 MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
                 MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
@@ -271,7 +271,7 @@ codeunit 50131 "MES Machine Fetch"
 
         exit(JsonHelper.JsonToTextArr(MESOperationStatusArr));
     end;
-    
+
 
     // real time details for a specific operation to get current status,produced quantity,scrap and progress...
     procedure fetchOperationLiveData(machineNo: Code[20]; prodOderNo: Code[20];
@@ -298,12 +298,12 @@ codeunit 50131 "MES Machine Fetch"
             MESOperationStatus.SetCurrentKey("Execution Id", "Declared At");
             MESOperationStatus.SetRange("Execution Id", MESExecution."Execution Id");
             MESOperationStatus.Ascending(false);
-// aizen to ask why not repeat why find first ? find first first operation so how running or paused is enough why only 1 recard
+            // aizen to ask why not repeat why find first ? find first first operation so how running or paused is enough why only 1 recard
             if MESOperationStatus.FindFirst() then begin
                 // as long last operation status aint finish u good to go
                 if (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Running) or
                    (MESOperationStatus."Operation Status" = MESOperationStatus."Operation Status"::Paused) then begin
-// aizen why we do format for status
+                    // aizen why we do format for status
                     Clear(MESOperationStatusObj);
                     MESOperationStatusObj.Add('operationStatus', Format(MESOperationStatus."Operation Status"));
                     // calculate scrap 
@@ -321,7 +321,7 @@ codeunit 50131 "MES Machine Fetch"
                     MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");
                     MESOperationProgress.SetRange("Execution Id", MESExecution."Execution Id");
                     MESOperationProgress.Ascending(false);
-                  
+
                     if MESOperationProgress.FindFirst() then begin
                         MESOperationStatusObj.Add('totalProducedQuantity', MESOperationProgress."Total Produced Quantity");
                         MESOperationStatusObj.Add('executionId', MESOperationStatus."Execution Id");
@@ -339,7 +339,7 @@ codeunit 50131 "MES Machine Fetch"
 
         exit(JsonHelper.JsonToTextArr(MESOperationStatusArr));
     end;
-   // get a history of all production cycles 
+    // get a history of all production cycles 
     procedure fetchProductionCycles(
         machineNo: Code[20];
         prodOrderNo: Code[20];
@@ -398,7 +398,7 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(CycleArr));
     end;
 
-//get all component needed fot this operation + show how much of this component has been consumed and scanned so far
+    //get all component needed fot this operation + show how much of this component has been consumed and scanned so far
     procedure fetchBom(
        prodOrderNo: Code[20];
        operationNo: Code[10]): Text
@@ -440,7 +440,7 @@ codeunit 50131 "MES Machine Fetch"
         | ----- | --------- | ------------ |
         | 1001  | 10        | A            |
         */
-     
+
         ProductOrderRoutingLine.Reset();
         ProductOrderRoutingLine.SetRange("Prod. Order No.", prodOrderNo);
         ProductOrderRoutingLine.SetRange("Operation No.", operationNo);
@@ -508,8 +508,8 @@ codeunit 50131 "MES Machine Fetch"
                         BomObj.Add('baseUOMQuantityPerUnit', ItemUnitOfMeasure."Qty. per Unit of Measure")
                     else
                         BomObj.Add('baseUOMQuantityPerUnit', 1);
-                
-                
+
+
 
 
                 end;
@@ -833,7 +833,10 @@ codeunit 50131 "MES Machine Fetch"
                         if MESOperationState.FindFirst() then begin
                             if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Finished then
                                 OperationFinished += 1
-                            else if MESOperationState."Operation Status" = MESOperationState."Operation Status"::Cancelled then
+                            else if MESOperationState."Operation Status" in [
+                                 MESOperationState."Operation Status"::Cancelled,
+                                 MESOperationState."Operation Status"::Interrupted
+                                ] then
                                 OperationCancelled += 1;
                         end;
 
@@ -928,7 +931,7 @@ codeunit 50131 "MES Machine Fetch"
         exit(JsonHelper.JsonToTextArr(MachineArr));
     end;
 
-// decode a barcode to identify the iteme and its unit of measure return item detials
+    // decode a barcode to identify the iteme and its unit of measure return item detials
     procedure resolveBarcode(barcode: Text): Text
     var
         Item: Record Item;

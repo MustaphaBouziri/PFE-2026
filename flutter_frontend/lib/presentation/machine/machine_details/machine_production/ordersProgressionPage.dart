@@ -39,9 +39,12 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${'failed'.tr()}: $e'),backgroundColor: Colors.red,));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${'failed'.tr()}: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -52,65 +55,78 @@ class _OrdersProgressionPageState extends State<OrdersProgressionPage> {
     final isVisible = ModalRoute.of(context)?.isCurrent ?? false;
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-    
 
-    
+      body: !isVisible
+          ? const SizedBox()
+          : StreamBuilder<List<OperationStatusAndProgressModel>>(
+              stream: provider.getMachineOngoingOperationsStateStream(
+                widget.machineNo,
+              ),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-      body: !isVisible ?
-      const SizedBox() :
-      StreamBuilder<List<OperationStatusAndProgressModel>>(
-        stream: provider.getMachineOngoingOperationsStateStream(
-          widget.machineNo,
-        ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_off_outlined,
+                          size: 48,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'FailedToFetchData'.tr(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: const Color(0xFF94A3B8),
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-          if (snapshot.hasError) {
-            return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.cloud_off_outlined,
-                  size: 48,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'FailedToFetchData'.tr(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: const Color(0xFF94A3B8),
-                    height: 1.5,
-                  ),
-                ),
-              ],
+                final operations = List<OperationStatusAndProgressModel>.from(
+                  snapshot.data!,
+                );
+
+                operations.sort((a, b) {
+                  int priority(String status) {
+                    final s = status.trim().toLowerCase();
+                    if (s == 'running') return 0;
+                    return 1;
+                  }
+
+                  final p = priority(
+                    a.operationStatus,
+                  ).compareTo(priority(b.operationStatus));
+                  if (p != 0) return p;
+                  return b.declaredAt.compareTo(a.declaredAt);
+                });
+
+                if (operations.isEmpty) {
+                  return const _EmptyState();
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: operations.length,
+                  itemBuilder: (context, index) {
+                    final op = operations[index];
+                    return OperationCard(
+                      operationData: op,
+                      onTogglePauseResume: () => _handleToggle(context, op),
+                    );
+                  },
+                );
+              },
             ),
-          );
-          }
-
-          final operations = snapshot.data!;
-
-          if (operations.isEmpty) {
-            return const _EmptyState();
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: operations.length,
-            itemBuilder: (context, index) {
-              final op = operations[index];
-              return OperationCard(
-                operationData: op,
-                onTogglePauseResume: () => _handleToggle(context, op),
-              );
-            },
-          );
-        },
-      ),
     );
   }
 }
@@ -130,7 +146,7 @@ class _EmptyState extends StatelessWidget {
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-           Text(
+          Text(
             'noOperationsCurrentlyActiveForThisMachine'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -144,6 +160,3 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-
-
