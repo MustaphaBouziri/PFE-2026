@@ -1298,7 +1298,7 @@ codeunit 50128 "MES Tool Functions"
         MESExecution: Record "MES Operation Execution"
     ): Decimal
     var
-        MESConsumption: Record "MES scan";
+        MESConsumption: Record "MES Operation Scan";
         ConsumedQty: Decimal;
     begin
         ConsumedQty := 0;
