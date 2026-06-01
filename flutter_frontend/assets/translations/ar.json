@@ -359,7 +359,12 @@
 
   "FailedToFetchData": "فشل في جلب البيانات",
 
-
+"scanYourBadge": "امسح شارتك",
+    "holdBadgeToCamera": "ضع الشارة أمام الكاميرا",
+    "hideManualEntry": "إخفاء الإدخال اليدوي",
+    "enterCodeManually": "إدخال الرمز يدويًا",
+    "badgeCode": "رمز الشارة",
+    "verify": "تحقق",
 
   "tutorialAdminSearch": "هذا هو بحث لوحة تحكم المدير. ابحث عن المستخدمين بالاسم أو البريد الإلكتروني.",
   "tutorialAdminRoleFilter": "تصفية المستخدمين حسب الدور: الكل، مدير، مشرف، أو مشغّل.",

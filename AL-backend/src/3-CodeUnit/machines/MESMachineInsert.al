@@ -250,7 +250,7 @@ codeunit 50133 "MES Machine Insert"
     // increase item inventory
 
 
-
+/*
 procedure IncreaseItemInventory(
         itemNo: Code[20];
         quantity: Decimal;
@@ -322,9 +322,8 @@ procedure IncreaseItemInventory(
 
         if ItemJournalLine.FindSet() then
             ItemJournalPostBatch.Run(ItemJournalLine);
-    end;
-
-/*procedure IncreaseItemInventory(
+    end;*/
+procedure IncreaseItemInventory(
     itemNo: Code[20];
     quantity: Decimal;
     executionId: Code[50]
@@ -337,7 +336,6 @@ var
     ProdOrderRoutingLine: Record "Prod. Order Routing Line";
     ItemJournalLine: Record "Item Journal Line";
     ItemJournalBatch: Record "Item Journal Batch";
-    ItemLedgerEntry: Record "Item Ledger Entry";
     ItemJournalPostLine: Codeunit "Item Jnl.-Post Line";
     LineNo: Integer;
     TemplateNameToUse: Code[10];
@@ -374,42 +372,23 @@ begin
             ProdOrderNo);
 
     // batch
-    if not ItemJournalBatch.Get('ARTICLE', 'MES') then begin
-        ItemJournalBatch.Init();
-        ItemJournalBatch."Journal Template Name" := 'ARTICLE';
-        ItemJournalBatch.Name := 'MES';
-        ItemJournalBatch.Description := 'MES Article Journal';
-        ItemJournalBatch.Insert(true);
-    end;
+    if not ItemJournalBatch.Get('ARTICLE', 'DEFAUT') then
+        Error('Output Journal batch not found.');
 
     TemplateNameToUse := 'ARTICLE';
-    BatchNameToUse := 'MES';
+    BatchNameToUse := 'DEFAUT';
 
     // cleanup old lines
     ItemJournalLine.Reset();
-
-    ItemJournalLine.SetRange(
-        "Journal Template Name",
-        TemplateNameToUse);
-
-    ItemJournalLine.SetRange(
-        "Journal Batch Name",
-        BatchNameToUse);
-
+    ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+    ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
     if ItemJournalLine.FindSet() then
         ItemJournalLine.DeleteAll();
 
     // line no
     ItemJournalLine.Reset();
-
-    ItemJournalLine.SetRange(
-        "Journal Template Name",
-        TemplateNameToUse);
-
-    ItemJournalLine.SetRange(
-        "Journal Batch Name",
-        BatchNameToUse);
-
+    ItemJournalLine.SetRange("Journal Template Name", TemplateNameToUse);
+    ItemJournalLine.SetRange("Journal Batch Name", BatchNameToUse);
     if ItemJournalLine.FindLast() then
         LineNo := ItemJournalLine."Line No." + 10000
     else
@@ -417,96 +396,50 @@ begin
 
     // prod order line
     ProdOrderLine.Reset();
-
-    ProdOrderLine.SetRange(
-        Status,
-        ProdOrder.Status);
-
-    ProdOrderLine.SetRange(
-        "Prod. Order No.",
-        ProdOrderNo);
-
-    ProdOrderLine.SetRange(
-        "Item No.",
-        itemNo);
-
+    ProdOrderLine.SetRange(Status, ProdOrder.Status);
+    ProdOrderLine.SetRange("Prod. Order No.", ProdOrderNo);
+    ProdOrderLine.SetRange("Item No.", itemNo);
     if not ProdOrderLine.FindFirst() then
         Error(
             'No production order line found for item %1.',
             itemNo);
 
-    // routing
+    // routing - filter by operation no from execution to get the correct one
     ProdOrderRoutingLine.Reset();
-
-    ProdOrderRoutingLine.SetRange(
-        Status,
-        ProdOrder.Status);
-
-    ProdOrderRoutingLine.SetRange(
-        "Prod. Order No.",
-        ProdOrderNo);
-
-    ProdOrderRoutingLine.SetRange(
-        "Routing Reference No.",
-        ProdOrderLine."Line No.");
-
+    ProdOrderRoutingLine.SetRange(Status, ProdOrder.Status);
+    ProdOrderRoutingLine.SetRange("Prod. Order No.", ProdOrderNo);
+    ProdOrderRoutingLine.SetRange("Routing Reference No.", ProdOrderLine."Line No.");
+    ProdOrderRoutingLine.SetRange("Operation No.", MESExecution."Operation No");
     if not ProdOrderRoutingLine.FindFirst() then
         Error(
-            'No routing line found for production order %1.',
+            'No routing line found for operation %1 in production order %2.',
+            MESExecution."Operation No",
             ProdOrderNo);
 
     // create line
     Clear(ItemJournalLine);
-
     ItemJournalLine.Init();
 
-    ItemJournalLine."Journal Template Name" :=
-        TemplateNameToUse;
-
-    ItemJournalLine."Journal Batch Name" :=
-        BatchNameToUse;
-
+    ItemJournalLine."Journal Template Name" := TemplateNameToUse;
+    ItemJournalLine."Journal Batch Name" := BatchNameToUse;
     ItemJournalLine."Line No." := LineNo;
 
-    ItemJournalLine.Validate(
-        "Posting Date",
-        Today());
+    ItemJournalLine.Validate("Posting Date", Today());
+    ItemJournalLine.Validate("Entry Type", ItemJournalLine."Entry Type"::Output);
 
-    ItemJournalLine.Validate(
-        "Entry Type",
-        ItemJournalLine."Entry Type"::Output);
+    // unique document no tied to execution for traceability
+    ItemJournalLine."Document No." := CopyStr('MES-' + executionId, 1, 20);
 
-    ItemJournalLine."Document No." := 'MES';
-
-    ItemJournalLine.Validate(
-        "Item No.",
-        itemNo);
-
-    ItemJournalLine.Validate(
-        "Order Type",
-        ItemJournalLine."Order Type"::Production);
-
-    ItemJournalLine.Validate(
-        "Order No.",
-        ProdOrderNo);
-
-    ItemJournalLine.Validate(
-        "Order Line No.",
-        ProdOrderLine."Line No.");
-
-    ItemJournalLine.Validate(
-        "Operation No.",
-        ProdOrderRoutingLine."Operation No.");
+    ItemJournalLine.Validate("Item No.", itemNo);
+    ItemJournalLine.Validate("Order Type", ItemJournalLine."Order Type"::Production);
+    ItemJournalLine.Validate("Order No.", ProdOrderNo);
+    ItemJournalLine.Validate("Order Line No.", ProdOrderLine."Line No.");
+    ItemJournalLine.Validate("Operation No.", ProdOrderRoutingLine."Operation No.");
 
     if ProdOrder."Location Code" <> '' then
-        ItemJournalLine.Validate(
-            "Location Code",
-            ProdOrder."Location Code");
+        ItemJournalLine.Validate("Location Code", ProdOrder."Location Code");
 
-    // quantity
-    ItemJournalLine.Validate(
-        "Output Quantity",
-        quantity);
+    ItemJournalLine.Validate("Output Quantity", quantity);
 
     ItemJournalLine.Insert(true);
 
@@ -525,28 +458,7 @@ begin
 
     // post line
     ItemJournalPostLine.RunWithCheck(ItemJournalLine);
-
-    // verify ledger entry created
-    ItemLedgerEntry.Reset();
-
-    ItemLedgerEntry.SetRange(
-        "Item No.",
-        itemNo);
-
-    if not ItemLedgerEntry.FindLast() then
-        Error(
-            'No Item Ledger Entry exists for item %1.',
-            itemNo);
-
-    Error(
-        'SUCCESS\\' +
-        'Entry No=%1\\' +
-        'Quantity=%2\\' +
-        'Remaining Quantity=%3',
-        ItemLedgerEntry."Entry No.",
-        ItemLedgerEntry.Quantity,
-        ItemLedgerEntry."Remaining Quantity");
-end;*/
+end;
     // ──────────────────────────────────────────────
     // Scrap records
     // ──────────────────────────────────────────────

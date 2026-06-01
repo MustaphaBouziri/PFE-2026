@@ -104,7 +104,11 @@ class _ScannerWidgetState extends State<ScannerWidget> {
       errorMessage = null;
     });
 
-    int index = items.indexWhere((e) => e.itemNo == newItem.itemNo);
+    int index = items.indexWhere(
+      (e) =>
+          e.itemNo == newItem.itemNo &&
+          e.unitOfMeasure == newItem.unitOfMeasure,
+    );
 
     if (index != -1) {
       // same item already in list — increment quantity, keep all other fields
@@ -269,7 +273,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                                   size: 70,
                                   color: Colors.orange,
                                 ),
-                                Text('cameraIsPaused'.tr())
+                                Text('cameraIsPaused'.tr()),
                               ],
                             ),
                           ),
