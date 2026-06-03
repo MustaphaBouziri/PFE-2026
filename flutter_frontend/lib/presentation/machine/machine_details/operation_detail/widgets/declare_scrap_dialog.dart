@@ -256,7 +256,7 @@ class _DeclareScrapDialogState extends State<DeclareScrapDialog> {
                   provider.isLoading && provider.scrapCodes.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : DropdownMenu<MesScrapCode>(
-                          width: double.infinity,
+                          width: 500,
                           hintText: 'selectScrapCode'.tr(),
                           initialSelection: _selectedCode,
                           onSelected: (val) =>

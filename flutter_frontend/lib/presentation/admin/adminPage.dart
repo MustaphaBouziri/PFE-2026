@@ -21,6 +21,13 @@ class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
   final SessionStorage _sessionStorage = SessionStorage();
 
+  final GlobalKey _sidebarKey = GlobalKey();
+  final GlobalKey _sidebarUsersKey = GlobalKey();
+  final GlobalKey _sidebarActivityKey = GlobalKey();
+  final GlobalKey _addUserButtonKey = GlobalKey();
+  final GlobalKey _userTableKey = GlobalKey();
+  final GlobalKey _actionMenuKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -31,6 +38,7 @@ class _AdminPageState extends State<AdminPage> {
         children: [
           // sidebar
           Container(
+           
             width: 250,
             decoration: BoxDecoration(
               color: const Color(0xFF0F172A),
@@ -145,7 +153,12 @@ class _AdminPageState extends State<AdminPage> {
             child: IndexedStack(
               index: _selectedIndex,
               children: [
-                const AddUserPage(),
+                AddUserPage(
+                  sidebarKey: _sidebarKey,
+                  addUserKey: _addUserButtonKey,
+                  tableKey: _userTableKey,
+                  actionMenuKey: _actionMenuKey,
+                ),
                 const ActivityLogPage(),
                 const BarcodeListPage(),
                 const MesSettingsPage(),

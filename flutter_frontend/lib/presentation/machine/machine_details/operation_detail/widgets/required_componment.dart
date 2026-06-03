@@ -10,7 +10,7 @@ class RequiredComponent extends StatefulWidget {
   final String executionId;
   final String operationStatus;
   final double orderQuantity;
-  final double outputScrapQuantity;
+  final double outputScrapQuantity; // this mean final order scrap
 
   const RequiredComponent({
     super.key,
@@ -43,12 +43,43 @@ class _RequiredComponentState extends State<RequiredComponent> {
   }
 
   void _openScanner(BuildContext context) {
+    //this to fix the scan out of
+    // scrap =component scrap + outPut scrap(meaning the final product scrap) * component quantity per unit
+    //remaining =component totalQuantityScanned - (total produced * component quantity per unit)
+    // outof  = order remaining qte - scrap-remaining
+
+    final outOf = {
+
+      for (final c in widget.components)
+        c.itemNo: (() {
+          final consumed = widget.totalProduced * c.quantityPerUnit;
+          final scanned = c.totalQuantityScanned;
+          final scrap =
+              c.scrapQuantity + c.quantityPerUnit * widget.outputScrapQuantity;
+          final remaining = scanned - consumed - scrap;
+          final orderRemainingQte = widget.orderQuantity - widget.totalProduced;
+          return (orderRemainingQte * c.quantityPerUnit - remaining).clamp(
+            0.0,
+            double.infinity,
+          );// never allow the result to be less then 0 
+        })(),
+      /*
+result
+        {
+
+  "001": 3.0,
+  "002": 6.0,
+  "003": 0.0,
+}*/
+    };
+
     showDialog(
       context: context,
       builder: (context) => ScannerWidget(
         executionId: widget.executionId,
         components: widget.components,
         orderRemainingQte: widget.orderQuantity - widget.totalProduced,
+        outOf: outOf,
       ),
     );
   }
@@ -274,17 +305,15 @@ class _RequiredComponentState extends State<RequiredComponent> {
             const SizedBox(height: 16),
 
             // display the list in normal way
-            
-               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 750),
-                child: ComponentListView(
-                  components: filteredComponents,
-                  totalProduced: widget.totalProduced,
-                  orderQuantity: widget.orderQuantity,
-                  outputScrapQuantity: widget.outputScrapQuantity,
-                ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 750),
+              child: ComponentListView(
+                components: filteredComponents,
+                totalProduced: widget.totalProduced,
+                orderQuantity: widget.orderQuantity,
+                outputScrapQuantity: widget.outputScrapQuantity,
               ),
-            
+            ),
           ],
         ],
       ),
@@ -321,8 +350,7 @@ class ComponentListView extends StatelessWidget {
   ) {
     final requiredForOrder = orderQuantity * quantityPerUnit;
 
-    if (scanned == 0 || remaining < quantityPerUnit)
-      return statusMissing; // if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
+    if (scanned == 0 || remaining < quantityPerUnit) return statusMissing;
     if (remaining < requiredForOrder) return statusLowStock;
     return statusAvailable;
   }

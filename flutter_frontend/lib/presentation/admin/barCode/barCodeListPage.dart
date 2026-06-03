@@ -165,12 +165,25 @@ class _BarcodeListScreenState extends State<BarcodeListPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (provider.barcodes.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('noBarcodesFound'.tr()),
+                  const SizedBox(height: 16),
+                  
+                ],
+              ),
+            );
+          }
+
           if (provider.errorMessage != null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('${'error'.tr()}: ${provider.errorMessage}'),
+                  Text('FailedToFetchData'.tr()),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.fetchAllBarcodes(),

@@ -30,13 +30,13 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
   String get _operationStatus =>
       widget.operationData.operationStatus.trim().toLowerCase();
 
-  bool get _isClosed => ['finished', 'cancelled'].contains(_operationStatus);
+  bool get _isClosed => ['finished', 'cancelled', 'interrupted'].contains(_operationStatus);
 
   bool get _canDeclareProduction =>
-      !['finished', 'cancelled', 'paused'].contains(_operationStatus);
+      !['finished', 'cancelled', 'paused','interrupted'].contains(_operationStatus);
 
   bool get _canReportReject =>
-      !['finished', 'cancelled', 'paused'].contains(_operationStatus);
+      !['finished', 'cancelled', 'paused','interrupted'].contains(_operationStatus);
 
   // only supervisors can close/cancel orders
   bool get _canCloseOrder => !_isClosed && _isSupervisor;
@@ -108,6 +108,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             'productionCompleteConfirm'.tr(
               args: [
                 widget.operationData.prodOrderNo,
+                widget.operationData.operationNo,
                 widget.operationData.progressPercent.toStringAsFixed(0),
               ],
             ),
@@ -141,11 +142,11 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
             const SizedBox(width: 8),
-            Text('cancelProductionOrder'.tr()),
+            Text('interruptOperation'.tr()),
           ],
         ),
         content: Text(
-          'productionCancelConfirm'.tr(
+          'operationInterruptConfirm'.tr(
             args: [
               widget.operationData.prodOrderNo,
               widget.operationData.progressPercent.toStringAsFixed(0),
@@ -163,7 +164,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
               backgroundColor: const Color(0xFFDC2626),
             ),
             child: Text(
-              'yesCancelOrder'.tr(),
+              'yesInterruptOperation'.tr(),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -273,7 +274,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
           _ActionButton(
             title: _isComplete
                 ? 'finishProductionOrder'.tr()
-                : 'cancelProductionOrder'.tr(),
+                : 'interruptOperation'.tr(),
             icon: _isComplete
                 ? Icons.check_circle_outline
                 : Icons.cancel_outlined,
@@ -283,7 +284,7 @@ class _ActionButtonsContainerState extends State<ActionButtonsContainer> {
             isEnabled: _canCloseOrder,
             isLoading: _isEndLoading,
             onTap: _canCloseOrder ? _handleEndOrder : null,
-            disabledReason: !_isSupervisor ? _isComplete? 'onlySupervisorsCanFinishOrders'.tr() :'onlySupervisorsCanCancelOrders'.tr(): null,
+            disabledReason: !_isSupervisor ? _isComplete? 'onlySupervisorsCanFinishOrders'.tr() :'onlySupervisorsCanInterruptOrders'.tr(): null,
           ),
           const SizedBox(height: 8),
 

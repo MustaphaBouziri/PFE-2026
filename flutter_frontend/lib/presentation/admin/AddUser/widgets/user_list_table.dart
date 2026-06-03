@@ -11,6 +11,7 @@ class UserListTable extends StatefulWidget {
   final Function(int) onPageChanged;
   final String currentUserId;
   final GlobalKey tableKey;
+  final GlobalKey actionMenuKey;
 
   const UserListTable({
     super.key,
@@ -20,6 +21,7 @@ class UserListTable extends StatefulWidget {
     required this.onPageChanged,
     required this.currentUserId,
     required this.tableKey,
+    required this.actionMenuKey,
   });
 
   @override

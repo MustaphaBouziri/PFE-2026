@@ -12,11 +12,13 @@ class ScannerWidget extends StatefulWidget {
   final String executionId;
   final List<ComponentConsumptionModel> components;
   final double orderRemainingQte;
+  final Map<String, double> outOf;
   const ScannerWidget({
     super.key,
     required this.executionId,
     required this.components,
     required this.orderRemainingQte,
+    required this.outOf,
   });
 
   @override
@@ -355,15 +357,11 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                   // i need to get the component quanitye per so
                   final totalScanned = (item.quantity * item.quantityPerUnit)
                       .toStringAsFixed(0);
-                  //i search the component list where this item no in it and store it in varriable component
-                  final component = widget.components.firstWhere(
-                    (c) => c.itemNo == item.itemNo,
-                  );
-                  // i use the varriable's qute per meaning thi item scanned component quantity per
-
-                  final outOf =
-                      (widget.orderRemainingQte * component.quantityPerUnit)
-                          .toStringAsFixed(0);
+                  
+                  // get the outOf for this item from the map widget.outOf["001"]
+                  final outOf = widget.outOf[item.itemNo] ?? 0;
+            
+                  
                   ///////////////////////////////////////////
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -498,3 +496,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     );
   }
 }
+
+
+
+
+
