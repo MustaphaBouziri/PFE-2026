@@ -316,3 +316,131 @@ def summarise_dashboard(machines: List[Dict[str, Any]]) -> Dict[str, Any]:
             f"average uptime {round(avg_uptime, 1)}%."
         ),
     }
+
+# ── Work-center summary analysis ─────────────────────────────────────────────
+
+def analyse_work_center_summary(wcs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Compute fleet-level utilisation across work centers."""
+    total_wcs = len(wcs)
+    total_machines = sum(int(w.get("totalMachines") or 0) for w in wcs)
+    working = sum(int(w.get("workingMachines") or 0) for w in wcs)
+    idle = total_machines - working
+    utilisation = round(working / total_machines * 100, 1) if total_machines else 0.0
+    return {
+        "wc_count": total_wcs,
+        "total_machines": total_machines,
+        "working_machines": working,
+        "idle_machines": idle,
+        "fleet_utilisation_pct": utilisation,
+        "interpretation": (
+            f"{working}/{total_machines} machines working across {total_wcs} "
+            f"work centre(s) ({utilisation}% utilisation). "
+            f"{idle} machine(s) idle."
+        ),
+    }
+
+
+# ── Operator summary analysis ─────────────────────────────────────────────────
+
+def analyse_operator_summary(operators: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Flag idle/active operators and surface productivity stats."""
+    total = len(operators)
+    active = sum(1 for o in operators if o.get("isActiveOnMachine"))
+    logged_in = sum(1 for o in operators if o.get("isLoggedIn"))
+    idle_logged_in = logged_in - active
+    top_producers = sorted(
+        operators,
+        key=lambda o: float(o.get("totalProducedQty") or 0),
+        reverse=True,
+    )[:3]
+    return {
+        "total_operators": total,
+        "active_on_machine": active,
+        "logged_in_idle": idle_logged_in,
+        "top_producers": [
+            {
+                "userId": o.get("userId", "?"),
+                "fullName": o.get("fullName", ""),
+                "produced": float(o.get("totalProducedQty") or 0),
+            }
+            for o in top_producers
+        ],
+        "interpretation": (
+            f"{active} operator(s) active on machines, "
+            f"{idle_logged_in} logged in but idle, "
+            f"{total - logged_in} not logged in."
+        ),
+    }
+
+
+# ── Scrap summary analysis ────────────────────────────────────────────────────
+
+def analyse_scrap_summary(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Severity classification and top-offender ranking from get_scrap_summary."""
+    total = float(data.get("totalScrapQty") or 0)
+    details: List[Dict[str, Any]] = data.get("details") or []
+
+    by_machine: Dict[str, float] = {}
+    by_order: Dict[str, float] = {}
+    by_reason: Dict[str, float] = {}
+
+    for d in details:
+        mno = d.get("machineNo") or "?"
+        ono = d.get("prodOrderNo") or "?"
+        rsn = d.get("scrapCode") or "?"
+        qty = float(d.get("scrapQuantity") or 0)
+        by_machine[mno] = by_machine.get(mno, 0.0) + qty
+        by_order[ono]   = by_order.get(ono, 0.0)   + qty
+        by_reason[rsn]  = by_reason.get(rsn, 0.0)  + qty
+
+    top_machines = sorted(by_machine.items(), key=lambda x: -x[1])[:3]
+    top_orders   = sorted(by_order.items(),   key=lambda x: -x[1])[:3]
+    top_reasons  = sorted(by_reason.items(),  key=lambda x: -x[1])[:3]
+
+    interp = f"Total scrap: {total} units across {len(details)} record(s)."
+    if top_machines:
+        interp += f" Highest machine: {top_machines[0][0]} ({top_machines[0][1]} units)."
+    if top_reasons:
+        interp += f" Top reason: {top_reasons[0][0]} ({top_reasons[0][1]} units)."
+
+    return {
+        "total_scrap_qty": total,
+        "record_count": len(details),
+        "top_machines": [{"machineNo": m, "scrap": q} for m, q in top_machines],
+        "top_orders":   [{"orderNo":   o, "scrap": q} for o, q in top_orders],
+        "top_reasons":  [{"code": r,      "scrap": q} for r, q in top_reasons],
+        "interpretation": interp,
+    }
+
+
+# ── Delay report analysis ─────────────────────────────────────────────────────
+
+def analyse_delay_report(delays: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Summarise delay report with severity counts and worst offenders."""
+    overdue     = [d for d in delays if d.get("isOverdue")]
+    paused_long = [d for d in delays if d.get("isPausedTooLong")]
+    worst = sorted(delays, key=lambda d: -float(d.get("delayMinutes") or 0))[:3]
+    return {
+        "total_delayed": len(delays),
+        "overdue_count": len(overdue),
+        "abnormal_pause_count": len(paused_long),
+        "worst_delays": [
+            {
+                "order": d.get("prodOrderNo"),
+                "op": d.get("operationNo"),
+                "machine": d.get("machineNo"),
+                "minutes": round(float(d.get("delayMinutes") or 0), 1),
+            }
+            for d in worst
+        ],
+        "interpretation": (
+            f"{len(delays)} delayed operation(s): "
+            f"{len(overdue)} overdue, "
+            f"{len(paused_long)} paused abnormally long."
+            + (
+                f" Worst: order {worst[0].get('prodOrderNo')} op {worst[0].get('operationNo')} "
+                f"— {round(float(worst[0].get('delayMinutes') or 0), 0):.0f} min."
+                if worst else ""
+            )
+        ),
+    }

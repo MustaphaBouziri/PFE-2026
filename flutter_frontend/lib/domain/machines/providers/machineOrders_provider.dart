@@ -37,13 +37,12 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
     });
   }
 
-
   Future<bool> startOrder(
     String prodOrderNo,
     String operationNo,
     String machineNo,
   ) async {
-    return _service.startOperation( prodOrderNo, operationNo, machineNo);
+    return _service.startOperation(prodOrderNo, operationNo, machineNo);
   }
 
   Future<bool> finishOperation({
@@ -70,6 +69,8 @@ class MachineordersProvider with ChangeNotifier, AsyncStateMixin {
       prodOrderNo: prodOrderNo,
       operationNo: operationNo,
     );
+    // print("=========================");
+    // print(result.toString());
     triggerRefresh();
     return result;
   }

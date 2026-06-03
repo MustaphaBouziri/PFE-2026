@@ -169,7 +169,6 @@ codeunit 50131 "MES Machine Fetch"
         CurrentOperationStatus: Text;
         CurrentDeclaredAt: DateTime;
         JsonHelper: Codeunit "MES Json Helper";
-
     begin
         Clear(MESOperationStatusArr);
 
@@ -203,23 +202,13 @@ codeunit 50131 "MES Machine Fetch"
                         //need to track when operatoin started and finished (to ask)
                         Clear(StartDateTime);
                         Clear(EndDateTime);
+
                         CurrentOperationStatus := Format(MESOperationStatus."Operation Status");
                         CurrentDeclaredAt := MESOperationStatus."Declared At";
 
-                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Running);
-                        if MESOperationStatus.FindLast() then
-                            StartDateTime := MESOperationStatus."Declared At";
-
-                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Finished);
-                        if MESOperationStatus.FindFirst() then
-                            EndDateTime := MESOperationStatus."Declared At";
-
-                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Cancelled);
-                        if MESOperationStatus.FindFirst() then
-                            EndDateTime := MESOperationStatus."Declared At";
-
-
-
+                        // Use execution start/end instead of operation state changes
+                        StartDateTime := MESExecution."Start Time";
+                        EndDateTime := MESExecution."End Time";
 
                         MESOperationStatus.SetRange("Operation Status");
 
@@ -232,7 +221,6 @@ codeunit 50131 "MES Machine Fetch"
                         MESOperationStatusObj.Add('startDateTime', Format(StartDateTime));
                         MESOperationStatusObj.Add('endDateTime', Format(EndDateTime));
                         MESOperationStatusObj.Add('declaredAt', Format(CurrentDeclaredAt));
-
 
                         MESOperationProgress.Reset();
                         MESOperationProgress.SetCurrentKey("Execution Id", "Declared At");

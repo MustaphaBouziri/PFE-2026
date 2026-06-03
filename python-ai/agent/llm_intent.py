@@ -35,16 +35,19 @@ it never writes user-visible text.
 """
 from __future__ import annotations
 
+import asyncio
+from itertools import chain
 import json
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+import httpx
+
 from agent.intent import (
     Intent,
     ToolChain,
-    ToolStep,
-    classify as regex_classify,
+    ToolStep
 )
 
 logger = logging.getLogger("mes-ai.llm_intent")
@@ -54,48 +57,82 @@ logger = logging.getLogger("mes-ai.llm_intent")
 # Kept intentionally terse — the LLM does not need implementation details,
 # only argument names so it can fill them correctly.
 
+
 TOOL_CATALOGUE = """
 Available tools (name → required args → description):
-  list_machines         | work_center_no: str          | List machines for a work centre. Fan-out across all user WCs when no specific WC is needed.
-  get_machine_orders    | machine_no: str               | Production order queue for a machine.
-  get_ongoing_operations| machine_no: str               | Current/live operation on a machine.
-  get_operation_live_data| machine_no, prod_order_no, operation_no: str | Live KPI data for a specific operation.
-  get_production_cycles | machine_no, prod_order_no, operation_no: str | Cycle declarations for an operation.
-  get_operations_history| machine_no: str               | Completed operations history for a machine.
-  get_activity_log      | hours_back: float             | Activity / event log for the floor (last N hours).
-  get_machine_dashboard | hours_back: float, work_center_nos: list[str] | KPI dashboard covering multiple machines.
-  get_production_orders | status_filter, work_center_no, machine_no: str | Production orders with optional status, work centre, or machine filters.
-  get_work_center_summary| work_center_nos: list[str], hours_back: float | Per-work-centre summary for machines, queues, operators, production, and scrap.
-  get_operator_summary  | work_center_nos: list[str], hours_back: float | Operator activity, machine assignment, produced quantity, scrap, and operation counts.
-  get_my_data           | hours_back: float             | Data scoped to the authenticated user: operations, production, scrap, and machine interactions.
-  get_scrap_summary     | hours_back: float, prod_order_no, operation_no, machine_no, work_center_no, operator_id: str | Scrap records and totals with optional filters.
-  get_delay_report      | work_center_nos: list[str], pause_threshold_minutes: float | Delayed and blocked operations ranked by delay severity.
-  get_consumption_summary| prod_order_no, operation_no, machine_no: str, hours_back: float | Component consumption versus planned BOM quantity.
-  get_supervisor_overview| work_center_nos: list[str], hours_back: float, pause_threshold_minutes: float | Supervisor overview of stopped machines, long pauses, idle operators, high scrap, delays, and totals.
-  get_bom               | prod_order_no, operation_no: str | Bill of materials / component list.
+  list_machines          | work_center_no: str                                                    | List machines for a work centre. Fan-out across all user WCs when no specific WC is needed.
+  get_machine_orders     | machine_no: str                                                        | Production order queue for a single machine (not-yet-started ops only).
+  get_ongoing_operations | machine_no: str                                                        | Current running/paused operation on a machine.
+  get_operation_live_data| machine_no, prod_order_no, operation_no: str                           | Live KPI for a specific operation (progress %, scrap, produced qty).
+  get_production_cycles  | machine_no, prod_order_no, operation_no: str                           | Cycle-by-cycle production declarations for an operation.
+  get_operations_history | machine_no: str                                                        | Completed/cancelled operations history for a machine.
+  get_activity_log       | hours_back: float                                                      | Chronological event log for the floor (status changes, production, scrap, scans).
+  get_machine_dashboard  | hours_back: float, work_center_nos: list[str]                          | Per-machine KPI dashboard (uptime %, produced, scrap, ops finished).
+  get_production_orders  | status_filter: str, work_center_no: str, machine_no: str               | Production orders; status_filter comma-separated e.g. "Released,Firm Planned"; empty = all.
+  get_work_center_summary| work_center_nos: list[str], hours_back: float                          | Per-WC summary: machine counts, running ops, assigned operators, produced qty, scrap.
+  get_operator_summary   | work_center_nos: list[str], hours_back: float                          | Per-operator summary: login status, machine assignment, produced qty, scrap, op counts.
+  get_my_data            | hours_back: float                                                      | Personal data for the authenticated user: their ops, produced qty, scrap.
+  get_scrap_summary      | hours_back: float, prod_order_no: str, operation_no: str, machine_no: str, work_center_no: str, operator_id: str | Scrap records with optional filters; any filter empty = all.
+  get_delay_report       | work_center_nos: list[str], pause_threshold_minutes: float             | Overdue and abnormally-paused operations ranked by delay severity.
+  get_consumption_summary| prod_order_no: str, operation_no: str, machine_no: str, hours_back: float | Component consumption vs planned BOM qty; flags over/under consumption.
+  get_supervisor_overview| work_center_nos: list[str], hours_back: float, pause_threshold_minutes: float | Comprehensive shift overview: stopped machines, idle operators, high-scrap ops, delays.
+  get_bom                | prod_order_no: str, operation_no: str                                  | Bill of materials / component list with scan progress.
+
+Intent → tool mapping guidance:
+  machine_status       → get_ongoing_operations
+  machine_orders       → get_machine_orders
+  machine_live         → get_ongoing_operations + get_operation_live_data [+ get_production_cycles if scrap/velocity asked]
+  machine_history      → get_operations_history
+  machine_dashboard    → get_machine_dashboard [+ list_machines if no specific machine]
+  department_overview  → list_machines (fan-out)
+  activity_log         → get_activity_log
+  scrap_analysis       → get_scrap_summary (preferred over activity_log for scrap questions)
+  work_center_summary  → get_work_center_summary
+  operator_summary     → get_operator_summary
+  supervisor_overview  → get_supervisor_overview  (use when: "what should I check", "shift briefing", "what's wrong on the floor")
+  delay_report         → get_delay_report  (use when: "overdue", "delayed", "blocked", "late orders")
+  production_orders    → get_production_orders  (use when: "list orders", "order status", "released orders")
+  my_data              → get_my_data  (use when: "my production", "what did I do", "my shift")
+  consumption_summary  → get_consumption_summary  (use when: "material usage", "component consumption", "BOM variance")
+  operation_live       → get_ongoing_operations + get_operation_live_data (specific order+op, not just machine)
+  operation_bom        → get_bom [preceded by get_ongoing_operations if order/op not known]
+  production_cycles    → get_production_cycles [preceded by get_ongoing_operations if order/op not known]
+  general              → (no tools — LLM answers from general knowledge)
 
 Slot references (resolved at runtime):
-  Use "$<result_key>[0].<field>" to reference data from a prior step.
+  Use "$<result_key>[0].<field>" to reference a prior step's output.
   Examples:
-    "$ongoing[0].prodOrderNo"  — prod order no from get_ongoing_operations result
-    "$ongoing[0].operationNo"  — operation no from get_ongoing_operations result
-    "$ongoing[0].executionId"  — execution id from get_ongoing_operations result
+    "$ongoing[0].prodOrderNo"  — prod order no from get_ongoing_operations
+    "$ongoing[0].operationNo"  — operation no from get_ongoing_operations
+    "$ongoing[0].executionId"  — execution id from get_ongoing_operations
 """
 
 # ── Intent labels (must match Intent enum values) ────────────────────────────
 
 INTENT_LABELS = [
+    # Machine-level
     "machine_status",
     "machine_orders",
     "machine_live",
     "machine_history",
     "machine_dashboard",
+    # Department / floor
     "department_overview",
     "activity_log",
     "scrap_analysis",
+    "work_center_summary",
+    "operator_summary",
+    "supervisor_overview",
+    "delay_report",
+    # Operation-level
     "operation_live",
     "operation_bom",
     "production_cycles",
+    "consumption_summary",
+    # Orders / personal
+    "production_orders",
+    "my_data",
+    # Fallback
     "general",
 ]
 
@@ -110,16 +147,22 @@ describing which tools to call to answer it.
 
 Rules:
 1. Output ONLY a valid JSON object — no prose, no markdown fences, no explanation.
-2. Choose the minimum set of tools needed.
+2. Choose the minimum set of tools needed. Never add a tool "just in case".
 3. Use slot references ("$key[0].field") to chain steps when a later step
    needs output from an earlier one.
 4. If the question involves MULTIPLE machines or "all machines / every machine /
    which machines", set "is_composite": true and include list_machines with
    fan_out_work_centers: true.
-5. If the question is general and needs no MES data, return an empty steps array.
+5. If the question is general and needs no MES data, return an empty steps array
+   and use intent "general".
 6. result_key must be a unique snake_case identifier per step.
-7. Choose intent from this exact list:
+7. Choose intent from EXACTLY this list (no other values are valid):
    {", ".join(INTENT_LABELS)}
+8. For supervisor/manager queries ("what should I focus on", "shift overview",
+   "what's wrong"), prefer supervisor_overview over combining multiple tools.
+9. For personal queries ("my production", "what did I do today"), use my_data.
+10. For scrap questions without a specific machine, use get_scrap_summary not
+    get_activity_log.
 
 Output schema:
 {{
@@ -136,6 +179,13 @@ Output schema:
   ],
   "reasoning": "<brief explanation of why you chose these tools>"
 }}
+
+Common mistakes to avoid:
+- Do NOT invent tool names. Only use names from the tool list above.
+- Do NOT omit result_key on any step.
+- Do NOT use duplicate result_key values.
+- Do NOT wrap the JSON in markdown code fences.
+- Do NOT add fields not in the schema.
 """
 
 _IDENTIFIER_USER_TEMPLATE = """\
@@ -252,6 +302,7 @@ class LLMIntentIdentifier:
     def __init__(self, llm_client: Any) -> None:
         self.llm = llm_client
 
+
     async def classify(
         self,
         message: str,
@@ -259,11 +310,13 @@ class LLMIntentIdentifier:
         work_centers: List[str],
     ) -> Tuple[ToolChain, "ThinkingBlock"]:
         """
-        Primary: ask LLM for a JSON plan.
-        Fallback: use regex classifier from intent.py.
+        Attempt 1: ask the LLM for a JSON plan.
+        Attempt 2: if attempt 1 fails, retry with the error injected into the prompt.
+        If both fail: return a GENERAL intent with empty steps (no regex fallback).
         """
         thinking = ThinkingBlock(message=message)
 
+        # ── Attempt 1 ────────────────────────────────────────────────────────
         try:
             chain, raw_plan, raw_text = await self._llm_classify(
                 message, role, work_centers
@@ -274,35 +327,87 @@ class LLMIntentIdentifier:
             thinking.reasoning = raw_plan.get("reasoning", "")
             thinking.intent = chain.intent.value
             thinking.steps = [
-                {"tool": s.tool, "args": s.args, "result_key": s.result_key,
-                 "fan_out_work_centers": s.fan_out_work_centers}
+                {
+                    "tool": s.tool,
+                    "args": s.args,
+                    "result_key": s.result_key,
+                    "fan_out_work_centers": s.fan_out_work_centers,
+                }
                 for s in chain.steps
             ]
-            thinking.fallback_used = False
+            thinking.retry_used = False
             logger.info(
                 "LLM intent: %s | steps=%d | composite=%s",
                 chain.intent, len(chain.steps), chain.is_composite,
             )
             return chain, thinking
-
-        except Exception as exc:
+        except httpx.HTTPStatusError as exc1:
+            # Provider-level error — retry won't help for 5xx
+            if exc1.response.status_code >= 500:
+                logger.error("LLM provider 5xx (%s) — skipping retry", exc1.response.status_code)
+                thinking.attempt1_error = str(exc1)
+                thinking.method = "both_failed"
+                thinking.fallback_used = True
+                thinking.fallback_reason = f"Provider 5xx: {exc1}"
+                chain = ToolChain(intent=Intent.GENERAL, steps=[], 
+                                description="Provider unavailable", is_composite=False)
+                thinking.intent = chain.intent.value
+                return chain, thinking
+        except Exception as exc1:
             logger.warning(
-                "LLM intent identification failed (%s) — falling back to regex", exc
+                "LLM intent attempt 1 failed (%s) — retrying with error context", exc1
             )
-            thinking.fallback_used = True
-            thinking.fallback_reason = str(exc)
+            thinking.attempt1_error = str(exc1)
+        await asyncio.sleep(1.0)   
+            
 
-            chain = regex_classify(message, work_centers)
-            thinking.method = "regex_fallback"
+        # ── Attempt 2 — retry with error context ─────────────────────────────
+        try:
+            chain, raw_plan, raw_text = await self._llm_classify_retry(
+                message, role, work_centers, error_hint=thinking.attempt1_error
+            )
+            thinking.method = "llm_retry"
+            thinking.raw_response = raw_text
+            thinking.parsed_plan = raw_plan
+            thinking.reasoning = raw_plan.get("reasoning", "")
             thinking.intent = chain.intent.value
             thinking.steps = [
-                {"tool": s.tool, "args": s.args, "result_key": s.result_key,
-                 "fan_out_work_centers": s.fan_out_work_centers}
+                {
+                    "tool": s.tool,
+                    "args": s.args,
+                    "result_key": s.result_key,
+                    "fan_out_work_centers": s.fan_out_work_centers,
+                }
                 for s in chain.steps
             ]
+            thinking.retry_used = True
             logger.info(
-                "Regex fallback intent: %s | steps=%d", chain.intent, len(chain.steps)
+                "LLM intent (retry): %s | steps=%d | composite=%s",
+                chain.intent, len(chain.steps), chain.is_composite,
             )
+            return chain, thinking
+
+        except Exception as exc2:
+            logger.error(
+                "LLM intent both attempts failed. Attempt1=%s | Attempt2=%s",
+                thinking.attempt1_error, exc2,
+            )
+            thinking.method = "both_failed"
+            thinking.retry_used = True
+            thinking.fallback_used = True
+            thinking.fallback_reason = (
+                f"Attempt 1: {thinking.attempt1_error} | Attempt 2: {exc2}"
+            )
+            # Return GENERAL with no steps — orchestrator will call LLM for
+            # a plain-text answer with no data context.
+            chain = ToolChain(
+                intent=Intent.GENERAL,
+                steps=[],
+                description="Intent classification failed after two attempts",
+                is_composite=False,
+            )
+            thinking.intent = chain.intent.value
+            thinking.steps = []
             return chain, thinking
 
     async def _llm_classify(
@@ -343,6 +448,64 @@ class LLMIntentIdentifier:
         chain = _plan_to_tool_chain(plan)
         return chain, plan, raw_text
 
+ 
+    async def _llm_classify_retry(
+        self,
+        message: str,
+        role: str,
+        work_centers: List[str],
+        error_hint: str,
+    ) -> Tuple[ToolChain, Dict[str, Any], str]:
+        """
+        Second attempt at LLM classification.
+        Injects the previous failure reason so the model can self-correct.
+        The system prompt is unchanged; only the user turn is modified.
+        Raises on any failure — caller handles the fallback to GENERAL.
+        """
+        wc_str = ", ".join(work_centers) if work_centers else "all"
+        original_user = _IDENTIFIER_USER_TEMPLATE.format(
+            message=message,
+            role=role,
+            work_centers=wc_str,
+        )
+        retry_instruction = (
+            f"Your previous response could not be used because of this error:\n"
+            f"  {error_hint}\n\n"
+            f"Common causes and fixes:\n"
+            f"  - Invalid JSON → ensure the output is a single JSON object, "
+            f"no markdown fences, no trailing commas.\n"
+            f"  - Unknown tool name → only use tool names listed in the catalogue.\n"
+            f"  - Missing result_key → every step must have a non-empty, "
+            f"unique snake_case result_key.\n"
+            f"  - Unknown intent → intent must be one of the exact labels listed.\n\n"
+            f"Produce the corrected JSON plan now. Output ONLY the JSON object."
+        )
+        messages = [
+            {"role": "system",    "content": _IDENTIFIER_SYSTEM},
+            {"role": "user",      "content": original_user},
+            # Simulate the bad assistant turn so the model sees what went wrong
+            {"role": "assistant", "content": "(previous response contained an error)"},
+            {"role": "user",      "content": retry_instruction},
+        ]
+
+        raw_text = await self.llm.complete(messages)
+        if not raw_text:
+            raise ValueError("LLM returned empty response on retry")
+
+        clean = _strip_json_fences(raw_text)
+        try:
+            plan = json.loads(clean)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Retry produced invalid JSON: {e}\nRaw: {raw_text[:300]}"
+            )
+
+        errors = _validate_plan(plan)
+        if errors:
+            raise ValueError(f"Retry plan still invalid: {errors}\nPlan: {plan}")
+
+        chain = _plan_to_tool_chain(plan)
+        return chain, plan, raw_text
 
 # ── ThinkingBlock ─────────────────────────────────────────────────────────────
 
@@ -362,16 +525,21 @@ class ThinkingBlock:
         self.parsed_plan: Dict = {}
         self.fallback_used: bool = False
         self.fallback_reason: str = ""
+        self.retry_used: bool = False
+        self.attempt1_error: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         d: Dict[str, Any] = {
             "classifier": self.method,
             "intent": self.intent,
             "fallback_used": self.fallback_used,
+            "retry_used": self.retry_used,
             "steps_planned": self.steps,
         }
         if self.reasoning:
             d["reasoning"] = self.reasoning
+        if self.attempt1_error:
+            d["attempt1_error"] = self.attempt1_error
         if self.fallback_used and self.fallback_reason:
             d["fallback_reason"] = self.fallback_reason
         return d

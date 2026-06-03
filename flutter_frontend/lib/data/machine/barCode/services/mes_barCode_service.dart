@@ -66,11 +66,11 @@ class MesBarcodeService {
     }),
   );
 
-  // Print useful debug information
-  print('=== insertScans DEBUG ===');
-  print('Status code: ${response.statusCode}');
-  print('Response body: ${response.body}');
-  print('=========================');
+  // // Print useful debug information
+  // print('=== insertScans DEBUG ===');
+  // print('Status code: ${response.statusCode}');
+  // print('Response body: ${response.body}');
+  // print('=========================');
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body) as Map<String, dynamic>;

@@ -37,6 +37,7 @@ class _ActionButtonsState extends State<ActionButtons> {
     final role = SessionStorage().getRole().toLowerCase();
     return role == 'supervisor';
   }
+
   Future<void> _reloadOrders() async {
     await context.read<MachineordersProvider>().getMachineOrders(
       widget.machineNo,
@@ -117,9 +118,14 @@ class _ActionButtonsState extends State<ActionButtons> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('orderCancelledSuccessfully'.tr()),backgroundColor: Colors.green,),
+        SnackBar(
+          content: Text('orderCancelledSuccessfully'.tr()),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
+      print("==================================================");
+      print(e);
       if (!mounted) return;
       _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -147,9 +153,8 @@ class _ActionButtonsState extends State<ActionButtons> {
     );
   }
 
-
   Widget _buildStartButton() {
- if (_canStart) {
+    if (_canStart) {
       return ElevatedButton.icon(
         onPressed: _isStartLoading ? null : _handleStart,
         icon: _isStartLoading
@@ -223,7 +228,6 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Widget _buildCloseButton() {
-
     final isEnabled = _canClose;
 
     return Tooltip(

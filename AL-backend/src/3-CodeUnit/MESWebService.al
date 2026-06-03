@@ -1,7 +1,7 @@
 codeunit 50126 "MES Web Service"
 {
     var
-        UnboundActions: Codeunit "MES Unbound Actions";
+        UnboundActions: Codeunit "MES Authentification Actions";
         MachineFetch: Codeunit "MES Machine Fetch";
         MachineWrite: Codeunit "MES Machine Write";
         Tools: Codeunit "MES Tool Functions";
@@ -419,7 +419,7 @@ codeunit 50126 "MES Web Service"
     begin
         UserIdCode := CopyStr(userId, 1, 50);
 
-        if AuthMgt.VerifyBadge(scannedSecret,token) then begin
+        if AuthMgt.VerifyBadge(scannedSecret, token) then begin
             ResultJson.Add('success', true);
             exit(JsonHelper.JsonToText(ResultJson));
         end;
@@ -457,10 +457,10 @@ codeunit 50126 "MES Web Service"
         exit(settings.GetMESSettings());
     end;
 
-    
+
     procedure updateSettings(pwChangePeriodDays: Integer; twoFAEnabled: Boolean; token: Text): Text
     begin
-     exit(settings.UpdateMESSettings(pwChangePeriodDays, twoFAEnabled, token));
+        exit(settings.UpdateMESSettings(pwChangePeriodDays, twoFAEnabled, token));
     end;
 
 }

@@ -48,8 +48,8 @@ answer with a JSON block in this exact format — nothing else after it:
 
 Omit the ```actions block entirely if no redirect is needed.
 Only use these action_type values:
-  redirect_machine       → payload: machineNo
-  redirect_operation     → payload: machineNo, prodOrderNo, operationNo
+  redirect_machine_waiting_operations       → payload: machineNo
+  redirect_machine_ongoing_operations       → payload: machineNo
   redirect_machine_list  → payload: (empty)
   redirect_machine_dashboard → payload: (empty)
   redirect_history       → payload: machineNo

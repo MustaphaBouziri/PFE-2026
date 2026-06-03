@@ -30,7 +30,7 @@ LLM_PROVIDER: str = _str("LLM_PROVIDER", "ollama")
 
 # Shared LLM settings (applied to whichever provider is active)
 LLM_TEMPERATURE: float = _float("LLM_TEMPERATURE", 0.1)
-LLM_MAX_TOKENS:  int   = _int("LLM_MAX_TOKENS",  2048)
+LLM_MAX_TOKENS:  int   = _int("LLM_MAX_TOKENS",  4096)
 LLM_TIMEOUT:     float = _float("LLM_TIMEOUT",    120.0)
 
 
@@ -73,4 +73,4 @@ TOOL_HTTP_TIMEOUT:   int = _int("TOOL_HTTP_TIMEOUT", 20)
 
 # ── Agent behaviour ───────────────────────────────────────────────────────────
 DEBUG_DATA:           bool = _bool("DEBUG_DATA")
-LLM_MAX_CONTEXT_CHARS: int = _int("LLM_MAX_CONTEXT_CHARS", 12000)
+LLM_MAX_CONTEXT_CHARS: int = _int("LLM_MAX_CONTEXT_CHARS", 20000)

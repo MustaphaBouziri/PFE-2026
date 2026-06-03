@@ -563,10 +563,11 @@ codeunit 50132 "MES Machine Write"
 
         // Create only the bare execution row – do NOT call InsertStartOperationRecords
         // which would also fire InsertStartMESMachineStatus (machine → Working).
-        ExecutionId := MachineInsert.InsertMESOperationExecution(prodOrderNo, operationNo, machineNo);
-        MachineInsert.EnsureUserExecutionInteraction(ExecutionId, mesUserId);
+        ExecutionId := MachineInsert.InsertMESOperationExecution(prodOrderNo, operationNo, machineNo); 
+        MachineInsert.InsertMESOperationProgression(ExecutionId, mesUserId);
         MachineInsert.InsertOperationStatus(machineNo, prodOrderNo, operationNo,
             MESOperationStatus."Operation Status"::Cancelled, mesUserId);
+
 
         MachineInsert.SetErpOrderToFinish(prodOrderNo, operationNo,
             MESOperationStatus."Operation Status"::Cancelled);

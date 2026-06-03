@@ -42,18 +42,17 @@ codeunit 50124 "MES Settings Functions"
         if PwChangePeriodDays < 0 then
             Error('Password change period must be a positive number.');
 
-        if MESSettings.FindFirst() then begin
-            DefaultMs := PwChangePeriodDays * 86400000L;
-            MESSettings."PW change period" := DefaultMs;
-            MESSettings."TwoFA Enabled" := TwoFAEnabled;
-            MESSettings.Modify(true);
-        end else begin
-            MESSettings.Init();
-            DefaultMs := PwChangePeriodDays * 86400000L;
-            MESSettings."PW change period" := DefaultMs;
-            MESSettings."TwoFA Enabled" := TwoFAEnabled;
-            MESSettings.Insert(true);
-        end;
+        DefaultMs := PwChangePeriodDays * 86400000L;
+
+        // Delete existing record if present (can't modify a PK field)
+        if MESSettings.FindFirst() then
+            MESSettings.Delete(true);
+
+        MESSettings.Init();
+        MESSettings."PW change period" := DefaultMs;
+        MESSettings."TwoFA Enabled" := TwoFAEnabled;
+        MESSettings.Insert(true);
+
         resultJson.Add('success', true);
         exit(JsonHelper.JsonToText(resultJson));
     end;

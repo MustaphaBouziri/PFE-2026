@@ -12,7 +12,8 @@ import '../models/mes_production_cycle.dart';
 /// require the session token so the BC backend can resolve the MES user
 /// from the token instead of the BC Windows session.
 class ErpMachineOrdersService {
-  final SessionStorage _sessionStorage =SessionStorage();
+  final SessionStorage _sessionStorage = SessionStorage();
+
   /// Fetches all pending production orders assigned to [machineNo].
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
     final response = await HttpClient.post(AppConstants.getMachineOrdersUrl, {
@@ -109,6 +110,9 @@ class ErpMachineOrdersService {
       'prodOrderNo': prodOrderNo,
       'operationNo': operationNo,
     });
+  //  print("STATUS: ${response.statusCode}");
+  //  print("BODY: ${response.body}");  
+
 
     return HttpResponseParser.parseWriteResult(
       response,

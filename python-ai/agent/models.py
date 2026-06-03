@@ -34,12 +34,12 @@ class ChatRequest(BaseModel):
 # ── Actions (UI commands sent back to Flutter) ────────────────────────────────
 
 class ActionType(str, Enum):
-    REDIRECT_MACHINE       = "redirect_machine"
-    REDIRECT_OPERATION     = "redirect_operation"
-    REDIRECT_MACHINE_LIST  = "redirect_machine_list"
-    REDIRECT_DASHBOARD     = "redirect_machine_dashboard"
-    REDIRECT_HISTORY       = "redirect_history"
-
+    REDIRECT_MACHINE_WAITING       = "redirect_machine_waiting_operations"
+    REDIRECT_MACHINE_ONGOING       = "redirect_machine_ongoing_operations"
+    REDIRECT_HISTORY               = "redirect_history"
+    REDIRECT_MACHINE_LIST          = "redirect_machine_list"
+    REDIRECT_DASHBOARD             = "redirect_machine_dashboard"
+    
 
 class RedirectAction(BaseModel):
     action_type: ActionType

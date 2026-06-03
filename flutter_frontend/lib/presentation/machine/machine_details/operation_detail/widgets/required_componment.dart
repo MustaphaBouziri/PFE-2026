@@ -317,9 +317,10 @@ class ComponentListView extends StatelessWidget {
     double remaining,
     double scanned,
     double orderQuantity,
+    double totalProduced,
     double quantityPerUnit,
   ) {
-    final requiredForOrder = orderQuantity * quantityPerUnit;
+    final requiredForOrder = (orderQuantity - totalProduced) * quantityPerUnit;
 
     if (scanned == 0 || remaining < quantityPerUnit)
       return statusMissing; // if there are less than 20% of the scanned quantity remaining and remaining is less than or equal to zero we consider it low stock
@@ -387,7 +388,7 @@ class ComponentListView extends StatelessWidget {
         final status = getStatus(
           remaining,
           scanned,
-          orderQuantity,
+          orderQuantity,totalProduced,
           component.quantityPerUnit,
         );
 

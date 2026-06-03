@@ -1,5 +1,5 @@
 // =============================================================================
-// Codeunit: MES Unbound Actions
+// Codeunit: MES Authentification Actions
 // Object ID: 50125
 // Purpose : Exposes all MES auth + admin operations as ODataV4 **unbound
 //           actions** via a published Codeunit web service.
@@ -39,7 +39,7 @@
 //   3 — [TryFunction] wrappers (strictly read-only)
 //   4 — JSON utilities (private)
 // =============================================================================
-codeunit 50125 "MES Unbound Actions"
+codeunit 50125 "MES Authentification Actions"
 {
     Access = Internal;
 
@@ -64,19 +64,19 @@ codeunit 50125 "MES Unbound Actions"
     [NonDebuggable]
     procedure Login(userId: Text; password: Text; deviceId: Text): Text
     var
-        TokenRec:       Record "MES Auth Token";
-        U:              Record "MES User";
-        WCRec:          Record "MES User Work Center";
-        MESSettings:    Record "MES Settings";
-        UserIdCode:     Code[50];
-        OutJ:           JsonObject;
-        WCArr:          JsonArray;
-        EmployeeRec:    Record Employee;
-        MediaInStream:  InStream;
-        Base64Convert:  Codeunit "Base64 Convert";
-        TempBlob:       Codeunit "Temp Blob";
-        OutStream:      OutStream;
-        TwoFAEnabled:   Boolean;
+        TokenRec: Record "MES Auth Token";
+        U: Record "MES User";
+        WCRec: Record "MES User Work Center";
+        MESSettings: Record "MES Settings";
+        UserIdCode: Code[50];
+        OutJ: JsonObject;
+        WCArr: JsonArray;
+        EmployeeRec: Record Employee;
+        MediaInStream: InStream;
+        Base64Convert: Codeunit "Base64 Convert";
+        TempBlob: Codeunit "Temp Blob";
+        OutStream: OutStream;
+        TwoFAEnabled: Boolean;
     begin
         if (userId = '') or (password = '') then
             exit(JsonHelper.BuildError('Invalid request', 'Username and password are required'));
@@ -114,21 +114,21 @@ codeunit 50125 "MES Unbound Actions"
             until WCRec.Next() = 0;
 
         // Build response (same fields as before + twoFAEnabled + userId)
-        OutJ.Add('success',       true);
-        OutJ.Add('twoFAEnabled',  TwoFAEnabled);   // NEW
-        OutJ.Add('workCenters',   WCArr);
+        OutJ.Add('success', true);
+        OutJ.Add('twoFAEnabled', TwoFAEnabled);   // NEW
+        OutJ.Add('workCenters', WCArr);
         OutJ.Add('needToChangePw', U."Need To Change Pw");
-        OutJ.Add('userId',        U."User Id");     // internal Code[50] — needed for VerifyBadge
-        OutJ.Add('authId',        U."Auth ID");
-        OutJ.Add('employeeId',    U."Employee ID");
-        OutJ.Add('role',          Format(U.Role));
-        OutJ.add('isActive',      U."Is Active");
-        OutJ.Add('token',         Format(TokenRec."Token"));
-        OutJ.Add('expiresAt',     Format(TokenRec."Expires At", 0, 9));
+        OutJ.Add('userId', U."User Id");     // internal Code[50] — needed for VerifyBadge
+        OutJ.Add('authId', U."Auth ID");
+        OutJ.Add('employeeId', U."Employee ID");
+        OutJ.Add('role', Format(U.Role));
+        OutJ.add('isActive', U."Is Active");
+        OutJ.Add('token', Format(TokenRec."Token"));
+        OutJ.Add('expiresAt', Format(TokenRec."Expires At", 0, 9));
 
         if EmployeeRec.Get(U."Employee ID") then begin
             OutJ.Add('fullName', EmployeeRec.FullName());
-            OutJ.Add('email',    EmployeeRec."E-Mail");
+            OutJ.Add('email', EmployeeRec."E-Mail");
             if EmployeeRec.Image.HasValue then begin
                 TempBlob.CreateOutStream(OutStream);
                 EmployeeRec.Image.ExportStream(OutStream);
@@ -137,9 +137,9 @@ codeunit 50125 "MES Unbound Actions"
             end else
                 OutJ.Add('imageBase64', '');
         end else begin
-            OutJ.Add('fullName',   '');
-            OutJ.Add('email',      '');
-            OutJ.Add('imageBase64','');
+            OutJ.Add('fullName', '');
+            OutJ.Add('email', '');
+            OutJ.Add('imageBase64', '');
         end;
 
         exit(JsonHelper.JsonToText(OutJ));
@@ -377,11 +377,11 @@ codeunit 50125 "MES Unbound Actions"
         // Step 1 — read-only admin token validation inside a TryFunction.
         if not TryValidateAdminToken(token, AdminUserId) then
             exit(JsonHelper.BuildErrorFromLastError('Status update failed'));
-        
+
         // you can not activate/deactivate your own account — guard against accidentally locking yourself out.
         if AdminUserId = UserIdCode then
             Error('Cannot modify your own account status.');
-        
+
         // Step 2 — SetActive performs writes (Modify + RevokeAll)
         AuthMgt.SetActive(UserIdCode, isActive);
 
@@ -680,7 +680,7 @@ codeunit 50125 "MES Unbound Actions"
         exit('{"success":true,"message":"User role updated successfully."}');
     end;
 
-   
+
     procedure fetchAllEmployees(): Text
     var
         EmployeeRec: Record Employee;
@@ -724,4 +724,4 @@ codeunit 50125 "MES Unbound Actions"
     end;
 }
 
-    
+

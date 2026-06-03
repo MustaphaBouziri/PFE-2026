@@ -1,6 +1,5 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
-import 'package:pfe_mes/presentation/ai/operationDeepLinkPage.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/tabsMain.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
@@ -27,8 +26,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   // ── Role helpers ──────────────────────────────────────────────────────────
 
-  String get _currentRole =>
-      SessionStorage().getRole().trim().toLowerCase();
+  String get _currentRole => SessionStorage().getRole().trim().toLowerCase();
 
   bool get _isSupervisor => _currentRole == 'supervisor';
 
@@ -36,12 +34,8 @@ class _AiChatPageState extends State<AiChatPage> {
   /// Operators cannot be redirected to the machine dashboard.
   List<AiRedirectAction> _filterActions(List<AiRedirectAction> actions) {
     return actions.where((a) {
-      switch (a.actionType) {
-        case 'redirect_machine_dashboard':
-          return _isSupervisor;
-        default:
-          return true;
-      }
+      if (a.actionType == 'redirect_machine_dashboard') return _isSupervisor;
+      return true;
     }).toList();
   }
 
@@ -92,51 +86,20 @@ class _AiChatPageState extends State<AiChatPage> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 
-
-  /// Pop to root, push MachineMainPage, then push [extra] on top.
-  /// Breadcrumb: MachineListPage → MachineMainPage (tab [tabIndex]) → [extra]
-  Future<void> _pushFromRootViaMainPage({
-    required String machineNo,
-    required String machineName,
-    required int tabIndex,
-    required Widget extra,
-  }) async {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    await Future.delayed(const Duration(milliseconds: 50));
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MachineMainPage(
-          machineNo: machineNo,
-          machineName: machineName,
-          initialTabIndex: tabIndex,
-        ),
-      ),
-    );
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => extra));
-  }
-
   void _handleAction(AiRedirectAction action) {
     final actionType = action.actionType;
     final payload = (action.payload as Map<String, dynamic>?) ?? {};
-
     final machineNo = payload['machineNo'] as String? ?? '';
     final machineName = payload['machineName'] as String? ?? machineNo;
 
     switch (actionType) {
-    // 1. Machine list — already at root, just dismiss the chat
       case 'redirect_machine_list':
         _dismissThenNavigate(() async {
           if (!mounted) return;
           Navigator.of(context).popUntil((route) => route.isFirst);
         });
-
-    // 2. Machine / Orders — opens on the orders tab (tab 0)
-    //    redirect_orders is an alias for redirect_machine
-      case 'redirect_machine':
-      case 'redirect_orders':
+        break;
+      case 'redirect_machine_waiting_operations':
         if (machineNo.isEmpty) {
           ScaffoldMessenger.of(
             context,
@@ -153,8 +116,27 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           );
         });
+        break;
 
-    // 3. History — opens MachineMainPage on the history tab (tab 2)
+      case 'redirect_machine_ongoing_operations':
+        if (machineNo.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
+          return;
+        }
+        _dismissThenNavigate(() async {
+          if (!mounted) return;
+          await _pushFromRoot(
+            MachineMainPage(
+              machineNo: machineNo,
+              machineName: machineName,
+              initialTabIndex: 1,
+            ),
+          );
+        });
+        break;
+
       case 'redirect_history':
         if (machineNo.isEmpty) {
           ScaffoldMessenger.of(
@@ -172,44 +154,10 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           );
         });
+        break;
 
-    // 4. Operation — full deep-link:
-    //    MachineListPage → MachineMainPage (tab 1) → OperationDeepLinkPage
-    //                                                  → OperationDetailPage
-      case 'redirect_operation':
-        final prodOrderNo = payload['prodOrderNo'] as String? ?? '';
-        final operationNo = payload['operationNo'] as String? ?? '';
-        if (machineNo.isEmpty) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
-          return;
-        }
-        if (prodOrderNo.isEmpty) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('missingProdOrderNo'.tr())));
-          return;
-        }
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          await _pushFromRootViaMainPage(
-            machineNo: machineNo,
-            machineName: machineName,
-            tabIndex: 1,
-            extra: OperationDeepLinkPage(
-              machineNo: machineNo,
-              machineName: machineName,
-              prodOrderNo: prodOrderNo,
-              operationNo: operationNo,
-            ),
-          );
-        });
-
-    // 5. Machine dashboard — supervisor only
       case 'redirect_machine_dashboard':
         if (!_isSupervisor) {
-          // Should never reach here due to _filterActions, but belt-and-suspenders
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('actionNotAllowed'.tr())));
@@ -219,6 +167,7 @@ class _AiChatPageState extends State<AiChatPage> {
           if (!mounted) return;
           await _pushFromRoot(const MachineDashboardPage());
         });
+        break;
 
       default:
         ScaffoldMessenger.of(context).showSnackBar(
@@ -317,40 +266,44 @@ class _AiChatPageState extends State<AiChatPage> {
                     child: aiProvider.history.isEmpty
                         ? const _EmptyState()
                         : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: aiProvider.history.length,
-                      itemBuilder: (context, index) {
-                        final turn = aiProvider.history[index];
-                        final isLastAssistant =
-                            turn.role == 'assistant' &&
-                                index == aiProvider.history.length - 1;
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: aiProvider.history.length,
+                            itemBuilder: (context, index) {
+                              final turn = aiProvider.history[index];
+                              final isLastAssistant =
+                                  turn.role == 'assistant' &&
+                                  index == aiProvider.history.length - 1;
 
-                        // Apply role-based filtering before rendering buttons
-                        final filteredActions = isLastAssistant &&
-                            aiProvider.lastResponse?.actions
-                                .isNotEmpty ==
-                                true
-                            ? _filterActions(
-                            aiProvider.lastResponse!.actions)
-                            : <AiRedirectAction>[];
+                              // Apply role-based filtering before rendering buttons
+                              final filteredActions =
+                                  isLastAssistant &&
+                                      aiProvider
+                                              .lastResponse
+                                              ?.actions
+                                              .isNotEmpty ==
+                                          true
+                                  ? _filterActions(
+                                      aiProvider.lastResponse!.actions,
+                                    )
+                                  : <AiRedirectAction>[];
 
-                        return Column(
-                          children: [
-                            _MessageBubble(turn: turn),
-                            if (filteredActions.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: _ActionButtons(
-                                  actions: filteredActions,
-                                  onTap: (action) =>
-                                      _handleAction(action),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
+                              return Column(
+                                children: [
+                                  _MessageBubble(turn: turn),
+                                  if (filteredActions.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: _ActionButtons(
+                                        actions: filteredActions,
+                                        onTap: (action) =>
+                                            _handleAction(action),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
                   ),
                   if (aiProvider.errorMessage != null)
                     Padding(
@@ -437,39 +390,39 @@ class _MessageBubble extends StatelessWidget {
         child: isUser
             ? Text(turn.content, style: const TextStyle(color: Colors.white))
             : MarkdownBody(
-          data: turn.content,
-          selectable: true,
-          onTapLink: (text, href, title) {
-            _openLink(href);
-          },
-          styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-              .copyWith(
-            p: TextStyle(color: textColor, fontSize: 14, height: 1.4),
-            h1: TextStyle(
-              color: textColor,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-            h2: TextStyle(
-              color: textColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-            strong: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-            ),
-            code: const TextStyle(
-              fontFamily: 'monospace',
-              backgroundColor: Color(0xFFE2E8F0),
-              color: Color(0xFF0F172A),
-            ),
-            codeblockDecoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-        ),
+                data: turn.content,
+                selectable: true,
+                onTapLink: (text, href, title) {
+                  _openLink(href);
+                },
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(
+                      p: TextStyle(color: textColor, fontSize: 14, height: 1.4),
+                      h1: TextStyle(
+                        color: textColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h2: TextStyle(
+                        color: textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      strong: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      code: const TextStyle(
+                        fontFamily: 'monospace',
+                        backgroundColor: Color(0xFFE2E8F0),
+                        color: Color(0xFF0F172A),
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+              ),
       ),
     );
   }
@@ -488,20 +441,20 @@ class _ActionButtons extends StatelessWidget {
     children: actions
         .map(
           (action) => ElevatedButton(
-        onPressed: () => onTap(action),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFe2e8f0),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+            onPressed: () => onTap(action),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFe2e8f0),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: Text(
+              action.label,
+              style: const TextStyle(color: Color(0xFF0F172A)),
+            ),
           ),
-        ),
-        child: Text(
-          action.label,
-          style: const TextStyle(color: Color(0xFF0F172A)),
-        ),
-      ),
-    )
+        )
         .toList(),
   );
 }
@@ -545,17 +498,17 @@ class _InputBar extends StatelessWidget {
           const SizedBox(width: 8),
           isLoading
               ? const SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : IconButton.filled(
-            onPressed: onSend,
-            icon: const Icon(Icons.send),
-            style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
-            ),
-          ),
+                  onPressed: onSend,
+                  icon: const Icon(Icons.send),
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                  ),
+                ),
         ],
       ),
     ),
