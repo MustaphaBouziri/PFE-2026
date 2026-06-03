@@ -56,10 +56,15 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
           // order number + product name
           _InfoRow(
-            leftLabel: "orderNumber".tr(),
-            leftValue: widget.operationData.operationNo,
-            rightLabel: "productName".tr(),
-            rightValue: widget.operationData.itemDescription,
+            rightLabel: "scrapQuantity".tr(),
+            rightValue: "${widget.operationData.scrapQuantity} ${"unit".tr()}",
+            
+            leftLabel: "productName".tr(),
+            leftValue: widget.operationData.itemDescription,
+
+            
+            
+
           ),
 
           const SizedBox(height: 12),
@@ -75,13 +80,8 @@ class _CurrentOrderInfoContainerState extends State<CurrentOrderInfoContainer> {
 
           const SizedBox(height: 12),
 
-          // scraps
-          _InfoRow(
-            leftLabel: "scrapQuantity".tr(),
-            leftValue: "${widget.operationData.scrapQuantity} ${"unit".tr()}",
-            rightLabel: "",
-            rightValue: "",
-          ),
+          
+         
 
           const SizedBox(height: 12),
 

@@ -9,70 +9,26 @@ class AdminDashboardTutorial {
     final tutorialShown = prefs.getBool('tutorial_shown_admin') ?? false;
     if (tutorialShown) return;
 
+    // Ensure the overlay is mounted before showing
+    if (!context.mounted) return;
+
     final targets = [
       TargetFocus(
-        identify: "search_bar",
+        identify: "add_user_button",
         keyTarget: keys[0],
         shape: ShapeLightFocus.RRect,
         radius: 8,
+        enableOverlayTab: true,
+        enableTargetTab: true,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isSmallScreen = constraints.maxWidth < 600;
+                final isSmall = constraints.maxWidth < 600;
                 return Text(
-                  'tutorialAdminSearch'.tr(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "role_dropdown",
-        keyTarget: keys[1],
-        shape: ShapeLightFocus.RRect,
-        radius: 8,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isSmallScreen = constraints.maxWidth < 600;
-                return Text(
-                  'tutorialAdminRoleFilter'.tr(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "add_user_button",
-        keyTarget: keys[2],
-        shape: ShapeLightFocus.RRect,
-        radius: 8,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isSmallScreen = constraints.maxWidth < 600;
-                return Text(
-                  'tutorialAdminAddUser'.tr(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                  ),
+                  'Click here to add a new user.',
+                  style: TextStyle(color: Colors.white, fontSize: isSmall ? 14 : 16),
                 );
               },
             ),
@@ -81,21 +37,42 @@ class AdminDashboardTutorial {
       ),
       TargetFocus(
         identify: "user_table",
-        keyTarget: keys[3],
+        keyTarget: keys[1],
         shape: ShapeLightFocus.RRect,
         radius: 8,
+        enableOverlayTab: true,
+        enableTargetTab: true,
         contents: [
           TargetContent(
             align: ContentAlign.top,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isSmallScreen = constraints.maxWidth < 600;
+                final isSmall = constraints.maxWidth < 600;
                 return Text(
-                  'tutorialAdminUserTable'.tr(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                  ),
+                  'This table shows users, roles, work center, status, and last seen.',
+                  style: TextStyle(color: Colors.white, fontSize: isSmall ? 14 : 16),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "user_action_menu",
+        keyTarget: keys[2],
+        shape: ShapeLightFocus.Circle,
+        radius: 10,
+        enableOverlayTab: true,
+        enableTargetTab: true,
+        contents: [
+          TargetContent(
+            align: ContentAlign.left,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmall = constraints.maxWidth < 600;
+                return Text(
+                  'Open this menu to: change role, generate password, view badge, activate or deactivate.',
+                  style: TextStyle(color: Colors.white, fontSize: isSmall ? 14 : 16),
                 );
               },
             ),
@@ -106,10 +83,16 @@ class AdminDashboardTutorial {
 
     TutorialCoachMark(
       targets: targets,
-      colorShadow: Colors.black87,
+      colorShadow: Colors.black,
       textSkip: 'skip'.tr(),
-      paddingFocus: 6,
-      opacityShadow: 0.95,
+      textStyleSkip: const TextStyle(
+        color: Colors.white,
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+      ),
+      paddingFocus: 8,
+      opacityShadow: 0.9,
+      hideSkip: false,
       onFinish: () {
         prefs.setBool('tutorial_shown_admin', true);
         return true;
@@ -121,3 +104,4 @@ class AdminDashboardTutorial {
     ).show(context: context);
   }
 }
+

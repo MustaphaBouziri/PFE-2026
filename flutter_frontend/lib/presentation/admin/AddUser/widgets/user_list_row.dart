@@ -8,17 +8,19 @@ import 'package:easy_localization/easy_localization.dart';
 class UserListRow extends StatelessWidget {
   final MesUser user;
   final bool isCurrentUser;
+  final GlobalKey? actionMenuKey;
 
   const UserListRow({
     required Key key,
     required this.user,
     required this.isCurrentUser,
+    this.actionMenuKey,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final roleColor = _calculateRoleColor(user.role, user.isActive);
-    final roleBg    = _calculateRoleBg(user.role, user.isActive);
+    final roleBg = _calculateRoleBg(user.role, user.isActive);
 
     return RepaintBoundary(
       child: Container(
@@ -27,8 +29,8 @@ class UserListRow extends StatelessWidget {
           color: Colors.white,
           border: user.isPendingSetup
               ? const Border(
-            left: BorderSide(color: Color(0xFFD39D2B), width: 3),
-          )
+                  left: BorderSide(color: Color(0xFFD39D2B), width: 3),
+                )
               : null,
         ),
         padding: EdgeInsets.only(
@@ -88,7 +90,12 @@ class UserListRow extends StatelessWidget {
               ),
 
               // Role
-              BadgeListCell(label: user.role, flex: 2, color: roleColor, bg: roleBg),
+              BadgeListCell(
+                label: user.role,
+                flex: 2,
+                color: roleColor,
+                bg: roleBg,
+              ),
 
               // Work Center
               TextListCell(label: user.workCenterNameTextFormat, flex: 2),
@@ -97,21 +104,28 @@ class UserListRow extends StatelessWidget {
               BadgeListCell(
                 label: user.isOnline ? 'online' : 'offline',
                 flex: 2,
-                color: user.isOnline ? const Color(0xFF16A34A) : const Color(0xFF64748B),
-                bg:    user.isOnline ? const Color(0xFFF0FDF4) : const Color(0xFFF1F5F9),
+                color: user.isOnline
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFF64748B),
+                bg: user.isOnline
+                    ? const Color(0xFFF0FDF4)
+                    : const Color(0xFFF1F5F9),
               ),
 
               // Last Seen
               TextListCell(
                 label: user.lastSeenAt,
                 flex: 2,
-                textStyle: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
+                ),
               ),
 
               // Actions
               SizedBox(
                 width: 60,
-                child: isCurrentUser ? const SizedBox.shrink() : UserActionMenu(user: user),
+                child: UserActionMenu(user: user, isCurrentUser: isCurrentUser),
               ),
             ],
           ),
@@ -123,20 +137,28 @@ class UserListRow extends StatelessWidget {
   Color _calculateRoleColor(String role, bool isActive) {
     if (!isActive) return const Color(0xFF64748B);
     switch (role) {
-      case 'Admin':      return const Color(0xFF7C3AED);
-      case 'Supervisor': return const Color(0xFF2563EB);
-      case 'Operator':   return const Color(0xFF16A34A);
-      default:           return const Color(0xFF64748B);
+      case 'Admin':
+        return const Color(0xFF7C3AED);
+      case 'Supervisor':
+        return const Color(0xFF2563EB);
+      case 'Operator':
+        return const Color(0xFF16A34A);
+      default:
+        return const Color(0xFF64748B);
     }
   }
 
   Color _calculateRoleBg(String role, bool isActive) {
     if (!isActive) return const Color(0xFFF1F5F9);
     switch (role) {
-      case 'Admin':      return const Color(0xFFF5F3FF);
-      case 'Supervisor': return const Color(0xFFEFF6FF);
-      case 'Operator':   return const Color(0xFFF0FDF4);
-      default:           return const Color(0xFFF1F5F9);
+      case 'Admin':
+        return const Color(0xFFF5F3FF);
+      case 'Supervisor':
+        return const Color(0xFFEFF6FF);
+      case 'Operator':
+        return const Color(0xFFF0FDF4);
+      default:
+        return const Color(0xFFF1F5F9);
     }
   }
 }
@@ -205,7 +227,11 @@ class BadgeListCell extends StatelessWidget {
           ),
           child: Text(
             label.tr(),
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ),
@@ -218,18 +244,22 @@ class TextListCell extends StatelessWidget {
   final int flex;
   final TextStyle? textStyle;
 
-  const TextListCell({super.key, required this.label, this.flex = 2, this.textStyle});
+  const TextListCell({
+    super.key,
+    required this.label,
+    this.flex = 2,
+    this.textStyle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
-      child:  ExpandableText(
-          text: label,
-          maxLines: 1,
-          style: textStyle ?? const TextStyle(fontSize: 13),
-        ),
-      
+      child: ExpandableText(
+        text: label,
+        maxLines: 1,
+        style: textStyle ?? const TextStyle(fontSize: 13),
+      ),
     );
   }
 }

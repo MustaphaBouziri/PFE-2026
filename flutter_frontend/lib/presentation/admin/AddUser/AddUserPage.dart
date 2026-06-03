@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:pfe_mes/core/exel/export_user_main.dart';
 
 import 'package:pfe_mes/core/storage/session_storage.dart';
 import 'package:pfe_mes/data/admin/models/mes_user_model.dart';
+import 'package:pfe_mes/data/admin/services/exportUserService/export_user_main.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/add_user_dialog.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/button.dart';
 import 'package:pfe_mes/presentation/admin/AddUser/widgets/stat_card.dart';
-import 'package:pfe_mes/presentation/admin/addUser/widgets/user_list_table.dart';
+import 'package:pfe_mes/presentation/admin/AddUser/widgets/user_list_table.dart';
 import 'package:pfe_mes/presentation/widgets/searchBar.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +19,18 @@ import '../../../domain/admin/providers/mes_user_provider.dart';
 import '../../tutorials/admin_dashboard_tutorial.dart';
 
 class AddUserPage extends StatefulWidget {
-  const AddUserPage({super.key});
+  const AddUserPage({
+    super.key,
+    required this.sidebarKey,
+    required this.addUserKey,
+    required this.tableKey,
+    required this.actionMenuKey,
+  });
+
+  final GlobalKey sidebarKey;
+  final GlobalKey addUserKey;
+  final GlobalKey tableKey;
+  final GlobalKey actionMenuKey;
 
   @override
   State<AddUserPage> createState() => _AddUserPageState();
@@ -42,7 +53,7 @@ class _AddUserPageState extends State<AddUserPage> {
   static const int _pageSize = 10;
 
   bool isLoading = false;
-   bool _isExporting = false;
+  bool _isExporting = false;
   bool _tutorialShown = false;
 
   late final Stream<List<MesUser>> _usersStream;
@@ -52,17 +63,12 @@ class _AddUserPageState extends State<AddUserPage> {
 
   // keys
   late final GlobalKey _searchKey;
-  late final GlobalKey _addUserKey;
-  late final GlobalKey _tableKey;
 
   @override
   void initState() {
     super.initState();
 
     _searchKey = GlobalKey();
-    _addUserKey = GlobalKey();
-    _tableKey = GlobalKey();
-
     _usersStream = context.read<MesUserProvider>().fetchMesUsers();
 
     searchController.addListener(_onSearchChanged);
@@ -132,7 +138,7 @@ class _AddUserPageState extends State<AddUserPage> {
   await Future.delayed(Duration.zero);
 
   try {
-    final exportService = ExportUserService();
+    final exportService =ExportUserService();
     await exportService.exportUsersToExcel(users);
 
     if (mounted) {
@@ -199,9 +205,9 @@ class _AddUserPageState extends State<AddUserPage> {
           _tutorialShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             AdminDashboardTutorial.show(context, [
-              _searchKey,
-              _addUserKey,
-              _tableKey,
+              widget.addUserKey,
+              widget.tableKey,
+              widget.actionMenuKey,
             ]);
           });
         }
@@ -248,7 +254,8 @@ class _AddUserPageState extends State<AddUserPage> {
                   currentPage: _currentPage,
                   onPageChanged: (p) => setState(() => _currentPage = p),
                   currentUserId: currentUserId,
-                  tableKey: _tableKey,
+                  tableKey: widget.tableKey,
+                  actionMenuKey: widget.actionMenuKey,
                 ),
               ),
             ],
@@ -273,7 +280,7 @@ class _AddUserPageState extends State<AddUserPage> {
         ),
         const SizedBox(width: 8),
         Container(
-          key: _addUserKey,
+          key: widget.addUserKey,
           child: Buttons(
             text: "addNewUser".tr(),
             isprimary: true,

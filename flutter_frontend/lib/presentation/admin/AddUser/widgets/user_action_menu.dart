@@ -11,8 +11,13 @@ import 'package:easy_localization/easy_localization.dart';
 
 class UserActionMenu extends StatelessWidget {
   final MesUser user;
+  final bool isCurrentUser;
 
-  const UserActionMenu({super.key, required this.user});
+  const UserActionMenu({
+    super.key,
+    required this.user,
+    required this.isCurrentUser,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,34 +26,44 @@ class UserActionMenu extends StatelessWidget {
         color: Colors.white,
         icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF64748B)),
         onSelected: (val) => _handleMenuAction(context, val, user),
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 'editRoleDepartement',
-            child: Text('changeRole'.tr()),
-          ),
-          if (user.isActive) ...[
-            PopupMenuItem(
-              value: 'generatePassword',
-              child: Text('generatePassword'.tr()),
-            ),
-            PopupMenuItem(value: 'viewBadge', child: Text('viewBadge'.tr())),
-          ],
-          user.isActive
-              ? PopupMenuItem(
-                  value: 'deactivate',
-                  child: Text(
-                    'deactivate'.tr(),
-                    style: const TextStyle(color: Color(0xFFDC2626)),
-                  ),
-                )
-              : PopupMenuItem(
-                  value: 'activate',
-                  child: Text(
-                    'activate'.tr(),
-                    style: const TextStyle(color: Color(0xFF16A34A)),
-                  ),
+        itemBuilder: (context) => isCurrentUser
+            ? [
+                PopupMenuItem(
+                  value: 'viewBadge',
+                  child: Text('viewBadge'.tr()),
                 ),
-        ],
+              ]
+            : [
+                PopupMenuItem(
+                  value: 'editRoleDepartement',
+                  child: Text('changeRole'.tr()),
+                ),
+                if (user.isActive) ...[
+                  PopupMenuItem(
+                    value: 'generatePassword',
+                    child: Text('generatePassword'.tr()),
+                  ),
+                  PopupMenuItem(
+                    value: 'viewBadge',
+                    child: Text('viewBadge'.tr()),
+                  ),
+                ],
+                user.isActive
+                    ? PopupMenuItem(
+                        value: 'deactivate',
+                        child: Text(
+                          'deactivate'.tr(),
+                          style: const TextStyle(color: Color(0xFFDC2626)),
+                        ),
+                      )
+                    : PopupMenuItem(
+                        value: 'activate',
+                        child: Text(
+                          'activate'.tr(),
+                          style: const TextStyle(color: Color(0xFF16A34A)),
+                        ),
+                      ),
+              ],
       ),
     );
   }
@@ -100,9 +115,12 @@ class UserActionMenu extends StatelessWidget {
 
     if (!context.mounted) return;
     if (result == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr()),backgroundColor: Colors.green,));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('roleUpdatedSuccessfully'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -119,9 +137,9 @@ class UserActionMenu extends StatelessWidget {
 
     if (!context.mounted) return;
     if (result == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('roleUpdatedSuccessfully'.tr())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('roleUpdatedSuccessfully'.tr())),
+      );
     }
   }
 }

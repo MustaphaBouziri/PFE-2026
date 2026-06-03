@@ -35,7 +35,7 @@ class OperationDetailTutorial {
       ),
       TargetFocus(
         identify: "action_buttons",
-        keyTarget: keys[2],
+        keyTarget: keys[1],
         shape: ShapeLightFocus.RRect,
         radius: 8,
         contents: [
