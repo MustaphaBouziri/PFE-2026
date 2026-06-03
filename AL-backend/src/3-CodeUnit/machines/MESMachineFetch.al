@@ -218,6 +218,10 @@ codeunit 50131 "MES Machine Fetch"
                         if MESOperationStatus.FindFirst() then
                             EndDateTime := MESOperationStatus."Declared At";
 
+                        MESOperationStatus.SetRange("Operation Status", MESOperationStatus."Operation Status"::Interrupted);
+                        if MESOperationStatus.FindFirst() then
+                            EndDateTime := MESOperationStatus."Declared At";
+
 
 
 
