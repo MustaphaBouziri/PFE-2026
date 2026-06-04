@@ -151,7 +151,7 @@ class _UserBadgeDialogState extends State<UserBadgeDialog> {
               mainAxisSize: pw.MainAxisSize.min,
               children: [
                 pw.Text(
-                  'MES System — Employee Badge',
+                  '',
                   style: pw.TextStyle(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,

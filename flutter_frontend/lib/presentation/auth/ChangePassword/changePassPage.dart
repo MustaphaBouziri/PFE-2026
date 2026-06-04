@@ -53,22 +53,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
     final success = await authProvider.changePassword(
       oldPasswordController.text.trim(),
       newPasswordController.text.trim(),
     );
 
     if (!mounted) return;
-
-    // Close loading indicator
-    Navigator.of(context).pop();
 
     if (success) {
       showDialog(
