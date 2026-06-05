@@ -80,7 +80,8 @@ codeunit 50111 "MES Auth Mgt"
     procedure SetPassword(
         UserId: Code[50];
         NewPassword: Text;
-        ForceChangeOnNextLogin: Boolean)
+        ForceChangeOnNextLogin: Boolean;
+        UserToken: Text) // optional: if provided, requires a valid token for the user — used for self-service password changes
     var
         U: Record "MES User";
         Salt, Hash : Text;
@@ -100,7 +101,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Modify(true);
 
         // Invalidate all active sessions — a compromised token cannot persist after a reset.
-        AuthValidation.RevokeAllTokensForUser(UserId);
+        AuthValidation.RevokeAllTokensForUser(UserId,UserToken);
     end;
 
     // =========================================================================
@@ -276,7 +277,7 @@ codeunit 50111 "MES Auth Mgt"
         U.Modify(true);
 
         if not Active then
-            AuthValidation.RevokeAllTokensForUser(TargetUserId);
+            AuthValidation.RevokeAllTokensForUser(TargetUserId,''); // revoke all sessions on deactivation
 
         exit(true);
     end;
@@ -361,7 +362,7 @@ codeunit 50111 "MES Auth Mgt"
     /// <summary>
     /// Regenerate the Badge Secret for TargetUserId.
     /// Requires a valid Admin token.
-    /// Returns { "success": true, "badgeSecret": "<new 64-char hex>" }
+    /// Returns { "success": true, "badgeSecret": "new 64-char hex" }
     /// The caller (Flutter admin dialog) uses the returned secret to re-render the QR.
     /// </summary>
     procedure RegenerateBadgeSecret(AdminToken: Text; TargetUserId: Code[50]): Text
@@ -393,7 +394,7 @@ codeunit 50111 "MES Auth Mgt"
     /// <summary>
     /// Return the current Badge Secret for TargetUserId.
     /// Requires a valid Admin token.
-    /// Returns { "success": true, "badgeSecret": "<64-char hex>" }
+    /// Returns { "success": true, "badgeSecret": "64-char hex" }
     /// Used by the admin dialog to show the current QR without regenerating.
     /// </summary>
     procedure GetBadgeSecret(AdminToken: Text; TargetUserId: Code[50]): Text

@@ -163,12 +163,20 @@ Rules:
 9. For personal queries ("my production", "what did I do today"), use my_data.
 10. For scrap questions without a specific machine, use get_scrap_summary not
     get_activity_log.
+11. If the user refers to a machine by a non-canonical name or partial name
+    (e.g. "bruno", "the milling machine", "MC 1", "machine 42"),
+    set "unresolved_machine_ref" to that raw string in the JSON output, and use
+    the placeholder "__RESOLVE__" as the machine_no value in the step args.
+    Do NOT invent or guess the canonical machine ID.
+    Example: user says "history of machine bruno"
+      → args: {"machine_no": "__RESOLVE__"}, unresolved_machine_ref: "bruno"
 
 Output schema:
 {{
   "intent": "<intent_label>",
   "description": "<one-line human summary>",
   "is_composite": false,
+  "unresolved_machine_ref": "<raw user string or null>",
   "steps": [
     {{
       "tool": "<tool_name>",
@@ -281,6 +289,7 @@ def _plan_to_tool_chain(plan: Dict[str, Any]) -> ToolChain:
         steps=steps,
         description=plan.get("description", ""),
         is_composite=bool(plan.get("is_composite", False)),
+        unresolved_machine_ref=plan.get("unresolved_machine_ref") or None,  # ADD THIS
     )
 
 

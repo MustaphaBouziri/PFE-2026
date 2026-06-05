@@ -342,6 +342,14 @@ class MESAgentOrchestrator:
                       f"A prior step may have returned no data.",
             )]
 
+        if resolved_args.get("machine_no") == "__RESOLVE__":
+            return [ToolResult(
+                tool_name=step.tool,
+                success=False,
+                error="Machine reference was not resolved before execution. "
+                    "This is an internal bug — unresolved_machine_ref should have been set.",
+            )]
+
         # Access control for machine-scoped tools
         if step.tool in MACHINE_SCOPED_TOOLS:
             machine_no = resolved_args.get("machine_no", "")

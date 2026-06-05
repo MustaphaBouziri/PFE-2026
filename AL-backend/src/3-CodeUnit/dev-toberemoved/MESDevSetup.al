@@ -67,7 +67,7 @@ codeunit 50127 "MES Dev Setup"
         AuthMgt.CreateUser(userId, employeeId, authId, role);
 
         // Set a known dev password so the login flow also works manually.
-        AuthMgt.SetPassword(userId, 'Dev@1234!', false);
+        AuthMgt.SetPassword(userId, 'Dev@1234!', false,'');
     end;
 
     /// Assigns the first available work center to the operator user.

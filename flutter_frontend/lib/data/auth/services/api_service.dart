@@ -21,7 +21,7 @@ class ApiService {
     String deviceId,
   ) async {
     try {
-      final response = await HttpClient.post(AppConstants.loginUrl, {
+      final response = await HttpClient.post(AppConstants.login, {
         'userId': authId,
         'password': password,
         'deviceId': deviceId,
@@ -37,7 +37,7 @@ class ApiService {
   Future<Map<String, dynamic>> getCurrentUser() async {
     try {
       final token = _storage.getToken();
-      final response = await HttpClient.post(AppConstants.meUrl, {
+      final response = await HttpClient.post(AppConstants.me, {
         'token': token,
       });
 
@@ -61,7 +61,7 @@ class ApiService {
   ) async {
     try {
       final token = _storage.getToken();
-      final response = await HttpClient.post(AppConstants.changePasswordUrl, {
+      final response = await HttpClient.post(AppConstants.changePassword, {
         'token': token,
         'oldPassword': oldPassword,
         'newPassword': newPassword,
@@ -75,7 +75,7 @@ class ApiService {
   Future<Map<String, dynamic>> logout() async {
     try {
       final token = _storage.getToken();
-      final response = await HttpClient.post(AppConstants.logoutUrl, {
+      final response = await HttpClient.post(AppConstants.logout, {
         'token': token,
       });
       await _storage.clear();
@@ -91,7 +91,7 @@ class ApiService {
     required String newPassword,
   }) async {
     final token = _storage.getToken();
-    final response = await HttpClient.post(AppConstants.adminSetPasswordUrl, {
+    final response = await HttpClient.post(AppConstants.adminSetPassword, {
       'token': token,
       'userId': userId,
       'newPassword': newPassword,

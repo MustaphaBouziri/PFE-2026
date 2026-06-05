@@ -25,7 +25,7 @@ codeunit 50115 "MES Setup"
             Enum::"MES User Role"::Admin     // Role
         );
 
-        AuthMgt.SetPassword(AdminId, TempPassword, true);
+        AuthMgt.SetPassword(AdminId, TempPassword, true,'');
 
         Message('MES Setup complete. Login as "admin" and change the password immediately.');
     end;

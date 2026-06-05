@@ -16,7 +16,7 @@ class ErpMachineOrdersService {
 
   /// Fetches all pending production orders assigned to [machineNo].
   Future<List<MachineOrderModel>> getMachineOrders(String machineNo) async {
-    final response = await HttpClient.post(AppConstants.getMachineOrdersUrl, {
+    final response = await HttpClient.post(AppConstants.getMachineOrders, {
       'machineNo': machineNo,
     });
 
@@ -54,7 +54,7 @@ class ErpMachineOrdersService {
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
-    url: AppConstants.finishOperationUrl,
+    url: AppConstants.finishOperation,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -66,7 +66,7 @@ class ErpMachineOrdersService {
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
-    url: AppConstants.cancelOperationUrl,
+    url: AppConstants.cancelOperation,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -78,7 +78,7 @@ class ErpMachineOrdersService {
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
-    url: AppConstants.pauseOperationUrl,
+    url: AppConstants.pauseOperation,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,
@@ -90,7 +90,7 @@ class ErpMachineOrdersService {
     required String prodOrderNo,
     required String operationNo,
   }) => _setOperationStatus(
-    url: AppConstants.resumeOperationUrl,
+    url: AppConstants.resumeOperation,
     machineNo: machineNo,
     prodOrderNo: prodOrderNo,
     operationNo: operationNo,

@@ -31,7 +31,7 @@ class MesScrapService {
     required String onBehalfOfUserId,
   }) async {
     final token = _sessionStorage.getToken();
-    final response = await HttpClient.post(AppConstants.declareScrapUrl, {
+    final response = await HttpClient.post(AppConstants.declareScrap, {
       'token': token,
       'executionId': executionId,
       'description': description,

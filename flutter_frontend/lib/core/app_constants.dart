@@ -38,15 +38,15 @@ class AppConstants {
   static const String? devToken = null;
 
   //  Auth
-  static String get loginUrl             => '${host}Login';
-  static String get meUrl                => '${host}Me';
-  static String get changePasswordUrl    => '${host}ChangePassword';
-  static String get logoutUrl            => '${host}Logout';
-  static String get adminSetPasswordUrl  => '${host}AdminSetPassword';
+  static String get login             => '${host}Login';
+  static String get me                => '${host}Me';
+  static String get changePassword    => '${host}ChangePassword';
+  static String get logout            => '${host}Logout';
+  static String get adminSetPassword  => '${host}AdminSetPassword';
 
   //  Read
-  static String get fetchMachinesUrl             => '${host}FetchMachines';
-  static String get getMachineOrdersUrl          => '${host}getMachineOrders';
+  static String get fetchMachines             => '${host}FetchMachines';
+  static String get getMachineOrders          => '${host}getMachineOrders';
   static String get fetchOngoingOperationsState  => '${host}fetchOngoingOperationsState';
   static String get fetchOperationsHistory       => '${host}fetchOperationsHistory';
   static String get fetchOperationLiveData       => '${host}fetchOperationLiveData';
@@ -58,16 +58,15 @@ class AppConstants {
   //  Write
   static String get startOperation      => '${host}startOperation';
   static String get declareProduction   => '${host}declareProduction';
-  static String get finishOperationUrl  => '${host}finishOperation';
-  static String get cancelOperationUrl  => '${host}cancelOperation';
-  static String get pauseOperationUrl   => '${host}pauseOperation';
-  static String get resumeOperationUrl  => '${host}resumeOperation';
-  static String get declareScrapUrl     => '${host}declareScrap';
+  static String get finishOperation  => '${host}finishOperation';
+  static String get cancelOperation  => '${host}cancelOperation';
+  static String get pauseOperation   => '${host}pauseOperation';
+  static String get resumeOperation  => '${host}resumeOperation';
+  static String get declareScrap     => '${host}declareScrap';
   static String get insertScans         => '${host}insertScans';
 
   //  Admin
   static String get scrapCodesUrl           => '${host}scrapCodes';
-  static String get employeesUrl            => '${host}employees';
   static String get workCentersUrl          => '${host}workCenters';
   static String get adminCreateUser         => '${host}AdminCreateUser';
   static String get fetchAllMESUsers        => '${host}fetchAllMESUsers';

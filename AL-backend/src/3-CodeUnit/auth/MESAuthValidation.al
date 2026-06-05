@@ -26,15 +26,19 @@ codeunit 50112 "MES Auth Validation"
         exit(HasUpper and HasLower and HasDigit and HasSpecial);
     end;
 
-    procedure RevokeAllTokensForUser(UserId: Code[50])
+    procedure RevokeAllTokensForUser(
+        UserId: Code[50];
+        TokenToExclude: Text) // optional: if provided, excludes this token from revocation — used to preserve the current session during a password change
     var
         T: Record "MES Auth Token";
     begin
         T.SetRange("User Id", UserId);
         if T.FindSet(true) then
             repeat
-                T.State := T.State::Revoked;
-                T.Modify(true);
+                if T.Token <> TokenToExclude then begin
+                    T.State := T.State::Revoked;
+                    T.Modify(true);
+                end;
             until T.Next() = 0;
     end;
 

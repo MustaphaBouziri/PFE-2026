@@ -34,10 +34,11 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
       final provider = context.read<MesSettingsProvider>();
       provider.fetchSettings().then((_) {
         if (provider.settings != null) {
-          _savedPeriod = provider.settings!.pwChangePeriod;
+          setState(() => _twoFAEnabled = provider.settings!.twoFAEnabled);
           _savedTwoFA = provider.settings!.twoFAEnabled;
+          _savedPeriod = provider.settings!.pwChangePeriod;
           _periodController.text = _savedPeriod;
-          setState(() => _twoFAEnabled = _savedTwoFA);
+          _isDirty.value = false;
         }
       });
     });
@@ -46,9 +47,11 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
   }
 
   void _checkDirty() {
-    _isDirty.value =
+    final newDirty =
         _periodController.text.trim() != _savedPeriod.trim() ||
         _twoFAEnabled != _savedTwoFA;
+
+    _isDirty.value = newDirty;
   }
 
   @override
@@ -79,7 +82,6 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
       _isDirty.value = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          
           content: Row(
             children: [
               const Icon(
@@ -91,7 +93,7 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
               Text('settingsSavedSuccessfully'.tr()),
             ],
           ),
-          backgroundColor:Colors.green,
+          backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
@@ -138,7 +140,6 @@ class _MesSettingsPageState extends State<MesSettingsPage> {
                 color: Color(0xFF1A1F36),
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-
               ),
             ),
             bottom: PreferredSize(
@@ -330,6 +331,7 @@ class _SettingsBody extends StatelessWidget {
 
 class _PasswordPeriodCard extends StatelessWidget {
   const _PasswordPeriodCard({required this.controller});
+
   final TextEditingController controller;
 
   @override
@@ -440,7 +442,8 @@ class _PasswordPeriodCard extends StatelessWidget {
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'fieldRequired'.tr();
                 final n = int.tryParse(v.trim());
-                if (n == null || n < 0) return 'Enter a valid number of days (min. 0)';
+                if (n == null || n < 0)
+                  return 'Enter a valid number of days (min. 0)';
                 if (n > 3650) return 'Maximum allowed is 3650 days';
                 return null;
               },
@@ -550,6 +553,7 @@ class _TwoFACard extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
+
   final String label;
 
   @override
@@ -568,6 +572,7 @@ class _SectionLabel extends StatelessWidget {
 
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});
+
   final String message;
   final VoidCallback onRetry;
 

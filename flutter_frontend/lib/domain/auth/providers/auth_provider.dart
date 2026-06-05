@@ -27,7 +27,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _syncUserDataFromSession({Map<String, dynamic>? data}) async {
-    _userData = data ?? await _sessionStorage.getUserData();
+    _userData = _sessionStorage.getUserData();
   }
 
   bool get isAuthenticated => _isAuthenticated;
@@ -45,15 +45,15 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _sessionStorage.getToken();
+      final token = _sessionStorage.getToken();
       if (token == null || token.isEmpty) {
         _isAuthenticated = false;
         return;
       }
       final result = await _apiService.getCurrentUser();
       if (result['success'] == true) {
+        _userData = _sessionStorage.getUserData();
         _isAuthenticated = true;
-        await _syncUserDataFromSession();
       } else {
         await logout();
       }
@@ -64,6 +64,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
 
   Future<bool> login(String userId, String password) async {
     _isLoading = true;
@@ -99,6 +100,7 @@ class AuthProvider with ChangeNotifier {
       await _sessionStorage.saveToken(result['token'] as String);
       await _sessionStorage.saveUserData(result);
       await _syncUserDataFromSession(data: result); // use what we already have
+      _userData = Map<String, dynamic>.from(result); // ✅ set synchronously
       _isAuthenticated = true;
       _errorMessage = null;
       _isLoading = false;
@@ -233,7 +235,7 @@ class AuthProvider with ChangeNotifier {
         // Persist what we were holding in memory
         await _sessionStorage.saveToken(_pendingToken!);
         await _sessionStorage.saveUserData(_pendingUserData!);
-        await _syncUserDataFromSession(data: _pendingUserData); // use what we already have
+        _userData = Map<String, dynamic>.from(_pendingUserData!);
         _isAuthenticated = true;
         _pendingBadge = false;
         _pendingToken = null;
@@ -243,6 +245,7 @@ class AuthProvider with ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         return true;
+
       }
 
       _errorMessage =

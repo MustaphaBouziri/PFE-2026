@@ -15,7 +15,7 @@ class MESMachineListService {
   {
 
     final response = await HttpClient.post(
-      AppConstants.fetchMachinesUrl,
+      AppConstants.fetchMachines,
       { 'workCenterNoJson': jsonEncode({ 'workCenterNos': workCenterNos }) },
     );
     

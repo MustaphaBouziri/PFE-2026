@@ -246,7 +246,8 @@ codeunit 50125 "MES Authentification Actions"
             exit(JsonHelper.BuildErrorFromLastError('Password change failed'));
 
         // forceChangeOnNextLogin = false: user is actively choosing their own new password.
-        AuthMgt.SetPassword(TargetUserId, newPassword, false);
+
+        AuthMgt.SetPassword(TargetUserId, newPassword, false, token);
 
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password changed successfully');
@@ -351,7 +352,8 @@ codeunit 50125 "MES Authentification Actions"
             exit(JsonHelper.BuildErrorFromLastError('Password update failed'));
 
         // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
-        AuthMgt.SetPassword(UserIdCode, newPassword, true);
+        AuthMgt.SetPassword(UserIdCode, newPassword, true,''); 
+        
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password updated successfully');
         exit(JsonHelper.JsonToText(OutJ));
