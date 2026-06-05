@@ -124,15 +124,25 @@ class _ActionButtonsState extends State<ActionButtons> {
         ),
       );
     } catch (e) {
-      print("==================================================");
-      print(e);
       if (!mounted) return;
-      _showErrorDialog(e.toString().replaceFirst('Exception: ', ''));
+      _showBusinessCentralError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() => _isCancelLoading = false);
       }
     }
+  }
+
+  void _showBusinessCentralError(String message) {
+    String userMessage = message;
+
+    if (message.contains(
+      'It has consumption or capacity posted with no output',
+    )) {
+      userMessage = 'cancelOperationBlocked'.tr();
+    }
+
+    _showErrorDialog(userMessage);
   }
 
   void _showErrorDialog(String message) {

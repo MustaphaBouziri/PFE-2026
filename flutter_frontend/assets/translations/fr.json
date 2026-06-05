@@ -72,6 +72,7 @@
   "tableHeaderStatus": "Statut",
   "tableHeaderLastActive": "Dernière activité",
   "tableHeaderActions": "Actions",
+  "cancelOperationBlocked": "Vous ne pouvez pas annuler cette opération car les étapes de production précédentes ont déjà enregistré des consommations sans production.\n\nComme il s’agit de la dernière opération, elle doit être corrigée dans Business Central par le service de planification.",
 
   "tapCardToViewDetails": "Appuyez sur la carte pour voir les détails",
   "componentsFound": "composants trouvés",

@@ -181,6 +181,7 @@
   "noHistoryFound": "No History Found",
   "startOrder": "Start Order",
   "close": "Close",
+  "cancelOperationBlocked": "You cannot cancel this operation because previous production steps already have recorded consumption without output.\n\nAs this is the last operation, it must be corrected in Business Central by the planning department.",
   "search": "Search",
   "quickActions": "Quick Actions",
   "productionDeclarations": "Production Declarations",

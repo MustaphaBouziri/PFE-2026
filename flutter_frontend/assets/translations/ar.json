@@ -181,6 +181,7 @@
   "noHistoryFound": "لا يوجد سجلّ",
   "startOrder": "بدء الطلب",
   "close": "إغلاق",
+  "cancelOperationBlocked": "لا يمكنك إلغاء هذه العملية لأن خطوات الإنتاج السابقة سجلت استهلاكًا دون وجود إنتاج.\n\nبما أنها آخر عملية، يجب تصحيحها في نظام Business Central من قبل قسم التخطيط.",
   "search": "بحث",
   "quickActions": "إجراءات سريعة",
   "productionDeclarations": "إعلانات الإنتاج",
