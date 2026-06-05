@@ -315,7 +315,7 @@
   "operationNo": "رقم العملية",
   "noOperationsCurrentlyActiveForThisMachine": "لا توجد عمليات نشطة حالياً\nلهذه الآلة",
   "operationDescription": "وصف العملية",
-  "itemNotInBOMForThisOperation": "الصنف غير موجود في قائمة المواد لهذه العملية",
+"itemNotInBOMForThisOperation": "هذا المكوّن غير مطلوب لهذه العملية",
   "invalidBarcodeUOM": "وحدة القياس للباركود غير صالحة: ${unit}. وحدة الصنف الأساسية هي ${base}. يجب أن تكون مساوية أو أكبر.",
  "insufficientInventoryAdd": "لا يمكن إضافة المزيد من {} — المخزون غير كافٍ",
   "insufficientInventoryItem": "مخزون غير كافٍ لـ ${itemNo}",

@@ -312,7 +312,7 @@
   "operationNo": "N° d'opération",
   "noOperationsCurrentlyActiveForThisMachine": "Aucune opération active\npour cette machine",
   "operationDescription": "Description de l'opération",
-  "itemNotInBOMForThisOperation": "Article non présent dans la nomenclature pour cette opération",
+  "itemNotInBOMForThisOperation": "Article non requis pour cette opération",
   "invalidBarcodeUOM": "Unité du code-barres invalide : ${unit}. L'unité de base est ${base}. Elle doit être égale ou supérieure à l'unité de base.",
   "insufficientInventoryAdd": "Impossible d'ajouter davantage de {} — stock insuffisant",
   "insufficientInventoryItem": "Stock insuffisant pour ${itemNo}",

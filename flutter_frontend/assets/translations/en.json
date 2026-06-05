@@ -315,7 +315,7 @@
   "operationNo": "Operation No",
   "noOperationsCurrentlyActiveForThisMachine": "No operations currently active\nfor this machine",
   "operationDescription": "Operation Description",
-  "itemNotInBOMForThisOperation": "Item not in BOM for this operation",
+  "itemNotInBOMForThisOperation": "Item not required for this operation",
   "invalidBarcodeUOM": "Invalid barcode UOM: ${unit}. Item base UOM is ${base}. Barcode UOM must be equal or larger than base UOM.",
 "insufficientInventoryAdd": "Cannot add more of {} — insufficient inventory",
   "insufficientInventoryItem": "Insufficient inventory for ${itemNo}",
