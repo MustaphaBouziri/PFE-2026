@@ -60,7 +60,7 @@ logger = logging.getLogger("mes-ai.llm_intent")
 
 TOOL_CATALOGUE = """
 Available tools (name → required args → description):
-  list_machines          | work_center_no: str                                                    | List machines for a work centre. Fan-out across all user WCs when no specific WC is needed.
+  list_machines          | work_center_no: str                                                    | List machines for a work centre and state each machine STATE WORKING or not. Fan-out across all user WCs when no specific WC is needed.
   get_machine_orders     | machine_no: str                                                        | Production order queue for a single machine (not-yet-started ops only).
   get_ongoing_operations | machine_no: str                                                        | Current running/paused operation on a machine.
   get_operation_live_data| machine_no, prod_order_no, operation_no: str                           | Live KPI for a specific operation (progress %, scrap, produced qty).
@@ -169,7 +169,7 @@ Rules:
     the placeholder "__RESOLVE__" as the machine_no value in the step args.
     Do NOT invent or guess the canonical machine ID.
     Example: user says "history of machine bruno"
-      → args: {"machine_no": "__RESOLVE__"}, unresolved_machine_ref: "bruno"
+      → args: {{"machine_no": "__RESOLVE__"}}, unresolved_machine_ref: "bruno"
 
 Output schema:
 {{

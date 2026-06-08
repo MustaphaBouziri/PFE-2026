@@ -39,7 +39,7 @@
 //   3 — [TryFunction] wrappers (strictly read-only)
 //   4 — JSON utilities (private)
 // =============================================================================
-codeunit 50125 "MES Authentification Actions"
+codeunit 50125 "MES Authentication Actions"
 {
     Access = Internal;
 
@@ -352,8 +352,8 @@ codeunit 50125 "MES Authentification Actions"
             exit(JsonHelper.BuildErrorFromLastError('Password update failed'));
 
         // Step 2 — writes (Modify + RevokeAll) happen outside the TryFunction.
-        AuthMgt.SetPassword(UserIdCode, newPassword, true,''); 
-        
+        AuthMgt.SetPassword(UserIdCode, newPassword, true, '');
+
         OutJ.Add('success', true);
         OutJ.Add('message', 'Password updated successfully');
         exit(JsonHelper.JsonToText(OutJ));

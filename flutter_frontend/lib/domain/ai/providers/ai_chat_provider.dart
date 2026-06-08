@@ -12,6 +12,17 @@ class AiChatProvider with ChangeNotifier {
   String? errorMessage;
   AiChatResponse? lastResponse;
 
+  void injectDebugResponse({
+    required String userMessage,
+    required AiChatResponse response,
+  }) {
+    _history.add(ConversationTurn(role: 'user', content: userMessage));
+    _history.add(ConversationTurn(role: 'assistant', content: response.text));
+    lastResponse = response;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   Future<AiChatResponse?> sendMessage({
     required String message,
   }) async {

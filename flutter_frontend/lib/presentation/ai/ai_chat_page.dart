@@ -1,4 +1,7 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:pfe_mes/core/app_constants.dart';
+import 'package:pfe_mes/data/machine/models/mes_machine_model.dart';
+import 'package:pfe_mes/domain/machines/providers/mes_machines_provider.dart';
 import 'package:pfe_mes/presentation/machine/machineDashBoard/machineDashboardPage.dart';
 import 'package:pfe_mes/presentation/machine/machine_details/tabsMain.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,6 +26,12 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Map<String, List<MachineModel>> _debugMachines = {};
+  bool _debugMachinesLoading = false;
+  String? _debugMachinesError;
+  bool _showDebug = false;
+
+  static const bool _aiDebugEnabled = AppConstants.aiDebug;
 
   // ── Role helpers ──────────────────────────────────────────────────────────
 
@@ -37,6 +46,30 @@ class _AiChatPageState extends State<AiChatPage> {
       if (a.actionType == 'redirect_machine_dashboard') return _isSupervisor;
       return true;
     }).toList();
+  }
+
+  Future<void> _loadDebugMachines() async {
+    if (_debugMachinesLoading) return;
+    setState(() {
+      _debugMachinesLoading = true;
+      _debugMachinesError = null;
+    });
+    try {
+      final wcs = SessionStorage().getWorkCenters();
+      final provider = context.read<MesMachinesProvider>();
+      final result = await provider
+          .streamOrderedMachinePerDepartments(wcs)
+          .first;
+      setState(() {
+        _debugMachines = result;
+        _debugMachinesLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _debugMachinesError = e.toString();
+        _debugMachinesLoading = false;
+      });
+    }
   }
 
   void _scrollToBottom() {
@@ -66,24 +99,14 @@ class _AiChatPageState extends State<AiChatPage> {
 
   // ── Navigation helpers ────────────────────────────────────────────────────
 
-  void _dismissThenNavigate(Future<void> Function() navigate) {
+  void _navigateTo(Widget page) {
+    final navigator = Navigator.of(context);
     if (widget.isDialog) {
-      Navigator.of(context).pop();
+      navigator.pop();
     } else {
       widget.onClose?.call();
     }
-    Future.delayed(const Duration(milliseconds: 150), navigate);
-  }
-
-  /// Pop the entire navigation stack back to the root (MachineListPage),
-  /// then push [page] so the breadcrumb is clean:
-  ///   MachineListPage → [page]
-  Future<void> _pushFromRoot(Widget page) async {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    // One extra microtask so the pop animation settles before pushing.
-    await Future.delayed(const Duration(milliseconds: 50));
-    if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    navigator.push(MaterialPageRoute(builder: (_) => page));
   }
 
   void _handleAction(AiRedirectAction action) {
@@ -94,11 +117,15 @@ class _AiChatPageState extends State<AiChatPage> {
 
     switch (actionType) {
       case 'redirect_machine_list':
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        });
+        final navigator = Navigator.of(context);
+        if (widget.isDialog) {
+          navigator.pop();
+        } else {
+          widget.onClose?.call();
+        }
+        navigator.popUntil((route) => route.isFirst);
         break;
+
       case 'redirect_machine_waiting_operations':
         if (machineNo.isEmpty) {
           ScaffoldMessenger.of(
@@ -106,16 +133,13 @@ class _AiChatPageState extends State<AiChatPage> {
           ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
           return;
         }
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          await _pushFromRoot(
-            MachineMainPage(
-              machineNo: machineNo,
-              machineName: machineName,
-              initialTabIndex: 0,
-            ),
-          );
-        });
+        _navigateTo(
+          MachineMainPage(
+            machineNo: machineNo,
+            machineName: machineName,
+            initialTabIndex: 0,
+          ),
+        );
         break;
 
       case 'redirect_machine_ongoing_operations':
@@ -125,16 +149,13 @@ class _AiChatPageState extends State<AiChatPage> {
           ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
           return;
         }
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          await _pushFromRoot(
-            MachineMainPage(
-              machineNo: machineNo,
-              machineName: machineName,
-              initialTabIndex: 1,
-            ),
-          );
-        });
+        _navigateTo(
+          MachineMainPage(
+            machineNo: machineNo,
+            machineName: machineName,
+            initialTabIndex: 1,
+          ),
+        );
         break;
 
       case 'redirect_history':
@@ -144,16 +165,13 @@ class _AiChatPageState extends State<AiChatPage> {
           ).showSnackBar(SnackBar(content: Text('missingMachineNo'.tr())));
           return;
         }
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          await _pushFromRoot(
-            MachineMainPage(
-              machineNo: machineNo,
-              machineName: machineName,
-              initialTabIndex: 2,
-            ),
-          );
-        });
+        _navigateTo(
+          MachineMainPage(
+            machineNo: machineNo,
+            machineName: machineName,
+            initialTabIndex: 2,
+          ),
+        );
         break;
 
       case 'redirect_machine_dashboard':
@@ -163,10 +181,7 @@ class _AiChatPageState extends State<AiChatPage> {
           ).showSnackBar(SnackBar(content: Text('actionNotAllowed'.tr())));
           return;
         }
-        _dismissThenNavigate(() async {
-          if (!mounted) return;
-          await _pushFromRoot(const MachineDashboardPage());
-        });
+        _navigateTo(const MachineDashboardPage());
         break;
 
       default:
@@ -243,6 +258,22 @@ class _AiChatPageState extends State<AiChatPage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
+              if (_aiDebugEnabled)
+                IconButton(
+                  icon: Icon(
+                    Icons.bug_report_outlined,
+                    color: _showDebug ? const Color(0xFF795548) : null,
+                  ),
+                  tooltip: 'Toggle debug panel',
+                  onPressed: () {
+                    setState(() => _showDebug = !_showDebug);
+                    if (_showDebug &&
+                        _debugMachines.isEmpty &&
+                        !_debugMachinesLoading) {
+                      _loadDebugMachines();
+                    }
+                  },
+                ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: 'clearChat'.tr(),
@@ -262,6 +293,27 @@ class _AiChatPageState extends State<AiChatPage> {
               _scrollToBottom();
               return Column(
                 children: [
+                  if (_showDebug && _aiDebugEnabled)
+                    LimitedBox(
+                      maxHeight: 220,
+                      child: SingleChildScrollView(
+                        child: _DebugActionPanel(
+                          machines: _debugMachines,
+                          isLoading: _debugMachinesLoading,
+                          errorMessage: _debugMachinesError,
+                          onRetry: _loadDebugMachines,
+                          onInject: (response) {
+                            final ai = context.read<AiChatProvider>();
+                            ai.injectDebugResponse(
+                              userMessage:
+                                  '[DEBUG] ${response.actions.first.actionType}',
+                              response: response,
+                            );
+                            _scrollToBottom();
+                          },
+                        ),
+                      ),
+                    ),
                   Expanded(
                     child: aiProvider.history.isEmpty
                         ? const _EmptyState()
@@ -513,4 +565,254 @@ class _InputBar extends StatelessWidget {
       ),
     ),
   );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DEBUG PANEL — remove before production
+// ══════════════════════════════════════════════════════════════════════════════
+class _DebugActionPanel extends StatelessWidget {
+  final Map<String, List<MachineModel>> machines;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback onRetry;
+  final void Function(AiChatResponse) onInject;
+
+  const _DebugActionPanel({
+    required this.machines,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onRetry,
+    required this.onInject,
+  });
+
+  AiChatResponse _make(
+    String text,
+    String actionType,
+    String label, [
+    Map<String, dynamic> payload = const {},
+  ]) {
+    return AiChatResponse(
+      text: text,
+      actions: [
+        AiRedirectAction(
+          actionType: actionType,
+          label: label,
+          payload: payload,
+        ),
+      ],
+    );
+  }
+
+  // one debug button chip
+  Widget _chip(String label, AiChatResponse response) {
+    return GestureDetector(
+      onTap: () => onInject(response),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFF795548),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFFFF8E1),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── header row ──────────────────────────────────────────────────
+          Row(
+            children: [
+              const Text(
+                '🛠 DEBUG — Redirect Action Tests',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF795548),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: onRetry,
+                child: const Icon(
+                  Icons.refresh,
+                  size: 16,
+                  color: Color(0xFF795548),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // ── loading / error / empty ──────────────────────────────────────
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Loading machines…',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF795548)),
+                  ),
+                ],
+              ),
+            )
+          else if (errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                '⚠ $errorMessage',
+                style: const TextStyle(fontSize: 11, color: Colors.red),
+              ),
+            )
+          else if (machines.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                'No machines found for your work centers.',
+                style: TextStyle(fontSize: 11, color: Color(0xFF795548)),
+              ),
+            )
+          else ...[
+            // ── per-machine action buttons ───────────────────────────────
+            ...machines.entries.expand((entry) {
+              final wcNo = entry.key;
+              final list = entry.value;
+              return [
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 4),
+                  child: Text(
+                    'WC: $wcNo',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF795548),
+                    ),
+                  ),
+                ),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: list.expand((machine) {
+                    final p = {
+                      'machineNo': machine.machineNo,
+                      'machineName': machine.machineName,
+                    };
+                    return [
+                      _chip(
+                        '${machine.machineName} › Orders',
+                        _make(
+                          '🟢 [DEBUG] redirect_machine_waiting_operations\n'
+                              'Machine: ${machine.machineName} (${machine.machineNo})\n'
+                              'Status: ${machine.status}',
+                          'redirect_machine_waiting_operations',
+                          '→ Orders: ${machine.machineName}',
+                          p,
+                        ),
+                      ),
+                      _chip(
+                        '${machine.machineName} › Ongoing',
+                        _make(
+                          '🟡 [DEBUG] redirect_machine_ongoing_operations\n'
+                              'Machine: ${machine.machineName} (${machine.machineNo})\n'
+                              'Status: ${machine.status}',
+                          'redirect_machine_ongoing_operations',
+                          '→ Ongoing: ${machine.machineName}',
+                          p,
+                        ),
+                      ),
+                      _chip(
+                        '${machine.machineName} › History',
+                        _make(
+                          '🟠 [DEBUG] redirect_history\n'
+                              'Machine: ${machine.machineName} (${machine.machineNo})\n'
+                              'Status: ${machine.status}',
+                          'redirect_history',
+                          '→ History: ${machine.machineName}',
+                          p,
+                        ),
+                      ),
+                    ];
+                  }).toList(),
+                ),
+              ];
+            }),
+          ],
+
+          const SizedBox(height: 8),
+          const Divider(height: 1, color: Color(0xFFD7CCC8)),
+          const SizedBox(height: 6),
+
+          // ── static tests (no machine needed) ────────────────────────────
+          const Text(
+            'Static tests',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF795548),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _chip(
+                '→ Machine List',
+                _make(
+                  '🔵 [DEBUG] redirect_machine_list\nGoes back to the machine list page.',
+                  'redirect_machine_list',
+                  '→ Machine List',
+                ),
+              ),
+              _chip(
+                '→ Dashboard',
+                _make(
+                  '🟣 [DEBUG] redirect_machine_dashboard\nOpens the machine dashboard (supervisor only).',
+                  'redirect_machine_dashboard',
+                  '→ Dashboard',
+                ),
+              ),
+              _chip(
+                '→ Unknown Action',
+                _make(
+                  '⛔ [DEBUG] unknown_action\nShould show unknown action snackbar.',
+                  'unknown_action',
+                  '→ Unknown',
+                ),
+              ),
+              _chip(
+                '→ Missing machineNo',
+                _make(
+                  '❌ [DEBUG] missing machineNo\nShould show missing machine snackbar.',
+                  'redirect_machine_ongoing_operations',
+                  '→ No Machine',
+                  {'machineNo': '', 'machineName': ''},
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

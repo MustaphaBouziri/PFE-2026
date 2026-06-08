@@ -47,7 +47,7 @@ table 50112 "MES Operation Scrap"
             TableRelation = "MES User Execution Interaction"."User Id";
             DataClassification = CustomerContent;
         }
-// new field for the radio buttons 
+        //  field specifiying if the scrapped item is the output material of the operation or input material of the operation, etc. This will help in determining the cost of the scrap
         field(8; "Material Id"; Code[20])
         {
             DataClassification = CustomerContent;

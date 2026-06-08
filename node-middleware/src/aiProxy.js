@@ -18,7 +18,7 @@
 const express = require("express");
 
 const AI_AGENT_URL = process.env.AI_AGENT_URL || "http://localhost:8000";
-const AI_TIMEOUT_MS = parseInt(process.env.AI_TIMEOUT_MS || "60000", 10);
+const AI_TIMEOUT_MS = parseInt(process.env.AI_TIMEOUT_MS || "240000", 10);
 
 const aiRouter = express.Router();
 

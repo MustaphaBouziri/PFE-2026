@@ -36,6 +36,7 @@ class AppConstants {
   static String get aiChatUrl => '${host}ai/chat';
 
   static const String? devToken = null;
+  static const bool aiDebug = false;
 
   //  Auth
   static String get login             => '${host}Login';

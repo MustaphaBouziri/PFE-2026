@@ -1,7 +1,7 @@
 codeunit 50126 "MES Web Service"
 {
     var
-        UnboundActions: Codeunit "MES Authentification Actions";
+        UnboundActions: Codeunit "MES Authentication Actions";
         MachineFetch: Codeunit "MES Machine Fetch";
         MachineWrite: Codeunit "MES Machine Write";
         Tools: Codeunit "MES Tool Functions";
