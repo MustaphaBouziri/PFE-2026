@@ -417,7 +417,6 @@ codeunit 50126 "MES Web Service"
         ResultJson: JsonObject;
         UserIdCode: Code[50];
     begin
-        UserIdCode := CopyStr(userId, 1, 50);
 
         if AuthMgt.VerifyBadge(scannedSecret, token) then begin
             ResultJson.Add('success', true);

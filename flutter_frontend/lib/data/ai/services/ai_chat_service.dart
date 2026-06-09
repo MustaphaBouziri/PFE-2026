@@ -26,8 +26,6 @@ class AiChatService {
       'conversation_history': history.map((t) => t.toJson()).toList(),
     });
 
-    print(jsonDecode(body));
-
     final response = await http.post(
       Uri.parse(AppConstants.aiChatUrl),
       headers: AppConstants.jsonHeaders,

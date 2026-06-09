@@ -337,28 +337,29 @@ codeunit 50111 "MES Auth Mgt"
     /// Returns TRUE when they match, FALSE otherwise.
     /// Called during login when MES Settings."TwoFA Enabled" is true.
     /// </summary>
-    procedure VerifyBadge(ScannedSecret: Text; Token: text): Boolean
+    procedure VerifyBadge(ScannedSecret: Text; Token: Text): Boolean
     var
         U: Record "MES User";
         T: Record "MES Auth Token";
-        result: Boolean;
     begin
-
         if not T.Get(Token) then
             exit(false);
+
         if not U.Get(T."User Id") then
             exit(false);
+
         if U."Badge Secret" = '' then
             exit(false);
 
-        result := U."Badge Secret" = CopyStr(ScannedSecret, 1, 64);
-        if result then
-            TouchToken(T); // update Last Seen At on successful 2FA
-            T.State := T.State::Active; // promote from pending to active on successful 2FA
-            T.Modify(true);
-        exit(result);
-    end;
+        if U."Badge Secret" <> CopyStr(ScannedSecret, 1, 64) then
+            exit(false);
 
+        T.State := T.State::Active;
+        TouchToken(T);
+        T.Modify(true);
+
+        exit(true);
+    end;
     /// <summary>
     /// Regenerate the Badge Secret for TargetUserId.
     /// Requires a valid Admin token.
