@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pfe_mes/data/machine/barCode/models/mes_barCode_model.dart';
 import 'package:pfe_mes/data/machine/models/mes_componentConsumption_model.dart';
@@ -27,10 +28,20 @@ class ScannerWidget extends StatefulWidget {
 
 class _ScannerWidgetState extends State<ScannerWidget> {
   List<ItemBarcodeModel> items = [];
+  // Keep one TextEditingController per item row so the field stays in sync
+  final List<TextEditingController> _qtyControllers = [];
   final MobileScannerController controller = MobileScannerController();
   bool isScanning = true;
   bool isSubmitting = false;
   String? errorMessage;
+
+  @override
+  void dispose() {
+    for (final c in _qtyControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   //check if item is in components list
   bool isItemInComponents(String itemNo) {
@@ -47,9 +58,9 @@ class _ScannerWidgetState extends State<ScannerWidget> {
       return false;
     }
 
-    // VALIDATION: barcode UOM must NOT be smaller than item base UOM
-    // Check: barcode quantityPerUnit >= base quantityPerUnit
-    // If barcode qty per unit < base qty per unit, barcode is smaller → INVALID
+    // VALIDATION: barcode UOM must not be smaller than item base UOM
+    // check: barcode quantityPerUnit >= base quantityPerUnit
+    // If barcode qty per unit < base qty per unit  barcode is smaller → invalid
     if (item.quantityPerUnit < component.baseUOMQuantityPerUnit) {
       return false; // Block: barcode UOM is smaller than base UOM
     }
@@ -83,7 +94,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
       (c) => c.itemNo == newItem.itemNo,
     );
 
-    // VALIDATION: Check if barcode UOM is smaller than base UOM
+    // VALIDATION: check if barcode UOM is smaller than base UOM
     // If barcode quantityPerUnit < base quantityPerUnit, barcode is smaller (invalid)
     if (newItem.quantityPerUnit < component.baseUOMQuantityPerUnit) {
       setState(() {
@@ -101,7 +112,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
       return;
     }
 
-    // Clear error when adding successfully
+    // clear error when adding successfully
     setState(() {
       errorMessage = null;
     });
@@ -113,7 +124,8 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     );
 
     if (index != -1) {
-      // same item already in list — increment quantity, keep all other fields
+      // same item already in list we increment quantity  keep all other fields the same
+      final newQty = items[index].quantity + 1;
       items[index] = ItemBarcodeModel(
         itemNo: items[index].itemNo,
         description: items[index].description,
@@ -121,23 +133,70 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         lotSize: items[index].lotSize,
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
-        quantity: items[index].quantity + 1,
+        quantity: newQty,
         quantityPerUnit: items[index].quantityPerUnit,
         unitOfMeasure: items[index].unitOfMeasure,
       );
+      // Keep the text field in sync when a re-scan increments the qty
+      _qtyControllers[index].text = newQty.toStringAsFixed(0);
     } else {
       items.add(newItem);
+      // Add a controller initialised to "1" for the new row
+      _qtyControllers.add(TextEditingController(text: '1'));
     }
   }
 
-  //increase quantity
-  void increaseQty(int index) {
-    if (!canAddMoreItem(items[index])) {
+  void setQty(int index, String value) {
+    // when field is cleared reset to 1
+    if (value.isEmpty) {
+  setState(() {
+    errorMessage = null;
+    items[index] = ItemBarcodeModel(
+      itemNo: items[index].itemNo,
+      description: items[index].description,
+      baseUOM: items[index].baseUOM,
+      lotSize: items[index].lotSize,
+      flushingMethod: items[index].flushingMethod,
+      barcodeText: items[index].barcodeText,
+      quantity: 1,
+      quantityPerUnit: items[index].quantityPerUnit,
+      unitOfMeasure: items[index].unitOfMeasure,
+    );
+    // when the user clears the field the value will be 1 if he press delete again it will select 1 so that it can be replaced by the new value , why ? so that the first number wont be forced 1 
+    _qtyControllers[index].value = const TextEditingValue(
+      text: '1',
+      selection: TextSelection(baseOffset: 0, extentOffset: 1),
+    );
+  });
+  return;
+}
+
+    // regect starting by 1 but alloow 0 if its the only value
+    if (value.length > 1 && value.startsWith('0')) {
+      final stripped = value.replaceFirst(RegExp(r'^0+'), '');
+      _qtyControllers[index].value = TextEditingValue(
+        text: stripped,
+        selection: TextSelection.collapsed(offset: stripped.length),
+      );
+      return;
+    }
+
+    final qty = int.tryParse(value);
+    if (qty == null || qty <= 0) return;
+
+    final component = widget.components.firstWhere(
+      (c) => c.itemNo == items[index].itemNo,
+    );
+
+    final totalRequired = qty * items[index].quantityPerUnit;
+
+    if (totalRequired > component.inventory) {
       setState(() {
         errorMessage = 'insufficientInventoryFor'.tr() + items[index].itemNo;
       });
       return;
     }
+
     setState(() {
       errorMessage = null;
       items[index] = ItemBarcodeModel(
@@ -147,30 +206,10 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         lotSize: items[index].lotSize,
         flushingMethod: items[index].flushingMethod,
         barcodeText: items[index].barcodeText,
-        quantity: items[index].quantity + 1,
+        quantity: qty.toDouble(),
         quantityPerUnit: items[index].quantityPerUnit,
         unitOfMeasure: items[index].unitOfMeasure,
       );
-    });
-  }
-
-  // decrease quantity
-  void decreaseQty(int index) {
-    setState(() {
-      if (items[index].quantity > 1) {
-        errorMessage = null;
-        items[index] = ItemBarcodeModel(
-          itemNo: items[index].itemNo,
-          description: items[index].description,
-          baseUOM: items[index].baseUOM,
-          lotSize: items[index].lotSize,
-          flushingMethod: items[index].flushingMethod,
-          barcodeText: items[index].barcodeText,
-          quantity: items[index].quantity - 1,
-          quantityPerUnit: items[index].quantityPerUnit,
-          unitOfMeasure: items[index].unitOfMeasure,
-        );
-      }
     });
   }
 
@@ -179,6 +218,9 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     setState(() {
       errorMessage = null;
       items.removeAt(index);
+      // Dispose and remove the matching controller
+      _qtyControllers[index].dispose();
+      _qtyControllers.removeAt(index);
     });
   }
 
@@ -236,19 +278,18 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                                   errorMessage =
                                       result?['message']?.toString() ??
                                       'barcodeNotRecognized'.tr();
-                                  // Keep isScanning = false, user must click "Scan Again"
+                                  // kkeep isScanning = falseso that user must click scan again
                                 });
                                 // DON'T restart camera automatically
                                 return;
                               }
 
-                              // build model from BC response — same structure for both our and external barcodes
+                              // build model from BC response same structure for both our and external barcodes
                               final item = ItemBarcodeModel(
                                 itemNo: result['itemNo']?.toString() ?? '',
                                 description:
                                     result['itemDescription']?.toString() ?? '',
                                 baseUOM: result['baseUOM']?.toString() ?? '',
-
                                 lotSize: 0,
                                 flushingMethod: '',
                                 barcodeText: value,
@@ -263,7 +304,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                               );
 
                               setState(() => addItem(item));
-                              // Keep camera stopped - user must click "Scan Again" to continue
+                              // camera stopped user must click "scan again" to continue
                             },
                           )
                         : Center(
@@ -310,7 +351,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
               ),
             ),
 
-            // Error message display
+            // error message display
             if (errorMessage != null)
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -357,11 +398,10 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                   // i need to get the component quanitye per so
                   final totalScanned = (item.quantity * item.quantityPerUnit)
                       .toStringAsFixed(0);
-                  
-                  // get the outOf for this item from the map widget.outOf["001"]
+
+                  // get the outOf for this item from the map widget.outOf["NAIL-001"]
                   final outOf = widget.outOf[item.itemNo] ?? 0;
-            
-                  
+
                   ///////////////////////////////////////////
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -393,14 +433,25 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                               ),
                             ),
                           ),
-                          IconButton(
-                            onPressed: () => increaseQty(index),
-                            icon: const Icon(Icons.add, color: Colors.black),
+
+                          // quantity input
+                          SizedBox(
+                            width: 50,
+                            child: TextFormField(
+                              controller: _qtyControllers[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              // only allow numbers 
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                             
+                              onChanged: (value) => setQty(index, value),
+                            ),
                           ),
-                          IconButton(
-                            onPressed: () => decreaseQty(index),
-                            icon: const Icon(Icons.remove, color: Colors.black),
-                          ),
+
+                          const SizedBox(width: 4),
+
                           IconButton(
                             onPressed: () => removeItem(index),
                             icon: const Icon(
@@ -428,7 +479,7 @@ class _ScannerWidgetState extends State<ScannerWidget> {
                           items.any(
                             (item) => !isItemInComponents(item.itemNo),
                           ) ||
-                          isSubmitting)
+                          isSubmitting ||errorMessage != null)
                       ? null
                       : () async {
                           setState(() => isSubmitting = true);
@@ -496,8 +547,3 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     );
   }
 }
-
-
-
-
-
